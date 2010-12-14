@@ -591,6 +591,17 @@ class Ftdi(object):
                 dev = usb.core.find(idVendor=vendor, idProduct=product)
                 if not dev:
                     raise ValueError('Device not found')
+                for configuration in dev:
+                    # we need to detach any kernel driver from the device
+                    # be greedy: reclaim all device interfaces from the kernel
+                    for interface in configuration: 
+                        ifnum = interface.bInterfaceNumber
+                        if not dev.is_kernel_driver_active(ifnum):
+                            continue
+                        try:
+                            dev.detach_kernel_driver(ifnum)
+                        except usb.core.USBError, e:
+                            pass
                 dev.set_configuration()
                 cls.DEVICES[device] = [dev, 1]
             else:
