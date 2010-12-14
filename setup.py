@@ -22,6 +22,7 @@ setup (
                                       'test']),
     package_dir = {'':'pyftdi'},
     zip_safe = True,
-    install_requires = [ 'setuptools>=0.6c11', #'pyusb >= 1.0.0a1' 
+    install_requires = [ 'setuptools>=0.6c11', 
+                       #'pyusb >= 1.0.0a1' 
                        ],
 )

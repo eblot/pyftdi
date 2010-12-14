@@ -750,23 +750,3 @@ PRODUCT_IDS = { '232':  0x6001,
                 'ft2232': 0x6010,
                 'ft4232': 0x6011 }
 #----------------------------------
-
-
-if __name__ == '__main__':
-    def main():
-        import sys
-        if sys.platform in ('darwin', ):
-            import os.path
-            if os.path.isdir('/usr/local/homebrew/lib'):
-                os.environ['DYLD_LIBRARY_PATH'] = '/usr/local/homebrew/lib'
-        ftdi = Ftdi()
-        ftdi.open(interface=3)
-        print "TYPE", ftdi.type
-        ftdi.set_baudrate(115200)
-        ftdi2 = Ftdi()
-        ftdi2.open(interface=4)
-        ftdi2.set_baudrate(115200)
-        while True:
-            print "Read"
-            print ftdi.read_data(100)
-    main()
