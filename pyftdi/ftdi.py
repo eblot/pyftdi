@@ -2,7 +2,7 @@
     Author:  Emmanuel Blot <emmanuel.blot@free.fr>
     License: LGPL, originally based on libftdi C library
     Caveats: Only tested with FT2232 and FT4232 FTDI devices
-    Require: pyusb """
+    Require: pyusb"""
 
 
 import array
@@ -269,7 +269,7 @@ class Ftdi(object):
         self.purge_rx_buffer()
         self.purge_tx_buffer()
 
-    # ---Replace with properties-------
+    # --- todo: Replace with properties -----------
     def write_data_set_chunksize(self, chunksize):
         """Configure write buffer chunk size."""
         self.writebuffer_chunksize = chunksize
@@ -293,7 +293,7 @@ class Ftdi(object):
     def read_data_get_chunksize(self):
         """Get read buffer chunk size."""
         return self.readbuffer_chunksize
-    # ---------------------------------
+    # --- end of todo section ---------------------
 
     def set_bitmode(self, bitmask, mode):
         """Enable/disable bitbang modes."""
@@ -466,37 +466,38 @@ class Ftdi(object):
         """Reads data in chunks (see read_data_set_chunksize) from the chip.
            Automatically strips the two modem status bytes transfered during 
            every read."""
-        # Packet size sanity check (avoid division by zero)
+        # Packet size sanity check
         if not self.max_packet_size:
-            raise AssertionError("max_packet_size is bogus")
+            raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1 # initial condition to enter the usb_read loop
         data = array.array('B')
-        # everything we want is still in the readbuffer?
+        # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
-            # Fix offset
             self.readoffset += size
             return data.tostring()
-        # something still in the readbuffer, but not enough to satisfy 'size'?
+        # something still in the cache, but not enough to satisfy 'size'?
         if len(self.readbuffer)-self.readoffset != 0:
             data = self.readbuffer[self.readoffset:]
             # end of readbuffer reached
             self.readoffset = len(self.readbuffer)
-        # Read from USB as local cache is empty
+        # read from USB, filling in the local cache as it is empty
         while (len(data) < size) and (length > 0):
             tempbuf = self.usb_dev.read(self.out_ep,
                                         self.readbuffer_chunksize,
                                         self.index-1,
                                         self.usb_read_timeout)
             length = len(tempbuf)
+            # the received buffer contains at least one useful databyte
+            # (first 2 bytes in each packet represent the current modem status)
             if length > 2:
                 if self.latency_threshold:
                     self.latency_count = 0
                     if self.latency != self.latency_min:
                         self.set_latency_timer(self.latency_min)
                         self.latency = self.latency_min
-                # skip FTDI status bytes.
+                # skip the status bytes
                 chunks = (length+packet_size-1) // packet_size
                 count = packet_size - 2
                 self.readbuffer = array.array('B')
@@ -507,7 +508,8 @@ class Ftdi(object):
                     srcoff += packet_size
                 length = len(self.readbuffer)
             else:
-                # clear out the modem status bytes
+                # received buffer only contains the modem status bytes
+                # clear them out
                 self.readbuffer = array.array('B')
                 self.readoffset = 0
                 if self.latency_threshold:
@@ -524,11 +526,12 @@ class Ftdi(object):
                     data += self.readbuffer[self.readoffset: \
                                             self.readoffset+length]
                     self.readoffset += length
-                    # Did we read exactly the right amount of bytes?
+                    # did we read exactly the right amount of bytes?
                     if len(data) == size:
                         return data.tostring()
                 else:
-                    # only copy part of the data or size<=readbuffer_chunksize
+                    # partial copy, not enough bytes in the local cache to
+                    # fulfill the request
                     part_size = min(size-len(data), 
                                     len(self.readbuffer)-self.readoffset)
                     if part_size < 0:
@@ -538,7 +541,7 @@ class Ftdi(object):
                     self.readoffset += part_size
                     return data.tostring()
         # never reached
-        raise AssertionError("Never reached")
+        raise FtdiError("Internal error")
 
     def set_dynamic_latency(self, lmin, lmax, threshold):
         """Set up or disable latency values"""
@@ -612,6 +615,7 @@ class Ftdi(object):
             cls.LOCK.release()
             
     def _set_interface(self, interface):
+        """Select the interface to use on the FTDI device"""
         if interface == 0:
             interface = 1
         if interface not in xrange(1, 5):
@@ -622,7 +626,7 @@ class Ftdi(object):
         self.out_ep = 0x80 + self.in_ep - 1
         
     def _reset_device(self):
-        """Resets the ftdi device"""
+        """Reset the ftdi device"""
         if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
                                       Ftdi.SIO_RESET_REQUEST, 
                                       Ftdi.SIO_RESET_SIO,
@@ -634,6 +638,7 @@ class Ftdi(object):
         self.readbuffer = array.array('B')
 
     def _get_max_packet_size(self):
+        """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
             raise AssertionError("Device is not yet known")
         if self.type in ('ft2232h', 'ft4232h'):
@@ -649,6 +654,8 @@ class Ftdi(object):
         return packet_size
 
     def _convert_baudrate(self, baudrate):
+        """Convert a requested baudrate into the closest possible baudrate
+           that can be assigned to the FTDI device"""
         am_adjust_up = [0, 0, 0, 1, 0, 3, 2, 1]
         am_adjust_dn = [0, 0, 0, 1, 0, 1, 2, 3]
         frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
