@@ -188,8 +188,7 @@ class Ftdi(object):
         self.usb_write_timeout = 5000
         self.baudrate = -1
         self.readbuffer = array.array('B')
-        self.readbuffer_offset = 0
-        self.readbuffer_remaining = 0
+        self.readoffset = 0
         self.readbuffer_chunksize = 4096
         self.writebuffer_chunksize = 4096
         self.max_packet_size = 0
@@ -255,7 +254,7 @@ class Ftdi(object):
             raise FtdiError('Unable to set baudrate')
         # Invalidate data in the readbuffer
         ftdi.readbuffer_offset = 0
-        ftdi.readbuffer_remaining = 0
+        ftdi.readbuffer = array.array('B')
 
     def purge_tx_buffer(self):
         """Clears the write buffer on the chip."""
@@ -282,8 +281,8 @@ class Ftdi(object):
     def read_data_set_chunksize(self, chunksize):
         """Configure read buffer chunk size."""
         # Invalidate all remaining data
-        self.readbuffer_offset = 0
-        self.readbuffer_remaining = 0
+        self.readoffset = 0
+        self.readbuffer = array.array('B')
         import sys
         if sys.platform == 'linux':
             if chunksize > 16384:
@@ -454,13 +453,13 @@ class Ftdi(object):
             write_size = self.writebuffer_chunksize
             if offset + write_size > size:
                 write_size = size - offset
-            actual_length = self.usb_dev.write(self.in_ep, 
-                                               data[offset:offset+write_size], 
-                                               self.index-1, 
-                                               self.usb_write_timeout)
-            if actual_length <= 0:
+            length = self.usb_dev.write(self.in_ep, 
+                                        data[offset:offset+write_size], 
+                                        self.index-1, 
+                                        self.usb_write_timeout)
+            if length <= 0:
                 raise FtdiError("Usb bulk write error")
-            offset += actual_length
+            offset += length
         return offset
 
     def read_data(self, size):
@@ -470,64 +469,47 @@ class Ftdi(object):
         # Packet size sanity check (avoid division by zero)
         if not self.max_packet_size:
             raise AssertionError("max_packet_size is bogus")
-        offset = 0
         packet_size = self.max_packet_size
-        actual_length = 1
+        length = 1 # initial condition to enter the usb_read loop
         data = array.array('B')
         # everything we want is still in the readbuffer?
-        if size <= self.readbuffer_remaining:
-            data = self.readbuffer[self.readbuffer_offset:\
-                                   self.readbuffer_offset+size]
-            # Fix offsets
-            self.readbuffer_remaining -= size
-            self.readbuffer_offset += size
+        if size <= len(self.readbuffer)-self.readoffset:
+            data = self.readbuffer[self.readoffset:self.readoffset+size]
+            # Fix offset
+            self.readoffset += size
             return data.tostring()
         # something still in the readbuffer, but not enough to satisfy 'size'?
-        if self.readbuffer_remaining != 0:
-            data[:] = self.readbuffer[self.readbuffer_offset:\
-                                      self.readbuffer_offset + \
-                                      self.readbuffer_remaining]
-            # Fix offset
-            offset += self.readbuffer_remaining
-        # do the actual USB read
-        while (offset < size) and (actual_length > 0):
-            self.readbuffer_remaining = 0
-            self.readbuffer_offset = 0
-            self.readbuffer = self.usb_dev.read(self.out_ep,
-                                                self.readbuffer_chunksize,
-                                                self.index-1,
-                                                self.usb_read_timeout)
-            actual_length = len(self.readbuffer)
-            if actual_length > 2:
+        if len(self.readbuffer)-self.readoffset != 0:
+            data = self.readbuffer[self.readoffset:]
+            # end of readbuffer reached
+            self.readoffset = len(self.readbuffer)
+        # Read from USB as local cache is empty
+        while (len(data) < size) and (length > 0):
+            tempbuf = self.usb_dev.read(self.out_ep,
+                                        self.readbuffer_chunksize,
+                                        self.index-1,
+                                        self.usb_read_timeout)
+            length = len(tempbuf)
+            if length > 2:
                 if self.latency_threshold:
                     self.latency_count = 0
                     if self.latency != self.latency_min:
                         self.set_latency_timer(self.latency_min)
                         self.latency = self.latency_min
                 # skip FTDI status bytes.
-                # Maybe stored in the future to enable modem use
-                num_of_chunks = actual_length // packet_size
-                chunk_remains = actual_length % packet_size
-                self.readbuffer_offset += 2
-                actual_length -= 2
+                chunks = (length+packet_size-1) // packet_size
                 count = packet_size - 2
-                if actual_length > packet_size - 2:
-                    for i in xrange(1, num_of_chunks+1):
-                        dstoff = self.readbuffer_offset + count * i
-                        srcoff = self.readbuffer_offset + packet_size * i
-                        self.readbuffer[dstoff:dstoff+count] = \
-                            self.readbuffer[srcoff:srcoff+count]
-                    if chunk_remains > 2:
-                        i = num_of_chunks+1
-                        count = chunk_remains-2
-                        dstoff = self.readbuffer_offset + count * i
-                        srcoff = self.readbuffer_offset + packet_size * i
-                        self.readbuffer[dstoff:dstoff+count] = \
-                            self.readbuffer[srcoff:srcoff+count]
-                        actual_length -= 2*num_of_chunks
-                    else:
-                        actual_length -= 2*(num_of_chunks-1)+chunk_remains
-            elif actual_length <= 2:
+                self.readbuffer = array.array('B')
+                self.readoffset = 0
+                srcoff = 2
+                for i in xrange(chunks):
+                    self.readbuffer += tempbuf[srcoff:srcoff+count]
+                    srcoff += packet_size
+                length = len(self.readbuffer)
+            else:
+                # clear out the modem status bytes
+                self.readbuffer = array.array('B')
+                self.readoffset = 0
                 if self.latency_threshold:
                     self.latency_count += 1
                     if self.latency != self.latency_max:
@@ -536,25 +518,24 @@ class Ftdi(object):
                             self.latency = self.latency_max
                 # no more data to read?
                 return data.tostring()
-            if actual_length > 0:
+            if length > 0:
                 # data still fits in buf?
-                if offset+actual_length <= size:
-                    data[offset:offset+actual_length] = \
-                        self.readbuffer[self.readbuffer_offset:\
-                                        self.readbuffer_offset+actual_length]
-                    offset += actual_length
+                if (len(data) + length) <= size:
+                    data += self.readbuffer[self.readoffset: \
+                                            self.readoffset+length]
+                    self.readoffset += length
                     # Did we read exactly the right amount of bytes?
-                    if offset == size:
+                    if len(data) == size:
                         return data.tostring()
                 else:
                     # only copy part of the data or size<=readbuffer_chunksize
-                    part_size = size-offset
-                    data[offset:offset+part_size] = \
-                        self.readbuffer[self.readbuffer_offset:\
-                                        self.readbuffer_offset+part_size]
-                    self.readbuffer_offset += part_size
-                    self.readbuffer_remaining = actual_length-part_size
-                    offset += part_size
+                    part_size = min(size-len(data), 
+                                    len(self.readbuffer)-self.readoffset)
+                    if part_size < 0:
+                        raise AssertionError("Internal Error")
+                    data += self.readbuffer[self.readoffset:\
+                                            self.readoffset+part_size]
+                    self.readoffset += part_size
                     return data.tostring()
         # never reached
         raise AssertionError("Never reached")
@@ -649,8 +630,8 @@ class Ftdi(object):
                                       self.usb_write_timeout):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
-        self.readbuffer_offset = 0
-        self.readbuffer_remaining = 0
+        self.readoffset = 0
+        self.readbuffer = array.array('B')
 
     def _get_max_packet_size(self):
         if not self.usb_dev:
