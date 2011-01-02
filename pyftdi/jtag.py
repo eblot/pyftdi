@@ -4,7 +4,6 @@ from pyftdi import Ftdi
 from util.bits import BitSequence
 from util.misc import hexline
 
-
 __all__ = ['JtagEngine']
 
 
@@ -317,7 +316,7 @@ class JtagController(object):
 
 class JtagEngine(object):
     """High-level JTAG engine controller"""
-    
+
     def __init__(self, logger):
         self.log = logger
         self._ctrl = JtagController(logger)
