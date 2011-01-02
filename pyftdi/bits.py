@@ -1,7 +1,7 @@
 """Bit field and sequence management"""
 
 from numbers import Integral
-from util import xor
+from util.misc import xor
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitError', 'BitField']
 
