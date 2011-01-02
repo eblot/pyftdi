@@ -3,9 +3,10 @@ import os
 import select
 import socket
 import sys
-from util.misc import hexdump
+from pyftdi.misc import hexdump
 
 __all__ = ['SerialSocket']
+
 
 class SerialSocket:
     """Fake serial port redirected to a Unix socket.

@@ -1,7 +1,7 @@
 import re
 import time
 from pyftdi import Ftdi, FtdiError
-from util.misc import to_int
+from pyftdi.misc import to_int
 
 
 class SerialFtdi:

@@ -5,8 +5,8 @@ import os
 import sys
 import time
 import threading
-from util.misc import to_int
-from util.term import getkey
+from pyftdi.misc import to_int
+from term import getkey
 
 class MiniTerm(object):
     """A mini serial terminal to demonstrate pyserial extensions"""

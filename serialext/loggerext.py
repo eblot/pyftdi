@@ -1,7 +1,8 @@
 import sys
-from util.misc import hexdump
+from pyftdi.misc import hexdump
 
 __all__ = ['SerialLoggerPort']
+
 
 class SerialLoggerPort(object):
     """Serial port implementation to log input/output data to a log file"""

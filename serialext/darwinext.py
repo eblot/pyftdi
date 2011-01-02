@@ -3,6 +3,7 @@ import serial
 
 __all__ = ['SerialDarwin']
 
+
 class SerialDarwin:
     """Serial port implementation dedicated to the Darwin kernel (Mac OS X)
        It allows to circumvent the POSIX/termios current limitation of the

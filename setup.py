@@ -12,7 +12,7 @@ def _read(fname):
 
 setup(
     name='pyftdi',
-    version='0.1.2',
+    version='0.2.1',
     description='FTDI device driver',
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
