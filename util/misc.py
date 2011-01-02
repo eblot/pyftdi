@@ -47,7 +47,7 @@ def to_int(value):
         value *= mo.group(2) and mult[mo.group(2).lower()] or 1
         return value
     return int(value.strip(), value.startswith('0x') and 16 or 10)
-    
+
 def to_bool(value, permissive=True, allow_int=False):
     """Parse a string and convert it into a boolean value"""
     if value is None:

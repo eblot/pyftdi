@@ -3,16 +3,16 @@ import sys
 
 __all__ = ['SerialExpander']
 
+
 class SerialExpanderError(Exception):
     """Raised when the expander is in trouble"""
     pass
-    
+
 
 class SerialExpander(object):
     """Provides extension classes compatible with PySerial module"
-    Create a class on request, to prevent useless dependency on 
-    non-standard PySerial module
-    """
+       Create a class on request, to prevent useless dependency on
+       non-standard PySerial module"""
 
     @staticmethod
     def serialclass(device, use_logger=False):
@@ -53,10 +53,10 @@ class SerialExpander(object):
                         if b > 230400:
                             del serial.baudrate_constants[b]
                     from darwinext import SerialDarwin
-                    type_ = type('SerialDarwin', (serial.Serial,), 
+                    type_ = type('SerialDarwin', (serial.Serial,),
                                  dict(SerialDarwin.__dict__))
         if use_logger:
             from loggerext import SerialLoggerPort
-            type_ = type('SerialLoggerPort', (type_,), 
+            type_ = type('SerialLoggerPort', (type_,),
                          dict(SerialLoggerPort.__dict__))
         return (type_, backend)

@@ -6,6 +6,7 @@ import sys
 _INIT = False
 
 def _init_term(fullterm):
+    """Internal terminal initialization function"""
     if os.name == 'nt':
         import msvcrt
         return True
@@ -24,19 +25,20 @@ def _init_term(fullterm):
         def cleanup_console():
             termios.tcsetattr(fd, termios.TCSAFLUSH, old)
             # terminal modes have to be restored on exit...
-        sys.exitfunc = cleanup_console 
+        sys.exitfunc = cleanup_console
         return True
     else:
         return True
 
 def getkey(fullterm=False):
+    """Return a key from the current console, in a platform independent way"""
     # there's probably a better way to initialize the module without going
     # relying onto a singleton pattern. To be fixed
     global _INIT
     if not _INIT:
         _INIT = _init_term(fullterm)
     if os.name == 'nt':
-        # w/ py2exe, it seems the importation fails to define the global 
+        # w/ py2exe, it seems the importation fails to define the global
         # symbol 'msvcrt', to be fixed
         import msvcrt
         while 1:
@@ -58,7 +60,7 @@ def getkey(fullterm=False):
         return None
 
 def is_term():
-    """Tells whether the current stdout/stderr stream are connected to a 
+    """Tells whether the current stdout/stderr stream are connected to a
     terminal (vs. a regular file or pipe)"""
     return sys.stdout.isatty()
 

@@ -5,14 +5,14 @@ __all__ = ['SerialLoggerPort']
 
 class SerialLoggerPort(object):
     """Serial port implementation to log input/output data to a log file"""
-    
+
     def __init__(self, **kwargs):
         self._logger = None
         if 'logger' in kwargs:
             self.set_logger(kwargs['logger'])
             del kwargs['logger']
         super(self.__class__, self).__init__(**kwargs)
-        
+
     def _log_read(self, data):
         if not self._logger:
             return
@@ -28,7 +28,7 @@ class SerialLoggerPort(object):
             print >>self._logger, "WRITE:\n%s" % hexdump(data)
         except:
             print >>sys.stderr, 'Cannot log written data'
-            
+
     def _log_flush(self, type_):
         if not self._logger:
             return
@@ -56,7 +56,7 @@ class SerialLoggerPort(object):
         data = super(self.__class__, self).read(size)
         self._log_read(data)
         return data
-        
+
     def write(self, data):
         super(self.__class__, self).write(data)
         if len(data):

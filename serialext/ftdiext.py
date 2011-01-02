@@ -22,12 +22,12 @@ class SerialFtdi:
         BYTESIZES = { 7 : Ftdi.BITS_7,
                       8 : Ftdi.BITS_8 }
         PARITIES  = { 'N' : Ftdi.PARITY_NONE,
-                      'O' : Ftdi.PARITY_ODD, 
-                      'E' : Ftdi.PARITY_EVEN, 
-                      'M' : Ftdi.PARITY_MARK, 
+                      'O' : Ftdi.PARITY_ODD,
+                      'E' : Ftdi.PARITY_EVEN,
+                      'M' : Ftdi.PARITY_MARK,
                       'S' : Ftdi.PARITY_SPACE }
-        STOPBITS  = { 1 : Ftdi.STOP_BIT_1, 
-                      1.5 : Ftdi.STOP_BIT_15, 
+        STOPBITS  = { 1 : Ftdi.STOP_BIT_1,
+                      1.5 : Ftdi.STOP_BIT_15,
                       2 : Ftdi.STOP_BIT_2 }
         if self._parity not in PARITIES:
             raise serial.SerialException("Unsupported parity")
@@ -37,8 +37,8 @@ class SerialFtdi:
             raise serial.SerialException("Unsupported stop bits")
         try:
             self.ftdi.set_baudrate(self._baudrate)
-            self.ftdi.set_line_property(BYTESIZES[self._bytesize], 
-                                        STOPBITS[self._stopbits], 
+            self.ftdi.set_line_property(BYTESIZES[self._bytesize],
+                                        STOPBITS[self._stopbits],
                                         PARITIES[self._parity])
             if self._rtscts:
                 self.ftdi.set_flowctrl(Ftdi.SIO_RTS_CTS_HS)
@@ -54,7 +54,7 @@ class SerialFtdi:
         except FtdiError, e:
             err = self.ftdi.get_error_string()
             raise serial.SerialException("%s (%s)" % str(e), err)
-    
+
     @property
     def fifoSizes(self):
         """Return the (TX, RX) tupple of hardware FIFO sizes"""
@@ -63,14 +63,14 @@ class SerialFtdi:
             # the following values may not be the right ones...
             fifo_sizes = { 0x6001: (128,  256),   # TX: 128, RX: 256
                            0x6010: (4096, 4096),  # TX: 4KB, RX: 4KB
-                           0x6011: (2048, 2048) } # TX: 2KB, RX: 2KB 
+                           0x6011: (2048, 2048) } # TX: 2KB, RX: 2KB
             return fifo_sizes[self._product]
         except KeyError:
             return (128, 128) # unknown product
-    
+
     def makeDeviceName(self, port):
         return port
-    
+
     def open(self):
         import serial
         if self._port is None:
@@ -98,12 +98,12 @@ class SerialFtdi:
         self._isOpen = True
         self._reconfigurePort()
         self._product = product
-        
+
     def close(self):
         self._isOpen = False
         self.ftdi.close()
         self.ftdi = None
-        
+
     def inWaiting(self):
         """Return the number of characters currently in the input buffer."""
         try:
@@ -159,11 +159,11 @@ class SerialFtdi:
     def setRTS(self,on=1):
         """Set terminal status line: Request To Send"""
         self.ftdi.set_rts(on)
-        
+
     def setDTR(self,on=1):
         """Set terminal status line: Data Terminal Ready"""
         self.ftdi.set_dtr(on)
-        
+
     def getCTS(self):
         """Read terminal status line: Clear To Send"""
         status = self.ftdi.poll_modem_status()

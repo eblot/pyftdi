@@ -14,10 +14,10 @@ class SerialSocket:
 
     def _reconfigurePort(self):
         pass
-        
+
     def makeDeviceName(self, port):
         return port
-    
+
     def open(self):
         if self._port is None:
             import serial
@@ -36,7 +36,7 @@ class SerialSocket:
     def close(self):
         if self.sock:
             self.sock.close()
-        
+
     def inWaiting(self):
         """Return the number of characters currently in the input buffer."""
         return 0
@@ -45,7 +45,7 @@ class SerialSocket:
         """Read size bytes from the serial port. If a timeout is set it may
            return less characters as requested. With no timeout it will block
            until the requested number of bytes is read."""
-        if self.sock is None: 
+        if self.sock is None:
             import serial
             raise serial.portNotOpenError
         read = ''
@@ -63,14 +63,14 @@ class SerialSocket:
 
     def write(self, data):
         """Output the given string over the serial port."""
-        if self.sock is None: 
+        if self.sock is None:
             raise serial.portNotOpenError
         t = len(data)
         d = data
         while t > 0:
             try:
                 if self._writeTimeout is not None and self._writeTimeout > 0:
-                    _,ready,_ = select.select([],[self.sock],[], 
+                    _,ready,_ = select.select([],[self.sock],[],
                                                   self._writeTimeout)
                     if not ready:
                         raise serial.writeTimeoutError
@@ -78,7 +78,7 @@ class SerialSocket:
                 if self._dump:
                     print hexdump(d[:n])
                 if self._writeTimeout is not None and self._writeTimeout > 0:
-                    _,ready,_ = select.select([],[self.sock],[], 
+                    _,ready,_ = select.select([],[self.sock],[],
                                               self._writeTimeout)
                     if not ready:
                         raise serial.writeTimeoutError
@@ -109,11 +109,11 @@ class SerialSocket:
     def setRTS(self,on=1):
         """Set terminal status line: Request To Send"""
         pass
-        
+
     def setDTR(self,on=1):
         """Set terminal status line: Data Terminal Ready"""
         pass
-        
+
     def getCTS(self):
         """Read terminal status line: Clear To Send"""
         return True

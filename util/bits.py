@@ -5,7 +5,7 @@ from util import xor
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitError', 'BitField']
 
-# Hints for PyLint: 
+# Hints for PyLint:
 #   use map(), use short variable names
 #pylint: disable-msg=W0141
 #pylint: disable-msg=C0103
@@ -18,7 +18,7 @@ class BitError(Exception):
 
 class BitSequence(object):
     """Bit sequence manipulation"""
-    
+
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
         self._seq = []
         if value and bytes_:
@@ -50,7 +50,7 @@ class BitSequence(object):
         else:
             raise BitError("Cannot initialize from a %s" % type(value))
         self._update_length(length, msb)
-    
+
     @staticmethod
     def _tomutable(value):
         """Convert a immutable sequence into a mutable one"""
@@ -76,7 +76,7 @@ class BitSequence(object):
             l -= 1
         if msb:
             self._seq.reverse()
-    
+
     def _init_from_sequence(self, value, msb):
         """Initialize from a Python sequence"""
         pos = msb and -1 or 0
@@ -88,15 +88,15 @@ class BitSequence(object):
             except KeyError:
                 print value
                 raise BitError("Invalid binary character: '%s'" % bit)
-    
+
     def _init_from_sibling(self, value, msb):
         """Initialize from a fellow object"""
         self._seq = value.sequence()
         if msb:
             self._seq.reverse()
-        
+
     def _update_length(self, length, msb):
-        """If a specific length is specified, extend the sequence as 
+        """If a specific length is specified, extend the sequence as
            expected"""
         if length and (len(self) < length):
             extra = [False] * (length-len(self))
@@ -113,29 +113,29 @@ class BitSequence(object):
         """In-place reverse"""
         self._seq.reverse()
         return self
-        
+
     def invert(self):
         """In-place invert sequence values"""
         self._seq = [not x for x in self._seq]
         return self
-        
+
     def append(self, seq):
         """Concatenate a new BitSequence"""
         if not isinstance(seq, BitSequence):
             seq = BitSequence(seq)
         self._seq.extend(seq.sequence())
         return self
-    
+
     def lsr(self, count):
         "Left shift rotate"
         count %= len(self)
         self._seq[:] = self._seq[count:] + self._seq[:count]
-        
+
     def rsr(self, count):
         "Right shift rotate"
         count %= len(self)
         self._seq[:] = self._seq[-count:] + self._seq[:-count]
-        
+
     def tobit(self):
         """Degenerate the sequence into a single bit, if possible"""
         if len(self) != 1:
@@ -184,7 +184,7 @@ class BitSequence(object):
             return self.__class__(value=self._seq[index])
         else:
             return self._seq[index]
-    
+
     def __setitem__(self, index, value):
         if not isinstance(value, BitSequence):
             value = self.__class__(value)
@@ -204,7 +204,7 @@ class BitSequence(object):
 
     def __len__(self):
         return len(self._seq)
-    
+
     def __cmp__(self, other):
         # the bit sequence should be of the same length
         ld = len(self) - len(other)
@@ -217,8 +217,8 @@ class BitSequence(object):
 
     def __repr__(self):
         # cannot use bin() as it truncates the MSB zero bits
-        return ''.join([b and '1' or '0' for b in reversed(self._seq)]) 
-    
+        return ''.join([b and '1' or '0' for b in reversed(self._seq)])
+
     def __str__(self):
         chunks = []
         srepr = repr(self)
@@ -229,11 +229,11 @@ class BitSequence(object):
             else:
                 j = None
             chunks.append(srepr[-i-8:j])
-        return '%d: %s' % (len(self), ' '.join(reversed(chunks))) 
-    
+        return '%d: %s' % (len(self), ' '.join(reversed(chunks)))
+
     def __int__(self):
         return int(long(self))
-    
+
     def __long__(self):
         value = 0
         for b in reversed(self._seq):
@@ -246,7 +246,7 @@ class BitSequence(object):
             raise BitError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitError('Sequences must be the same size')
-        return self.__class__(value=map(lambda x, y: x and y, 
+        return self.__class__(value=map(lambda x, y: x and y,
                                         self._seq, other.sequence()))
 
     def __or__(self, other):
@@ -254,9 +254,9 @@ class BitSequence(object):
             raise BitError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitError('Sequences must be the same size')
-        return self.__class__(value=map(lambda x, y: x or y, 
+        return self.__class__(value=map(lambda x, y: x or y,
                                         self._seq, other.sequence()))
-    
+
     def __add__(self, other):
         return self.__class__(value = self._seq + other.sequence())
 
@@ -370,7 +370,7 @@ class BitField(object):
        Beware the slices does not behave as regular Python slices:
        bitfield[3:5] means b3..b5, NOT b3..b4 as with regular slices
     """
-    
+
     def __init__(self, value=0):
         self._val = value
 
@@ -387,7 +387,7 @@ class BitField(object):
             mask = (1<<count)-1
             return (self._val >> offset) & mask
         else:
-            return (self._val >> index) & 1 
+            return (self._val >> index) & 1
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):

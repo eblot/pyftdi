@@ -177,11 +177,11 @@ def main():
         sys.exit(2)
 
 # pip install virtualenv
-# virtualenv ve
+# virtualenv pyusb100a0
 # ve/bin/python pip install pyserial
-# cd .../pyusb-1.0.0-a0 && .../ve/bin/python setup.py install
+# cd .../pyusb-1.0.0-a0 && .../pyusb100a0/bin/python setup.py install
 # DYLD_LIBRARY_PATH=/usr/local/homebrew/lib PYTHONPATH=. 
-#   ve/bin/python serialext/tests/pyterm.py -p ftdi://ftdi:ft4232/3 -d
+#   pyusb100a0/bin/python serialext/tests/pyterm.py -p ftdi://ftdi:ft4232/3
 
 if __name__ == '__main__':
     main()
