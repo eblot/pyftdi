@@ -729,14 +729,3 @@ class Ftdi(object):
         if hispeed:
             index |= 1<<9 # use hispeed mode
         return (best_baud, value, index)
-
-
-# --- to be removed ---------------
-VENDOR_IDS = { 'ftdi': 0x0403 }
-PRODUCT_IDS = { '232':  0x6001,
-                '2232': 0x6010,
-                '4232': 0x6011,
-                'ft232': 0x6001,
-                'ft2232': 0x6010,
-                'ft4232': 0x6011 }
-#----------------------------------
