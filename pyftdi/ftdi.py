@@ -124,7 +124,7 @@ class Ftdi(object):
 
     # Requests 
     SIO_RESET = 0              # Reset the port
-    SIO_MODEM_CTRL = 1         # Set the modem control register
+    SIO_SET_MODEM_CTRL = 1     # Set the modem control register
     SIO_SET_FLOW_CTRL = 2      # Set flow control register
     SIO_SET_BAUDRATE = 3       # Set baud rate
     SIO_SET_DATA = 4           # Set the data characteristics of the port
@@ -354,8 +354,9 @@ class Ftdi(object):
 
     def set_flowctrl(self, flowctrl):
         """Set flowcontrol for ftdi chip"""
+        value = flowctrl | self.index
         try:
-            if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
+            if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_FLOW_CTRL, 0,
                                           value, '', self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
