@@ -347,9 +347,9 @@ class Ftdi(object):
            - B6       Transmitter empty (TEMT)
            - B7       Error in RCVR FIFO"""
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
-        if not usb_val or len(usb_val) != 2:
+        if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
-        status, = struct.unpack('<H', usb_val)
+        status, = struct.unpack('<H', value)
         return status
 
     def set_flowctrl(self, flowctrl):
