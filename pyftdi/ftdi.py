@@ -25,12 +25,12 @@ class Ftdi(object):
     
     # Shifting commands IN MPSSE Mode
     MPSSE_WRITE_NEG = 0x01 # Write TDI/DO on negative TCK/SK edge
-    MPSSE_BITMODE = 0x02 # Write bits, not bytes 
-    MPSSE_READ_NEG = 0x04 # Sample TDO/DI on negative TCK/SK edge 
-    MPSSE_LSB = 0x08 # LSB first 
-    MPSSE_DO_WRITE = 0x10 # Write TDI/DO 
-    MPSSE_DO_READ = 0x20 # Read TDO/DI 
-    MPSSE_WRITE_TMS = 0x40 # Write TMS/CS 
+    MPSSE_BITMODE = 0x02   # Write bits, not bytes
+    MPSSE_READ_NEG = 0x04  # Sample TDO/DI on negative TCK/SK edge
+    MPSSE_LSB = 0x08       # LSB first
+    MPSSE_DO_WRITE = 0x10  # Write TDI/DO
+    MPSSE_DO_READ = 0x20   # Read TDO/DI
+    MPSSE_WRITE_TMS = 0x40 # Write TMS/CS
 
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
@@ -84,22 +84,22 @@ class Ftdi(object):
     MODEM_RCVE = (1 << 15)  # Error in RCVR FIFO
     
     # FTDI MPSSE commands 
-    SET_BITS_LOW = 0x80
-    SET_BITS_HIGH = 0x82
-    GET_BITS_LOW = 0x81
-    GET_BITS_HIGH = 0x83
-    LOOPBACK_START = 0x84
-    LOOPBACK_END = 0x85
+    SET_BITS_LOW = 0x80     # Change LSB GPIO output
+    SET_BITS_HIGH = 0x82    # Change MSB GPIO output
+    GET_BITS_LOW = 0x81     # Get LSB GPIO output
+    GET_BITS_HIGH = 0x83    # Get MSB GPIO output
+    LOOPBACK_START = 0x84   # Enable loopback
+    LOOPBACK_END = 0x85     # Disable loopback
     TCK_DIVISOR = 0x86
 
-    BITMODE_RESET = 0x00   # switch off bitbang mode
-    BITMODE_BITBANG = 0x01 # classical asynchronous bitbang mode
-    BITMODE_MPSSE = 0x02   # MPSSE mode, available on 2232x chips
-    BITMODE_SYNCBB = 0x04  # synchronous bitbang mode
-    BITMODE_MCU = 0x08     # MCU Host Bus Emulation mode,
-    BITMODE_OPTO = 0x10    # Fast Opto-Isolated Serial Interface Mode
-    BITMODE_CBUS = 0x20    # Bitbang on CBUS pins of R-type chips
-    BITMODE_SYNCFF = 0x40  # Single Channel Synchronous FIFO mode
+    BITMODE_RESET = 0x00    # switch off bitbang mode
+    BITMODE_BITBANG = 0x01  # classical asynchronous bitbang mode
+    BITMODE_MPSSE = 0x02    # MPSSE mode, available on 2232x chips
+    BITMODE_SYNCBB = 0x04   # synchronous bitbang mode
+    BITMODE_MCU = 0x08      # MCU Host Bus Emulation mode,
+    BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
+    BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
+    BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
 
     # Commands in MPSSE and Host Emulation Mode 
     SEND_IMMEDIATE = 0x87
@@ -112,41 +112,40 @@ class Ftdi(object):
     WRITE_SHORT = 0x92
     WRITE_EXTENDED = 0x93
 
-    # Definitions for flow control 
-    SIO_RESET = 0 # Reset the port 
-    SIO_MODEM_CTRL = 1 # Set the modem control register 
-    SIO_SET_FLOW_CTRL = 2 # Set flow control register 
-    SIO_SET_BAUD_RATE = 3 # Set baud rate 
-    SIO_SET_DATA = 4 # Set the data characteristics of the port 
-
     # USB control requests
-    DEV_OUT_REQTYPE = (usb.util.CTRL_TYPE_VENDOR << 5) | \
-                       usb.util.CTRL_RECIPIENT_DEVICE | \
-                       usb.util.CTRL_OUT
-    DEV_IN_REQTYPE = (usb.util.CTRL_TYPE_VENDOR << 5) | \
-                      usb.util.CTRL_RECIPIENT_DEVICE | \
-                      usb.util.CTRL_IN
+    REQ_OUT = usb.util.build_request_type(
+                  usb.util.CTRL_OUT,
+                  usb.util.CTRL_TYPE_VENDOR,
+                  usb.util.CTRL_RECIPIENT_DEVICE)
+    REQ_IN = usb.util.build_request_type(
+                  usb.util.CTRL_IN,
+                  usb.util.CTRL_TYPE_VENDOR,
+                  usb.util.CTRL_RECIPIENT_DEVICE)
 
     # Requests 
-    SIO_RESET_REQUEST = SIO_RESET
-    SIO_SET_BAUDRATE_REQUEST = SIO_SET_BAUD_RATE
-    SIO_SET_DATA_REQUEST = SIO_SET_DATA
-    SIO_SET_FLOW_CTRL_REQUEST = SIO_SET_FLOW_CTRL
-    SIO_SET_MODEM_CTRL_REQUEST = SIO_MODEM_CTRL
-    SIO_POLL_MODEM_STATUS_REQUEST = 0x05
-    SIO_SET_EVENT_CHAR_REQUEST = 0x06
-    SIO_SET_ERROR_CHAR_REQUEST = 0x07
-    SIO_SET_LATENCY_TIMER_REQUEST = 0x09
-    SIO_GET_LATENCY_TIMER_REQUEST = 0x0A
-    SIO_SET_BITMODE_REQUEST = 0x0B
-    SIO_READ_PINS_REQUEST = 0x0C
-    SIO_READ_EEPROM_REQUEST = 0x90
-    SIO_WRITE_EEPROM_REQUEST = 0x91
-    SIO_ERASE_EEPROM_REQUEST = 0x92
+    SIO_RESET = 0              # Reset the port
+    SIO_MODEM_CTRL = 1         # Set the modem control register
+    SIO_SET_FLOW_CTRL = 2      # Set flow control register
+    SIO_SET_BAUDRATE = 3       # Set baud rate
+    SIO_SET_DATA = 4           # Set the data characteristics of the port
+    SIO_POLL_MODEM_STATUS = 5  # Get line status
+    SIO_SET_EVENT_CHAR = 6     # Change event character
+    SIO_SET_ERROR_CHAR = 7     # Change error character
+    SIO_SET_LATENCY_TIMER = 9  # Change latency timer
+    SIO_GET_LATENCY_TIMER = 10 # Get latency timer
+    SIO_SET_BITMODE = 11       # Change bit mode
+    SIO_READ_PINS = 12         # Read GPIO pin value
 
-    SIO_RESET_SIO = 0
-    SIO_RESET_PURGE_RX = 1
-    SIO_RESET_PURGE_TX = 2
+    # Eeprom requests
+    SIO_EEPROM = 0x90
+    SIO_READ_EEPROM = SIO_EEPROM + 0   # Read EEPROM content
+    SIO_WRITE_EEPROM = SIO_EEPROM + 1  # Write EEPROM content
+    SIO_ERASE_EEPROM = SIO_EEPROM + 2  # Erase EEPROM content
+
+    # Reset commands
+    SIO_RESET_SIO = 0          # Reset device
+    SIO_RESET_PURGE_RX = 1     # Drain RX buffer
+    SIO_RESET_PURGE_TX = 2     # Drain TX buffer
 
     # Flow control
     SIO_DISABLE_FLOW_CTRL = 0x0
@@ -154,11 +153,11 @@ class Ftdi(object):
     SIO_DTR_DSR_HS = (0x2 << 8)
     SIO_XON_XOFF_HS = (0x4 << 8)
     SIO_SET_DTR_MASK = 0x1
-    SIO_SET_DTR_HIGH = ( 1 | ( SIO_SET_DTR_MASK  << 8))
-    SIO_SET_DTR_LOW = ( 0 | ( SIO_SET_DTR_MASK  << 8))
+    SIO_SET_DTR_HIGH = (SIO_SET_DTR_MASK | (SIO_SET_DTR_MASK << 8))
+    SIO_SET_DTR_LOW = (0x0 | (SIO_SET_DTR_MASK << 8))
     SIO_SET_RTS_MASK = 0x2
-    SIO_SET_RTS_HIGH = ( 2 | ( SIO_SET_RTS_MASK << 8 ))
-    SIO_SET_RTS_LOW = ( 0 | ( SIO_SET_RTS_MASK << 8 ))
+    SIO_SET_RTS_HIGH = (SIO_SET_RTS_MASK | (SIO_SET_RTS_MASK << 8))
+    SIO_SET_RTS_LOW = (0x0 | (SIO_SET_RTS_MASK << 8))
 
     # Parity bits
     PARITY_NONE, PARITY_ODD, PARITY_EVEN, PARITY_MARK, PARITY_SPACE = range(5)
@@ -171,6 +170,7 @@ class Ftdi(object):
 
     BAUDRATE_REF_CLOCK = 3000000 # 3 MHz
     BAUDRATE_TOLERANCE = 3.0 # acceptable clock drift, in %
+    BITBANG_CLOCK_MULTIPLIER = 4
     LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_THRESHOLD = 1000
@@ -189,8 +189,8 @@ class Ftdi(object):
         self.baudrate = -1
         self.readbuffer = array.array('B')
         self.readoffset = 0
-        self.readbuffer_chunksize = 4096
-        self.writebuffer_chunksize = 4096
+        self.readbuffer_chunksize = 4 << 10 # 4KB
+        self.writebuffer_chunksize = 4 << 10 # 4KB
         self.max_packet_size = 0
         self.index = None
         self.in_ep = None
@@ -204,7 +204,7 @@ class Ftdi(object):
     
     # --- Public API -------------------------------------------------------
     
-    def open(self, vendor=0x403, product=0x6011, interface=0):
+    def open(self, vendor=0x403, product=0x6011, interface=1):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = self._get_device(vendor, product)
         self._set_interface(interface)
@@ -234,23 +234,23 @@ class Ftdi(object):
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""
         if self.bitbang_enabled:
-            baudrate *= 4
+            baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if delta > Ftdi.BAUDRATE_TOLERANCE:
             raise AssertionError('Cannot represent baudrate')
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_BAUDRATE_REQUEST, value,
-                                      index, '', self.usb_write_timeout):
-            raise FtdiError('Unable to set baudrate')
-        self.baudrate = baudrate
+        try:
+            if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
+                                          Ftdi.SIO_SET_BAUDRATE, value,
+                                          index, '', self.usb_write_timeout):
+                raise FtdiError('Unable to set baudrate')
+            self.baudrate = baudrate
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
 
     def purge_rx_buffer(self):
         """Clears the read buffer on the chip and the internal read buffer."""
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_RESET_REQUEST, 
-                                      Ftdi.SIO_RESET_PURGE_RX,
-                                      self.index, '', self.usb_write_timeout):
+        if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_RX):
             raise FtdiError('Unable to set baudrate')
         # Invalidate data in the readbuffer
         ftdi.readbuffer_offset = 0
@@ -258,10 +258,7 @@ class Ftdi(object):
 
     def purge_tx_buffer(self):
         """Clears the write buffer on the chip."""
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_RESET_REQUEST, 
-                                      Ftdi.SIO_RESET_PURGE_TX,
-                                      self.index, '', self.usb_write_timeout):
+        if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to set baudrate')
 
     def purge_buffers(self):
@@ -297,21 +294,15 @@ class Ftdi(object):
 
     def set_bitmode(self, bitmask, mode):
         """Enable/disable bitbang modes."""
-        usb_val = bitmask # low byte: bitmask
-        usb_val |= mode << 8
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_BITMODE_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+        value = bitmask | (mode << 8)
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitbang_mode = mode
     
     def read_pins(self):
         """Directly read pin state, circumventing the read buffer. 
            Useful for bitbang mode."""
-        pins = self.usb_dev.ctrl_transfer(Ftdi.DEV_IN_REQTYPE,
-                                          Ftdi.SIO_READ_PINS_REQUEST, 0,
-                                          self.index, 1, 
-                                          self.usb_read_timeout)
+        pins = self._ctrl_transfer_in(Ftdi.SIO_READ_PINS, 1)
         if not pins:
             raise FtdiError('Unable to read pins')
         return pins[0]
@@ -321,20 +312,14 @@ class Ftdi(object):
            The FTDI chip keeps data in the internal buffer for a specific
            amount of time if the buffer is not full yet to decrease
            load on the usb bus."""
-        if not (0 < latency < 256):
+        if not (Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX):
             raise AssertionError("Latency out of range")
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_LATENCY_TIMER_REQUEST, 
-                                      latency,
-                                      self.index, '', self.usb_write_timeout):
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_LATENCY_TIMER, latency):
             raise FtdiError('Unable to latency timer')
 
     def get_latency_timer(self):
         """Get latency timer"""
-        latency = self.usb_dev.ctrl_transfer(Ftdi.DEV_IN_REQTYPE,
-                                             Ftdi.SIO_READ_PINS_REQUEST, 0,
-                                             self.index, 1, 
-                                             self.usb_read_timeout)
+        latency = self._ctrl_transfer_in(Ftdi.SIO_GET_LATENCY_TIMER, 1)
         if not latency:
             raise FtdiError('Unable to get latency')
         return latency[0]
@@ -361,10 +346,7 @@ class Ftdi(object):
            - B5       Transmitter holding register (THRE)
            - B6       Transmitter empty (TEMT)
            - B7       Error in RCVR FIFO"""
-        usb_val = self.usb_dev.ctrl_transfer(Ftdi.DEV_IN_REQTYPE, 
-                                             Ftdi.SIO_POLL_MODEM_STATUS_REQUEST, 
-                                             0, self.index, 2, 
-                                             self.usb_read_timeout)
+        value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not usb_val or len(usb_val) != 2:
             raise FtdiError('Unable to get modem status')
         status, = struct.unpack('<H', usb_val)
@@ -372,95 +354,88 @@ class Ftdi(object):
 
     def set_flowctrl(self, flowctrl):
         """Set flowcontrol for ftdi chip"""
-        usb_val = flowctrl | self.index
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_FLOW_CTRL_REQUEST, 0,
-                                      usb_val, '', self.usb_write_timeout):
-            raise FtdiError('Unable to set flow control')
+        try:
+            if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
+                                          Ftdi.SIO_SET_FLOW_CTRL, 0,
+                                          value, '', self.usb_write_timeout):
+                raise FtdiError('Unable to set flow control')
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
 
     def set_dtr(self, state):
         """Set dtr line"""
-        usb_val = state and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_MODEM_CTRL_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+        value = state and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set DTR line')
 
     def set_rts(self, state):
         """Set rts line"""
-        usb_val = state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_MODEM_CTRL_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+        value = state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set RTS line')
 
     def set_dtr_rts(self, dtr, rts):
-        """Set dtr and rts line in one pass"""
-        usb_val = 0
-        usb_val |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
-        usb_val |= state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_MODEM_CTRL_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+        """Set dtr and rts lines"""
+        value = 0
+        value |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
+        value |= state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_event_char(self, eventch, enable):
         """Set the special event character"""
-        usb_val = eventch
+        value = eventch
         if enable:
-            usb_val |= 1 << 8
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_EVENT_CHAR_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+            value |= 1 << 8
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_EVENT_CHAR, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_error_char(self, errorch, enable):
         """Set error character"""
-        usb_val = errorch
+        value = errorch
         if enable:
-            usb_val |= 1 << 8
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_ERROR_CHAR_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+            value |= 1 << 8
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_line_property(self, bits, stopbits, parity, break_=0):
         """Set (RS232) line characteristics"""
-        usb_val = bits & 0x0F
+        value = bits & 0x0F
         try:
-            usb_val |= { Ftdi.PARITY_NONE : 0x00 << 8,
-                         Ftdi.PARITY_ODD : 0x01 << 8,
-                         Ftdi.PARITY_EVEN : 0x02 << 8, 
-                         Ftdi.PARITY_MARK : 0x03 << 8,
-                         Ftdi.PARITY_SPACE : 0x04 << 8 }[parity]
-            usb_val |= { Ftdi.STOP_BIT_1 : 0x00 << 11,
-                         Ftdi.STOP_BIT_15 : 0x01 << 11,
-                         Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits]
+            value |= { Ftdi.PARITY_NONE : 0x00 << 8,
+                       Ftdi.PARITY_ODD : 0x01 << 8,
+                       Ftdi.PARITY_EVEN : 0x02 << 8,
+                       Ftdi.PARITY_MARK : 0x03 << 8,
+                       Ftdi.PARITY_SPACE : 0x04 << 8 }[parity]
+            value |= { Ftdi.STOP_BIT_1 : 0x00 << 11,
+                       Ftdi.STOP_BIT_15 : 0x01 << 11,
+                       Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits]
             if break_ == Ftdi.BREAK_ON:
-                usb_val |= 0x01 << 14
+                value |= 0x01 << 14
         except KeyError:
             raise AssertionError('Invalid line property')
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_SET_DATA_REQUEST, usb_val,
-                                      self.index, '', self.usb_write_timeout):
+        if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
             raise FtdiError('Unable to set line property')
 
     def write_data(self, data):
         """Writes data in chunks (see write_data_set_chunksize) to the chip"""
         offset = 0
         size = len(data)
-        while offset < size:
-            write_size = self.writebuffer_chunksize
-            if offset + write_size > size:
-                write_size = size - offset
-            length = self.usb_dev.write(self.in_ep, 
-                                        data[offset:offset+write_size], 
-                                        self.index-1, 
-                                        self.usb_write_timeout)
-            if length <= 0:
-                raise FtdiError("Usb bulk write error")
-            offset += length
-        return offset
+        try:
+            while offset < size:
+                write_size = self.writebuffer_chunksize
+                if offset + write_size > size:
+                    write_size = size - offset
+                length = self.usb_dev.write(self.in_ep,
+                                            data[offset:offset+write_size],
+                                            self.index-1,
+                                            self.usb_write_timeout)
+                if length <= 0:
+                    raise FtdiError("Usb bulk write error")
+                offset += length
+            return offset
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
 
     def read_data(self, size):
         """Reads data in chunks (see read_data_set_chunksize) from the chip.
@@ -483,63 +458,66 @@ class Ftdi(object):
             # end of readbuffer reached
             self.readoffset = len(self.readbuffer)
         # read from USB, filling in the local cache as it is empty
-        while (len(data) < size) and (length > 0):
-            tempbuf = self.usb_dev.read(self.out_ep,
-                                        self.readbuffer_chunksize,
-                                        self.index-1,
-                                        self.usb_read_timeout)
-            length = len(tempbuf)
-            # the received buffer contains at least one useful databyte
-            # (first 2 bytes in each packet represent the current modem status)
-            if length > 2:
-                if self.latency_threshold:
-                    self.latency_count = 0
-                    if self.latency != self.latency_min:
-                        self.set_latency_timer(self.latency_min)
-                        self.latency = self.latency_min
-                # skip the status bytes
-                chunks = (length+packet_size-1) // packet_size
-                count = packet_size - 2
-                self.readbuffer = array.array('B')
-                self.readoffset = 0
-                srcoff = 2
-                for i in xrange(chunks):
-                    self.readbuffer += tempbuf[srcoff:srcoff+count]
-                    srcoff += packet_size
-                length = len(self.readbuffer)
-            else:
-                # received buffer only contains the modem status bytes
-                # clear them out
-                self.readbuffer = array.array('B')
-                self.readoffset = 0
-                if self.latency_threshold:
-                    self.latency_count += 1
-                    if self.latency != self.latency_max:
-                        if self.latency_count > self.latency_threshold:
-                            self.set_latency_timer(self.latency_max)
-                            self.latency = self.latency_max
-                # no more data to read?
-                return data.tostring()
-            if length > 0:
-                # data still fits in buf?
-                if (len(data) + length) <= size:
-                    data += self.readbuffer[self.readoffset: \
-                                            self.readoffset+length]
-                    self.readoffset += length
-                    # did we read exactly the right amount of bytes?
-                    if len(data) == size:
-                        return data.tostring()
+        try:
+            while (len(data) < size) and (length > 0):
+                tempbuf = self.usb_dev.read(self.out_ep,
+                                            self.readbuffer_chunksize,
+                                            self.index-1,
+                                            self.usb_read_timeout)
+                length = len(tempbuf)
+                # the received buffer contains at least one useful databyte
+                # (first 2 bytes in each packet represent the current modem status)
+                if length > 2:
+                    if self.latency_threshold:
+                        self.latency_count = 0
+                        if self.latency != self.latency_min:
+                            self.set_latency_timer(self.latency_min)
+                            self.latency = self.latency_min
+                    # skip the status bytes
+                    chunks = (length+packet_size-1) // packet_size
+                    count = packet_size - 2
+                    self.readbuffer = array.array('B')
+                    self.readoffset = 0
+                    srcoff = 2
+                    for i in xrange(chunks):
+                        self.readbuffer += tempbuf[srcoff:srcoff+count]
+                        srcoff += packet_size
+                    length = len(self.readbuffer)
                 else:
-                    # partial copy, not enough bytes in the local cache to
-                    # fulfill the request
-                    part_size = min(size-len(data), 
-                                    len(self.readbuffer)-self.readoffset)
-                    if part_size < 0:
-                        raise AssertionError("Internal Error")
-                    data += self.readbuffer[self.readoffset:\
-                                            self.readoffset+part_size]
-                    self.readoffset += part_size
+                    # received buffer only contains the modem status bytes
+                    # clear them out
+                    self.readbuffer = array.array('B')
+                    self.readoffset = 0
+                    if self.latency_threshold:
+                        self.latency_count += 1
+                        if self.latency != self.latency_max:
+                            if self.latency_count > self.latency_threshold:
+                                self.set_latency_timer(self.latency_max)
+                                self.latency = self.latency_max
+                    # no more data to read?
                     return data.tostring()
+                if length > 0:
+                    # data still fits in buf?
+                    if (len(data) + length) <= size:
+                        data += self.readbuffer[self.readoffset: \
+                                                self.readoffset+length]
+                        self.readoffset += length
+                        # did we read exactly the right amount of bytes?
+                        if len(data) == size:
+                            return data.tostring()
+                    else:
+                        # partial copy, not enough bytes in the local cache to
+                        # fulfill the request
+                        part_size = min(size-len(data),
+                                        len(self.readbuffer)-self.readoffset)
+                        if part_size < 0:
+                            raise AssertionError("Internal Error")
+                        data += self.readbuffer[self.readoffset:\
+                                                self.readoffset+part_size]
+                        self.readoffset += part_size
+                        return data.tostring()
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
         # never reached
         raise FtdiError("Internal error")
 
@@ -627,15 +605,27 @@ class Ftdi(object):
         
     def _reset_device(self):
         """Reset the ftdi device"""
-        if self.usb_dev.ctrl_transfer(Ftdi.DEV_OUT_REQTYPE,
-                                      Ftdi.SIO_RESET_REQUEST, 
-                                      Ftdi.SIO_RESET_SIO,
-                                      self.index, '', 
-                                      self.usb_write_timeout):
+        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
         self.readoffset = 0
         self.readbuffer = array.array('B')
+
+    def _ctrl_transfer_out(self, reqtype, value, data=''):
+        try:
+            return self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT, reqtype, value,
+                                              self.index, data,
+                                              self.usb_write_timeout)
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
+
+    def _ctrl_transfer_in(self, reqtype, length):
+        try:
+            return self.usb_dev.ctrl_transfer(Ftdi.REQ_IN, reqtype, 0,
+                                              self.index, length,
+                                              self.usb_read_timeout)
+        except usb.core.USBError, e:
+            raise FtdiError('UsbError: %s' % str(e))
 
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""
