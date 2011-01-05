@@ -24,22 +24,22 @@ class SerialExpander(object):
             raise SerialExpanderError("Python serial module not installed")
         # default serial class
         type_ = serial.Serial
-        backend = 'serial'
+        type_.backend = 'serial'
         if device.startswith('ftdi://'):
             # for now, assume the USB device is a FTDI device
             # a USB dispatcher should be implemented here
             from ftdiext import SerialFtdi
             type_ = type('SerialFtdi', (serial.SerialBase,),
                          dict(SerialFtdi.__dict__))
-            backend = 'ftdi'
+            type_.backend = 'ftdi'
         elif os.path.exists(device):
             import stat
             from socketext import SerialSocket
             if stat.S_ISSOCK(os.stat(device)[0]):
                 type_ = type('SerialSocket', (serial.SerialBase,),
                              dict(SerialSocket.__dict__))
-                backend = 'socket'
-        if backend == 'serial' and sys.platform.lower() in ('darwin'):
+                type_.backend = 'socket'
+        if type_.backend == 'serial' and sys.platform.lower() in ('darwin'):
             # hack for Mac OS X hosts: the underlying termios system library
             # cannot cope with baudrates > 230kbps and pyserial << 9.7
             version = os.uname()[2].split('.')
@@ -57,6 +57,8 @@ class SerialExpander(object):
                                  dict(SerialDarwin.__dict__))
         if use_logger:
             from loggerext import SerialLoggerPort
+            backend = type_.backend
             type_ = type('SerialLoggerPort', (type_,),
                          dict(SerialLoggerPort.__dict__))
-        return (type_, backend)
+            type_.backend = backend
+        return type_
