@@ -1,5 +1,33 @@
 #!/usr/bin/env python
-"Simple Python serial terminal"
+
+# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the Neotion nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""Simple Python serial terminal
+
+"""
 
 import os
 import sys
@@ -11,7 +39,7 @@ from term import getkey
 class MiniTerm(object):
     """A mini serial terminal to demonstrate pyserial extensions"""
 
-    def __init__(self, device=None, baudrate=115200, logfile=None, 
+    def __init__(self, device=None, baudrate=115200, logfile=None,
                  debug=False):
         self._device = device
         self._baudrate = baudrate
@@ -37,7 +65,7 @@ class MiniTerm(object):
             self._cleanup()
         except Exception:
             pass
- 
+
     def run(self, fullmode=False, reset=None):
         """Switch to a pure serial terminal application"""
         if reset:
@@ -46,7 +74,7 @@ class MiniTerm(object):
             time.sleep(0.200)
             self._port.setDTR(not hwreset)
             time.sleep(0.100)
-        # wait forever, although Windows is stupid and does not signal Ctrl+C, 
+        # wait forever, although Windows is stupid and does not signal Ctrl+C,
         # so wait use a 1/2-second timeout that gives some time to check for a
         # Ctrl+C break then polls again...
         print 'Entering minicom mode'
@@ -59,7 +87,7 @@ class MiniTerm(object):
         r.start()
         # start the writer (host to target direction)
         self._writer(fullmode)
-        
+
     def _reader(self):
         """Loop forever, processing received serial data in terminal mode"""
         try:
@@ -77,7 +105,7 @@ class MiniTerm(object):
             print "Exception: %s" % e
             import thread
             thread.interrupt_main()
-            
+
     def _writer(self, fullmode=False):
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
@@ -106,7 +134,7 @@ class MiniTerm(object):
                 rem = 0
             # consumes all the received bytes
             for _ in range(rem):
-                self._port.read()    
+                self._port.read()
             self._port.close()
             self._port = None
             print 'Bye.'
@@ -118,12 +146,12 @@ class MiniTerm(object):
         serialclass = SerialExpander.serialclass(device, logfile and True)
         import serial
         try:
-            port = serialclass(port=device, 
+            port = serialclass(port=device,
                                baudrate=baudrate,
                                timeout=0)
             if logfile:
                 port.set_logger(logfile)
-            if not port.isOpen(): 
+            if not port.isOpen():
                 port.open()
             if not port.isOpen():
                 raise AssertionError('Cannot open port "%s"' % device)
@@ -180,7 +208,7 @@ def main():
 # virtualenv pyusb100a0
 # ve/bin/python pip install pyserial
 # cd .../pyusb-1.0.0-a0 && .../pyusb100a0/bin/python setup.py install
-# DYLD_LIBRARY_PATH=/usr/local/homebrew/lib PYTHONPATH=. 
+# DYLD_LIBRARY_PATH=/usr/local/homebrew/lib PYTHONPATH=.
 #   pyusb100a0/bin/python serialext/tests/pyterm.py -p ftdi://ftdi:ft4232/3
 
 if __name__ == '__main__':

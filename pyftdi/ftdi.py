@@ -1,9 +1,28 @@
-""" pyftdi - A pure Python FTDI driver on top of pyusb
-    Author:  Emmanuel Blot <emmanuel.blot@free.fr>
-    License: LGPL, originally based on libftdi C library
-    Caveats: Only tested with FT2232 and FT4232 FTDI devices
-    Require: pyusb"""
+# pyftdi - A pure Python FTDI driver
+# Copyright (C) 2010-2011 Emmanuel Blot <emmanuel.blot@free.fr>
+#   Originally based on the C libftdi project
+#   http://www.intra2net.com/en/developer/libftdi/
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this library; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+"""pyftdi - A pure Python FTDI driver on top of pyusb
+
+Author:  Emmanuel Blot <emmanuel.blot@free.fr>
+License: LGPL, originally based on libftdi C library
+Caveats: Only tested with FT2232 and FT4232 FTDI devices
+"""
 
 import array
 import os
@@ -22,7 +41,7 @@ class FtdiError(IOError):
 
 class Ftdi(object):
     """FTDI device driver"""
-    
+
     # Shifting commands IN MPSSE Mode
     MPSSE_WRITE_NEG = 0x01 # Write TDI/DO on negative TCK/SK edge
     MPSSE_BITMODE = 0x02   # Write bits, not bytes
@@ -50,7 +69,7 @@ class Ftdi(object):
     READ_BITS_PVE_LSB = 0x2a
     READ_BITS_NVE_LSB = 0x2e
     RW_BYTES_NVE_LSB = 0x3d
-    WRITE_BITS_TMS_PVE = 0x4a 
+    WRITE_BITS_TMS_PVE = 0x4a
     WRITE_BITS_TMS_NVE = 0x4b
     RW_BITS_TMS_PVE_PVE = 0x6a
     RW_BITS_TMS_NVE_PVE = 0x6b
@@ -68,7 +87,7 @@ class Ftdi(object):
     WAIT_ON_LOW = 0x89
     DISABLE_CLK_DIV5 = 0x8a
     ENABLE_CLK_DIV5 = 0x8b
-    
+
     # Modem status
     MODEM_CTS = (1 << 4)    # Clear to send
     MODEM_DSR = (1 << 5)    # Data set ready
@@ -82,8 +101,8 @@ class Ftdi(object):
     MODEM_THRE = (1 << 13)  # Transmitter holding register
     MODEM_TEMT = (1 << 14)  # Transmitter empty
     MODEM_RCVE = (1 << 15)  # Error in RCVR FIFO
-    
-    # FTDI MPSSE commands 
+
+    # FTDI MPSSE commands
     SET_BITS_LOW = 0x80     # Change LSB GPIO output
     SET_BITS_HIGH = 0x82    # Change MSB GPIO output
     GET_BITS_LOW = 0x81     # Get LSB GPIO output
@@ -101,12 +120,12 @@ class Ftdi(object):
     BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
     BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
 
-    # Commands in MPSSE and Host Emulation Mode 
+    # Commands in MPSSE and Host Emulation Mode
     SEND_IMMEDIATE = 0x87
     WAIT_ON_HIGH = 0x88
     WAIT_ON_LOW = 0x89
 
-    # Commands in Host Emulation Mode 
+    # Commands in Host Emulation Mode
     READ_SHORT = 0x90
     READ_EXTENDED = 0x91
     WRITE_SHORT = 0x92
@@ -122,7 +141,7 @@ class Ftdi(object):
                   usb.util.CTRL_TYPE_VENDOR,
                   usb.util.CTRL_RECIPIENT_DEVICE)
 
-    # Requests 
+    # Requests
     SIO_RESET = 0              # Reset the port
     SIO_SET_MODEM_CTRL = 1     # Set the modem control register
     SIO_SET_FLOW_CTRL = 2      # Set flow control register
@@ -174,14 +193,14 @@ class Ftdi(object):
     LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_THRESHOLD = 1000
-    
-    # Need to maintain a list of reference USB devices, to circumvent a 
-    # limitation in pyusb that prevents from opening several times the same 
+
+    # Need to maintain a list of reference USB devices, to circumvent a
+    # limitation in pyusb that prevents from opening several times the same
     # USB device. The following dictionary used vendor/product keys
     # to track (device, refcount) pairs
     DEVICES = {}
     LOCK = threading.Lock()
-    
+
     def __init__(self):
         self.usb_dev = None
         self.usb_read_timeout = 5000
@@ -201,9 +220,9 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None # disable dynamic latency
-    
+
     # --- Public API -------------------------------------------------------
-    
+
     def open(self, vendor=0x403, product=0x6011, interface=1):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = self._get_device(vendor, product)
@@ -298,9 +317,9 @@ class Ftdi(object):
         if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitbang_mode = mode
-    
+
     def read_pins(self):
-        """Directly read pin state, circumventing the read buffer. 
+        """Directly read pin state, circumventing the read buffer.
            Useful for bitbang mode."""
         pins = self._ctrl_transfer_in(Ftdi.SIO_READ_PINS, 1)
         if not pins:
@@ -335,7 +354,7 @@ class Ftdi(object):
            - B4       Clear to send (CTS)  0 = inactive / 1 = active
            - B5       Data set ready (DTS) 0 = inactive / 1 = active
            - B6       Ring indicator (RI)  0 = inactive / 1 = active
-           - B7       Receive line signal detect (RLSD) 
+           - B7       Receive line signal detect (RLSD)
                                            0 = inactive / 1 = active
            Layout of the second byte:
            - B0       Data ready (DR)
@@ -440,7 +459,7 @@ class Ftdi(object):
 
     def read_data(self, size):
         """Reads data in chunks (see read_data_set_chunksize) from the chip.
-           Automatically strips the two modem status bytes transfered during 
+           Automatically strips the two modem status bytes transfered during
            every read."""
         # Packet size sanity check
         if not self.max_packet_size:
@@ -467,7 +486,8 @@ class Ftdi(object):
                                             self.usb_read_timeout)
                 length = len(tempbuf)
                 # the received buffer contains at least one useful databyte
-                # (first 2 bytes in each packet represent the current modem status)
+                # (first 2 bytes in each packet represent the current modem
+                # status)
                 if length > 2:
                     if self.latency_threshold:
                         self.latency_count = 0
@@ -542,7 +562,7 @@ class Ftdi(object):
         return "Unknown error"
 
     # --- Private implementation -------------------------------------------
-    
+
     @classmethod
     def _get_device(cls, vendor, product):
         """Find a previously open device with the same vendor/product
@@ -557,7 +577,7 @@ class Ftdi(object):
                 for configuration in dev:
                     # we need to detach any kernel driver from the device
                     # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration: 
+                    for interface in configuration:
                         ifnum = interface.bInterfaceNumber
                         if not dev.is_kernel_driver_active(ifnum):
                             continue
@@ -572,7 +592,7 @@ class Ftdi(object):
             return cls.DEVICES[device][0]
         finally:
             cls.LOCK.release()
-    
+
     @classmethod
     def _release_device(cls, usb_dev):
         """Release a previously open device, if it not used anymore"""
@@ -592,7 +612,7 @@ class Ftdi(object):
                     break
         finally:
             cls.LOCK.release()
-            
+
     def _set_interface(self, interface):
         """Select the interface to use on the FTDI device"""
         if interface == 0:
@@ -603,7 +623,7 @@ class Ftdi(object):
         self.index = interface
         self.in_ep = 2*interface
         self.out_ep = 0x80 + self.in_ep - 1
-        
+
     def _reset_device(self):
         """Reset the ftdi device"""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
