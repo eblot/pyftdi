@@ -20,6 +20,7 @@
 
 from distutils.core import setup
 
+
 def _read(fname):
     import os
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
