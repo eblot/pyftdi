@@ -24,3 +24,4 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ftdi import *
+from jtag import *
