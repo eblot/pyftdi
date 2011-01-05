@@ -32,13 +32,6 @@ from pyftdi.ftdi import Ftdi
 class FtdiTestCase(unittest.TestCase):
     """FTDI driver test case"""
 
-    def setUp(self):
-        import sys
-        if sys.platform in ('darwin', ):
-            import os.path
-            if os.path.isdir('/usr/local/homebrew/lib'):
-                os.environ['DYLD_LIBRARY_PATH'] = '/usr/local/homebrew/lib'
-
     def test_multiple_interface(self):
         # the following calls used to create issues (several interfaces from
         # the same device)
@@ -53,3 +46,8 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
     return suite
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(sys.modules[__name__])
+    unittest.main(defaultTest='suite')
