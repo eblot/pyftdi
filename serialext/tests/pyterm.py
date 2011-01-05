@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import threading
-from pyftdi.misc import to_int
+from pyftdi.misc import to_bool, to_int
 from term import getkey
 
 class MiniTerm(object):
@@ -32,21 +32,20 @@ class MiniTerm(object):
                                      self._logfile, self._debug)
         self._resume = False
 
-        # hwreset = False
-        # self._port.setDTR(hwreset)
-        # time.sleep(0.200)
-        # self._port.setDTR(not hwreset)
-        # time.sleep(0.100)
-        
-
     def __del__(self):
         try:
             self._cleanup()
         except Exception:
             pass
  
-    def run(self, fullmode):
+    def run(self, fullmode=False, reset=None):
         """Switch to a pure serial terminal application"""
+        if reset:
+            hwreset = to_bool(reset)
+            self._port.setDTR(hwreset)
+            time.sleep(0.200)
+            self._port.setDTR(not hwreset)
+            time.sleep(0.100)
         # wait forever, although Windows is stupid and does not signal Ctrl+C, 
         # so wait use a 1/2-second timeout that gives some time to check for a
         # Ctrl+C break then polls again...
@@ -116,8 +115,7 @@ class MiniTerm(object):
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
         from serialext import SerialExpander
-        serialclass, backend = \
-            SerialExpander.serialclass(device, logfile and True)
+        serialclass = SerialExpander.serialclass(device, logfile and True)
         import serial
         try:
             port = serialclass(port=device, 
@@ -130,7 +128,7 @@ class MiniTerm(object):
             if not port.isOpen():
                 raise AssertionError('Cannot open port "%s"' % device)
             if debug:
-                print "Using serial backend '%s'" % backend
+                print "Using serial backend '%s'" % serialclass.backend
             return port
         except serial.serialutil.SerialException, e:
             raise AssertionError(str(e))
@@ -153,6 +151,8 @@ def get_options():
                          help='Serial port device name')
     optparser.add_option('-b', '--baudrate', dest='baudrate',
                          help='Serial port baudrate', default='115200')
+    optparser.add_option('-r', '--reset', dest='reset',
+                         help='HW reset on DTR line')
     optparser.add_option('-o', '--logfile', dest='logfile',
                          help='Path to the log file')
     options, _ = optparser.parse_args(sys.argv[1:])
@@ -166,7 +166,7 @@ def main():
                             baudrate=to_int(options.baudrate),
                             logfile=options.logfile,
                             debug=options.debug)
-        miniterm.run(options.fullmode)
+        miniterm.run(options.fullmode, options.reset)
     except (AssertionError, IOError, ValueError), e:
         print >> sys.stderr, '\nError: %s' % e
         if options.debug:
