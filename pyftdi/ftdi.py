@@ -187,6 +187,21 @@ class Ftdi(object):
     # Break type
     BREAK_OFF, BREAK_ON = range(2)
 
+    # cts:  Clear to send
+    # dsr:  Data set ready
+    # ri:   Ring indicator
+    # dcd:  Data carrier detect
+    # dr:   Data ready
+    # oe:   Overrun error
+    # pe:   Parity error
+    # fe:   Framing error
+    # bi:   Break interrupt
+    # thre: Transmitter holding register
+    # temt: Transmitter empty
+    # err:  Error in RCVR FIFO
+    MODEM_STATUS = [('_0 _1 _2 _3 cts dsr ri dcd'.split()),
+                    ('dr oe pe fe bi thre temt error'.split())]
+
     BAUDRATE_REF_CLOCK = 3000000 # 3 MHz
     BAUDRATE_TOLERANCE = 3.0 # acceptable clock drift, in %
     BITBANG_CLOCK_MULTIPLIER = 4
@@ -231,7 +246,7 @@ class Ftdi(object):
         self._reset_device()
 
     def close(self):
-        """Closing the FTDI interface"""
+        """Close the FTDI interface"""
         self._release_device(self)
 
     @property
@@ -268,7 +283,7 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def purge_rx_buffer(self):
-        """Clears the read buffer on the chip and the internal read buffer."""
+        """Clear the read buffer on the chip and the internal read buffer."""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_RX):
             raise FtdiError('Unable to set baudrate')
         # Invalidate data in the readbuffer
@@ -276,12 +291,12 @@ class Ftdi(object):
         ftdi.readbuffer = array.array('B')
 
     def purge_tx_buffer(self):
-        """Clears the write buffer on the chip."""
+        """Clear the write buffer on the chip."""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to set baudrate')
 
     def purge_buffers(self):
-        """Clears the buffers on the chip and the internal read buffer."""
+        """Clear the buffers on the chip and the internal read buffer."""
         self.purge_rx_buffer()
         self.purge_tx_buffer()
 
@@ -346,30 +361,24 @@ class Ftdi(object):
     def poll_modem_status(self):
         """Poll modem status information
            This function allows the retrieve the two status bytes of the device.
-           The device sends these bytes also as a header for each read access
-           where they are discarded by ftdi_read_data(). The chip generates
-           the two stripped status bytes in the absence of data every 40 ms.
-           Layout of the first byte:
-           - B0..B3 - must be 0
-           - B4       Clear to send (CTS)  0 = inactive / 1 = active
-           - B5       Data set ready (DTS) 0 = inactive / 1 = active
-           - B6       Ring indicator (RI)  0 = inactive / 1 = active
-           - B7       Receive line signal detect (RLSD)
-                                           0 = inactive / 1 = active
-           Layout of the second byte:
-           - B0       Data ready (DR)
-           - B1       Overrun error (OE)
-           - B2       Parity error (PE)
-           - B3       Framing error (FE)
-           - B4       Break interrupt (BI)
-           - B5       Transmitter holding register (THRE)
-           - B6       Transmitter empty (TEMT)
-           - B7       Error in RCVR FIFO"""
+        """
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
         status, = struct.unpack('<H', value)
         return status
+
+    def modem_status(self):
+        """Provide the current modem status as a tuple of set signals"""
+        value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
+        if not value or len(value) != 2:
+            raise FtdiError('Unable to get modem status')
+        status = []
+        for pos, byte_ in enumerate(value):
+            for b,v in enumerate(Ftdi.MODEM_STATUS[pos]):
+                if byte_ & (1<<b):
+                    status.append(Ftdi.MODEM_STATUS[pos][b])
+        return tuple(status)
 
     def set_flowctrl(self, flowctrl):
         """Set flowcontrol for ftdi chip"""
@@ -438,7 +447,7 @@ class Ftdi(object):
             raise FtdiError('Unable to set line property')
 
     def write_data(self, data):
-        """Writes data in chunks (see write_data_set_chunksize) to the chip"""
+        """Write data in chunks to the chip"""
         offset = 0
         size = len(data)
         try:
@@ -458,7 +467,7 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def read_data(self, size):
-        """Reads data in chunks (see read_data_set_chunksize) from the chip.
+        """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
         # Packet size sanity check
@@ -633,6 +642,7 @@ class Ftdi(object):
         self.readbuffer = array.array('B')
 
     def _ctrl_transfer_out(self, reqtype, value, data=''):
+        """Send a control message to the device"""
         try:
             return self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT, reqtype, value,
                                               self.index, data,
@@ -641,6 +651,7 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def _ctrl_transfer_in(self, reqtype, length):
+        """Request for a control message from the device"""
         try:
             return self.usb_dev.ctrl_transfer(Ftdi.REQ_IN, reqtype, 0,
                                               self.index, length,

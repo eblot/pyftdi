@@ -26,14 +26,14 @@
 import struct
 import time
 from pyftdi import Ftdi
-from util.bits import BitSequence
-from util.misc import hexline
+from pyftdi.bits import BitSequence
+from pyftdi.misc import hexline
 
 __all__ = ['JtagEngine']
 
 
 class JtagState(object):
-    """TAP controller state"""
+    """Test Access Port controller state"""
 
     def __init__(self, name):
         self.name = name
@@ -53,7 +53,7 @@ class JtagState(object):
 
 
 class JtagStateMachine(object):
-    """TAP controller state machine"""
+    """Test Access Port controller state machine"""
 
     def __init__(self):
         self.states = {}
