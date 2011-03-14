@@ -28,6 +28,8 @@ import time
 from pyftdi import Ftdi, FtdiError
 from pyftdi.misc import to_int
 
+BACKEND = 'pyftdi'
+
 __all__ = ['SerialFtdi']
 
 
@@ -76,7 +78,7 @@ class SerialFtdi:
             try:
                 self.ftdi.set_dynamic_latency(2, 200, 400)
             except AttributeError:
-                # unsupported this feature
+                # unsupported feature
                 pass
         except FtdiError, e:
             err = self.ftdi.get_error_string()

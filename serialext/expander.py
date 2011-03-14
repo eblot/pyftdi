@@ -26,7 +26,7 @@
 import os
 import sys
 
-__all__ = ['SerialExpander']
+__all__ = ['SerialExpander', 'SerialExpanderError']
 
 
 class SerialExpanderError(Exception):
@@ -53,10 +53,10 @@ class SerialExpander(object):
         if device.startswith('ftdi://'):
             # for now, assume the USB device is a FTDI device
             # a USB dispatcher should be implemented here
-            from ftdiext import SerialFtdi
+            from ftdiext import SerialFtdi, BACKEND
             type_ = type('SerialFtdi', (serial.SerialBase,),
                          dict(SerialFtdi.__dict__))
-            type_.backend = 'ftdi'
+            type_.backend = BACKEND
         elif os.path.exists(device):
             import stat
             from socketext import SerialSocket
