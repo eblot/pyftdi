@@ -25,6 +25,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
 import unittest
 from pyftdi.ftdi import Ftdi
 
@@ -39,6 +40,11 @@ class FtdiTestCase(unittest.TestCase):
         ftdi1.open(interface=1)
         ftdi2 = Ftdi()
         ftdi2.open(interface=2)
+        import time
+        for x in range(5):
+            print "If#1: ", hex(ftdi1.poll_modem_status())
+            print "If#2: ", ftdi2.modem_status()
+            time.sleep(0.500)
         ftdi1.close()
         ftdi2.close()
 

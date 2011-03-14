@@ -28,7 +28,7 @@
 """
 
 from numbers import Integral
-from util import xor
+from pyftdi.misc import xor
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitError', 'BitField']
 
