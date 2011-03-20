@@ -55,9 +55,9 @@ class SpiController(object):
 
     def __init__(self):
         self._ftdi = Ftdi()
-        self._cs_bits = ((SpiController.CS_BIT<<CS_COUNT)-1) - \
+        self._cs_bits = ((SpiController.CS_BIT<<SpiController.CS_COUNT)-1) - \
                          (SpiController.CS_BIT-1)
-        self._ports = [None] * CS_COUNT
+        self._ports = [None] * SpiController.CS_COUNT
         self._direction = self._cs_bits | \
                           SpiController.DO_BIT | \
                           SpiController.SCK_BIT

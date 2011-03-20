@@ -238,7 +238,7 @@ class Ftdi(object):
 
     # --- Public API -------------------------------------------------------
 
-    def open(self, vendor=0x403, product=0x6011, interface=1):
+    def open(self, vendor, product, interface=1):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = self._get_device(vendor, product)
         self._set_interface(interface)
@@ -248,6 +248,51 @@ class Ftdi(object):
     def close(self):
         """Close the FTDI interface"""
         self._release_device(self)
+
+    def open_mpsse(self, vendor, product, interface=1,
+                   direction=0x0, frequency=6.0E6, latency=16):
+        """Configure the interface for MPSSE mode"""
+        # Open an FTDI interface
+        self.open(vendor, product, interface)
+        # Set latency timer
+        self.set_latency_timer(latency)
+        # Set chunk size
+        self.write_data_set_chunksize(512)
+        self.read_data_set_chunksize(512)
+        # Disable loopback
+        self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
+        # Configure clock, twice to circumvent cold init case issue
+        frequency = self._set_frequency(frequency)
+        # Configure I/O
+        self.write_data(struct.pack('<BBB', Ftdi.SET_BITS_LOW, 0, direction))
+        # Enable MPSSE mode
+        self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
+        # Drain input buffer
+        self.write_data(struct.pack('<B', Ftdi.SEND_IMMEDIATE))
+        self.purge_rx_buffer()
+        self.read_data(16)
+        # Return the actual frequency
+        return frequency
+        
+    def open_bitbang(self, vendor, product, interface=1,
+                     direction=0x0, baudrate=115200, latency=16):
+        """Configure the interface for BITBANG mode"""
+        # Open an FTDI interface
+        self.open(vendor, product, interface)
+        # Set latency timer
+        self.set_latency_timer(latency)
+        # Set chunk size
+        self.write_data_set_chunksize(512)
+        self.read_data_set_chunksize(512)
+        # Disable loopback
+        self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
+        # Enable BITBANG mode
+        self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
+        # Configure baudrate
+        self.set_baudrate(baudrate)
+        # Drain input buffer
+        self.purge_rx_buffer()
+        self.read_data(16)
 
     @property
     def type(self):
@@ -284,15 +329,15 @@ class Ftdi(object):
 
     def purge_rx_buffer(self):
         """Clear the read buffer on the chip and the internal read buffer."""
-        if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_RX):
+        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_RX):
             raise FtdiError('Unable to set baudrate')
         # Invalidate data in the readbuffer
-        ftdi.readbuffer_offset = 0
-        ftdi.readbuffer = array.array('B')
+        self.readoffset = 0
+        self.readbuffer = array.array('B')
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
-        if self._ctrl_transfer_out(Ftdi.SIO_RESET, SIO_RESET_PURGE_TX):
+        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to set baudrate')
 
     def purge_buffers(self):
@@ -760,3 +805,21 @@ class Ftdi(object):
         if hispeed:
             index |= 1<<9 # use hispeed mode
         return (best_baud, value, index)
+
+    def _set_frequency(self, frequency):
+        """Convert a frequency value into a TCK divisor setting"""
+        if frequency <= 6.0E6:
+            divcode = Ftdi.ENABLE_CLK_DIV5
+            divisor = int(6.0E6/frequency)-1
+            actual_freq = 6.0E6/(divisor+1)
+        elif frequency <= 30E6:
+            divcode = Ftdi.DISABLE_CLK_DIV5
+            divisor = int(30.0E6/frequency)-1
+            actual_freq = 30.0E6/(divisor+1)
+        else:
+            raise FtdiError("Unsupported frequency: %f" % frequency)
+        # Configure clock, twice to circumvent cold init case issue
+        cmd = struct.pack('<BBHBH', divcode, Ftdi.TCK_DIVISOR, divisor,
+                                             Ftdi.TCK_DIVISOR, divisor)
+        self.write_data(cmd)
+        return actual_freq
