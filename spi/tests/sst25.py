@@ -12,10 +12,10 @@ def read_jedec_id(spi):
     CMD_JEDEC_ID = 0x9F
     jedec_cmd = struct.pack('<B', CMD_JEDEC_ID)
     return spi.command(jedec_cmd, 3)
-    
+
 def read_data(spi, address, length):
     CMD_READ = 0x03
-    read_cmd = struct.pack('<BBBB', CMD_READ, 
+    read_cmd = struct.pack('<BBBB', CMD_READ,
                            (address>>16)&0xff, (address>>8)&0xff, address&0xff)
     return spi.command(read_cmd, length)
 
@@ -62,9 +62,9 @@ def write_data(spi, address, data):
         raise AssertionError("Alignement/size not supported")
     enable_write(spi)
     CMD_AAI = 0xAD
-    aai_cmd = struct.pack('<BBBBBB', CMD_AAI, 
-                          (address>>16)&0xff, 
-                          (address>>8)&0xff, 
+    aai_cmd = struct.pack('<BBBBBB', CMD_AAI,
+                          (address>>16)&0xff,
+                          (address>>8)&0xff,
                           address&0xff,
                           data.pop(0), data.pop(0))
     offset = 0
@@ -81,13 +81,13 @@ def write_data(spi, address, data):
         aai_cmd = struct.pack('<BBB', CMD_AAI, data.pop(0), data.pop(0))
     print ""
     disable_write(spi)
-    
+
 def erase_sector(spi, address):
     enable_write(spi)
     CMD_ERBLK = 0xD8
-    erblk_cmd = struct.pack('<BBBB', CMD_ERBLK, 
-                            (address>>16)&0xff, 
-                            (address>>8)&0xff, 
+    erblk_cmd = struct.pack('<BBBB', CMD_ERBLK,
+                            (address>>16)&0xff,
+                            (address>>8)&0xff,
                             address&0xff)
     spi.command(erblk_cmd)
     while is_busy(read_status(spi)):
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     spi_ctrl = SpiController()
     spi_ctrl.configure(vendor=0x403, product=0x6011, interface=0)
     spi = spi_ctrl.get_port(0)
-    
+
     print "Identify"
     start_count = 0
     while True:
@@ -114,9 +114,9 @@ if __name__ == '__main__':
 
     print "Unlock"
     unlock(spi)
-    
+
     ref = ''.join([chr(x&0xff) for x in xrange(1<<16)])
-    
+
     for sector in [x<<16 for x in xrange(0,(4<<20)>>16)]:
     #for sector in (0,):
         print "Write sector %d" % sector
@@ -132,8 +132,8 @@ if __name__ == '__main__':
             print "Sector Ok"
         print "Erase sector"
         erase_sector(spi, sector)
-    
-    
+
+
     #CMD_READ_SECURITY = 0x77
     #sec_cmd = struct.pack('<BBBB', CMD_READ_SECURITY, 0, 0 ,0)
     #while True:

@@ -273,7 +273,7 @@ class Ftdi(object):
         self.read_data(16)
         # Return the actual frequency
         return frequency
-        
+
     def open_bitbang(self, vendor, product, interface=1,
                      direction=0x0, baudrate=115200, latency=16):
         """Configure the interface for BITBANG mode"""
