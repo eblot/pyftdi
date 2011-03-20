@@ -51,9 +51,18 @@ class SerialFlash(object):
            specific constraints."""
         raise NotImplemented()
 
+    def is_busy(self):
+        """Reports whether the flash may receive commands or is actually
+           being performing internal work"""
+        raise NotImplemented()
+
+    def get_capacity(self):
+        """Get the flash device capacity in bytes"""
+        raise NotImplemented()
+
     def get_capabilities(self):
         """List the flash device capabilities."""
-        raise NotImplemented()
+        return ''
 
     def get_locks(self):
         """Report the currently write-protected areas of the device."""
@@ -66,7 +75,7 @@ class SerialFlash(object):
 
     def unlock(self):
         """Make the whole device read/write"""
-        raise NotImplemented()
+        pass
 
     def get_unique_id(self):
         """Return the unique ID of the flash, if it exists"""
@@ -74,7 +83,11 @@ class SerialFlash(object):
 
 
 class SerialFlashManager(object):
-    """Serial flash manager"""
+    """Serial flash manager.
+
+       Automatically detects and instanciate the proper flash device class
+       based on the JEDEC identifier which is read out from the device itself.
+    """
 
     CMD_JEDEC_ID = 0x9F
 
@@ -86,7 +99,7 @@ class SerialFlashManager(object):
         """Obtain an instance of the detected flash device"""
         spi = self._ctrl.get_port(cs)
         jedec = SerialFlashManager.read_jedec_id(spi)
-        return SerialFlashManager._get_flash(jedec)
+        return SerialFlashManager._get_flash(spi, jedec)
 
     @staticmethod
     def read_jedec_id(spi):
@@ -95,22 +108,31 @@ class SerialFlashManager(object):
         return spi.command(jedec_cmd, 3)
 
     @staticmethod
-    def _get_flash(jedec):
+    def _get_flash(spi, jedec):
         devices = []
         contents = sys.modules[__name__].__dict__
         for name in contents:
             if name.endswith('FlashDevice') and not name.startswith('_'):
                 devices.append(contents[name])
-        print "Devices: %s" % devices
         for device in devices:
             if device.match(jedec):
-                return device(jedec)
+                return device(spi, jedec)
         from binascii import hexlify
         raise SerialFlashNotSupported("Unknown flash device: %s" % \
                                       hexlify(jedec))
 
+
 class _Gen25FlashDevice(SerialFlash):
-    """Generic flash device implementation"""
+    """Generic flash device implementation.
+
+       Most SPI flash devices share commands and parameters. Those devices
+       generally contains '25' in their reference. However, there are virtually
+       no '25' device that is fully compliant with any counterpart from
+       a concurrent manufacturer. Most differences are focused on lock and
+       security features. Here comes the mess... This class contains the most
+       common implementation for the basic feature, and each physical device
+       inherit from this class for feature specialization.
+    """
 
     CMD_READ_LO_SPEED = 0x03 # Read @ low speed
     CMD_READ_HI_SPEED = 0x0B # Read @ high speed
@@ -129,8 +151,23 @@ class _Gen25FlashDevice(SerialFlash):
     def __init__(self, spiport):
         self._spi = spiport
 
+    def get_capacity(self):
+        """Get the flash device capacity in bytes"""
+        return len(self)
+
     def is_busy(self):
         return Gen25FlashDevice._is_busy(self._read_status())
+
+    def unlock(spi):
+        ewsr_cmd = struct.pack('<B', Gen25FlashDevice.CMD_EWSR)
+        spi.command(ewsr_cmd)
+        wrsr_cmd = struct.pack('<BB', Gen25FlashDevice.CMD_WRSR,
+                               (~Gen25FlashDevice.STATUS_BP)&0xff)
+        spi.command(wrsr_cmd)
+
+    @staticmethod
+    def _jedec2int(jedec, maxlength=3):
+        return tuple([ord(x) for x in jedec[:maxlength]])
 
     def _read_lo_speed(self, address, length):
         read_cmd = struct.pack('<BBBB', Gen25FlashDevice.CMD_READ_LO_SPEED,
@@ -150,13 +187,6 @@ class _Gen25FlashDevice(SerialFlash):
     def _disable_write(self):
         wrdi_cmd = struct.pack('<B', Gen25FlashDevice.CMD_WRITE_DISABLE)
         self._spi.command(wrdi_cmd)
-
-    def unlock(spi):
-        ewsr_cmd = struct.pack('<B', Gen25FlashDevice.CMD_EWSR)
-        spi.command(ewsr_cmd)
-        wrsr_cmd = struct.pack('<BB', Gen25FlashDevice.CMD_WRSR,
-                               (~Gen25FlashDevice.STATUS_BP)&0xff)
-        spi.command(wrsr_cmd)
 
     def _erase_sector(self, address):
         self._enable_write()
@@ -183,20 +213,32 @@ class Sst25FlashDevice(_Gen25FlashDevice):
 
     CMD_AAI = 0xAD # Auto address increment (for write command)
 
-    SST25_AAI = 0b01000000
+    SST25_AAI = 0b01000000 # AAI mode activation flag
+
+    DEVICES = { 0x4a: 4<<20 }
+
+    def __init__(self, spi, jedec):
+        if not Sst25FlashDevice.match(jedec):
+            raise SerialFlashNotSupported('Invalid JEDEC id')
+        device = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = Sst25FlashDevice.DEVICES[device]
+        self._spi = spi
+
+    def __len__(self):
+        return self._size
 
     @staticmethod
     def match(jedec):
         """Tells whether this class support this JEDEC identifier"""
-        manufacturer, device, capacity = [ord(x) for x in jedec[:3]]
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
         if manufacturer != 0xbf:
             return False
         if device != 0x25:
             return False
-        if capacity not in (0x4a, ):
+        if capacity not in Sst25FlashDevice.DEVICES:
             return False
         return True
-        
+
     def write(self, address, data):
         """SST25 uses a very specific implementation to write data. It offers
            very poor performances, because the device lacks an internal buffer
@@ -228,6 +270,10 @@ class Sst25FlashDevice(_Gen25FlashDevice):
                                   data.pop(0), data.pop(0))
         #print ""
         self._disable_write()
+
+    def unlock(self):
+        """Make the whole device read/write"""
+        pass
 
 
 if __name__ == '__main__':
