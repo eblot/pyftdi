@@ -176,7 +176,8 @@ def get_options():
                              action='store_true',
                              help='Use full terminal mode, exit with [Ctrl]+A')
     optparser.add_option('-p', '--port', dest='device',
-                         help='Serial port device name')
+                         help='Serial port device name (list available ports '
+                              'with \'ftdi:///?\')')
     optparser.add_option('-b', '--baudrate', dest='baudrate',
                          help='Serial port baudrate', default='115200')
     optparser.add_option('-r', '--reset', dest='reset',
@@ -203,13 +204,6 @@ def main():
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(2)
-
-# pip install virtualenv
-# virtualenv ~/.pyusb
-# ~/.pyusb/bin/python pip install pyserial
-# cd .../pyusb-1.0.0-a0 && ~/.pyusb/bin/python setup.py install
-# DYLD_LIBRARY_PATH=/usr/local/homebrew/lib PYTHONPATH=.
-#   ~/.pyusb/bin/python serialext/tests/pyterm.py -p ftdi://ftdi:ft4232/3
 
 if __name__ == '__main__':
     main()

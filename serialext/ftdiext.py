@@ -36,15 +36,22 @@ __all__ = ['SerialFtdi']
 class SerialFtdi:
     """Serial port implementation for FTDI compatible with pyserial API"""
 
-    BAUDRATES = sorted(range(115200, 1000000, 115200) + \
-                range(1000000, 13000000, 100000))
+    BAUDRATES = sorted([9600 * (x+1) for x in range(6)] +
+                       range(115200, 1000000, 115200) + \
+                       range(1000000, 13000000, 100000))
+    SCHEME = 'ftdi://'
     VENDOR_IDS = { 'ftdi': 0x0403 }
-    PRODUCT_IDS = { '232':  0x6001,
-                    '2232': 0x6010,
-                    '4232': 0x6011,
-                    'ft232': 0x6001,
-                    'ft2232': 0x6010,
-                    'ft4232': 0x6011 }
+    PRODUCT_IDS = { 0x0403 : \
+                      { '232': 0x6001,
+                        '2232': 0x6010,
+                        '4232': 0x6011,
+                        'ft232': 0x6001,
+                        'ft2232': 0x6010,
+                        'ft4232': 0x6011
+                      }
+                  }
+    INTERFACES = { 0x403 : { 0x6001 : 1, 0x6010 : 2, 0x6011 : 4 } }
+    DEFAULT_VENDOR = 0x403
 
     def _reconfigurePort(self):
         import serial
@@ -78,7 +85,7 @@ class SerialFtdi:
             try:
                 self.ftdi.set_dynamic_latency(2, 200, 400)
             except AttributeError:
-                # unsupported feature
+                # FTDI backend does not support this feature
                 pass
         except FtdiError, e:
             err = self.ftdi.get_error_string()
@@ -104,24 +111,90 @@ class SerialFtdi:
         import serial
         if self._port is None:
             raise serial.SerialException("Port must be configured before use.")
-        vre = r'|'.join(self.VENDOR_IDS.keys() + [r'(?:0x)?[a-f0-9]+'])
-        pre = r'|'.join(self.PRODUCT_IDS.keys() + [r'(?:0x)?[a-f0-9]+'])
-        usb_re = r'(?i)^ftdi://(?P<vendor>'+vre+r'):(?P<product>'+pre+r')/'
-        def replace_usb(mo):
-            vendor = mo.group('vendor')
-            product = mo.group('product')
-            return 'ftdi://%s:%s/' % (self.VENDOR_IDS.get(vendor, vendor),
-                                      self.PRODUCT_IDS.get(product, product))
-        ftdi_re = r'(?i)^ftdi://((?:0x)?[a-f0-9]+):((?:0x)?[a-f0-9]+)/(\d)\s*$'
-        mo = re.match(ftdi_re, re.sub(usb_re, replace_usb, self.portstr))
-        if not mo:
-            raise serial.SerialException("Invalid FTDI device name")
-        vendor = to_int(mo.group(1))
-        product = to_int(mo.group(2))
-        interface = to_int(mo.group(3))
+        portstr = self.portstr
+        if not portstr.startswith(self.SCHEME):
+            raise serial.SerialException("Invalid FTDI URL")
+        ftdiloc = portstr[len(self.SCHEME):].split('/')
+        ftdicomps = ftdiloc[0].split(':') + [''] * 2
+        try:
+            ftdicomps[0] = self.VENDOR_IDS.get(ftdicomps[0], ftdicomps[0])
+            if ftdicomps[0]:
+                vendor = to_int(ftdicomps[0])
+            else:
+                vendor = None
+            product_ids = self.PRODUCT_IDS.get(vendor, None)
+            if not product_ids:
+                product_ids = self.PRODUCT_IDS[self.DEFAULT_VENDOR]
+            ftdicomps[1] = product_ids.get(ftdicomps[1], ftdicomps[1])
+            if ftdicomps[1]:
+                product = to_int(ftdicomps[1])
+            else:
+                product = None
+            if not ftdiloc[1]:
+                raise serial.SerialException('Invalid FTDI device port')
+            if ftdiloc[1] == '?':
+                show_devices = True
+            else:
+                interface = to_int(ftdiloc[1])
+                show_devices = False
+        except (IndexError, ValueError):
+            raise serial.SerialException('Invalid FTDI device URL')
+        sernum = None
+        idx = 0
+        if ftdicomps[2]:
+            try:
+                idx = to_int(ftdicomps[2])
+                if idx > 255:
+                    idx = 0
+                    raise ValueError
+                if idx:
+                    idx -= 1
+            except ValueError:
+                sernum = ftdicomps[2]
         try:
             self.ftdi = Ftdi()
-            self.ftdi.open(vendor, product, interface)
+            if not vendor or not product or sernum or idx:
+                # Need to enumerate USB devices to find a matching device
+                vendors = vendor and [vendor] or \
+                    set(self.VENDOR_IDS.values())
+                # this construction is invalid with more than one vendor
+                # as a product may only exist for a single vendor. To be fixed
+                vps = set()
+                for v in vendors:
+                    products = self.PRODUCT_IDS.get(v, [])
+                    for p in products:
+                        vps.add((v, products[p]))
+                devices = self.ftdi.usb_find_all(vps)
+                candidates = []
+                if sernum:
+                    if sernum not in [dev[2] for dev in devices]:
+                        raise serial.SerialException("No FTDI device with " \
+                                                     "S/N %s" % sernum)
+                    for v, p, s in devices:
+                        if s != sernum:
+                            continue
+                        if vendor and vendor != v:
+                            continue
+                        if product and product != p:
+                            continue
+                        candidates.append((v, p, s))
+                else:
+                    for v, p, s in devices:
+                        if vendor and vendor != v:
+                            continue
+                        if product and product != p:
+                            continue
+                        candidates.append((v, p, s))
+                    if not show_devices:
+                        try:
+                            vendor, product, _ = candidates[idx]
+                        except IndexError:
+                            raise serial.SerialException("No FTDI device #%d" \
+                                                         % idx)
+            if show_devices:
+                self._show_devices(candidates)
+                raise SystemExit('Please specify the FTDI device')
+            self.ftdi.open(vendor, product, interface, idx, sernum)
         except FtdiError:
             raise IOError('Unable to open FTDI port %s' % self.portstr)
         self._isOpen = True
@@ -212,3 +285,55 @@ class SerialFtdi:
         """Read terminal status line: Carrier Detect"""
         status = self.ftdi.poll_modem_status()
         return (status & Ftdi.MODEM_RLSD) and True or False
+
+    def _show_devices(self, candidates, out=None):
+        from string import printable as printablechars
+        if not out:
+            import sys
+            out = sys.stdout
+        print >> out, "Available interfaces:"
+        indices = {}
+        for (v, p, s) in candidates:
+            try:
+                ifcount = self.INTERFACES[v][p]
+            except KeyError, e:
+                continue
+            ikey = (v, p)
+            indices[ikey] = indices.get(ikey, 0) + 1
+            # try to find a matching string for the current vendor
+            vendors = []
+            # fallback if no matching string for the current vendor is found
+            vendor = '%04x' % v
+            for vc in self.VENDOR_IDS:
+                if self.VENDOR_IDS[vc] == v:
+                    vendors.append(vc)
+            if vendors:
+                vendors.sort(key=len)
+                vendor = vendors[0]
+            # try to find a matching string for the current vendor
+            # fallback if no matching string for the current product is found
+            product = '%04x' % p
+            try:
+                products = []
+                productids = self.PRODUCT_IDS[v]
+                for pc in productids:
+                    if productids[pc] == p:
+                        products.append(pc)
+                if products:
+                    products.sort(key=len)
+                    product = products[0]
+            except KeyError:
+                pass
+            # if the serial number is an ASCII char, use it, or use the index
+            # value
+            if [c for c in s if c not in printablechars or c == '?']:
+                serial = '%d' % indices[ikey]
+            else:
+                serial = s
+            # Now print out the prettiest URL syntax
+            for i in range(1, ifcount+1):
+                # On most configurations, low interfaces are used for MPSSE,
+                # high interfaces are dedicated to UARTs
+                print >> out, '  %s%s:%s:%s/%d' % \
+                    (self.SCHEME, vendor, product, serial, i)
+        print >> out, ''

@@ -22,6 +22,7 @@
 Author:  Emmanuel Blot <emmanuel.blot@free.fr>
 License: LGPL, originally based on libftdi C library
 Caveats: Only tested with FT2232 and FT4232 FTDI devices
+Require: pyusb
 """
 
 import array
@@ -238,15 +239,24 @@ class Ftdi(object):
 
     # --- Public API -------------------------------------------------------
 
-    def open(self, vendor=0x403, product=0x6011, interface=1):
+    def usb_find_all(self, vps):
+        return self._enumerate(vps)
+
+    def open(self, vendor, product, interface, index=0, serial=None):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = self._get_device(vendor, product)
+        self.usb_dev = self._get_device(vendor, product, index, serial)
+        # detect invalid interface as early as possible
+        config = self.usb_dev.get_active_configuration()
+        if interface > config.bNumInterfaces:
+            raise FtdiError('No such FTDI port: %d' % interface)
         self._set_interface(interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
+        self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self):
         """Close the FTDI interface"""
+        self.set_latency_timer(self.LATENCY_MAX)
         self._release_device(self)
 
     @property
@@ -572,17 +582,51 @@ class Ftdi(object):
 
     # --- Private implementation -------------------------------------------
 
-    @classmethod
-    def _get_device(cls, vendor, product):
+    @staticmethod
+    def _enumerate(vps):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
-        device = (vendor<<16)+product
+        devices = []
+        for vendor, product in vps:
+            devs = usb.core.find(find_all=True,
+                                 idVendor=vendor,
+                                 idProduct=product)
+            for dev in devs:
+                sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
+                devices.append((vendor, product, sernum))
+                del dev
+        return devices
+
+    @classmethod
+    def _get_device(cls, vendor, product, index, serial):
+        """Find a previously open device with the same vendor/product
+           or initialize a new one, and return it"""
         cls.LOCK.acquire()
         try:
-            if device not in cls.DEVICES:
+            if index or serial:
+                dev = None
+                kwargs = {}
+                if vendor:
+                    kwargs['idVendor'] = vendor
+                if product:
+                    kwargs['idProduct'] = product
+                devs = usb.core.find(find_all=True, **kwargs)
+                if serial:
+                    devs = [dev for dev in devs if \
+                              usb.util.get_string(dev, 64, dev.iSerialNumber) \
+                                == serial]
+                try:
+                    dev = devs[index]
+                except IndexError:
+                    raise IOError("No such device")
+            else:
                 dev = usb.core.find(idVendor=vendor, idProduct=product)
-                if not dev:
-                    raise ValueError('Device not found')
+            if not dev:
+                raise IOError('Device not found')
+            bus = dev.get_bus_number()
+            address = dev.get_device_address()
+            devkey = (bus, address, vendor, product)
+            if devkey not in cls.DEVICES:
                 for configuration in dev:
                     # we need to detach any kernel driver from the device
                     # be greedy: reclaim all device interfaces from the kernel
@@ -595,10 +639,10 @@ class Ftdi(object):
                         except usb.core.USBError, e:
                             pass
                 dev.set_configuration()
-                cls.DEVICES[device] = [dev, 1]
+                cls.DEVICES[devkey] = [dev, 1]
             else:
-                cls.DEVICES[device][1] += 1
-            return cls.DEVICES[device][0]
+                cls.DEVICES[devkey][1] += 1
+            return cls.DEVICES[devkey][0]
         finally:
             cls.LOCK.release()
 
@@ -608,16 +652,17 @@ class Ftdi(object):
         # Lookup for ourselves in the class dictionary
         cls.LOCK.acquire()
         try:
-            for device in cls.DEVICES:
-                dev, refcount = cls.DEVICES[device]
+            for devkey in cls.DEVICES:
+                dev, refcount = cls.DEVICES[devkey]
                 if dev == usb_dev:
                     # found
                     if refcount > 1:
                         # another interface is open, decrement
-                        cls.DEVICES[device][1] -= 1
+                        cls.DEVICES[devkey][1] -= 1
                     else:
                         # last interface in use, release
-                        del cls.DEVICES[device]
+                        dispose_resources(cls.DEVICES[devkey][0])
+                        del cls.DEVICES[devkey]
                     break
         finally:
             cls.LOCK.release()
