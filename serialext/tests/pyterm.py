@@ -44,7 +44,6 @@ class MiniTerm(object):
         self._device = device
         self._baudrate = baudrate
         self._logfile = logfile
-        self._debug = debug
         if not self._device:
             if os.name == 'nt':
                 self._device = 'COM1'
@@ -57,7 +56,7 @@ class MiniTerm(object):
             else:
                 raise AssertionError('Serial port unknown')
         self._port = self._open_port(self._device, self._baudrate,
-                                     self._logfile, self._debug)
+                                     self._logfile, debug)
         self._resume = False
 
     def __del__(self):

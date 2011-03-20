@@ -171,9 +171,8 @@ class JtagController(object):
     JTAG_MASK = 0x1f
 
     # Private API
-    def __init__(self, logger):
-        self.log = logger
-        self.ftdi = Ftdi(self.log)
+    def __init__(self):
+        self._ftdi = Ftdi()
         self.direction = JtagController.TCK_BIT | \
                          JtagController.TDI_BIT | \
                          JtagController.TMS_BIT | \
@@ -191,7 +190,6 @@ class JtagController(object):
         length = len(out)
         byte = out.tobyte()
         cmd = struct.pack('<BBB', Ftdi.WRITE_BITS_NVE_LSB, length-1, byte)
-        self.log.debug("Write TDI(%d): %s" % (len(cmd), hexline(cmd)))
         self._stack_cmd(cmd)
 
     def _write_bytes(self, out):
@@ -199,115 +197,95 @@ class JtagController(object):
         bytes = out.tobytes(msby=True) # don't ask...
         cmd = struct.pack('<BH%dB' % len(bytes), Ftdi.WRITE_BYTES_NVE_LSB,
                           len(bytes)-1, *bytes)
-        self.log.debug("Write TDI(%d): %s" % (len(out), hexline(cmd)))
         self._stack_cmd(cmd)
 
     # Public API
-    def debug(self, level):
-        self._debug = level
-
-    def configure(self, vendor=0x0403, product=0x6011, interface=0,
+    def configure(self, vendor, product, interface,
                   highreset=False, frequency=3.0E6):
         """Configure the FTDI interface as a JTAG controller"""
-        curfreq = self.ftdi.open_mpsse(vendor, product, interface,
-                                       self.direction, frequency)
-        self.log.debug( "JTAG freq req. %2.2e, real freq. %2.2e" % \
-                       (frequency, curfreq))
+        curfreq = self._ftdi.open_mpsse(vendor, product, interface,
+                                        self.direction, frequency)
         if highreset:
             value = 0x01
             direction = 0x01
             cmd = struct.pack('<BBB', Ftdi.SET_BITS_HIGH, value, direction)
-            self.ftdi.write_data(cmd)
-            self.ftdi.check_error()
+            self._ftdi.write_data(cmd)
 
     def terminate(self):
-        if self.ftdi:
-            self.ftdi.close()
-            self.ftdi = None
+        if self._ftdi:
+            self._ftdi.close()
+            self._ftdi = None
 
     def reset(self):
         """Reset the attached TAP controller"""
         # we can either send a TRST HW signal or perform 5 cycles with TMS=1
         # to move the remote TAP controller back to 'test_logic_reset' state
         # do both for now
-        #self.log.debug("HW (TRst) reset")
-        if not self.ftdi:
+        if not self._ftdi:
             raise AssertionError("FTDI controller terminated")
         value = 0
         cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW, value, self.direction)
-        self.ftdi.write_data(cmd)
-        self.ftdi.check_error('HW reset')
+        self._ftdi.write_data(cmd)
         time.sleep(0.1)
         value = TRST_BIT
         cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW, value, self.direction)
-        self.ftdi.write_data(cmd)
-        self.ftdi.check_error('HW reset')
+        self._ftdi.write_data(cmd)
         time.sleep(0.1)
-        self.log.debug("SW (TMS) reset")
         self.write_tms(BitSequence('11111'))
-        self.ftdi.check_error('SW reset')
 
     def sync(self):
-        if not self.ftdi:
+        if not self._ftdi:
             raise AssertionError("FTDI controller terminated")
         if self._write_buff:
-            self.ftdi.write_data(self._write_buff)
+            self._ftdi.write_data(self._write_buff)
             self._write_buff = ''
 
     def write_tms(self, out):
         """Change the TAP controller state"""
         length = len(out)
-        self.log.debug("Last bit: %d" % self._last)
         if self._last:
             out = out[:]
             out[7] = 1
             self._last = 0
         cmd = struct.pack('<BBB', Ftdi.WRITE_BITS_TMS_NVE, length-1,
                           out.tobyte())
-        self.log.debug("Write TMS: %s" % hexline(cmd))
         self._stack_cmd(cmd)
 
     def read_bits(self, length):
         """Read out bits from TDO"""
-        if not self.ftdi:
+        if not self._ftdi:
             raise AssertionError("FTDI controller terminated")
         data = ''
         if length > 8:
             raise AssertionError, "Cannot fit into FTDI fifo"
         cmd = struct.pack('<BB', Ftdi.READ_BITS_NVE_LSB, length-1)
-        self.log.debug("Write FTDI %s" % hexline(cmd))
         self._stack_cmd(cmd)
         self.sync()
-        data = self.ftdi.read_data(1)
-        self.log.debug("Read TDO: %s (%d)" % (hexline(data), len(data)))
+        data = self._ftdi.read_data(1)
         return BitSequence(ord(data), length=length)
 
     def read_bytes(self, length):
         """Read out bytes from TDO"""
-        if not self.ftdi:
+        if not self._ftdi:
             raise AssertionError("FTDI controller terminated")
         data = ''
         if length > 512:
             raise AssertionError, "Cannot fit into FTDI fifo"
         cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_LSB, length-1)
-        self.log.debug("Write FTDI %s" % hexline(cmd))
         self._stack_cmd(cmd)
         self.sync()
-        data = self.ftdi.read_data(length)
-        self.log.debug("Read TDO: %s (%d)" % (hexline(data), len(data)))
+        data = self._ftdi.read_data(length)
         return BitSequence(bytes=data, length=8*length)
 
     def read_write_bytes(self, out):
-        if not self.ftdi:
+        if not self._ftdi:
             raise AssertionError("FTDI controller terminated")
         length = len(out)
         cmd = struct.pack('<BH', Ftdi.RW_BYTES_NVE_LSB, length-1)
         cmd += out
-        self.log.debug("Write TDI(%d): %s" % (length, hexline(cmd)))
         self._stack_cmd(cmd)
         self.sync()
-        data = self.ftdi.read_data(length)
-        self.log.debug("Read TDO(%d): %s" % (len(data), hexline(data)))
+        data = self._ftdi.read_data(length)
 
     def read(self, length):
         """Read out a sequence of bits from TDO"""
@@ -332,7 +310,6 @@ class JtagController(object):
         byte_count = len(out)//8
         pos = 8*byte_count
         bit_count = len(out)-pos
-        self.log.debug("POS: %d" % pos)
         if byte_count:
             self._write_bytes(out[:pos])
         if bit_count:
@@ -342,9 +319,8 @@ class JtagController(object):
 class JtagEngine(object):
     """High-level JTAG engine controller"""
 
-    def __init__(self, logger):
-        self.log = logger
-        self._ctrl = JtagController(logger)
+    def __init__(self):
+        self._ctrl = JtagController()
         self._sm = JtagStateMachine()
         self._seq = ''
 
