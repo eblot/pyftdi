@@ -142,11 +142,37 @@ class _Gen25FlashDevice(SerialFlash):
     CMD_ERASE_BLOCK = 0xD8 # Erase full block
     CMD_EWSR = 0x50 # Enable write status register
     CMD_WRSR = 0x01 # Write status register
+    CMD_ERASE_SUBSECTOR = 0x20
+    CMD_ERASE_HSECTOR = 0x52
+    CMD_ERASE_SECTOR = 0xD8
+    CMD_ERASE_CHIP = 0xC7
+    CMD_PROGRAM_PAGE = 0x02
 
-    STATUS_BUSY = 0b00000001 # Busy bit
-    STATUS_WEL = 0b00000010 # Write enable bit
-    STATUS_BP = 0b00111100 # Protection bits
-    STATUS_BPL = 0b10000000 #
+    PAGE_DIV = 8
+    SUBSECTOR_DIV = 12
+    HSECTOR_DIV = 15
+    SECTOR_DIV = 16
+    PAGE_SIZE = (1<<PAGE_DIV)
+    SUBSECTOR_SIZE = (1<<SUBSECTOR_DIV)
+    HSECTOR_SIZE = (1<<HSECTOR_DIV)
+    SECTOR_SIZE = (1<<SECTOR_DIV)
+    SPI_FREQUENCY_MAX = 50# MHz
+    ADDRESS_WIDTH = 3
+
+    SR_WIP = 0b00000001 # Busy/Work-in-progress bit
+    SR_WEL = 0b00000010 # Write enable bit
+    SR_BP0 = 0b00000100 # bit protect #0
+    SR_BP1 = 0b00001000 # bit protect #1
+    SR_BP2 = 0b00010000 # bit protect #2
+    SR_BP3 = 0b00100000 # bit protect #3
+    SR_TBP = SR_BP3     # top-bottom protect bit
+    SR_SP = 0b01000000
+    SR_BPL = 0b10000000
+    SR_PROTECT_NONE = 0 # BP[0..2] = 0
+    SR_PROTECT_ALL = 0b00011100 # BP[0..2] = 1
+    SR_LOCK_PROTECT = SR_BPL
+    SR_UNLOCK_PROTECT = 0
+    SR_BPL_SHIFT = 2
 
     def __init__(self, spiport):
         self._spi = spiport
@@ -196,7 +222,7 @@ class _Gen25FlashDevice(SerialFlash):
                                 address&0xff)
         self._spi.command(erblk_cmd)
         while self.is_busy():
-            time.sleep(0.030) # 30 ms
+            time.sleep(self.SECTOR_ETIME_MAX)
         self._disable_write()
 
     @staticmethod
@@ -211,11 +237,18 @@ class _Gen25FlashDevice(SerialFlash):
 class Sst25FlashDevice(_Gen25FlashDevice):
     """SST25 flash device implementation"""
 
-    CMD_AAI = 0xAD # Auto address increment (for write command)
-
+    JEDEC_ID = 0xBF
+    SERIALFLASH_ID = 0x25
+    CMD_PROGRAM_BYTE = 0x02
+    CMD_PROGRAM_WORD = 0xAD # Auto address increment (for write command)
     SST25_AAI = 0b01000000 # AAI mode activation flag
-
-    DEVICES = { 0x4a: 4<<20 }
+    DEVICES = { 0x41 : 2<<20, 0x4A : 4<<20 }
+    SUBSECTOR_ETIME_MAX = 0.025 # 25 ms
+    HSECTOR_ETIME_MAX = 0.025 # 25 ms
+    SECTOR_ETIME_MAX = 0.025 # 25 ms
+    SPI_FREQ_MAX = 66 # MHz
+    SPI_SETUP_TIME = 5E-09 # 5 ns
+    SPI_HOLD_TIME = 5E-09 # 5 ns
 
     def __init__(self, spi, jedec):
         if not Sst25FlashDevice.match(jedec):
@@ -231,9 +264,9 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     def match(jedec):
         """Tells whether this class support this JEDEC identifier"""
         manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
-        if manufacturer != 0xbf:
+        if manufacturer != Sst25FlashDevice.JEDEC_ID:
             return False
-        if device != 0x25:
+        if device != Sst25FlashDevice.SERIALFLASH_ID:
             return False
         if capacity not in Sst25FlashDevice.DEVICES:
             return False
@@ -250,7 +283,7 @@ class Sst25FlashDevice(_Gen25FlashDevice):
         if (address&0x1) or (length&0x1) or (length==0):
             raise AssertionError("Alignement/size not supported")
         self._enable_write()
-        aai_cmd = struct.pack('<BBBBBB', Sst25FlashDevice.CMD_AAI,
+        aai_cmd = struct.pack('<BBBBBB', Sst25FlashDevice.CMD_PROGRAM_WORD,
                               (address>>16)&0xff,
                               (address>>8)&0xff,
                               address&0xff,
@@ -266,14 +299,10 @@ class Sst25FlashDevice(_Gen25FlashDevice):
                 time.sleep(0.01) # 10 ms
             if not data:
                 break
-            aai_cmd = struct.pack('<BBB', Sst25FlashDevice.CMD_AAI,
+            aai_cmd = struct.pack('<BBB', Sst25FlashDevice.CMD_PROGRAM_WORD,
                                   data.pop(0), data.pop(0))
         #print ""
         self._disable_write()
-
-    def unlock(self):
-        """Make the whole device read/write"""
-        pass
 
 
 if __name__ == '__main__':
