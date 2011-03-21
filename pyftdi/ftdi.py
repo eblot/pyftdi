@@ -42,6 +42,10 @@ class FtdiError(IOError):
 class Ftdi(object):
     """FTDI device driver"""
 
+    # Bus clocks
+    BUS_CLOCK_MAX = 30.0E6
+    BUS_CLOCK_BASE = 6.0E6
+
     # Shifting commands IN MPSSE Mode
     MPSSE_WRITE_NEG = 0x01 # Write TDI/DO on negative TCK/SK edge
     MPSSE_BITMODE = 0x02   # Write bits, not bytes
@@ -235,6 +239,7 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None # disable dynamic latency
+        self.device = (None, None, None)
 
     # --- Public API -------------------------------------------------------
 
@@ -242,6 +247,7 @@ class Ftdi(object):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = self._get_device(vendor, product)
         self._set_interface(interface)
+        self.device = (vendor, product, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
 
@@ -262,7 +268,7 @@ class Ftdi(object):
         # Disable loopback
         self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
         # Configure clock, twice to circumvent cold init case issue
-        frequency = self._set_frequency(frequency)
+        frequency = self.set_frequency(frequency)
         # Configure I/O
         self.write_data(struct.pack('<BBB', Ftdi.SET_BITS_LOW, 0, direction))
         # Enable MPSSE mode
@@ -511,7 +517,7 @@ class Ftdi(object):
         except usb.core.USBError, e:
             raise FtdiError('UsbError: %s' % str(e))
 
-    def read_data(self, size):
+    def read_data_bytes(self, size):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
@@ -525,7 +531,7 @@ class Ftdi(object):
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
             self.readoffset += size
-            return data.tostring()
+            return data
         # something still in the cache, but not enough to satisfy 'size'?
         if len(self.readbuffer)-self.readoffset != 0:
             data = self.readbuffer[self.readoffset:]
@@ -570,7 +576,7 @@ class Ftdi(object):
                                 self.set_latency_timer(self.latency_max)
                                 self.latency = self.latency_max
                     # no more data to read?
-                    return data.tostring()
+                    return data
                 if length > 0:
                     # data still fits in buf?
                     if (len(data) + length) <= size:
@@ -579,7 +585,7 @@ class Ftdi(object):
                         self.readoffset += length
                         # did we read exactly the right amount of bytes?
                         if len(data) == size:
-                            return data.tostring()
+                            return data
                     else:
                         # partial copy, not enough bytes in the local cache to
                         # fulfill the request
@@ -590,11 +596,17 @@ class Ftdi(object):
                         data += self.readbuffer[self.readoffset:\
                                                 self.readoffset+part_size]
                         self.readoffset += part_size
-                        return data.tostring()
+                        return data
         except usb.core.USBError, e:
             raise FtdiError('UsbError: %s' % str(e))
         # never reached
         raise FtdiError("Internal error")
+
+    def read_data(self, size):
+        """Read data in chunks from the chip.
+           Automatically strips the two modem status bytes transfered during
+           every read."""
+        return self.read_data_bytes(size).tostring()
 
     def set_dynamic_latency(self, lmin, lmax, threshold):
         """Set up or disable latency values"""
@@ -806,16 +818,18 @@ class Ftdi(object):
             index |= 1<<9 # use hispeed mode
         return (best_baud, value, index)
 
-    def _set_frequency(self, frequency):
+    def set_frequency(self, frequency):
         """Convert a frequency value into a TCK divisor setting"""
-        if frequency <= 6.0E6:
+        if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5
-            divisor = int(6.0E6/frequency)-1
-            actual_freq = 6.0E6/(divisor+1)
-        elif frequency <= 30E6:
+            divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
+            actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
+        elif frequency <= Ftdi.BUS_CLOCK_MAX:
+            # not supported on non-H device, however it seems that 2232D
+            # devices simply ignore the settings. Could be improved though
             divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int(30.0E6/frequency)-1
-            actual_freq = 30.0E6/(divisor+1)
+            divisor = int(Ftdi.BUS_CLOCK_MAX/frequency)-1
+            actual_freq = Ftdi.BUS_CLOCK_MAX/(divisor+1)
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # Configure clock, twice to circumvent cold init case issue

@@ -23,11 +23,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import array
 import struct
 import time
 from pyftdi import Ftdi
 
 __all__ = ['SpiPort', 'SpiController']
+
+
+class SpiIOError(IOError):
+    """SPI I/O error"""
 
 
 class SpiPort(object):
@@ -36,12 +41,24 @@ class SpiPort(object):
         """Instanciate a new SPI port"""
         self._controller = controller
         self._cs_cmd = cs_cmd
+        self._frequency = self._controller.frequency
 
-    def command(self, out='', readlen=0):
-        return self._controller._command(self._cs_cmd, out, readlen)
+    def exchange(self, out='', readlen=0):
+        """Perform a half-duplex transaction with the SPI slave"""
+        return self._controller._exchange(self._frequency, self._cs_cmd,
+                                          out, readlen)
 
     def flush(self):
+        """Force the flush of the HW FIFOs"""
         self._controller._flush()
+
+    def change_bitrate(self, frequency):
+        """Change SPI bus frequency"""
+        self._frequency = min(frequency, Ftdi.BUS_CLOCK_MAX)
+
+    @property
+    def frequency(self):
+        return self._frequency
 
 
 class SpiController(object):
@@ -52,6 +69,7 @@ class SpiController(object):
     DI_BIT = 0x04
     CS_BIT = 0x08
     CS_COUNT = 4
+    PAYLOAD_MAX_LENGTH = 0x10000 # 16 bits max
 
     def __init__(self):
         self._ftdi = Ftdi()
@@ -65,11 +83,12 @@ class SpiController(object):
                                     self._cs_bits,
                                     self._direction) + \
                         struct.pack('<BBB', Ftdi.WRITE_BITS_TMS_NVE, 7, 0xff)
+        self._frequency = 0.0
 
     def configure(self, vendor, product, interface, frequency=6.0E6):
         """Configure the FTDI interface as a SPI master"""
-        curfreq = self._ftdi.open_mpsse(vendor, product, interface,
-                                        self._direction, frequency)
+        self._frequency = self._ftdi.open_mpsse(vendor, product, interface,
+                                                self._direction, frequency)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -80,9 +99,9 @@ class SpiController(object):
     def get_port(self, cs):
         """Obtain a SPI port to drive a SPI device selected by cs"""
         if not self._ftdi:
-            raise AssertionError("FTDI controller terminated")
+            raise SpiIOError("FTDI controller not initialized")
         if cs >= len(self._ports):
-            raise AssertionError("No such SPI port")
+            raise SpiIOError("No such SPI port")
         if not self._ports[cs]:
             cs_bits = SpiController.SCK_BIT | \
                       SpiController.DO_BIT | \
@@ -90,26 +109,42 @@ class SpiController(object):
             cs_cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW,
                                  (~cs_bits)&0xff, self._direction)
             self._ports[cs] = SpiPort(self, cs_cmd)
+            self._release_bus()
         return self._ports[cs]
 
-    def _command(self, cs_cmd, out, readlen):
-        """Perform a half-duplex communication with a SPI slave"""
+    @property
+    def frequency(self):
+        return self._frequency
+
+    def _release_bus(self):
+        self._ftdi.write_data(self._cs_high)
+        self._flush()
+
+    def _exchange(self, frequency, cs_cmd, out, readlen):
+        """Perform a half-duplex transaction with the SPI slave"""
         if not self._ftdi:
-            raise AssertionError("FTDI controller terminated")
+            raise SpiIOError("FTDI controller not initialized")
+        if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
+            raise SpiIOError("Output payload is too large")
+        if readlen > SpiController.PAYLOAD_MAX_LENGTH:
+            raise SpiIOError("Input payload is too large")
+        if self._frequency != frequency:
+            freq = self._ftdi.set_frequency(frequency)
+            # store the requested value, not the actual one (best effort)
+            self._frequency = frequency
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
             cmd = cs_cmd + write_cmd + out + read_cmd + self._cs_high
             self._ftdi.write_data(cmd)
-            data = self._ftdi.read_data(readlen)
+            data = self._ftdi.read_data_bytes(readlen)
         else:
             cmd = cs_cmd + write_cmd + out + self._cs_high
             self._ftdi.write_data(cmd)
-            data = ''
+            data = array.array('B')
         return data
 
     def _flush(self):
         """Flush the HW FIFOs"""
         self._ftdi.write_data(struct.pack('<B', Ftdi.SEND_IMMEDIATE))
-        self._ftdi.usb_purge_buffers()
-        self._ftdi.read_data(16)
+        self._ftdi.purge_buffers()

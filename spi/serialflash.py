@@ -26,13 +26,22 @@
 from pyftdi import Ftdi
 from pyftdi.spi import SpiController
 from pyftdi.misc import hexdump
+import array
 import struct
-import time
 import sys
+import time
 
 
 class SerialFlashNotSupported(Exception):
     """Exception thrown when a non-existing feature is invoked"""
+
+
+class SerialFlashUnknownJedec(SerialFlashNotSupported):
+    """Exception thrown when a JEDEC identifier is not recognized"""
+    def __init__(self, jedec):
+        from binascii import hexlify
+        SerialFlashNotSupported.__init__(self,
+            msg="Unknown flash device: %s" % hexlify(jedec))
 
 
 class SerialFlash(object):
@@ -105,7 +114,7 @@ class SerialFlashManager(object):
     def read_jedec_id(spi):
         """Read flash device JEDEC identifier (3 bytes)"""
         jedec_cmd = struct.pack('<B', SerialFlashManager.CMD_JEDEC_ID)
-        return spi.command(jedec_cmd, 3)
+        return spi.exchange(jedec_cmd, 3).tostring()
 
     @staticmethod
     def _get_flash(spi, jedec):
@@ -117,9 +126,7 @@ class SerialFlashManager(object):
         for device in devices:
             if device.match(jedec):
                 return device(spi, jedec)
-        from binascii import hexlify
-        raise SerialFlashNotSupported("Unknown flash device: %s" % \
-                                      hexlify(jedec))
+        raise SerialFlashUnknownJedec(jedec)
 
 
 class _Gen25FlashDevice(SerialFlash):
@@ -139,6 +146,7 @@ class _Gen25FlashDevice(SerialFlash):
     CMD_READ_STATUS = 0x05 # Read status register
     CMD_WRITE_ENABLE = 0x06 # Write enable
     CMD_WRITE_DISABLE = 0x04 # Write disable
+    CMD_PROGRAM_PAGE = 0x02 # Write page
     CMD_ERASE_BLOCK = 0xD8 # Erase full block
     CMD_EWSR = 0x50 # Enable write status register
     CMD_WRSR = 0x01 # Write status register
@@ -156,7 +164,7 @@ class _Gen25FlashDevice(SerialFlash):
     SUBSECTOR_SIZE = (1<<SUBSECTOR_DIV)
     HSECTOR_SIZE = (1<<HSECTOR_DIV)
     SECTOR_SIZE = (1<<SECTOR_DIV)
-    SPI_FREQUENCY_MAX = 50# MHz
+    SPI_FREQUENCY_MAX = 50 # MHz
     ADDRESS_WIDTH = 3
 
     SR_WIP = 0b00000001 # Busy/Work-in-progress bit
@@ -182,56 +190,99 @@ class _Gen25FlashDevice(SerialFlash):
         return len(self)
 
     def is_busy(self):
-        return Gen25FlashDevice._is_busy(self._read_status())
+        return _Gen25FlashDevice._is_busy(self._read_status())
 
-    def unlock(spi):
-        ewsr_cmd = struct.pack('<B', Gen25FlashDevice.CMD_EWSR)
-        spi.command(ewsr_cmd)
-        wrsr_cmd = struct.pack('<BB', Gen25FlashDevice.CMD_WRSR,
-                               (~Gen25FlashDevice.STATUS_BP)&0xff)
-        spi.command(wrsr_cmd)
+    def unlock(self):
+        ewsr_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_EWSR)
+        self._spi.exchange(ewsr_cmd)
+        wrsr_cmd = struct.pack('<BB', _Gen25FlashDevice.CMD_WRSR,
+                               (~_Gen25FlashDevice.STATUS_BP)&0xff)
+        self._spi.exchange(wrsr_cmd)
+
+    def read(self, address, length):
+        buf = array.array('B')
+        while length > 0:
+            size = min(length, _Gen25FlashDevice.PAGE_SIZE)
+            data = self._read_hi_speed(address, size)
+            length -= len(data)
+            address += len(data)
+            buf.extend(data)
+        return buf
+
+    def write(self, address, data):
+        """Write a sequence of bytes, starting at the specified address."""
+        length = len(data)
+        pos = 0
+        while pos < length:
+            size = min(length-pos, SpiController.PAYLOAD_MAX_LENGTH)
+            self._write(address, data[pos:pos+size])
+            address += size
+            pos += size
 
     @staticmethod
     def _jedec2int(jedec, maxlength=3):
         return tuple([ord(x) for x in jedec[:maxlength]])
 
     def _read_lo_speed(self, address, length):
-        read_cmd = struct.pack('<BBBB', Gen25FlashDevice.CMD_READ_LO_SPEED,
-                               (address>>16)&0xff,
-                               (address>>8)&0xff,
+        read_cmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_READ_LO_SPEED,
+                               (address>>16)&0xff, (address>>8)&0xff,
                                address&0xff)
-        return self._spi.command(read_cmd, length)
+        return self._spi.exchange(read_cmd, length)
+
+    def _read_hi_speed(self, address, length):
+        read_cmd = struct.pack('<BBBBB', _Gen25FlashDevice.CMD_READ_LO_SPEED,
+                               (address>>16)&0xff, (address>>8)&0xff,
+                               address&0xff, 0)
+        return self._spi.exchange(read_cmd, length)
+
+    def _write(self, address, data):
+        # take care not to roll over the end of the flash page
+        if address & (_Gen25FlashDevice.PAGE_SIZE-1):
+            up = (address+(_Gen25FlashDevice.PAGE_SIZE-1)) & \
+                    ~(_Gen25FlashDevice.PAGE_SIZE-1);
+            count = min(len(data), up-address)
+            sequences = [(address, data[:count]), (up, data[count:])]
+        else:
+            sequences = [(address, data)]
+        for addr, buf in sequences:
+            # print "write 0x%06x %d '%s'" % (addr, len(buf), buf)
+            self._enable_write()
+            wcmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_PROGRAM_PAGE,
+                               (addr>>16)&0xff, (addr>>8)&0xff, addr&0xff)
+            self._spi.exchange(wcmd + data)
+            while self.is_busy():
+                time.sleep(self.PAGE_WTIME)
 
     def _read_status(self):
-        read_cmd = struct.pack('<B', CMD_READ_STATUS)
-        return struct.unpack('<B', self._spi.command(read_cmd, 1))[0]
+        read_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_READ_STATUS)
+        return struct.unpack('<B', self._spi.exchange(read_cmd, 1))[0]
 
     def _enable_write(self):
-        wren_cmd = struct.pack('<B', Gen25FlashDevice.CMD_WRITE_ENABLE)
-        self._spi.command(wren_cmd)
+        wren_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_ENABLE)
+        self._spi.exchange(wren_cmd)
 
     def _disable_write(self):
-        wrdi_cmd = struct.pack('<B', Gen25FlashDevice.CMD_WRITE_DISABLE)
-        self._spi.command(wrdi_cmd)
+        wrdi_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_DISABLE)
+        self._spi.exchange(wrdi_cmd)
 
     def _erase_sector(self, address):
         self._enable_write()
-        erblk_cmd = struct.pack('<BBBB', Gen25FlashDevice.CMD_ERASE_BLOCK,
+        erblk_cmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_ERASE_BLOCK,
                                 (address>>16)&0xff,
                                 (address>>8)&0xff,
                                 address&0xff)
-        self._spi.command(erblk_cmd)
+        self._spi.exchange(erblk_cmd)
         while self.is_busy():
             time.sleep(self.SECTOR_ETIME_MAX)
         self._disable_write()
 
     @staticmethod
     def _is_busy(status):
-        return (status & ST25_BUSY) and True or False
+        return (status & _Gen25FlashDevice.SR_WIP) and True or False
 
     @staticmethod
     def _is_wren(status):
-        return (status & ST25_WEL) and True or False
+        return (status & _Gen25FlashDevice.SR_WEL) and True or False
 
 
 class Sst25FlashDevice(_Gen25FlashDevice):
@@ -252,13 +303,16 @@ class Sst25FlashDevice(_Gen25FlashDevice):
 
     def __init__(self, spi, jedec):
         if not Sst25FlashDevice.match(jedec):
-            raise SerialFlashNotSupported('Invalid JEDEC id')
+            raise SerialFlashUnknownJedec(jedec)
         device = _Gen25FlashDevice._jedec2int(jedec)[-1]
         self._size = Sst25FlashDevice.DEVICES[device]
         self._spi = spi
 
     def __len__(self):
         return self._size
+
+    def __str__(self):
+        return 'SST SST25 %d MB' % (len(self)>>20, )
 
     @staticmethod
     def match(jedec):
@@ -294,7 +348,7 @@ class Sst25FlashDevice(_Gen25FlashDevice):
             percent = (1000.0*offset/length)
             #print "Address %06x (%2.1f%%)\r" % (address + offset, percent/10),
             offset += 2
-            self._spi.command(aai_cmd)
+            self._spi.exchange(aai_cmd)
             while self.is_busy():
                 time.sleep(0.01) # 10 ms
             if not data:
@@ -305,6 +359,64 @@ class Sst25FlashDevice(_Gen25FlashDevice):
         self._disable_write()
 
 
+class S25FlFlashDevice(_Gen25FlashDevice):
+    """Spansion S25FL flash device implementation"""
+
+    JEDEC_ID = 0x01
+    SERIALFLASH_ID = 0x02
+    CR_FREEZE = 0x01
+    CR_QUAD = 0x02
+    CR_TBPARM = 0x04
+    CR_BPNV = 0x08
+    CR_LOCK = 0x10
+    CR_TBPROT = 0x20
+    READ_CONFIG = 0x35
+    SECTOR_ETIME_MAX = 3 # 3000 ms
+    SUBSECTOR_ETIME_MAX = 0.8 # 800 ms
+    SPI_FREQ_MAX = 104 # MHz (P series only)
+    SPI_SETUP_TIME = 3E-09 # 3 ns
+    SPI_HOLD_TIME = 3E-09 # 3 ns
+    DEVICES = { 0x15 : 4<<20, 0x16 : 8<<20 }
+
+    def __init__(self, spi, jedec):
+        if not S25FlFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        device = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = S25FlFlashDevice.DEVICES[device]
+        self._spi = spi
+        self._spi.change_bitrate(S25FlFlashDevice.SPI_FREQ_MAX*1E06)
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Spansion S25FL %d MB' % (len(self)>>20, )
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != S25FlFlashDevice.JEDEC_ID:
+            return False
+        if device != S25FlFlashDevice.SERIALFLASH_ID:
+            return False
+        if capacity not in S25FlFlashDevice.DEVICES:
+            return False
+        return True
+
+
 if __name__ == '__main__':
-    mgr = SerialFlashManager(0x403, 0x6011, 1)
-    print mgr.get_flash_device()
+    import time
+    mgr = SerialFlashManager(0x403, 0x6010, 1)
+    flash = mgr.get_flash_device()
+    print "Flash device: %s" % flash
+    #delta = time.time()
+    #data = flash.read(0, len(flash))
+    #delta = time.time()-delta
+    #length = len(data)
+    #print "%d bytes in %d seconds @ %d KB/s" % \
+    #    (length, delta, length/(1024*delta))
+    flash.write(0x3c0020, 'This is a serial SPI flash test')
+    data = flash.read(0x3c0000, 128).tostring()
+    from pyftdi.misc import hexdump
+    print hexdump(data)
