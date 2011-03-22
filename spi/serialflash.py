@@ -108,6 +108,10 @@ class SerialFlashManager(object):
         """Obtain an instance of the detected flash device"""
         spi = self._ctrl.get_port(cs)
         jedec = SerialFlashManager.read_jedec_id(spi)
+        if not jedec:
+            # it is likely that the latency setting is too low if this
+            # condition is encountered
+            raise SerialFlashUnknownJedec("Unable to read JEDEC Id")
         return SerialFlashManager._get_flash(spi, jedec)
 
     @staticmethod
@@ -202,7 +206,7 @@ class _Gen25FlashDevice(SerialFlash):
     def read(self, address, length):
         buf = array.array('B')
         while length > 0:
-            size = min(length, _Gen25FlashDevice.PAGE_SIZE)
+            size = min(length, SpiController.PAYLOAD_MAX_LENGTH)
             data = self._read_hi_speed(address, size)
             length -= len(data)
             address += len(data)
@@ -214,7 +218,7 @@ class _Gen25FlashDevice(SerialFlash):
         length = len(data)
         pos = 0
         while pos < length:
-            size = min(length-pos, SpiController.PAYLOAD_MAX_LENGTH)
+            size = min(length-pos, _Gen25FlashDevice.PAGE_SIZE)
             self._write(address, data[pos:pos+size])
             address += size
             pos += size
@@ -410,14 +414,15 @@ if __name__ == '__main__':
     mgr = SerialFlashManager(0x403, 0x6010, 1)
     flash = mgr.get_flash_device()
     print "Flash device: %s" % flash
-    #delta = time.time()
-    #data = flash.read(0, len(flash))
-    #delta = time.time()-delta
-    #length = len(data)
-    #print "%d bytes in %d seconds @ %d KB/s" % \
-    #    (length, delta, length/(1024*delta))
-    flash.write(0x3c0020, 'This is a serial SPI flash test')
-    data = flash.read(0x3c0020, 128).tostring()
+    print "Start reading the whole device..."
+    delta = time.time()
+    data = flash.read(0, len(flash))
+    delta = time.time()-delta
+    length = len(data)
+    print "%d bytes in %d seconds @ %.1f KB/s" % \
+        (length, delta, length/(1024.0*delta))
+    #flash.write(0x3c0020, 'This is a serial SPI flash test')
+    #data = flash.read(0x3c0020, 128).tostring()
     #data = flash.read(0xeff0, 128).tostring()
-    from pyftdi.misc import hexdump
-    print hexdump(data)
+    #from pyftdi.misc import hexdump
+    #print hexdump(data)
