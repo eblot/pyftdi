@@ -35,7 +35,6 @@ import time
 class SerialFlashNotSupported(Exception):
     """Exception thrown when a non-existing feature is invoked"""
 
-
 class SerialFlashUnknownJedec(SerialFlashNotSupported):
     """Exception thrown when a JEDEC identifier is not recognized"""
     def __init__(self, jedec):
@@ -43,9 +42,26 @@ class SerialFlashUnknownJedec(SerialFlashNotSupported):
         SerialFlashNotSupported.__init__(self,
             msg="Unknown flash device: %s" % hexlify(jedec))
 
+class SerialFlashTimeout(Exception):
+    """Exception thrown when a flash command cannot be completed in a timely
+       manner"""
+
+class SerialFlashValueError(ValueError):
+    """Exception thrown when a parameter is out of range"""
+
 
 class SerialFlash(object):
     """Interface of a generic SPI flash device"""
+
+    FEAT_NONE = 0x000         # No special feature
+    FEAT_LOCK = 0x001         # Basic, revertable locking
+    FEAT_INVLOCK = 0x002      # Inverted (bottom/top) locking
+    FEAT_SECTLOCK = 0x004     # Arbitrary sector locking
+    FEAT_OTPLOCK = 0x008      # OTP locking available
+    FEAT_UNIQUEID = 0x010     # Unique ID
+    FEAT_SECTERASE = 0x100    # Can erase whole sectors
+    FEAT_HSECTERASE = 0x200   # Can erase half sectors
+    FEAT_SUBSECTERASE = 0x400 # Can erase sub sectors
 
     def read(self, address, length):
         """Read a sequence of bytes from the specified address."""
@@ -60,6 +76,11 @@ class SerialFlash(object):
            specific constraints."""
         raise NotImplemented()
 
+    def can_erase(self, address, length):
+        """Tells whether a defined area can be erased on the Spansion flash
+           device. It does not take into account any locking scheme."""
+        raise NotImplemented()
+
     def is_busy(self):
         """Reports whether the flash may receive commands or is actually
            being performing internal work"""
@@ -70,8 +91,8 @@ class SerialFlash(object):
         raise NotImplemented()
 
     def get_capabilities(self):
-        """List the flash device capabilities."""
-        return ''
+        """Flash device capabilities."""
+        return SerialFlash.FEAT_NONE
 
     def get_locks(self):
         """Report the currently write-protected areas of the device."""
@@ -223,6 +244,100 @@ class _Gen25FlashDevice(SerialFlash):
             address += size
             pos += size
 
+    def erase(self, address, length):
+        """Erase sectors/blocks/chip of a "generic" flash device.
+           Erasure algorithm:
+           The area to erase span across one or more sectors, which can be
+           accounted as bigger blocks, depending on the start and end address
+           of the location to be erased
+           address ----------------- length ---------------------->
+                 v                                                 v
+              ...|LSS|LSS|LSS| LHS | LHS |  S  |  RHS  | RHS |RSS|RSS|RSS|....
+
+             LSS: left subsector, RSS: right subsector
+             LHS: left half-sector, RHS: right half-sector (32KB)
+             S: (large) sector (64kB)
+           Depending on the device capabilities, half-sector may or may not be
+           used. This routine tries to find and erase the biggest flash page
+           segments so that erasure time is decreased
+           """
+        # sanity check
+        self.can_erase(address, length)
+        # first page to erase on the left-hand size
+        start = address
+        # last page to erase on the left-hand size
+        end = start + length
+        # first page to erase on the right-hand size
+        rstart = start
+        # last page to erase on the right-hand size
+        rend = end
+        if self.get_capabilities() & SerialFlash.FEAT_SECTERASE:
+            # Check whether one or more whole large sector can be erased
+            s_start = (start+_Gen25FlashDevice.SECTOR_SIZE-1) & \
+                        ~(_Gen25FlashDevice.SECTOR_SIZE-1)
+            s_end = end & ~(_Gen25FlashDevice.SECTOR_SIZE-1)
+            if s_start < s_end:
+                self._erase_blocks(self.CMD_ERASE_SECTOR,
+                                   self.ERASE_SECTOR_TIME,
+                                   s_start, s_end,
+                                   self.SECTOR_SIZE)
+                # update the left-hand end marker
+                end = s_start
+                # update the right-hand start marker
+                if s_end > rstart:
+                    rstart = s_end
+        if self.get_capabilities() & SerialFlash.FEAT_HSECTERASE:
+            # Check whether one or more left halfsectors can be erased
+            hsl_start = (start+_Gen25FlashDevice.HSECTOR_SIZE-1) & \
+                           ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
+            hsl_end = end & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
+            if hsl_start < hsl_end:
+                self._erase_blocks(self.CMD_ERASE_HSECTOR,
+                                   self.ERASE_HSECTOR_TIME,
+                                   hsl_start, hsl_end,
+                                   self.HSECTOR_SIZE)
+                # update the left-hand end marker
+                end = hsl_start
+                # update the right-hand start marker
+                if hsl_end > rstart:
+                    rstart = hsl_end
+        if self.get_capabilities() & SerialFlash.FEAT_SUBSECTERASE:
+            # Check whether one or more left subsectors can be erased
+            ssl_start = (start+_Gen25FlashDevice.SUBSECTOR_SIZE-1) & \
+                           ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
+            ssl_end = end & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
+            if ssl_start < ssl_end:
+                self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
+                                   self.ERASE_SUBSECTOR_TIME,
+                                   ssl_start, ssl_end,
+                                   self.SUBSECTOR_SIZE)
+                # update the right-hand start marker
+                if ssl_end > rstart:
+                    rstart = ssl_end
+        if self.get_capabilities() & SerialFlash.FEAT_HSECTERASE:
+            # Check whether one or more whole left halfsectors can be erased
+            hsr_start = (rstart+_Gen25FlashDevice.HSECTOR_SIZE-1) & \
+                           ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
+            hsr_end = rend & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
+            if hsr_start < hsr_end:
+                self._erase_blocks(self.CMD_ERASE_HSECTOR,
+                                   self.ERASE_HSECTOR_TIME,
+                                   hsr_start, hsr_end,
+                                   self.HSECTOR_SIZE)
+                # update the right-hand start marker
+                if hsr_end > rstart:
+                    rstart = hsr_end
+        if self.get_capabilities() & SerialFlash.FEAT_SUBSECTERASE:
+            # Check whether one or more whole right subsectors can be erased
+            ssr_start = (rstart+_Gen25FlashDevice.SUBSECTOR_SIZE-1) & \
+                           ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
+            ssr_end = rend & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
+            if ssr_start < ssr_end:
+                self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
+                                   self.ERASE_SUBSECTOR_TIME,
+                                   ssr_start, ssr_end,
+                                   self.SUBSECTOR_SIZE)
+
     @staticmethod
     def _jedec2int(jedec, maxlength=3):
         return tuple([ord(x) for x in jedec[:maxlength]])
@@ -243,7 +358,7 @@ class _Gen25FlashDevice(SerialFlash):
         # take care not to roll over the end of the flash page
         if address & (_Gen25FlashDevice.PAGE_SIZE-1):
             up = (address+(_Gen25FlashDevice.PAGE_SIZE-1)) & \
-                    ~(_Gen25FlashDevice.PAGE_SIZE-1);
+                    ~(_Gen25FlashDevice.PAGE_SIZE-1)
             count = min(len(data), up-address)
             sequences = [(address, data[:count]), (up, data[count:])]
         else:
@@ -254,12 +369,18 @@ class _Gen25FlashDevice(SerialFlash):
             wcmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_PROGRAM_PAGE,
                                (addr>>16)&0xff, (addr>>8)&0xff, addr&0xff)
             self._spi.exchange(wcmd + data)
-            while self.is_busy():
-                time.sleep(self.PAGE_WTIME)
+            self._wait_for_completion(self.PROGRAM_PAGE_TIME)
 
     def _read_status(self):
         read_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_READ_STATUS)
-        return struct.unpack('<B', self._spi.exchange(read_cmd, 1))[0]
+        while True:
+            self._spi.flush()
+            # need troubleshooting here, the buffer is sometime empty, which
+            # should never be
+            data = self._spi.exchange(read_cmd, 1)
+            if len(data) > 0:
+                break
+        return data[0]
 
     def _enable_write(self):
         wren_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_ENABLE)
@@ -269,16 +390,27 @@ class _Gen25FlashDevice(SerialFlash):
         wrdi_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_DISABLE)
         self._spi.exchange(wrdi_cmd)
 
-    def _erase_sector(self, address):
-        self._enable_write()
-        erblk_cmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_ERASE_BLOCK,
-                                (address>>16)&0xff,
-                                (address>>8)&0xff,
-                                address&0xff)
-        self._spi.exchange(erblk_cmd)
+    def _erase_blocks(self, command, etime, start, end, size):
+        """Erase one or more blocks"""
+        while start < end:
+            print "ERASE BLOCK 0x%06x..0x%06x" % (start, end-1)
+            print "CMD: 0x%02x" % command
+            self._enable_write()
+            cmd = struct.pack('<BBBB', command, (start>>16)&0xff,
+                              (start>>8)&0xff, start&0xff)
+            self._spi.exchange(cmd)
+            self._wait_for_completion(etime)
+            start += size
+
+    def _wait_for_completion(self, delay, maxdelay=0):
+        if not maxdelay:
+            maxdelay = delay*8
+        timeout = time.time()
+        timeout += maxdelay
         while self.is_busy():
-            time.sleep(self.SECTOR_ETIME_MAX)
-        self._disable_write()
+            if time.time() > timeout:
+                raise SerialFlashTimeout('Command timeout')
+            time.sleep(delay)
 
     @staticmethod
     def _is_busy(status):
@@ -298,9 +430,9 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     CMD_PROGRAM_WORD = 0xAD # Auto address increment (for write command)
     SST25_AAI = 0b01000000 # AAI mode activation flag
     DEVICES = { 0x41 : 2<<20, 0x4A : 4<<20 }
-    SUBSECTOR_ETIME_MAX = 0.025 # 25 ms
-    HSECTOR_ETIME_MAX = 0.025 # 25 ms
-    SECTOR_ETIME_MAX = 0.025 # 25 ms
+    ERASE_SUBSECTOR_TIME = 0.025 # 25 ms
+    ERASE_HSECTOR_TIME = 0.025 # 25 ms
+    ERASE_SECTOR_TIME = 0.025 # 25 ms
     SPI_FREQ_MAX = 66 # MHz
     SPI_SETUP_TIME = 5E-09 # 5 ns
     SPI_HOLD_TIME = 5E-09 # 5 ns
@@ -374,9 +506,10 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     CR_BPNV = 0x08
     CR_LOCK = 0x10
     CR_TBPROT = 0x20
-    READ_CONFIG = 0x35
-    SECTOR_ETIME_MAX = 3 # 3000 ms
-    SUBSECTOR_ETIME_MAX = 0.8 # 800 ms
+    CMD_READ_CONFIG = 0x35
+    PROGRAM_PAGE_TIME = 0.0015 # 1.5 ms
+    ERASE_SUBSECTOR_TIME = 0.8 # 800 ms
+    ERASE_SECTOR_TIME = 3.0 # 3000 ms
     SPI_FREQ_MAX = 104 # MHz (P series only)
     SPI_SETUP_TIME = 3E-09 # 3 ns
     SPI_HOLD_TIME = 3E-09 # 3 ns
@@ -396,6 +529,56 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     def __str__(self):
         return 'Spansion S25FL %d MB' % (len(self)>>20, )
 
+    def get_capabilities(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE
+
+    def can_erase(self, address, length):
+        """Tells whether a defined area can be erased on the Spansion flash
+           device. It does not take into account any locking scheme.
+        """
+        # we first need to check the current configuration register, as a
+        # previous configuration may prevent from altering some of the bits
+        readcfg_cmd = struct.pack('<B', S25FlFlashDevice.CMD_READ_CONFIG)
+        config = self._spi.exchange(readcfg_cmd, 1)[0]
+        if config & S25FlFlashDevice.CR_TBPARM:
+            # "parameter zone" is defined in the high sectors
+            border = len(self)-2*S25FlFlashDevice.SECTOR_SIZE
+            ls_size = S25FlFlashDevice.SECTOR_SIZE
+            rs_size = S25FlFlashDevice.SUBSECTOR_SIZE
+        else:
+            # "parameter zone" is defined in the low sectors
+            border = 2*S25FlFlashDevice.SECTOR_SIZE
+            ls_size = S25FlFlashDevice.SUBSECTOR_SIZE
+            rs_size = S25FlFlashDevice.SECTOR_SIZE
+        start = address;
+        fend = address+length;
+        # sanity check
+        if (start > fend) or (fend > len(self)):
+            raise SerialFlashValueError('Out of flash storage range')
+        if (fend > border) and (start < border):
+            end = border
+        else:
+            end = fend
+        size = ls_size
+        while True: # expect 1 or 2 loops max
+            # sanity check
+            if start & (size-1):
+                # start address should be aligned on a boundary
+                raise SerialFlashValueError('Start address not aligned on a '
+                                            'sector boundary')
+            # sanity check
+            if (((end-start)-1) & (size-1)) != (size-1):
+                # length should be a multiple of a subsector
+                raise SerialFlashValueError('End address not aligned on a '
+                                            'sector boundary')
+            # stop condition
+            if (start >= border) or (end >= fend):
+                break
+            start = end
+            end = fend
+            size = rs_size
+
     @staticmethod
     def match(jedec):
         """Tells whether this class support this JEDEC identifier"""
@@ -411,18 +594,21 @@ class S25FlFlashDevice(_Gen25FlashDevice):
 
 if __name__ == '__main__':
     import time
+    from pyftdi.misc import hexdump
     mgr = SerialFlashManager(0x403, 0x6010, 1)
     flash = mgr.get_flash_device()
     print "Flash device: %s" % flash
-    print "Start reading the whole device..."
-    delta = time.time()
-    data = flash.read(0, len(flash))
-    delta = time.time()-delta
-    length = len(data)
-    print "%d bytes in %d seconds @ %.1f KB/s" % \
-        (length, delta, length/(1024.0*delta))
-    #flash.write(0x3c0020, 'This is a serial SPI flash test')
-    #data = flash.read(0x3c0020, 128).tostring()
+    #print "Start reading the whole device..."
+    #delta = time.time()
+    #data = flash.read(0, len(flash))
+    #delta = time.time()-delta
+    #length = len(data)
+    #print "%d bytes in %d seconds @ %.1f KB/s" % \
+    #    (length, delta, length/(1024.0*delta))
     #data = flash.read(0xeff0, 128).tostring()
-    #from pyftdi.misc import hexdump
-    #print hexdump(data)
+    flash.write(0x2c0020, 'This is a serial SPI flash test')
+    data = flash.read(0x2c0020, 128).tostring()
+    print hexdump(data)
+    flash.erase(0x2c0000, 4096)
+    data = flash.read(0x2c0020, 128).tostring()
+    print hexdump(data)
