@@ -268,7 +268,7 @@ class Ftdi(object):
         # Disable loopback
         self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
         # Configure clock, twice to circumvent cold init case issue
-        frequency = self.set_frequency(frequency)
+        frequency = self._set_frequency(frequency)
         # Configure I/O
         self.write_data(struct.pack('<BBB', Ftdi.SET_BITS_LOW, 0, direction))
         # Enable MPSSE mode
@@ -333,10 +333,16 @@ class Ftdi(object):
         except usb.core.USBError, e:
             raise FtdiError('UsbError: %s' % str(e))
 
+    def set_frequency(self, frequency):
+        frequency = self._set_frequency(frequency)
+        self.write_data(struct.pack('<B', Ftdi.SEND_IMMEDIATE))
+        self.purge_buffers()
+        return frequency
+
     def purge_rx_buffer(self):
         """Clear the read buffer on the chip and the internal read buffer."""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_RX):
-            raise FtdiError('Unable to set baudrate')
+            raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
         self.readbuffer = array.array('B')
@@ -344,7 +350,7 @@ class Ftdi(object):
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_TX):
-            raise FtdiError('Unable to set baudrate')
+            raise FtdiError('Unable to flush TX buffer')
 
     def purge_buffers(self):
         """Clear the buffers on the chip and the internal read buffer."""
@@ -818,7 +824,7 @@ class Ftdi(object):
             index |= 1<<9 # use hispeed mode
         return (best_baud, value, index)
 
-    def set_frequency(self, frequency):
+    def _set_frequency(self, frequency):
         """Convert a frequency value into a TCK divisor setting"""
         if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5

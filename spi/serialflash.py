@@ -230,7 +230,7 @@ class _Gen25FlashDevice(SerialFlash):
         return self._spi.exchange(read_cmd, length)
 
     def _read_hi_speed(self, address, length):
-        read_cmd = struct.pack('<BBBBB', _Gen25FlashDevice.CMD_READ_LO_SPEED,
+        read_cmd = struct.pack('<BBBBB', _Gen25FlashDevice.CMD_READ_HI_SPEED,
                                (address>>16)&0xff, (address>>8)&0xff,
                                address&0xff, 0)
         return self._spi.exchange(read_cmd, length)
@@ -384,7 +384,7 @@ class S25FlFlashDevice(_Gen25FlashDevice):
         device = _Gen25FlashDevice._jedec2int(jedec)[-1]
         self._size = S25FlFlashDevice.DEVICES[device]
         self._spi = spi
-        self._spi.change_bitrate(S25FlFlashDevice.SPI_FREQ_MAX*1E06)
+        self._spi.set_frequency(S25FlFlashDevice.SPI_FREQ_MAX*1E06)
 
     def __len__(self):
         return self._size
@@ -417,6 +417,7 @@ if __name__ == '__main__':
     #print "%d bytes in %d seconds @ %d KB/s" % \
     #    (length, delta, length/(1024*delta))
     flash.write(0x3c0020, 'This is a serial SPI flash test')
-    data = flash.read(0x3c0000, 128).tostring()
+    data = flash.read(0x3c0020, 128).tostring()
+    #data = flash.read(0xeff0, 128).tostring()
     from pyftdi.misc import hexdump
     print hexdump(data)

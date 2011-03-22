@@ -52,7 +52,7 @@ class SpiPort(object):
         """Force the flush of the HW FIFOs"""
         self._controller._flush()
 
-    def change_bitrate(self, frequency):
+    def set_frequency(self, frequency):
         """Change SPI bus frequency"""
         self._frequency = min(frequency, Ftdi.BUS_CLOCK_MAX)
 
