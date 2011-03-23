@@ -31,10 +31,10 @@ from pyftdi.jtag import JtagEngine
 from pyftdi.bits import BitSequence
 
 # Should match the tested device
-JTAG_INSTR = {'SAMPLE'     :  BitSequence('0001', msb=True, length=4),
-              'PRELOAD'    :  BitSequence('0001', msb=True, length=4),
-              'IDCODE'     :  BitSequence('0100', msb=True, length=4),
-              'BYPASS'     :  BitSequence('1111', msb=True, length=4) }
+JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),
+              'PRELOAD' : BitSequence('0001', msb=True, length=4),
+              'IDCODE'  : BitSequence('0100', msb=True, length=4),
+              'BYPASS'  : BitSequence('1111', msb=True, length=4) }
 
 
 class JtagTestCase(unittest.TestCase):
@@ -51,7 +51,7 @@ class JtagTestCase(unittest.TestCase):
         """Read the IDCODE right after a JTAG reset"""
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: %x" % int(idcode)
+        print "IDCODE: 0x%x" % int(idcode)
 
     def test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
@@ -59,7 +59,7 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.write_ir(instruction)
         data = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: %x" % int(data)
+        print "IDCODE: 0x%x" % int(data)
 
 def suite():
     return unittest.makeSuite(JtagTestCase, 'test')
