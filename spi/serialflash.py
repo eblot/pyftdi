@@ -75,23 +75,10 @@ class SerialFlash(object):
            specific constraints."""
         raise NotImplemented()
 
-    def can_erase(self, address, length):
-        """Tells whether a defined area can be erased on the Spansion flash
-           device. It does not take into account any locking scheme."""
-        raise NotImplemented()
-
     def is_busy(self):
         """Reports whether the flash may receive commands or is actually
            being performing internal work"""
         raise NotImplemented()
-
-    def get_capacity(self):
-        """Get the flash device capacity in bytes"""
-        raise NotImplemented()
-
-    def get_capabilities(self):
-        """Flash device capabilities."""
-        return SerialFlash.FEAT_NONE
 
     def get_locks(self):
         """Report the currently write-protected areas of the device."""
@@ -106,7 +93,17 @@ class SerialFlash(object):
         """Make the whole device read/write"""
         pass
 
-    def get_unique_id(self):
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        raise NotImplemented()
+
+    @property
+    def features(self):
+        """Flash device capabilities."""
+        return SerialFlash.FEAT_NONE
+
+    @property
+    def unique_id(self):
         """Return the unique ID of the flash, if it exists"""
         raise NotImplemented()
 
@@ -209,10 +206,6 @@ class _Gen25FlashDevice(SerialFlash):
     def __init__(self, spiport):
         self._spi = spiport
 
-    def get_capacity(self):
-        """Get the flash device capacity in bytes"""
-        return len(self)
-
     def is_busy(self):
         return _Gen25FlashDevice._is_busy(self._read_status())
 
@@ -276,14 +269,14 @@ class _Gen25FlashDevice(SerialFlash):
         rstart = start
         # last page to erase on the right-hand size
         rend = end
-        if self.get_capabilities() & SerialFlash.FEAT_SECTERASE:
+        if self.features & SerialFlash.FEAT_SECTERASE:
             # Check whether one or more whole large sector can be erased
             s_start = (start+_Gen25FlashDevice.SECTOR_SIZE-1) & \
                         ~(_Gen25FlashDevice.SECTOR_SIZE-1)
             s_end = end & ~(_Gen25FlashDevice.SECTOR_SIZE-1)
             if s_start < s_end:
                 self._erase_blocks(self.CMD_ERASE_SECTOR,
-                                   self.ERASE_SECTOR_TIMES,
+                                   self.get_timings('sector'),
                                    s_start, s_end,
                                    self.SECTOR_SIZE)
                 # update the left-hand end marker
@@ -291,14 +284,14 @@ class _Gen25FlashDevice(SerialFlash):
                 # update the right-hand start marker
                 if s_end > rstart:
                     rstart = s_end
-        if self.get_capabilities() & SerialFlash.FEAT_HSECTERASE:
+        if self.features & SerialFlash.FEAT_HSECTERASE:
             # Check whether one or more left halfsectors can be erased
             hsl_start = (start+_Gen25FlashDevice.HSECTOR_SIZE-1) & \
                            ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             hsl_end = end & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             if hsl_start < hsl_end:
                 self._erase_blocks(self.CMD_ERASE_HSECTOR,
-                                   self.ERASE_HSECTOR_TIMES,
+                                   self.get_timings('hsector'),
                                    hsl_start, hsl_end,
                                    self.HSECTOR_SIZE)
                 # update the left-hand end marker
@@ -306,42 +299,66 @@ class _Gen25FlashDevice(SerialFlash):
                 # update the right-hand start marker
                 if hsl_end > rstart:
                     rstart = hsl_end
-        if self.get_capabilities() & SerialFlash.FEAT_SUBSECTERASE:
+        if self.features & SerialFlash.FEAT_SUBSECTERASE:
             # Check whether one or more left subsectors can be erased
             ssl_start = (start+_Gen25FlashDevice.SUBSECTOR_SIZE-1) & \
                            ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             ssl_end = end & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             if ssl_start < ssl_end:
                 self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
-                                   self.ERASE_SUBSECTOR_TIMES,
+                                   self.get_timings('subsector'),
                                    ssl_start, ssl_end,
                                    self.SUBSECTOR_SIZE)
                 # update the right-hand start marker
                 if ssl_end > rstart:
                     rstart = ssl_end
-        if self.get_capabilities() & SerialFlash.FEAT_HSECTERASE:
+        if self.features & SerialFlash.FEAT_HSECTERASE:
             # Check whether one or more whole left halfsectors can be erased
             hsr_start = (rstart+_Gen25FlashDevice.HSECTOR_SIZE-1) & \
                            ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             hsr_end = rend & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             if hsr_start < hsr_end:
                 self._erase_blocks(self.CMD_ERASE_HSECTOR,
-                                   self.ERASE_HSECTOR_TIMES,
+                                   self.get_timings('hsector'),
                                    hsr_start, hsr_end,
                                    self.HSECTOR_SIZE)
                 # update the right-hand start marker
                 if hsr_end > rstart:
                     rstart = hsr_end
-        if self.get_capabilities() & SerialFlash.FEAT_SUBSECTERASE:
+        if self.features & SerialFlash.FEAT_SUBSECTERASE:
             # Check whether one or more whole right subsectors can be erased
             ssr_start = (rstart+_Gen25FlashDevice.SUBSECTOR_SIZE-1) & \
                            ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             ssr_end = rend & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             if ssr_start < ssr_end:
                 self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
-                                   self.ERASE_SUBSECTOR_TIMES,
+                                   self.get_timings('subsector'),
                                    ssr_start, ssr_end,
                                    self.SUBSECTOR_SIZE)
+
+    def _can_erase(self, address, length):
+        """Tells whether a defined area can be erased on the Spansion flash
+           device. It does not take into account any locking scheme."""
+        if address & (self.erase_size-1):
+            # start address should be aligned on a subsector boundary
+            raise SerialFlashValueError('Start address not aligned on a '
+                                        'erase sector boundary')
+        if ((length-1) & (self.erase_size-1)) != (self.erase_size-1):
+            # length should be a multiple of a subsector
+            raise SerialFlashValueError('End address not aligned on a '
+                                        'erase sector boundary')
+
+    @property
+    def erase_size(self):
+        """Return the erase size in bytes"""
+        features = self.features
+        if features & SerialFlash.FEAT_SUBSECTERASE:
+            return self.SUBSECTOR_SIZE
+        if features & SerialFlash.FEAT_HSECTERASE:
+            return self.HSECTOR_SIZE
+        if features & SerialFlash.FEAT_SECTERASE:
+            return self.SECTOR_SIZE
+        raise SerialFlashNotSupported("Unknown erase size")
 
     @staticmethod
     def _jedec2int(jedec, maxlength=3):
@@ -375,7 +392,7 @@ class _Gen25FlashDevice(SerialFlash):
                                addr&0xff])
             wcmd.extend(data)
             self._spi.exchange(wcmd)
-            self._wait_for_completion(self.PROGRAM_PAGE_TIMES)
+            self._wait_for_completion(self.get_timings('page'))
 
     def _read_status(self):
         read_cmd = Array('B', [_Gen25FlashDevice.CMD_READ_STATUS])
@@ -434,16 +451,17 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     CMD_PROGRAM_WORD = 0xAD # Auto address increment (for write command)
     SST25_AAI = 0b01000000 # AAI mode activation flag
     DEVICES = { 0x41 : 2<<20, 0x4A : 4<<20 }
-    ERASE_SUBSECTOR_TIMES = (0.025, 0.025) # 25 ms
-    ERASE_HSECTOR_TIMES = (0.025, 0.025) # 25 ms
-    ERASE_SECTOR_TIMES = (0.025, 0.025) # 25 ms
     SPI_FREQ_MAX = 66 # MHz
+    TIMINGS = { 'subsector' : (0.025, 0.025) # 25 ms
+                'hsector' : (0.025, 0.025) # 25 ms
+                'sector' : (0.025, 0.025) # 25 ms
+              }
 
     def __init__(self, spi, jedec):
         if not Sst25FlashDevice.match(jedec):
             raise SerialFlashUnknownJedec(jedec)
-        device = _Gen25FlashDevice._jedec2int(jedec)[-1]
-        self._size = Sst25FlashDevice.DEVICES[device]
+        capacity = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = Sst25FlashDevice.DEVICES[capacity]
         self._spi = spi
 
     def __len__(self):
@@ -451,6 +469,10 @@ class Sst25FlashDevice(_Gen25FlashDevice):
 
     def __str__(self):
         return 'SST SST25 %d MB' % (len(self)>>20, )
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return Sst25FlashDevice.TIMINGS[time]
 
     @staticmethod
     def match(jedec):
@@ -511,18 +533,19 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     CR_LOCK = 0x10
     CR_TBPROT = 0x20
     CMD_READ_CONFIG = 0x35
-    PROGRAM_PAGE_TIMES = (0.0015, 0.003) # 1.5/3 ms
-    ERASE_SUBSECTOR_TIMES = (0.2, 0.8) # 200/800 ms
-    ERASE_SECTOR_TIMES = (0.5, 2.0) # 0.5/2 s
-    BULK_ERASE_TIMES = (32, 64) # seconds
     SPI_FREQ_MAX = 104 # MHz (P series only)
     DEVICES = { 0x15 : 4<<20, 0x16 : 8<<20 }
+    TIMINGS = { 'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.2, 0.8) # 200/800 ms
+                'sector' : (0.5, 2.0) # 0.5/2 s
+                'bulk' : (32, 64) # seconds
+              }
 
     def __init__(self, spi, jedec):
         if not S25FlFlashDevice.match(jedec):
             raise SerialFlashUnknownJedec(jedec)
-        device = _Gen25FlashDevice._jedec2int(jedec)[-1]
-        self._size = S25FlFlashDevice.DEVICES[device]
+        capacity = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = S25FlFlashDevice.DEVICES[capacity]
         self._spi = spi
         self._spi.set_frequency(S25FlFlashDevice.SPI_FREQ_MAX*1E06)
 
@@ -532,14 +555,31 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     def __str__(self):
         return 'Spansion S25FL %d MB' % (len(self)>>20, )
 
-    def get_capabilities(self):
+    @property
+    def features(self):
         """Flash device features"""
         # note that subsector erasure is only supported for a 2 * sectorsize
         # -long area at start OR end of the flash. can_erase asserts this
         # condition
         return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
 
-    def can_erase(self, address, length):
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return S25FlFlashDevice.TIMINGS[time]
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != S25FlFlashDevice.JEDEC_ID:
+            return False
+        if device != S25FlFlashDevice.SERIALFLASH_ID:
+            return False
+        if capacity not in S25FlFlashDevice.DEVICES:
+            return False
+        return True
+
+    def _can_erase(self, address, length):
         """Verifies that a defined area can be erased on the Spansion flash
            device. It does not take into account any locking scheme.
         """
@@ -588,14 +628,272 @@ class S25FlFlashDevice(_Gen25FlashDevice):
             end = fend
             size = rs_size
 
+
+class M25PxFlashDevice(_Gen25FlashDevice):
+    """Numonix M25P/M25PX flash device implementation"""
+
+    JEDEC_ID = 0x20
+    P_SERIALFLASH_ID = 0x71
+    PX_SERIALFLASH_ID = 0x20
+    SPI_FREQ_MAX = 75 # MHz (P series only)
+    DEVICES = { 0x15 : 2<<20, 0x16 : 4<<20 }
+    TIMINGS = { #'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.150, 0.150) # 150/150 ms
+                'sector' : (3.0, 3.0) # 3/3 s
+                #'bulk' : (32, 64) # seconds
+              }
+
+    def __init__(self, spi, jedec):
+        if not M25PFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        device, capacity = _Gen25FlashDevice._jedec2int(jedec)[1:]
+        self._size = M25PFlashDevice.DEVICES[device]
+        self._spi = spi
+        self._spi.set_frequency(M25PFlashDevice.SPI_FREQ_MAX*1E06)
+        self._var = (device == M25PFlashDevice.PX_SERIALFLASH_ID) \
+                    and 'PX' or 'X'
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Numonix M25%s%02d %d MB' % \
+            (self._var, len(self)>>17, len(self)>>20)
+
+    @property
+    def features(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
+               # SerialFlash.FEAT_LOCK|SerialFlash.FEAT_INVLOCK
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return S25FlFlashDevice.TIMINGS[time]
+
     @staticmethod
     def match(jedec):
         """Tells whether this class support this JEDEC identifier"""
         manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
-        if manufacturer != S25FlFlashDevice.JEDEC_ID:
+        if manufacturer != M25PFlashDevice.JEDEC_ID:
             return False
-        if device != S25FlFlashDevice.SERIALFLASH_ID:
+        if not device in (M25PFlashDevice.P_SERIALFLASH_ID,
+                          M25PFlashDevice.PX_SERIALFLASH_ID):
             return False
-        if capacity not in S25FlFlashDevice.DEVICES:
+        if capacity not in M25PFlashDevice.DEVICES:
+            return False
+        return True
+
+
+class W25xFlashDevice(_Gen25FlashDevice):
+    """Winbond W25Q/W25X flash device implementation"""
+
+    JEDEC_ID = 0xEF
+    X_SERIALFLASH_ID = 0x30
+    Q_SERIALFLASH_ID = 0x40
+    SPI_FREQ_MAX = 104 # MHz
+    CMD_READ_UID = 0x4B
+    UID_LEN = 0x8 # 64 bits
+    READ_UID_WIDTH = 4 # 4 dummy bytes
+    DEVICES = { 0x15 : 2<<20, 0x16 : 4<<20, 0x17 : 8<<20 }
+    TIMINGS = { #'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.200, 0.200) # 200/200 ms
+                'sector' : (1.0, 1.0) # 1/1 s
+                #'bulk' : (32, 64) # seconds
+              }
+
+    def __init__(self, spi, jedec):
+        if not W25xFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        device, capacity = _Gen25FlashDevice._jedec2int(jedec)[1:]
+        self._size = M25PFlashDevice.DEVICES[device]
+        self._spi = spi
+        self._spi.set_frequency(W25xFlashDevice.SPI_FREQ_MAX*1E06)
+        self._var = (device == W25xFlashDevice.X_SERIALFLASH_ID) \
+                    and 'X' or 'Q'
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Winbond W25%s%02d %d MB' % \
+            (self._var, len(self)>>17, len(self)>>20)
+
+    @property
+    def features(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
+               # SerialFlash.FEAT_LOCK|SerialFlash.FEAT_INVLOCK
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return W25xFlashDevice.TIMINGS[time]
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != W25xFlashDevice.JEDEC_ID:
+            return False
+        if not device in (W25xFlashDevice.X_SERIALFLASH_ID,
+                          W25xFlashDevice.Q_SERIALFLASH_ID):
+            return False
+        if capacity not in W25xFlashDevice.DEVICES:
+            return False
+        return True
+
+
+class Mx25lFlashDevice(_Gen25FlashDevice):
+    """Macronix MX25L flash device implementation"""
+
+    JEDEC_ID = 0xC2
+    D_SERIALFLASH_ID = 0x9E
+    E_SERIALFLASH_ID = 0x26
+    SPI_FREQ_MAX = 104 # MHz
+    DEVICES = { 0x15 : 2<<20, 0x16 : 4<<20, 0x17 : 8<<20, 0x18 : 16<<20 }
+    TIMINGS = { #'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.300, 0.300) # 300/300 ms
+                'hsector' : (2.0, 2.0) # 2/2 s
+                'sector' : (2.0, 2.0) # 2/2 s
+                #'bulk' : (32, 64) # seconds
+              }
+
+    def __init__(self, spi, jedec):
+        if not Mx25lFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        device, capacity = _Gen25FlashDevice._jedec2int(jedec)[1:]
+        self._size = M25PFlashDevice.DEVICES[device]
+        self._spi = spi
+        self._spi.set_frequency(Mx25lFlashDevice.SPI_FREQ_MAX*1E06)
+        self._var = (device == Mx25lFlashDevice.D_SERIALFLASH_ID) \
+                    and 'D' or 'E'
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Macronix M25L55%s%02d %d MB' % \
+            (self._var, len(self)>>17, len(self)>>20)
+
+    @property
+    def features(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_HSECTERASE|\
+               SerialFlash.FEAT_SUBSECTERASE
+               # SerialFlash.FEAT_LOCK|SerialFlash.FEAT_INVLOCK
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return Mx25lFlashDevice.TIMINGS[time]
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != Mx25lFlashDevice.JEDEC_ID:
+            return False
+        if not device in (Mx25lFlashDevice.D_SERIALFLASH_ID,
+                          Mx25lFlashDevice.E_SERIALFLASH_ID):
+            return False
+        if capacity not in Mx25lFlashDevice.DEVICES:
+            return False
+        return True
+
+
+class En25qFlashDevice(_Gen25FlashDevice):
+    """EON EN25Q flash device implementation"""
+
+    JEDEC_ID = 0x1C
+    SERIALFLASH_ID = 0x30
+    SPI_FREQ_MAX = 100 # MHz
+    DEVICES = { 0x15 : 2<<20, 0x16 : 4<<20, 0x17 : 8<<20 }
+    TIMINGS = { #'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.300, 0.300) # 300/300 ms
+                'sector' : (2.0, 2.0) # 2/2 s
+                #'bulk' : (32, 64) # seconds
+              }
+
+    def __init__(self, spi, jedec):
+        if not En25qFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        capacity = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = En25qFlashDevice.DEVICES[capacity]
+        self._spi = spi
+        self._spi.set_frequency(En25qFlashDevice.SPI_FREQ_MAX*1E06)
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Eon EN25Q%02d %d MB' % (len(self)>>17, len(self)>>20)
+
+    @property
+    def features(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
+               # SerialFlash.FEAT_LOCK|SerialFlash.FEAT_INVLOCK
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return En25qFlashDevice.TIMINGS[time]
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != En25qFlashDevice.JEDEC_ID:
+            return False
+        if not device != En25qFlashDevice.SERIALFLASH_ID:
+            return False
+        if capacity not in En25qFlashDevice.DEVICES:
+            return False
+        return True
+
+
+class At25FlashDevice(_Gen25FlashDevice):
+    """Atmel AT25 flash device implementation"""
+
+    JEDEC_ID = 0x1F
+    SERIALFLASH_ID = 0x30
+    SPI_FREQ_MAX = 85 # MHz
+    DEVICES = { 0x46 : 2<<20, 0x47 : 4<<20, 0x48 : 8<<20 }
+    TIMINGS = { #'page' : (0.0015, 0.003) # 1.5/3 ms
+                'subsector' : (0.200, 0.200) # 200/200 ms
+                'sector' : (0.950, 0.950) # 950/950 ms
+                #'bulk' : (32, 64) # seconds
+              }
+
+    def __init__(self, spi, jedec):
+        if not At25FlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        capacity = _Gen25FlashDevice._jedec2int(jedec)[-1]
+        self._size = At25FlashDevice.DEVICES[capacity]
+        self._spi = spi
+        self._spi.set_frequency(At25FlashDevice.SPI_FREQ_MAX*1E06)
+
+    def __len__(self):
+        return self._size
+
+    def __str__(self):
+        return 'Atmel AT25%02d %d MB' % (len(self)>>17, len(self)>>20)
+
+    @property
+    def features(self):
+        """Flash device features"""
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
+               # SerialFlash.FEAT_LOCK|SerialFlash.FEAT_INVLOCK
+
+    def get_timings(self, time):
+        """Get a time tuple (typical, max)"""
+        return At25FlashDevice.TIMINGS[time]
+
+    @staticmethod
+    def match(jedec):
+        """Tells whether this class support this JEDEC identifier"""
+        manufacturer, device, capacity = _Gen25FlashDevice._jedec2int(jedec)
+        if manufacturer != At25FlashDevice.JEDEC_ID:
+            return False
+        if not device != At25FlashDevice.SERIALFLASH_ID:
+            return False
+        if capacity not in At25FlashDevice.DEVICES:
             return False
         return True
