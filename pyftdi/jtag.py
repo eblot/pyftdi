@@ -227,7 +227,7 @@ class JtagController(object):
         cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW, value, self.direction)
         self._ftdi.write_data(cmd)
         time.sleep(0.1)
-        value = TRST_BIT
+        value = JtagController.TRST_BIT
         cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW, value, self.direction)
         self._ftdi.write_data(cmd)
         time.sleep(0.1)
@@ -275,7 +275,7 @@ class JtagController(object):
         self._stack_cmd(cmd)
         self.sync()
         data = self._ftdi.read_data(length)
-        return BitSequence(bytes=data, length=8*length)
+        return BitSequence(bytes_=data, length=8*length)
 
     def read_write_bytes(self, out):
         if not self._ftdi:
@@ -303,7 +303,7 @@ class JtagController(object):
     def write(self, out):
         """Write a sequence of bits to TDI"""
         if isinstance(out, str):
-            out = BitSequence(bytes=out)
+            out = BitSequence(bytes_=out)
         elif not isinstance(out, BitSequence):
             out = BitSequence(out)
         (out, self._last) = (out[:-1], int(out[-1]))
