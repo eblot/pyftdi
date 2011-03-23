@@ -533,7 +533,7 @@ class S25FlFlashDevice(_Gen25FlashDevice):
         return SerialFlash.FEAT_SECTERASE
 
     def can_erase(self, address, length):
-        """Tells whether a defined area can be erased on the Spansion flash
+        """Verifies that a defined area can be erased on the Spansion flash
            device. It does not take into account any locking scheme.
         """
         # we first need to check the current configuration register, as a
@@ -559,16 +559,19 @@ class S25FlFlashDevice(_Gen25FlashDevice):
             end = border
         else:
             end = fend
-        size = ls_size
-        while True: # expect 1 or 2 loops max
+        if start >= border:
+            size = rs_size
+        else:
+            size = ls_size
+        while True: # expect 1 (no border cross) or 2 loops (border cross)
             # sanity check
             if start & (size-1):
-                # start address should be aligned on a boundary
+                # start address should be aligned on a (sub)sector boundary
                 raise SerialFlashValueError('Start address not aligned on a '
                                             'sector boundary')
             # sanity check
             if (((end-start)-1) & (size-1)) != (size-1):
-                # length should be a multiple of a subsector
+                # length should be a multiple of a (sub)sector
                 raise SerialFlashValueError('End address not aligned on a '
                                             'sector boundary')
             # stop condition
@@ -612,10 +615,10 @@ if __name__ == '__main__':
     while True:
         loop += 1
         print "Loop %d" % loop
-        flash.write(0x2c0020, 'This is a serial SPI flash test')
-        data = flash.read(0x2c0020, 128).tostring()
+        flash.write(0x007020, 'This is a serial SPI flash test')
+        data = flash.read(0x007020, 128).tostring()
         print hexdump(data)
-        flash.erase(0x2c0000, 4096)
-        data = flash.read(0x2c0020, 128).tostring()
+        flash.erase(0x007000, 4096)
+        data = flash.read(0x007020, 128).tostring()
         print hexdump(data)
         time.sleep(0.5)
