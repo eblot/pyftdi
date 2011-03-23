@@ -137,7 +137,10 @@ class SpiController(object):
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
             cmd = cs_cmd + write_cmd + out + read_cmd + self._cs_high
             self._ftdi.write_data(cmd)
-            data = self._ftdi.read_data_bytes(readlen)
+            # USB read cycle may occur before the FTDI device has actually
+            # sent the data, so try to read more than once if no data is
+            # actually received
+            data = self._ftdi.read_data_bytes(readlen, 2)
         else:
             cmd = cs_cmd + write_cmd + out + self._cs_high
             self._ftdi.write_data(cmd)

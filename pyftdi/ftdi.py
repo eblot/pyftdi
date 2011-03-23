@@ -523,7 +523,7 @@ class Ftdi(object):
         except usb.core.USBError, e:
             raise FtdiError('UsbError: %s' % str(e))
 
-    def read_data_bytes(self, size):
+    def read_data_bytes(self, size, attempt=1):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
@@ -546,43 +546,49 @@ class Ftdi(object):
         # read from USB, filling in the local cache as it is empty
         try:
             while (len(data) < size) and (length > 0):
-                tempbuf = self.usb_dev.read(self.out_ep,
-                                            self.readbuffer_chunksize,
-                                            self.index-1,
-                                            self.usb_read_timeout)
-                length = len(tempbuf)
-                # the received buffer contains at least one useful databyte
-                # (first 2 bytes in each packet represent the current modem
-                # status)
-                if length > 2:
-                    if self.latency_threshold:
-                        self.latency_count = 0
-                        if self.latency != self.latency_min:
-                            self.set_latency_timer(self.latency_min)
-                            self.latency = self.latency_min
-                    # skip the status bytes
-                    chunks = (length+packet_size-1) // packet_size
-                    count = packet_size - 2
-                    self.readbuffer = array.array('B')
-                    self.readoffset = 0
-                    srcoff = 2
-                    for i in xrange(chunks):
-                        self.readbuffer += tempbuf[srcoff:srcoff+count]
-                        srcoff += packet_size
-                    length = len(self.readbuffer)
-                else:
-                    # received buffer only contains the modem status bytes
-                    # clear them out
-                    self.readbuffer = array.array('B')
-                    self.readoffset = 0
-                    if self.latency_threshold:
-                        self.latency_count += 1
-                        if self.latency != self.latency_max:
-                            if self.latency_count > self.latency_threshold:
-                                self.set_latency_timer(self.latency_max)
-                                self.latency = self.latency_max
-                    # no more data to read?
-                    return data
+                while True:
+                    tempbuf = self.usb_dev.read(self.out_ep,
+                                                self.readbuffer_chunksize,
+                                                self.index-1,
+                                                self.usb_read_timeout)
+                    attempt -= 1
+                    length = len(tempbuf)
+                    # the received buffer contains at least one useful databyte
+                    # (first 2 bytes in each packet represent the current modem
+                    # status)
+                    if length > 2:
+                        if self.latency_threshold:
+                            self.latency_count = 0
+                            if self.latency != self.latency_min:
+                                self.set_latency_timer(self.latency_min)
+                                self.latency = self.latency_min
+                        # skip the status bytes
+                        chunks = (length+packet_size-1) // packet_size
+                        count = packet_size - 2
+                        self.readbuffer = array.array('B')
+                        self.readoffset = 0
+                        srcoff = 2
+                        for i in xrange(chunks):
+                            self.readbuffer += tempbuf[srcoff:srcoff+count]
+                            srcoff += packet_size
+                        length = len(self.readbuffer)
+                        break
+                    else:
+                        # received buffer only contains the modem status bytes
+                        # no data received, may be late, try again
+                        if attempt > 0:
+                            continue
+                        # no actual data
+                        self.readbuffer = array.array('B')
+                        self.readoffset = 0
+                        if self.latency_threshold:
+                            self.latency_count += 1
+                            if self.latency != self.latency_max:
+                                if self.latency_count > self.latency_threshold:
+                                    self.set_latency_timer(self.latency_max)
+                                    self.latency = self.latency_max
+                        # no more data to read?
+                        return data
                 if length > 0:
                     # data still fits in buf?
                     if (len(data) + length) <= size:

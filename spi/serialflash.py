@@ -228,7 +228,9 @@ class _Gen25FlashDevice(SerialFlash):
         buf = array.array('B')
         while length > 0:
             size = min(length, SpiController.PAYLOAD_MAX_LENGTH)
+            print "Read 0x%06x %d KB..." % (length, size>>10),
             data = self._read_hi_speed(address, size)
+            print "done."
             length -= len(data)
             address += len(data)
             buf.extend(data)
@@ -373,13 +375,10 @@ class _Gen25FlashDevice(SerialFlash):
 
     def _read_status(self):
         read_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_READ_STATUS)
-        while True:
-            self._spi.flush()
-            # need troubleshooting here, the buffer is sometime empty, which
-            # should never be
-            data = self._spi.exchange(read_cmd, 1)
-            if len(data) > 0:
-                break
+        self._spi.flush()
+        data = self._spi.exchange(read_cmd, 1)
+        if len(data) != 1:
+            raise SerialFlashTimeout("Unable to retrieve flash status")
         return data[0]
 
     def _enable_write(self):
@@ -595,20 +594,28 @@ class S25FlFlashDevice(_Gen25FlashDevice):
 if __name__ == '__main__':
     import time
     from pyftdi.misc import hexdump
+
     mgr = SerialFlashManager(0x403, 0x6010, 1)
     flash = mgr.get_flash_device()
     print "Flash device: %s" % flash
-    #print "Start reading the whole device..."
-    #delta = time.time()
-    #data = flash.read(0, len(flash))
-    #delta = time.time()-delta
-    #length = len(data)
-    #print "%d bytes in %d seconds @ %.1f KB/s" % \
-    #    (length, delta, length/(1024.0*delta))
+
+    while False:
+        print "Start reading the whole device..."
+        delta = time.time()
+        data = flash.read(0, len(flash))
+        delta = time.time()-delta
+        length = len(data)
+        print "%d bytes in %d seconds @ %.1f KB/s" % \
+            (length, delta, length/(1024.0*delta))
     #data = flash.read(0xeff0, 128).tostring()
-    flash.write(0x2c0020, 'This is a serial SPI flash test')
-    data = flash.read(0x2c0020, 128).tostring()
-    print hexdump(data)
-    flash.erase(0x2c0000, 4096)
-    data = flash.read(0x2c0020, 128).tostring()
-    print hexdump(data)
+    loop = 0
+    while True:
+        loop += 1
+        print "Loop %d" % loop
+        flash.write(0x2c0020, 'This is a serial SPI flash test')
+        data = flash.read(0x2c0020, 128).tostring()
+        print hexdump(data)
+        flash.erase(0x2c0000, 4096)
+        data = flash.read(0x2c0020, 128).tostring()
+        print hexdump(data)
+        time.sleep(0.5)
