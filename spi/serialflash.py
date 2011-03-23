@@ -280,7 +280,7 @@ class _Gen25FlashDevice(SerialFlash):
             s_end = end & ~(_Gen25FlashDevice.SECTOR_SIZE-1)
             if s_start < s_end:
                 self._erase_blocks(self.CMD_ERASE_SECTOR,
-                                   self.ERASE_SECTOR_TIME,
+                                   self.ERASE_SECTOR_TIMES,
                                    s_start, s_end,
                                    self.SECTOR_SIZE)
                 # update the left-hand end marker
@@ -295,7 +295,7 @@ class _Gen25FlashDevice(SerialFlash):
             hsl_end = end & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             if hsl_start < hsl_end:
                 self._erase_blocks(self.CMD_ERASE_HSECTOR,
-                                   self.ERASE_HSECTOR_TIME,
+                                   self.ERASE_HSECTOR_TIMES,
                                    hsl_start, hsl_end,
                                    self.HSECTOR_SIZE)
                 # update the left-hand end marker
@@ -310,7 +310,7 @@ class _Gen25FlashDevice(SerialFlash):
             ssl_end = end & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             if ssl_start < ssl_end:
                 self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
-                                   self.ERASE_SUBSECTOR_TIME,
+                                   self.ERASE_SUBSECTOR_TIMES,
                                    ssl_start, ssl_end,
                                    self.SUBSECTOR_SIZE)
                 # update the right-hand start marker
@@ -323,7 +323,7 @@ class _Gen25FlashDevice(SerialFlash):
             hsr_end = rend & ~(_Gen25FlashDevice.HSECTOR_SIZE-1)
             if hsr_start < hsr_end:
                 self._erase_blocks(self.CMD_ERASE_HSECTOR,
-                                   self.ERASE_HSECTOR_TIME,
+                                   self.ERASE_HSECTOR_TIMES,
                                    hsr_start, hsr_end,
                                    self.HSECTOR_SIZE)
                 # update the right-hand start marker
@@ -336,7 +336,7 @@ class _Gen25FlashDevice(SerialFlash):
             ssr_end = rend & ~(_Gen25FlashDevice.SUBSECTOR_SIZE-1)
             if ssr_start < ssr_end:
                 self._erase_blocks(self.CMD_ERASE_SUBSECTOR,
-                                   self.ERASE_SUBSECTOR_TIME,
+                                   self.ERASE_SUBSECTOR_TIMES,
                                    ssr_start, ssr_end,
                                    self.SUBSECTOR_SIZE)
 
@@ -371,11 +371,11 @@ class _Gen25FlashDevice(SerialFlash):
             wcmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_PROGRAM_PAGE,
                                (addr>>16)&0xff, (addr>>8)&0xff, addr&0xff)
             self._spi.exchange(wcmd + data)
-            self._wait_for_completion(self.PROGRAM_PAGE_TIME)
+            self._wait_for_completion(self.PROGRAM_PAGE_TIMES)
 
     def _read_status(self):
         read_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_READ_STATUS)
-        self._spi.flush()
+        #self._spi.flush()
         data = self._spi.exchange(read_cmd, 1)
         if len(data) != 1:
             raise SerialFlashTimeout("Unable to retrieve flash status")
@@ -389,27 +389,29 @@ class _Gen25FlashDevice(SerialFlash):
         wrdi_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_DISABLE)
         self._spi.exchange(wrdi_cmd)
 
-    def _erase_blocks(self, command, etime, start, end, size):
+    def _erase_blocks(self, command, times, start, end, size):
         """Erase one or more blocks"""
         while start < end:
-            print "ERASE BLOCK 0x%06x..0x%06x" % (start, end-1)
-            print "CMD: 0x%02x" % command
+            #print "ERASE BLOCK 0x%06x..0x%06x" % (start, end-1)
+            #print "CMD: 0x%02x" % command
             self._enable_write()
             cmd = struct.pack('<BBBB', command, (start>>16)&0xff,
                               (start>>8)&0xff, start&0xff)
             self._spi.exchange(cmd)
-            self._wait_for_completion(etime)
+            self._wait_for_completion(times)
             start += size
 
-    def _wait_for_completion(self, delay, maxdelay=0):
-        if not maxdelay:
-            maxdelay = delay*8
+    def _wait_for_completion(self, times):
+        typical_time, max_time = times
         timeout = time.time()
-        timeout += maxdelay
+        timeout += typical_time+max_time
+        cycle = 0
         while self.is_busy():
-            if time.time() > timeout:
-                raise SerialFlashTimeout('Command timeout')
-            time.sleep(delay)
+            # need to wait at least once
+            if cycle and time.time() > timeout:
+                raise SerialFlashTimeout('Command timeout (%d cycles)' % cycle)
+            time.sleep(typical_time)
+            cycle +=1
 
     @staticmethod
     def _is_busy(status):
@@ -429,9 +431,9 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     CMD_PROGRAM_WORD = 0xAD # Auto address increment (for write command)
     SST25_AAI = 0b01000000 # AAI mode activation flag
     DEVICES = { 0x41 : 2<<20, 0x4A : 4<<20 }
-    ERASE_SUBSECTOR_TIME = 0.025 # 25 ms
-    ERASE_HSECTOR_TIME = 0.025 # 25 ms
-    ERASE_SECTOR_TIME = 0.025 # 25 ms
+    ERASE_SUBSECTOR_TIMES = (0.025, 0.025) # 25 ms
+    ERASE_HSECTOR_TIMES = (0.025, 0.025) # 25 ms
+    ERASE_SECTOR_TIMES = (0.025, 0.025) # 25 ms
     SPI_FREQ_MAX = 66 # MHz
     SPI_SETUP_TIME = 5E-09 # 5 ns
     SPI_HOLD_TIME = 5E-09 # 5 ns
@@ -506,9 +508,10 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     CR_LOCK = 0x10
     CR_TBPROT = 0x20
     CMD_READ_CONFIG = 0x35
-    PROGRAM_PAGE_TIME = 0.0015 # 1.5 ms
-    ERASE_SUBSECTOR_TIME = 0.8 # 800 ms
-    ERASE_SECTOR_TIME = 3.0 # 3000 ms
+    PROGRAM_PAGE_TIMES = (0.0015, 0.003) # 1.5/3 ms
+    ERASE_SUBSECTOR_TIMES = (0.2, 0.8) # 200/800 ms
+    ERASE_SECTOR_TIMES = (0.5, 2.0) # 0.5/2 s
+    BULK_ERASE_TIMES = (32, 64) # seconds
     SPI_FREQ_MAX = 104 # MHz (P series only)
     SPI_SETUP_TIME = 3E-09 # 3 ns
     SPI_HOLD_TIME = 3E-09 # 3 ns
@@ -530,7 +533,10 @@ class S25FlFlashDevice(_Gen25FlashDevice):
 
     def get_capabilities(self):
         """Flash device features"""
-        return SerialFlash.FEAT_SECTERASE
+        # note that subsector erasure is only supported for a 2 * sectorsize
+        # -long area at start OR end of the flash. can_erase asserts this 
+        # condition
+        return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
 
     def can_erase(self, address, length):
         """Verifies that a defined area can be erased on the Spansion flash
