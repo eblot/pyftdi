@@ -54,7 +54,7 @@ class SpiPort(object):
 
     def set_frequency(self, frequency):
         """Change SPI bus frequency"""
-        self._frequency = min(frequency, Ftdi.BUS_CLOCK_MAX)
+        self._frequency = min(frequency, self._controller.frequency_max)
 
     @property
     def frequency(self):
@@ -112,6 +112,10 @@ class SpiController(object):
             self._ports[cs] = SpiPort(self, cs_cmd)
             self._release_bus()
         return self._ports[cs]
+
+    @property
+    def frequency_max(self):
+        return self._ftdi.frequency_max
 
     @property
     def frequency(self):

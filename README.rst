@@ -51,8 +51,7 @@ libraries:
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules.
 
-Python_ 2.6 or above is required, although PyFtdi may run on older Python
-releases with some or no modifications.
+Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
 
 .. _PyUSB: http://sourceforge.net/projects/pyusb/
 .. _Python: http://python.org/
@@ -72,6 +71,21 @@ libftdi_ is now being phased out from this closed-source project and replaced
 with PyFtdi, to ease maintenance and customization.
 
 Meanwhile, PyFtdi is developed as an open-source solution.
+
+Supported features
+------------------
+* All FTDI device ports (UART, MPSSE) can be used simultaneously.
+* Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
+  offers transparent access to the FTDI serial ports through a pyserial_-
+  compliant API. `serialext` directory contains a minimal serial terminal
+  that demonstrates the use of this extension, and a dispatcher that
+  automatically selects the serial backend (pyserial_, PyFtdi), depending on
+  the serial port name.
+* SPI master. PyFtdi includes several examples that demonstrate how to use
+  the FTDI SPI master, with a pure-Python serial flash device driver for
+  several common serial flash devices.
+  These tests show an average 400 KB/s read out from the flash devices running
+  with a 6MHz SPI clock on a Core2Duo Mac Book Pro.
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
 

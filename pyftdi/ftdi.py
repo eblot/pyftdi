@@ -24,12 +24,12 @@ License: LGPL, originally based on libftdi C library
 Caveats: Only tested with FT2232 and FT4232 FTDI devices
 """
 
-import array
 import os
 import struct
 import threading
 import usb.core
 import usb.util
+from array import array as Array
 
 __all__ = ['Ftdi', 'FtdiError']
 
@@ -43,7 +43,7 @@ class Ftdi(object):
     """FTDI device driver"""
 
     # Bus clocks
-    BUS_CLOCK_MAX = 30.0E6
+    BUS_CLOCK_HIGH = 30.0E6
     BUS_CLOCK_BASE = 6.0E6
 
     # Shifting commands IN MPSSE Mode
@@ -225,7 +225,7 @@ class Ftdi(object):
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
-        self.readbuffer = array.array('B')
+        self.readbuffer = Array('B')
         self.readoffset = 0
         self.readbuffer_chunksize = 4 << 10 # 4KB
         self.writebuffer_chunksize = 4 << 10 # 4KB
@@ -266,16 +266,15 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
-        # Configure clock, twice to circumvent cold init case issue
-        frequency = self._set_frequency(frequency)
+        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
         # Configure I/O
-        self.write_data(struct.pack('<BBB', Ftdi.SET_BITS_LOW, 0, direction))
+        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, 0, direction]))
         # Enable MPSSE mode
         self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
+        # Configure clock
+        frequency = self._set_frequency(frequency)
         # Drain input buffer
-        self.write_data(struct.pack('<B', Ftdi.SEND_IMMEDIATE))
-        self.purge_rx_buffer()
+        self.purge_buffers()
         self.read_data(16)
         # Return the actual frequency
         return frequency
@@ -291,13 +290,13 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(struct.pack('<B', Ftdi.LOOPBACK_END))
+        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate
         self.set_baudrate(baudrate)
         # Drain input buffer
-        self.purge_rx_buffer()
+        self.purge_buffers()
         self.read_data(16)
 
     @property
@@ -305,7 +304,7 @@ class Ftdi(object):
         """Return the current type of the FTDI device as a string"""
         types = { 0x200: 'ft232am',
                   0x400: 'ft232bm', # bug with S/N == 0 not handled
-                  0x500: 'ft2232c',
+                  0x500: 'ft2232d',
                   0x600: 'ft232c',
                   0x700: 'ft2232h',
                   0x800: 'ft4232h' }
@@ -315,6 +314,13 @@ class Ftdi(object):
     def bitbang_enabled(self):
         """Tell whether some bitbang mode is activated"""
         return not (self.bitbang_mode == Ftdi.BITMODE_RESET)
+
+    @property
+    def frequency_max(self):
+        """Tells the maximum frequency for MPSSE clock"""
+        if self.type in ('ft2232h', 'ft4232h'):
+            return Ftdi.BUS_CLOCK_HIGH
+        return Ftdi.BUS_CLOCK_BASE
 
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""
@@ -334,10 +340,7 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def set_frequency(self, frequency):
-        frequency = self._set_frequency(frequency)
-        self.write_data(struct.pack('<B', Ftdi.SEND_IMMEDIATE))
-        self.purge_buffers()
-        return frequency
+        return self._set_frequency(frequency)
 
     def purge_rx_buffer(self):
         """Clear the read buffer on the chip and the internal read buffer."""
@@ -345,7 +348,7 @@ class Ftdi(object):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = array.array('B')
+        self.readbuffer = Array('B')
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
@@ -370,7 +373,7 @@ class Ftdi(object):
         """Configure read buffer chunk size."""
         # Invalidate all remaining data
         self.readoffset = 0
-        self.readbuffer = array.array('B')
+        self.readbuffer = Array('B')
         import sys
         if sys.platform == 'linux':
             if chunksize > 16384:
@@ -532,7 +535,7 @@ class Ftdi(object):
             raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1 # initial condition to enter the usb_read loop
-        data = array.array('B')
+        data = Array('B')
         # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
@@ -565,7 +568,7 @@ class Ftdi(object):
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
-                        self.readbuffer = array.array('B')
+                        self.readbuffer = Array('B')
                         self.readoffset = 0
                         srcoff = 2
                         for i in xrange(chunks):
@@ -579,7 +582,7 @@ class Ftdi(object):
                         if attempt > 0:
                             continue
                         # no actual data
-                        self.readbuffer = array.array('B')
+                        self.readbuffer = Array('B')
                         self.readoffset = 0
                         if self.latency_threshold:
                             self.latency_count += 1
@@ -708,7 +711,7 @@ class Ftdi(object):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = array.array('B')
+        self.readbuffer = Array('B')
 
     def _ctrl_transfer_out(self, reqtype, value, data=''):
         """Send a control message to the device"""
@@ -820,7 +823,7 @@ class Ftdi(object):
             encoded_divisor = 1 # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.type in ('ft2232c', 'ft2232h', 'ft4232h'):
+        if self.type in ('ft2232d', 'ft2232h', 'ft4232h'):
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -832,6 +835,8 @@ class Ftdi(object):
 
     def _set_frequency(self, frequency):
         """Convert a frequency value into a TCK divisor setting"""
+        if frequency > self.frequency_max:
+            raise FtdiError("Unsupported frequency: %f" % frequency)
         if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5
             divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
@@ -844,8 +849,13 @@ class Ftdi(object):
             actual_freq = Ftdi.BUS_CLOCK_MAX/(divisor+1)
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
-        # Configure clock, twice to circumvent cold init case issue
-        cmd = struct.pack('<BBHBH', divcode, Ftdi.TCK_DIVISOR, divisor,
-                                             Ftdi.TCK_DIVISOR, divisor)
-        self.write_data(cmd)
+        # Send the command twice, as it seems that cold initialization is a
+        # bit buggy. FTDI expects little endian
+        self.write_data(Array('B', [divcode, Ftdi.TCK_DIVISOR,
+                                    divisor&0xff, (divisor>>8)&0xff,
+                                    Ftdi.TCK_DIVISOR,
+                                    divisor&0xff, (divisor>>8)&0xff,
+                                    Ftdi.SEND_IMMEDIATE]))
+                                    # Drain input buffer
+        self.purge_rx_buffer()
         return actual_freq

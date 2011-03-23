@@ -38,8 +38,8 @@ class SerialFlashUnknownJedec(SerialFlashNotSupported):
     """Exception thrown when a JEDEC identifier is not recognized"""
     def __init__(self, jedec):
         from binascii import hexlify
-        SerialFlashNotSupported.__init__(self,
-            msg="Unknown flash device: %s" % hexlify(jedec))
+        SerialFlashNotSupported.__init__(self, "Unknown flash device: %s" % \
+                                         hexlify(jedec))
 
 class SerialFlashTimeout(Exception):
     """Exception thrown when a flash command cannot be completed in a timely
