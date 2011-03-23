@@ -23,9 +23,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import array
 import struct
 import time
+from array import array as Array
 from pyftdi import Ftdi
 
 __all__ = ['SpiPort', 'SpiController']
@@ -79,11 +79,11 @@ class SpiController(object):
         self._direction = self._cs_bits | \
                           SpiController.DO_BIT | \
                           SpiController.SCK_BIT
-        self._cs_high = struct.pack('<BBB', Ftdi.SET_BITS_LOW,
-                                    self._cs_bits,
-                                    self._direction) + \
-                        struct.pack('<BBB', Ftdi.WRITE_BITS_TMS_NVE, 7, 0xff)
-        self._immediate = struct.pack('<B', Ftdi.SEND_IMMEDIATE)
+        self._cs_high = Array('B', [Ftdi.SET_BITS_LOW,
+                                    self._cs_bits, self._direction,
+                                    # /CS to SCLK delay
+                                    Ftdi.WRITE_BITS_TMS_NVE, 7, 0xff])
+        self._immediate = Array('B', [Ftdi.SEND_IMMEDIATE])
         self._frequency = 0.0
 
     def configure(self, vendor, product, interface, frequency=6.0E6):
@@ -136,17 +136,24 @@ class SpiController(object):
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
-            cmd = cs_cmd + write_cmd + out + read_cmd + self._immediate + \
-                  self._cs_high
+            cmd = Array('B', cs_cmd)
+            cmd.fromstring(write_cmd)
+            cmd.extend(out)
+            cmd.fromstring(read_cmd)
+            cmd.extend(self._immediate)
+            cmd.extend(self._cs_high)
             self._ftdi.write_data(cmd)
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         else:
-            cmd = cs_cmd + write_cmd + out + self._cs_high
+            cmd = Array('B', cs_cmd)
+            cmd.fromstring(write_cmd)
+            cmd.extend(out)
+            cmd.extend(self._cs_high)
             self._ftdi.write_data(cmd)
-            data = array.array('B')
+            data = Array('B')
         return data
 
     def _flush(self):

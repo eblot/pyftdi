@@ -23,13 +23,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+import time
 from pyftdi import Ftdi
 from pyftdi.spi import SpiController
 from pyftdi.misc import hexdump
-import array
-import struct
-import sys
-import time
+from array import array as Array
 
 
 class SerialFlashNotSupported(Exception):
@@ -138,7 +137,7 @@ class SerialFlashManager(object):
     @staticmethod
     def read_jedec_id(spi):
         """Read flash device JEDEC identifier (3 bytes)"""
-        jedec_cmd = struct.pack('<B', SerialFlashManager.CMD_JEDEC_ID)
+        jedec_cmd = Array('B', [SerialFlashManager.CMD_JEDEC_ID])
         return spi.exchange(jedec_cmd, 3).tostring()
 
     @staticmethod
@@ -218,19 +217,19 @@ class _Gen25FlashDevice(SerialFlash):
         return _Gen25FlashDevice._is_busy(self._read_status())
 
     def unlock(self):
-        ewsr_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_EWSR)
+        ewsr_cmd = Array('<B', [_Gen25FlashDevice.CMD_EWSR])
         self._spi.exchange(ewsr_cmd)
-        wrsr_cmd = struct.pack('<BB', _Gen25FlashDevice.CMD_WRSR,
-                               (~_Gen25FlashDevice.STATUS_BP)&0xff)
+        wrsr_cmd = Array('B', [_Gen25FlashDevice.CMD_WRSR,
+                               (~_Gen25FlashDevice.STATUS_BP)&0xff])
         self._spi.exchange(wrsr_cmd)
 
     def read(self, address, length):
-        buf = array.array('B')
+        if address+length > len(self):
+            raise SerialFlashValueError('Out of range')
+        buf = Array('B')
         while length > 0:
             size = min(length, SpiController.PAYLOAD_MAX_LENGTH)
-            print "Read 0x%06x %d KB..." % (length, size>>10),
             data = self._read_hi_speed(address, size)
-            print "done."
             length -= len(data)
             address += len(data)
             buf.extend(data)
@@ -239,6 +238,10 @@ class _Gen25FlashDevice(SerialFlash):
     def write(self, address, data):
         """Write a sequence of bytes, starting at the specified address."""
         length = len(data)
+        if address+length > len(self):
+            raise SerialFlashValueError('Cannot fit in flash area')
+        if not isinstance(data, Array):
+            data = Array('B', data)
         pos = 0
         while pos < length:
             size = min(length-pos, _Gen25FlashDevice.PAGE_SIZE)
@@ -345,15 +348,15 @@ class _Gen25FlashDevice(SerialFlash):
         return tuple([ord(x) for x in jedec[:maxlength]])
 
     def _read_lo_speed(self, address, length):
-        read_cmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_READ_LO_SPEED,
+        read_cmd = Array('B', [_Gen25FlashDevice.CMD_READ_LO_SPEED,
                                (address>>16)&0xff, (address>>8)&0xff,
-                               address&0xff)
+                               address&0xff])
         return self._spi.exchange(read_cmd, length)
 
     def _read_hi_speed(self, address, length):
-        read_cmd = struct.pack('<BBBBB', _Gen25FlashDevice.CMD_READ_HI_SPEED,
+        read_cmd = Array('B', [_Gen25FlashDevice.CMD_READ_HI_SPEED,
                                (address>>16)&0xff, (address>>8)&0xff,
-                               address&0xff, 0)
+                               address&0xff, 0])
         return self._spi.exchange(read_cmd, length)
 
     def _write(self, address, data):
@@ -366,15 +369,16 @@ class _Gen25FlashDevice(SerialFlash):
         else:
             sequences = [(address, data)]
         for addr, buf in sequences:
-            # print "write 0x%06x %d '%s'" % (addr, len(buf), buf)
             self._enable_write()
-            wcmd = struct.pack('<BBBB', _Gen25FlashDevice.CMD_PROGRAM_PAGE,
-                               (addr>>16)&0xff, (addr>>8)&0xff, addr&0xff)
-            self._spi.exchange(wcmd + data)
+            wcmd = Array('B', [_Gen25FlashDevice.CMD_PROGRAM_PAGE,
+                               (addr>>16)&0xff, (addr>>8)&0xff,
+                               addr&0xff])
+            wcmd.extend(data)
+            self._spi.exchange(wcmd)
             self._wait_for_completion(self.PROGRAM_PAGE_TIMES)
 
     def _read_status(self):
-        read_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_READ_STATUS)
+        read_cmd = Array('B', [_Gen25FlashDevice.CMD_READ_STATUS])
         #self._spi.flush()
         data = self._spi.exchange(read_cmd, 1)
         if len(data) != 1:
@@ -382,21 +386,20 @@ class _Gen25FlashDevice(SerialFlash):
         return data[0]
 
     def _enable_write(self):
-        wren_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_ENABLE)
+        wren_cmd = Array('B', [_Gen25FlashDevice.CMD_WRITE_ENABLE])
         self._spi.exchange(wren_cmd)
 
     def _disable_write(self):
-        wrdi_cmd = struct.pack('<B', _Gen25FlashDevice.CMD_WRITE_DISABLE)
+        wrdi_cmd = Array('B', [_Gen25FlashDevice.CMD_WRITE_DISABLE])
         self._spi.exchange(wrdi_cmd)
 
     def _erase_blocks(self, command, times, start, end, size):
         """Erase one or more blocks"""
         while start < end:
-            #print "ERASE BLOCK 0x%06x..0x%06x" % (start, end-1)
-            #print "CMD: 0x%02x" % command
+            #print "ERASE BLOCK 0x%06x..0x%06x" % (start, start+size-1)
             self._enable_write()
-            cmd = struct.pack('<BBBB', command, (start>>16)&0xff,
-                              (start>>8)&0xff, start&0xff)
+            cmd = Array('B', [command, (start>>16)&0xff,
+                              (start>>8)&0xff, start&0xff])
             self._spi.exchange(cmd)
             self._wait_for_completion(times)
             start += size
@@ -435,8 +438,6 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     ERASE_HSECTOR_TIMES = (0.025, 0.025) # 25 ms
     ERASE_SECTOR_TIMES = (0.025, 0.025) # 25 ms
     SPI_FREQ_MAX = 66 # MHz
-    SPI_SETUP_TIME = 5E-09 # 5 ns
-    SPI_HOLD_TIME = 5E-09 # 5 ns
 
     def __init__(self, spi, jedec):
         if not Sst25FlashDevice.match(jedec):
@@ -468,17 +469,19 @@ class Sst25FlashDevice(_Gen25FlashDevice):
            very poor performances, because the device lacks an internal buffer
            which translates into an ultra-heavy load on SPI bus. However, the
            device offers lightning-speed for flash data erasure"""
-        if isinstance(data, str):
-            data = [ord(x) for x in data]
+        if address+len(data) > len(self):
+            raise SerialFlashValueError('Cannot fit in flash area')
+        if not isinstance(data, Array):
+            data = Array('B', data)
         length = len(data)
         if (address&0x1) or (length&0x1) or (length==0):
             raise AssertionError("Alignement/size not supported")
         self._enable_write()
-        aai_cmd = struct.pack('<BBBBBB', Sst25FlashDevice.CMD_PROGRAM_WORD,
+        aai_cmd = Array('B', [Sst25FlashDevice.CMD_PROGRAM_WORD,
                               (address>>16)&0xff,
                               (address>>8)&0xff,
                               address&0xff,
-                              data.pop(0), data.pop(0))
+                              data.pop(0), data.pop(0)])
         offset = 0
         percent = 0.0
         while True:
@@ -490,8 +493,8 @@ class Sst25FlashDevice(_Gen25FlashDevice):
                 time.sleep(0.01) # 10 ms
             if not data:
                 break
-            aai_cmd = struct.pack('<BBB', Sst25FlashDevice.CMD_PROGRAM_WORD,
-                                  data.pop(0), data.pop(0))
+            aai_cmd = Array('B', [Sst25FlashDevice.CMD_PROGRAM_WORD,
+                                  data.pop(0), data.pop(0)])
         #print ""
         self._disable_write()
 
@@ -513,8 +516,6 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     ERASE_SECTOR_TIMES = (0.5, 2.0) # 0.5/2 s
     BULK_ERASE_TIMES = (32, 64) # seconds
     SPI_FREQ_MAX = 104 # MHz (P series only)
-    SPI_SETUP_TIME = 3E-09 # 3 ns
-    SPI_HOLD_TIME = 3E-09 # 3 ns
     DEVICES = { 0x15 : 4<<20, 0x16 : 8<<20 }
 
     def __init__(self, spi, jedec):
@@ -534,7 +535,7 @@ class S25FlFlashDevice(_Gen25FlashDevice):
     def get_capabilities(self):
         """Flash device features"""
         # note that subsector erasure is only supported for a 2 * sectorsize
-        # -long area at start OR end of the flash. can_erase asserts this 
+        # -long area at start OR end of the flash. can_erase asserts this
         # condition
         return SerialFlash.FEAT_SECTERASE|SerialFlash.FEAT_SUBSECTERASE
 
@@ -544,7 +545,7 @@ class S25FlFlashDevice(_Gen25FlashDevice):
         """
         # we first need to check the current configuration register, as a
         # previous configuration may prevent from altering some of the bits
-        readcfg_cmd = struct.pack('<B', S25FlFlashDevice.CMD_READ_CONFIG)
+        readcfg_cmd = Array('B', [S25FlFlashDevice.CMD_READ_CONFIG])
         config = self._spi.exchange(readcfg_cmd, 1)[0]
         if config & S25FlFlashDevice.CR_TBPARM:
             # "parameter zone" is defined in the high sectors
@@ -618,7 +619,7 @@ if __name__ == '__main__':
             (length, delta, length/(1024.0*delta))
     #data = flash.read(0xeff0, 128).tostring()
     loop = 0
-    while True:
+    while False:
         loop += 1
         print "Loop %d" % loop
         flash.write(0x007020, 'This is a serial SPI flash test')
@@ -628,3 +629,39 @@ if __name__ == '__main__':
         data = flash.read(0x007020, 128).tostring()
         print hexdump(data)
         time.sleep(0.5)
+
+    if True:
+        # Fill in the whole flash with a monotonic increasing value, that is
+        # the current flash 32-bit address, then verify the sequence has been
+        # properly read back
+        from hashlib import sha1
+        buf = Array('I')
+        print "Build sequence"
+        for address in range(0, len(flash), 4):
+            buf.append(address)
+        # Expect to run on x86 or ARM (little endian), so swap the values
+        # to ease debugging
+        # A cleaner test would verify the host endianess, or use struct module
+        print "Swap sequence"
+        buf.byteswap()
+        print "Erase flash (may take a while...)"
+        flash.erase(0, len(flash))
+        # Cannot use buf, as it's an I-array, and SPI expects a B-array
+        bufstr = buf.tostring()
+        print "Write flash", len(bufstr)
+        flash.write(0, bufstr)
+        wmd = sha1()
+        wmd.update(buf.tostring())
+        refdigest = wmd.hexdigest()
+        print "Read flash"
+        data = flash.read(0, len(flash))
+        #print "Dump flash"
+        #print hexdump(data.tostring())
+        print "Verify flash"
+        rmd = sha1()
+        rmd.update(data.tostring())
+        newdigest = rmd.hexdigest()
+        print "Reference:", refdigest
+        print "Retrieved:", newdigest 
+        if refdigest != newdigest:
+            raise AssertionError('Data comparison mismatch')
