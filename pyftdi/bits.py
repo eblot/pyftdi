@@ -113,7 +113,6 @@ class BitSequence(object):
                 bit = value.pop(pos)
                 self._seq.append(smap[bit])
             except KeyError:
-                print value
                 raise BitError("Invalid binary character: '%s'" % bit)
 
     def _init_from_sibling(self, value, msb):
