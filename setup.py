@@ -38,7 +38,7 @@ setup(
     packages=['pyftdi'],
     requires=[ 'pyusb (>= 1.0.0a1)' ],
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Environment :: Other Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Library or '
