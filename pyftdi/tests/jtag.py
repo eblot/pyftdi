@@ -27,7 +27,7 @@
 import sys
 import time
 import unittest
-from pyftdi.jtag import JtagEngine
+from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
 
 # Should match the tested device
@@ -42,17 +42,18 @@ class JtagTestCase(unittest.TestCase):
         self.jtag = JtagEngine()
         self.jtag.configure(interface=1)
         self.jtag.reset()
+        self.tool = JtagTool(self.jtag)
 
     def tearDown(self):
         del self.jtag
 
-    def test_idcode_reset(self):
+    def _test_idcode_reset(self):
         """Read the IDCODE right after a JTAG reset"""
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
         print "IDCODE: 0x%x" % int(idcode)
 
-    def test_idcode_sequence(self):
+    def _test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
         instruction = JTAG_INSTR['IDCODE']
         self.jtag.write_ir(instruction)
@@ -60,8 +61,26 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.go_idle()
         print "IDCODE: 0x%x" % int(idcode)
 
+    def test_detect_ir_length(self):
+        """Detect the instruction register length"""
+        self.jtag.reset()
+        self.jtag.go_idle()
+        self.jtag.capture_ir()
+        self.tool.detect_register_size()
+
+    def test_shift_register(self):
+        self.jtag.reset()
+        self.jtag.go_idle()
+        self.jtag.capture_ir()
+        for x in range(10):
+            patin = BitSequence(0b1, length=3)
+            patout = self.jtag.shift_register(patin)
+            print patin
+            print patout
+
+
 def suite():
-    return unittest.makeSuite(JtagTestCase, 'test')
+    return unittest.makeSuite(JtagTestCase, '_test')
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

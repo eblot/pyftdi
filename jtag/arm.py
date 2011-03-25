@@ -42,7 +42,7 @@ JTAG_INSTR = {'EXTEST'  : BitSequence('0000', msb=True, length=4),
 
 class ArmJtag(object):
     """JTAG helper for ARM core"""
-    
+
     def __init__(self, vendor, product, interface):
         self.jtag = JtagEngine()
         self.jtag.configure(vendor, product, interface)
@@ -65,7 +65,7 @@ class ArmJtag(object):
         partnumber = idcode[12:28]
         manufacturer = idcode[1:12]
         ieee = idcode[0:1]
-        print "IDCODE: 0x%x %s %s %s %s" % (int(idcode), 
+        print "IDCODE: 0x%x %s %s %s %s" % (int(idcode),
             revision, partnumber, manufacturer, ieee)
         return idcode
 
@@ -74,4 +74,3 @@ if __name__ == '__main__':
     jtag = ArmJtag(0x403, 0x6011, 1)
     jtag.get_idcode_from_reset()
     jtag.get_idcode_from_instruction()
-    
