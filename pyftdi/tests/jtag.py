@@ -51,7 +51,7 @@ class JtagTestCase(unittest.TestCase):
         """Read the IDCODE right after a JTAG reset"""
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: %x" % int(idcode)
+        print "IDCODE: %08x" % int(idcode)
 
     def test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
@@ -59,7 +59,7 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.write_ir(instruction)
         data = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: %x" % int(data)
+        print "IDCODE: %08x" % int(data)
 
 def suite():
     return unittest.makeSuite(JtagTestCase, 'test')
