@@ -317,11 +317,11 @@ class JtagController(object):
             raise JtagError("Nothing to shift")
         if byte_count:
             blen = byte_count-1
-            cmd = Array('B', [Ftdi.RW_BYTES_NVE_LSB, blen, (blen>>8)&0xff])
+            cmd = Array('B', [Ftdi.RW_BYTES_PVE_NVE_LSB, blen, (blen>>8)&0xff])
             cmd.extend(out[:pos].tobytes(msby=True))
             self._stack_cmd(cmd)
         if bit_count:
-            cmd = Array('B', [Ftdi.READ_BITS_NVE_LSB, bit_count-1])
+            cmd = Array('B', [Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1])
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
         self.sync()
@@ -330,17 +330,18 @@ class JtagController(object):
         pos = 8*byte_count
         bit_count = length-pos
         if byte_count:
-            data = self._ftdi.read_data_bytes(byte_count)
+            data = self._ftdi.read_data_bytes(byte_count, 4)
             byteseq = BitSequence(bytes_=data, length=8*byte_count)
             bs.append(byteseq)
         if bit_count:
-            data = self._ftdi.read_data_bytes(1, 2)
+            data = self._ftdi.read_data_bytes(1, 4)
             if not data:
                 raise JtagError('Unable to read data from FTDI')
             bitseq = BitSequence(data[0], length=bit_count)
             bs.append(bitseq)
         if len(bs) != length:
             raise AssertionError("Internal error")
+        self._ftdi.validate_mpsse()
         return bs
 
     def _read_bits(self, length):
@@ -518,7 +519,7 @@ class JtagTool(object):
     def detect_register_size(self):
         # Freely inpired from UrJTAG, GPL license
         # Need to contact authors, or to replace this code to comply with
-        # the GPL license
+        # the GPL license (GPL vs. LGPL with Python is a bit fuzzy for me)
         MAX_REG_LEN = 1024
         PATTERN_LEN = 8
         stuck = None
