@@ -121,7 +121,7 @@ class SerialFlashManager(object):
     CMD_JEDEC_ID = 0x9F
 
     def __init__(self, vendor, product, interface=1):
-        self._ctrl = SpiController()
+        self._ctrl = SpiController(silent_clock=False)
         self._ctrl.configure(vendor, product, interface)
 
     def get_flash_device(self, cs=0):
