@@ -72,7 +72,14 @@ class Ftdi(object):
     READ_BYTES_NVE_LSB = 0x2c
     READ_BITS_PVE_LSB = 0x2a
     READ_BITS_NVE_LSB = 0x2e
-    RW_BYTES_NVE_LSB = 0x3d
+    RW_BYTES_PVE_PVE_LSB = 0x38
+    RW_BYTES_PVE_NVE_LSB = 0x39
+    RW_BYTES_NVE_PVE_LSB = 0x3c
+    RW_BYTES_NVE_NVE_LSB = 0x3d
+    RW_BITS_PVE_PVE_LSB = 0x3a
+    RW_BITS_PVE_NVE_LSB = 0x3b
+    RW_BITS_NVE_PVE_LSB = 0x3e
+    RW_BITS_NVE_NVE_LSB = 0x3f
     WRITE_BITS_TMS_PVE = 0x4a
     WRITE_BITS_TMS_NVE = 0x4b
     RW_BITS_TMS_PVE_PVE = 0x6a
@@ -273,9 +280,9 @@ class Ftdi(object):
         self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
         # Configure clock
         frequency = self._set_frequency(frequency)
+        self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
-        self.read_data(16)
         # Return the actual frequency
         return frequency
 
@@ -295,9 +302,9 @@ class Ftdi(object):
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate
         self.set_baudrate(baudrate)
+        self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
-        self.read_data(16)
 
     @property
     def type(self):
@@ -638,6 +645,12 @@ class Ftdi(object):
             self.latency = lmax
             self.set_latency_timer(self.latency)
 
+    def validate_mpsse(self):
+        # only useful in MPSSE mode
+        bytes_ = self.read_data(2)
+        if (len(bytes_) >=2 ) and (bytes_[0] == '\xfa'):
+            raise FtdiError("Invalid command @ %d" % ord(bytes_[1]))
+
     def get_error_string(self):
         """Wrapper for libftdi compatibility"""
         return "Unknown error"
@@ -851,11 +864,15 @@ class Ftdi(object):
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # Send the command twice, as it seems that cold initialization is a
         # bit buggy. FTDI expects little endian
-        self.write_data(Array('B', [divcode, Ftdi.TCK_DIVISOR,
-                                    divisor&0xff, (divisor>>8)&0xff,
-                                    Ftdi.TCK_DIVISOR,
-                                    divisor&0xff, (divisor>>8)&0xff,
-                                    Ftdi.SEND_IMMEDIATE]))
-                                    # Drain input buffer
+        if self.type in ('ft2232h', 'ft4232h'):
+            cmd = Array('B', [divcode])
+        else:
+            cmd = Array('B')
+        cmd.extend([Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff,
+                    Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff,
+                    Ftdi.SEND_IMMEDIATE])
+        self.write_data(cmd)
+        self.validate_mpsse()
+        # Drain input buffer
         self.purge_rx_buffer()
         return actual_freq

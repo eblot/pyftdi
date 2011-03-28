@@ -94,7 +94,7 @@ class SerialFlashTestCase(unittest.TestCase):
         rmd.update(data.tostring())
         newdigest = rmd.hexdigest()
         print "Reference:", refdigest
-        print "Retrieved:", newdigest 
+        print "Retrieved:", newdigest
         if refdigest != newdigest:
             raise AssertionError('Data comparison mismatch')
 

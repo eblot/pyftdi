@@ -113,7 +113,6 @@ class BitSequence(object):
                 bit = value.pop(pos)
                 self._seq.append(smap[bit])
             except KeyError:
-                print value
                 raise BitError("Invalid binary character: '%s'" % bit)
 
     def _init_from_sibling(self, value, msb):
@@ -286,6 +285,48 @@ class BitSequence(object):
 
     def __add__(self, other):
         return self.__class__(value = self._seq + other.sequence())
+
+    def __ilshift__(self, count):
+        count %= len(self)
+        self._seq[:] = [False]*count + self._seq[:-count]
+        return self
+
+    def __irshift__(self, count):
+        count %= len(self)
+        self._seq[:] = self._seq[count:] + [False]*count
+        return self
+
+    def inc(self):
+        """Increment the sequence"""
+        for p, b in enumerate(self._seq):
+            b ^= True
+            self._seq[p] = b
+            if b:
+                break
+
+    def dec(self):
+        """Decrement the sequence"""
+        for p, b in enumerate(self._seq):
+            b ^= True
+            self._seq[p] = b
+            if not b:
+                break
+
+    def invariant(self):
+        """Tells whether all bits of the sequence are of the same value.
+           Return the value, or ValueError if the bits are not of the same
+           value
+        """
+        try:
+            ref = self._seq[0]
+        except IndexError:
+            raise ValueError('Empty sequence')
+        if len(self._seq) == 1:
+            return ref
+        for b in self._seq[1:]:
+            if b != ref:
+                raise ValueError('Bits do no match')
+        return ref
 
 
 class BitZSequence(BitSequence):

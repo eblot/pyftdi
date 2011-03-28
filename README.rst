@@ -11,8 +11,9 @@ implemented in pure Python language.
 
 Modern FTDI_ devices include:
 
-* FT2232H (dual port)
-* FT4232H (quad port)
+* FT2232D (dual port, clock up to 6 MHz)
+* FT2232H (dual port, clock up to 30 MHz)
+* FT4232H (quad port, clock up to 30 MHz)
 
 Other FTDI_ devices could also been supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi, and therefore have

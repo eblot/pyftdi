@@ -26,60 +26,51 @@
 
 import sys
 import time
-import unittest
-from pyftdi.jtag import JtagEngine, JtagTool
+from pyftdi.jtag import JtagEngine
 from pyftdi.bits import BitSequence
 
-# Should match the tested device
-JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),
-              'PRELOAD' : BitSequence('0001', msb=True, length=4),
-              'IDCODE'  : BitSequence('0100', msb=True, length=4),
-              'BYPASS'  : BitSequence('1111', msb=True, length=4) }
+# ARM 926
+JTAG_INSTR = {'EXTEST'  : BitSequence('0000', msb=True, length=4),
+              'SAMPLE'  : BitSequence('0011', msb=True, length=4),
+              'PRELOAD' : BitSequence('0011', msb=True, length=4),
+              'SCAN_N'  : BitSequence('0010', msb=True, length=4),
+              'INTEST'  : BitSequence('1100', msb=True, length=4),
+              'IDCODE'  : BitSequence('1110', msb=True, length=4),
+              'BYPASS'  : BitSequence('1111', msb=True, length=4),
+              'RESTART' : BitSequence('0100', msb=True, length=4)}
 
-class JtagTestCase(unittest.TestCase):
 
-    def setUp(self):
+class ArmJtag(object):
+    """JTAG helper for ARM core"""
+
+    def __init__(self, vendor, product, interface):
         self.jtag = JtagEngine()
-        self.jtag.configure(interface=1)
+        self.jtag.configure(vendor, product, interface)
         self.jtag.reset()
-        self.tool = JtagTool(self.jtag)
 
-    def tearDown(self):
-        del self.jtag
-
-    def _test_idcode_reset(self):
+    def get_idcode_from_reset(self):
         """Read the IDCODE right after a JTAG reset"""
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: 0x%08x" % int(idcode)
+        print "IDCODE: 0x%x" % int(idcode)
+        return int(idcode)
 
-    def _test_idcode_sequence(self):
+    def get_idcode_from_instruction(self):
         """Read the IDCODE using the dedicated instruction"""
         instruction = JTAG_INSTR['IDCODE']
         self.jtag.write_ir(instruction)
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: 0x%08x" % int(idcode)
+        revision = idcode[28:32]
+        partnumber = idcode[12:28]
+        manufacturer = idcode[1:12]
+        ieee = idcode[0:1]
+        print "IDCODE: 0x%x %s %s %s %s" % (int(idcode),
+            revision, partnumber, manufacturer, ieee)
+        return idcode
 
-    def test_detect_ir_length(self):
-        """Detect the instruction register length"""
-        self.jtag.reset()
-        self.jtag.go_idle()
-        self.jtag.capture_ir()
-        self.tool.detect_register_size()
-
-    def test_shift_register(self):
-        self.jtag.reset()
-        self.jtag.go_idle()
-        self.jtag.capture_ir()
-        for x in range(10):
-            patin = BitSequence(0b1, length=3)
-            patout = self.jtag.shift_register(patin)
-            print patin
-            print patout
-
-def suite():
-    return unittest.makeSuite(JtagTestCase, '_test')
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    jtag = ArmJtag(0x403, 0x6011, 1)
+    jtag.get_idcode_from_reset()
+    jtag.get_idcode_from_instruction()
