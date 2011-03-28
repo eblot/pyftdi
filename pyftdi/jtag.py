@@ -175,11 +175,11 @@ class JtagStateMachine(object):
 class JtagController(object):
     """JTAG master of an FTDI device"""
 
-    TCK_BIT = 0x01   # output
-    TDI_BIT = 0x02   # output
-    TDO_BIT = 0x04   # input
-    TMS_BIT = 0x08   # output
-    TRST_BIT = 0x10  # output, not available on 2232 JTAG debugger
+    TCK_BIT = 0x01   # FTDI output
+    TDI_BIT = 0x02   # FTDI output
+    TDO_BIT = 0x04   # FTDI input
+    TMS_BIT = 0x08   # FTDI output
+    TRST_BIT = 0x10  # FTDI output, not available on 2232 JTAG debugger
     JTAG_MASK = 0x1f
     FTDI_PIPE_LEN = 512
 
@@ -190,42 +190,52 @@ class JtagController(object):
                          JtagController.TDI_BIT | \
                          JtagController.TMS_BIT | \
                          JtagController.TRST_BIT
-        self._last = True # Last deferred TDO bit
+        self._last = None # Last deferred TDO bit
         self._write_buff = Array('B')
 
     # Public API
     def configure(self, vendor, product, interface,
-                  highreset=False, frequency=3.0E6):
+                  frequency=3.0E6):
         """Configure the FTDI interface as a JTAG controller"""
         curfreq = self._ftdi.open_mpsse(vendor, product, interface,
-                                        self.direction, frequency)
-        if highreset:
-            value = 0x01
-            direction = 0x01
-            cmd = array('B', Ftdi.SET_BITS_HIGH, value, direction)
-            self._ftdi.write_data(cmd)
+                                        direction=self.direction,
+                                        #initial=0x0,
+                                        frequency=frequency)
+        # FTDI requires to initialize all GPIOs before MPSSE kicks in
+        cmd = Array('B', [Ftdi.SET_BITS_LOW, 0x0, self.direction])
+        self._ftdi.write_data(cmd)
 
     def terminate(self):
         if self._ftdi:
             self._ftdi.close()
             self._ftdi = None
 
-    def reset(self):
-        """Reset the attached TAP controller"""
+    def reset(self, trst=False, sync=False):
+        """Reset the attached TAP controller.
+           trst uses the nTRST optional JTAG line to hard-reset the TAP 
+             controller
+           sync sends the command immediately (no caching)
+        """
         # we can either send a TRST HW signal or perform 5 cycles with TMS=1
         # to move the remote TAP controller back to 'test_logic_reset' state
         # do both for now
         if not self._ftdi:
             raise JtagError("FTDI controller terminated")
-        value = 0
-        cmd = Array('B', [Ftdi.SET_BITS_LOW, value, self.direction])
-        self._ftdi.write_data(cmd)
-        time.sleep(0.1)
+        if trst:
+            # nTRST
+            value = 0
+            cmd = Array('B', [Ftdi.SET_BITS_LOW, value, self.direction])
+            self._ftdi.write_data(cmd)
+            time.sleep(0.1)
+        # nTRST should be left to the high state
         value = JtagController.TRST_BIT
         cmd = Array('B', [Ftdi.SET_BITS_LOW, value, self.direction])
         self._ftdi.write_data(cmd)
         time.sleep(0.1)
+        # TAP reset
         self.write_tms(BitSequence('11111'))
+        if sync:
+            self.sync()
 
     def sync(self):
         if not self._ftdi:
@@ -244,17 +254,20 @@ class JtagController(object):
             self.sync()
         self._write_buff.extend(cmd)
 
-    def write_tms(self, out):
+    def write_tms(self, tms):
         """Change the TAP controller state"""
-        if not isinstance(out, BitSequence):
+        if not isinstance(tms, BitSequence):
             raise JtagError('Expect a BitSequence')
-        length = len(out)
-        # duplicate
-        out = out[:]
+        length = len(tms)
+        if not (0 < length < 8):
+            raise JtagError('Invalid TMS length')
+        out = BitSequence(tms, length=8)
         # apply the last TDO bit
-        out[7] = self._last
+        if self._last is not None:
+            out[7] = self._last
+        print out, length
         # reset last bit
-        self._last = False
+        self._last = None
         cmd = Array('B', [Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()])
         self._stack_cmd(cmd)
 
@@ -264,9 +277,11 @@ class JtagController(object):
         bit_count = length-8*byte_count
         bs = BitSequence()
         if byte_count:
+            print "READ %d bytes" % byte_count
             bytes = self._read_bytes(byte_count)
             bs.append(bytes)
         if bit_count:
+            print "READ %d bits" % bit_count
             bits = self._read_bits(bit_count)
             bs.append(bits)
         return bs
@@ -278,7 +293,7 @@ class JtagController(object):
         elif not isinstance(out, BitSequence):
             out = BitSequence(out)
         if use_last:
-            (out, self._last) = (out[:-1], int(out[-1]))
+            (out, self._last) = (out[:-1], bool(out[-1]))
         byte_count = len(out)//8
         pos = 8*byte_count
         bit_count = len(out)-pos
@@ -336,7 +351,7 @@ class JtagController(object):
         cmd = Array('B', [Ftdi.READ_BITS_NVE_LSB, length-1])
         self._stack_cmd(cmd)
         self.sync()
-        data = self._ftdi.read_data_bytes(1)
+        data = self._ftdi.read_data_bytes(1, 4)
         return BitSequence(ord(data), length=length)
 
     def _write_bits(self, out):
@@ -355,7 +370,7 @@ class JtagController(object):
         cmd = Array('B', [Ftdi.READ_BYTES_NVE_LSB, alen&0xff, (alen>>8)&0xff])
         self._stack_cmd(cmd)
         self.sync()
-        data = self._ftdi.read_data_bytes(length)
+        data = self._ftdi.read_data_bytes(length, 4)
         return BitSequence(bytes_=data, length=8*length)
 
     def _write_bytes(self, out):
