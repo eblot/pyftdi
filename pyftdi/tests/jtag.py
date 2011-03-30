@@ -60,7 +60,7 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.write_ir(instruction)
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE (idcode): 0x%x" % int(idcode)
+        print "IDCODE (idcode): 0x%08x" % int(idcode)
 
     def _test_shift_register(self):
         self.jtag.purge()
