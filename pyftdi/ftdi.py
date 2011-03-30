@@ -46,15 +46,6 @@ class Ftdi(object):
     BUS_CLOCK_HIGH = 30.0E6
     BUS_CLOCK_BASE = 6.0E6
 
-    # Shifting commands IN MPSSE Mode
-    MPSSE_WRITE_NEG = 0x01 # Write TDI/DO on negative TCK/SK edge
-    MPSSE_BITMODE = 0x02   # Write bits, not bytes
-    MPSSE_READ_NEG = 0x04  # Sample TDO/DI on negative TCK/SK edge
-    MPSSE_LSB = 0x08       # LSB first
-    MPSSE_DO_WRITE = 0x10  # Write TDI/DO
-    MPSSE_DO_READ = 0x20   # Read TDO/DI
-    MPSSE_WRITE_TMS = 0x40 # Write TMS/CS
-
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
     WRITE_BYTES_NVE_MSB = 0x11
@@ -98,6 +89,10 @@ class Ftdi(object):
     WAIT_ON_LOW = 0x89
     DISABLE_CLK_DIV5 = 0x8a
     ENABLE_CLK_DIV5 = 0x8b
+    READ_SHORT = 0x90
+    READ_EXTENDED = 0x91
+    WRITE_SHORT = 0x92
+    WRITE_EXTENDED = 0x93
 
     # Modem status
     MODEM_CTS = (1 << 4)    # Clear to send
@@ -130,17 +125,6 @@ class Ftdi(object):
     BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
     BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
     BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
-
-    # Commands in MPSSE and Host Emulation Mode
-    SEND_IMMEDIATE = 0x87
-    WAIT_ON_HIGH = 0x88
-    WAIT_ON_LOW = 0x89
-
-    # Commands in Host Emulation Mode
-    READ_SHORT = 0x90
-    READ_EXTENDED = 0x91
-    WRITE_SHORT = 0x92
-    WRITE_EXTENDED = 0x93
 
     # USB control requests
     REQ_OUT = usb.util.build_request_type(

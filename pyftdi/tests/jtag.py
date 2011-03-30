@@ -39,44 +39,63 @@ JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),
 class JtagTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.jtag = JtagEngine()
-        self.jtag.configure(interface=1)
+        self.jtag = JtagEngine(trst=True, frequency=1E3)
+        self.jtag.configure(vendor=0x403, product=0x6010, interface=1)
         self.jtag.reset()
         self.tool = JtagTool(self.jtag)
 
     def tearDown(self):
         del self.jtag
 
-    def _test_idcode_reset(self):
+    def test_idcode_reset(self):
         """Read the IDCODE right after a JTAG reset"""
+        self.jtag.reset()
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: 0x%x" % int(idcode)
+        print "IDCODE (reset): 0x%x" % int(idcode)
 
-    def _test_idcode_sequence(self):
+    def test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
         instruction = JTAG_INSTR['IDCODE']
         self.jtag.write_ir(instruction)
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: 0x%x" % int(idcode)
+        print "IDCODE (idcode): 0x%x" % int(idcode)
+
+    def _test_shift_register(self):
+        self.jtag.purge()
+        self.jtag.go_idle()
+        self.jtag.capture_dr()
+        length = 4
+        for x in range(length):
+            patin = BitSequence(x, length=length)
+            patout = self.jtag.shift_register(patin)
+            print "X=%02d" % x, "IN", patin, int(patin)
+            print "    OUT", patout, int(patout)
+            if x > 4:
+                break
+        #bs0 = BitSequence(0, length=4*length)
+        #bs1 = BitSequence(0b0000, length=length)
+        #bs2 = BitSequence(0b0011, length=length)
+        #bs3 = BitSequence(0b1111, length=length)
+        #count = 0
+        ##self.jtag.shift_register(bs0)
+        #while True:
+        #    r1 = self.jtag.shift_register(bs1)
+        #    r2 = self.jtag.shift_register(bs2)
+        #    r3 = self.jtag.shift_register(bs3)
+        #    #print "IN1", bs1, "OUT1", r1
+        #    #print "IN2", bs2, "OUT2", r2
+        #    #print "IN3", bs3, "OUT3", r3
+        #    count += 1
+        #    if count > 3:
+        #        break
 
     def test_detect_ir_length(self):
         """Detect the instruction register length"""
-        self.jtag.reset()
         self.jtag.go_idle()
         self.jtag.capture_ir()
         self.tool.detect_register_size()
-
-    def test_shift_register(self):
-        self.jtag.reset()
-        self.jtag.go_idle()
-        self.jtag.capture_ir()
-        for x in range(10):
-            patin = BitSequence(0b1, length=3)
-            patout = self.jtag.shift_register(patin)
-            print patin
-            print patout
 
 
 def suite():
