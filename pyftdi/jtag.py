@@ -264,7 +264,7 @@ class JtagController(object):
         # apply the last TDO bit
         if self._last is not None:
             out[7] = self._last
-        print "TMS", tms, (self._last is not None) and 'w/ Last' or ''
+        # print "TMS", tms, (self._last is not None) and 'w/ Last' or ''
         # reset last bit
         self._last = None
         cmd = Array('B', [Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()])
@@ -278,11 +278,9 @@ class JtagController(object):
         bit_count = length-8*byte_count
         bs = BitSequence()
         if byte_count:
-            print "READ %d bytes" % byte_count
             bytes = self._read_bytes(byte_count)
             bs.append(bytes)
         if bit_count:
-            print "READ %d bits" % bit_count
             bits = self._read_bits(bit_count)
             bs.append(bits)
         return bs
@@ -308,7 +306,6 @@ class JtagController(object):
            register output"""
         if not isinstance(out, BitSequence):
             return JtagError('Expect a BitSequence')
-        print "Send", out
         length = len(out)
         if use_last:
             (out, self._last) = (out[:-1], int(out[-1]))
@@ -319,11 +316,13 @@ class JtagController(object):
             raise JtagError("Nothing to shift")
         if byte_count:
             blen = byte_count-1
+            #print "RW OUT %s" % out[:pos]
             cmd = Array('B', [Ftdi.RW_BYTES_PVE_NVE_LSB, blen, (blen>>8)&0xff])
             cmd.extend(out[:pos].tobytes(msby=True))
             self._stack_cmd(cmd)
             #print "push %d bytes" % byte_count
         if bit_count:
+            #print "RW OUT %s" % out[pos:]
             cmd = Array('B', [Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1])
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
@@ -338,19 +337,22 @@ class JtagController(object):
             if not data:
                 raise JtagError('Unable to read data from FTDI')
             byteseq = BitSequence(bytes_=data, length=8*byte_count)
+            #print "RW IN %s" % byteseq
             bs.append(byteseq)
             #print "pop %d bytes" % byte_count
         if bit_count:
             data = self._ftdi.read_data_bytes(1, 4)
             if not data:
                 raise JtagError('Unable to read data from FTDI')
-            bitseq = BitSequence(data[0], length=bit_count)
+            byte = data[0]
+            # need to shift bits as they are shifted in from the MSB in FTDI
+            byte >>= 8-bit_count
+            bitseq = BitSequence(byte, length=bit_count)
             bs.append(bitseq)
             #print "pop %d bits" % bit_count
         if len(bs) != length:
             raise AssertionError("Internal error")
         #self._ftdi.validate_mpsse()
-        print "Recv", bs
         return bs
 
     def _stack_cmd(self, cmd):
@@ -372,12 +374,17 @@ class JtagController(object):
         self._stack_cmd(cmd)
         self.sync()
         data = self._ftdi.read_data_bytes(1, 4)
-        return BitSequence(ord(data), length=length)
+        # need to shift bits as they are shifted in from the MSB in FTDI
+        byte = ord(data) >> 8-bit_count
+        bs = BitSequence(byte, length=length)
+        #print "READ BITS %s" % (bs)
+        return bs
 
     def _write_bits(self, out):
         """Output bits on TDI"""
         length = len(out)
         byte = out.tobyte()
+        #print "WRITE BITS %s" % out
         cmd = Array('B', [Ftdi.WRITE_BITS_NVE_LSB, length-1, byte])
         self._stack_cmd(cmd)
 
@@ -391,14 +398,16 @@ class JtagController(object):
         self._stack_cmd(cmd)
         self.sync()
         data = self._ftdi.read_data_bytes(length, 4)
-        return BitSequence(bytes_=data, length=8*length)
+        bs = BitSequence(bytes_=data, length=8*length)
+        #print "READ BYTES %s" % bs
+        return bs
 
     def _write_bytes(self, out):
         """Output bytes on TDI"""
         bytes_ = out.tobytes(msby=True) # don't ask...
-        length = len(bytes_)-1
-        cmd = Array('B', Ftdi.WRITE_BYTES_NVE_LSB,
-                    length&0xff, (length>>8)&0xff)
+        olen = len(bytes_)-1
+        #print "WRITE BYTES %s" % out
+        cmd = Array('B', [Ftdi.WRITE_BYTES_NVE_LSB, olen&0xff, (olen>>8)&0xff])
         cmd.extend(bytes_)
         self._stack_cmd(cmd)
 
@@ -441,9 +450,9 @@ class JtagEngine(object):
         """Read out a sequence of bits from TDO"""
         return self._ctrl.read(length)
 
-    def write(self, out):
+    def write(self, out, use_last=False):
         """Write a sequence of bits to TDI"""
-        self._ctrl.write(out)
+        self._ctrl.write(out, use_last)
 
     def get_available_statenames(self):
         """Return a list of supported state name"""
@@ -496,10 +505,8 @@ class JtagEngine(object):
             raise JtagError("Invalid state: %s" % self._sm.state())
         if self._sm.state_of('capture'):
             bs = BitSequence(False)
-            print "Move from Capture to Shift", bs
             self._ctrl.write_tms(bs)
             self._sm.handle_events(bs)
-        self.sync()
         return self._ctrl.shift_register(length)
 
     def sync(self):
@@ -543,19 +550,26 @@ class JtagTool(object):
         # Freely inpired from UrJTAG, GPL license
         # Need to contact authors, or to replace this code to comply with
         # the GPL license (GPL vs. LGPL with Python is a bit fuzzy for me)
+        if not self._engine._sm.state_of('shift'):
+            raise JtagError("Invalid state: %s" % self._engine._sm.state())
+        if self._engine._sm.state_of('capture'):
+            bs = BitSequence(False)
+            self._engine._ctrl.write_tms(bs)
+            self._engine._sm.handle_events(bs)
         MAX_REG_LEN = 1024
         PATTERN_LEN = 8
         stuck = None
         for length in range(1, MAX_REG_LEN):
+            print "Testing for length %d" % length
+            if length > 5:
+                return
             zero = BitSequence(length=length)
             inj = BitSequence(length=length+PATTERN_LEN)
             inj.inc()
             for p in range(1, 1<<PATTERN_LEN):
-                self._engine.shift_register(zero)
+                ok = False
+                self._engine.write(zero, False)
                 rcv = self._engine.shift_register(inj)
-                print "Zero: %s" % zero
-                print "Inj:  %s" % inj
-                print "Rcv:  %s" % rcv
                 try:
                     tdo = rcv.invariant()
                 except ValueError:
@@ -564,11 +578,15 @@ class JtagTool(object):
                     stuck = tdo
                 if stuck != tdo:
                     stuck = None
-                rcv <<= length
+                rcv >>= length
                 if rcv == inj:
-                    print "MATCH length %d" % length
-                    return length
+                    ok = True
+                else:
+                    break
                 inj.inc()
+            if ok:
+                print "Register detected length: %d" % length
+                return length
         if stuck is not None:
             raise JtagError('TDO seems to be stuck')
         raise JtagError('Unable to detect register length')
