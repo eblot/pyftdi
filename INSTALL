@@ -1,7 +1,14 @@
 = General =
 
-This version requires an extension to pyusb.
- * Download pyusb-1.0.0a1 
+== Overview ==
+
+To support device selection based on index or serial number, this version
+requires an extension to pyusb. Without this extension, it is not possible to
+select a specific FTDI device if more than one FTDI devices are connected to
+the host, and the behaviour of PyFTDI may be unreliable in this case.
+
+== Installation ==
+ * Download pyusb-1.0.0a1
  * Apply the patch available from: https://gist.github.com/878301
  * Install pyusb
  * Install pyftdi
@@ -13,15 +20,17 @@ iteration of pyusb.
 
 pip install virtualenv
 virtualenv ~/.pyusb
-~/.pyusb/bin/python pip install pyserial
+# one out of the two following lines:
+  ~/.pyusb/bin/pip install pyserial
+  ~/.pyusb/bin/easy_install install pyserial
 wget http://pypi.python.org/packages/source/p/pyusb/pyusb-1.0.0-a1.zip
 unzip pyusb-1.0.0-a1.zip
-cd .../pyusb-1.0.0-a1 
+cd .../pyusb-1.0.0-a1
 wget -O - https://gist.github.com/raw/878301/4e750cb913fd4979a76fbd3286615bce7517c264/pyusb-1.0.0a1-usbbus.patch | patch -p1
  ~/.pyusb/bin/python setup.py install
 PYTHONPATH=. ~/.pyusb/bin/python serialext/tests/pyterm.py -p ftdi:///?
 
-Note that if there's only one FTDI device connected to the host, the FTDI URL 
+Note that if there's only one FTDI device connected to the host, the FTDI URL
 should be as simple as ftdi:///n, where n is the FTDI UART port (starting from 1)
 
 = Troubleshooting =

@@ -157,8 +157,6 @@ class SerialFtdi:
                 # Need to enumerate USB devices to find a matching device
                 vendors = vendor and [vendor] or \
                     set(self.VENDOR_IDS.values())
-                # this construction is invalid with more than one vendor
-                # as a product may only exist for a single vendor. To be fixed
                 vps = set()
                 for v in vendors:
                     products = self.PRODUCT_IDS.get(v, [])

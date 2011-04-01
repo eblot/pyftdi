@@ -24,6 +24,8 @@ License: LGPL, originally based on libftdi C library
 Caveats: Only tested with FT2232 and FT4232 FTDI devices
 Require: pyusb
 """
+# PyUSB 1.0.0a1 + patch is required to run this module
+_USB_SCAN = False
 
 import array
 import os
@@ -212,8 +214,9 @@ class Ftdi(object):
 
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
-    # USB device. The following dictionary used vendor/product keys
-    # to track (device, refcount) pairs
+    # USB device. The following dictionary used bus/address/vendor/product keys
+    # to track (device, refcount) pairs if USBSCAN is available or simply
+    # vendor/product
     DEVICES = {}
     LOCK = threading.Lock()
 
@@ -601,6 +604,7 @@ class Ftdi(object):
     def _get_device(cls, vendor, product, index, serial):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
+        usbscan = cls.is_usbscan_available()
         cls.LOCK.acquire()
         try:
             if index or serial:
@@ -623,9 +627,12 @@ class Ftdi(object):
                 dev = usb.core.find(idVendor=vendor, idProduct=product)
             if not dev:
                 raise IOError('Device not found')
-            bus = dev.get_bus_number()
-            address = dev.get_device_address()
-            devkey = (bus, address, vendor, product)
+            if usbscan:
+                bus = dev.get_bus_number()
+                address = dev.get_device_address()
+                devkey = (bus, address, vendor, product)
+            else:
+                devkey = (vendor, product)
             if devkey not in cls.DEVICES:
                 for configuration in dev:
                     # we need to detach any kernel driver from the device
@@ -805,3 +812,30 @@ class Ftdi(object):
         if hispeed:
             index |= 1<<9 # use hispeed mode
         return (best_baud, value, index)
+
+    @staticmethod
+    def is_usbscan_available():
+        try:
+            from pkg_resources import get_distribution, parse_version
+        except ImportError:
+            # if pkg_resources is not available, do not try to test PyUSB
+            # version
+            return False
+        try:
+            pyusb_version = parse_version(get_distribution("pyusb").version)
+        except Exception:
+            # if pyusb is not installed as a distribution, cannot check
+            # version
+            return False
+        # check if the required version is installed
+        req_version = ('00000001', '*a', '00000001', '*final')
+        if pyusb_version < req_version:
+            return False
+        # check if the required patches are installed
+        from usb.core import Device as UsbDevice
+        for extension in ['get_bus_number', 'get_device_address']:
+            try:
+                getattr(UsbDevice, extension)
+            except AttributeError:
+                return False
+        return True
