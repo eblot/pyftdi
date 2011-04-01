@@ -241,9 +241,11 @@ class Ftdi(object):
         self.device = (vendor, product, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
+        self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self):
         """Close the FTDI interface"""
+        self.set_latency_timer(self.LATENCY_MAX)
         self._release_device(self)
 
     def open_mpsse(self, vendor, product, interface=1,
