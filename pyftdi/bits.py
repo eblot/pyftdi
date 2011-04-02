@@ -27,8 +27,9 @@
 
 """
 
+from array import array as Array
 from numbers import Integral
-from pyftdi.misc import xor
+from pyftdi.misc import is_iterable, xor
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
@@ -47,7 +48,7 @@ class BitSequence(object):
     """Bit sequence manipulation"""
 
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
-        self._seq = []
+        self._seq = Array('B')
         seq = self._seq
         if value and bytes_:
             raise BitSequenceError("Cannot inialize with both a value and "
@@ -70,10 +71,10 @@ class BitSequence(object):
             value = self._tomutable(value)
         if isinstance(value, Integral):
             self._init_from_integer(value, msb, length)
-        elif isinstance(value, list):
-            self._init_from_sequence(value, msb)
         elif isinstance(value, BitSequence):
             self._init_from_sibling(value, msb)
+        elif is_iterable(value):
+            self._init_from_iterable(value, msb)
         elif value is None:
             pass
         else:
@@ -82,7 +83,7 @@ class BitSequence(object):
 
     def sequence(self):
         """Return the internal representation as a new mutable sequence"""
-        return list(self._seq)
+        return Array('B', self._seq)
 
     def reverse(self):
         """In-place reverse"""
@@ -91,7 +92,7 @@ class BitSequence(object):
 
     def invert(self):
         """In-place invert sequence values"""
-        self._seq = [not x for x in self._seq]
+        self._seq = Array('B', [x^1 for x in self._seq])
         return self
 
     def append(self, seq):
@@ -115,7 +116,7 @@ class BitSequence(object):
         """Degenerate the sequence into a single bit, if possible"""
         if len(self) != 1:
             raise BitSequenceError("BitSequence should be a scalar")
-        return self._seq[0]
+        return self._seq[0] and True or False
 
     def tobyte(self, msb=False):
         """Convert the sequence into a single byte value, if possible"""
@@ -136,7 +137,7 @@ class BitSequence(object):
         sequence = list(self._seq)
         if not msb:
             sequence.reverse()
-        bytes_ = []
+        bytes_ = Array('B')
         for pos in xrange(0, blength, 8):
             seq = sequence[pos:pos+8]
             byte = 0
@@ -146,7 +147,7 @@ class BitSequence(object):
             bytes_.append(byte)
         if msby:
             bytes_.reverse()
-        return bytes_
+        return bytes_.tolist()
 
     @staticmethod
     def _tomutable(value):
@@ -175,18 +176,17 @@ class BitSequence(object):
         if msb:
             seq.reverse()
 
-    def _init_from_sequence(self, value, msb):
-        """Initialize from a Python sequence"""
-        pos = msb and -1 or 0
-        smap = { '0': False, '1': True, False: False, True: True }
+    def _init_from_iterable(self, iterable, msb):
+        """Initialize from an iterable"""
+        smap = { '0': 0, '1': 1, False: 0, True: 1, 0: 0, 1: 1 }
         seq = self._seq
-        while value:
-            try:
-                bit = value.pop(pos)
-                seq.append(smap[bit])
-            except KeyError:
-                print value
-                raise BitSequenceError("Invalid binary character: '%s'" % bit)
+        try:
+            if msb:
+                seq.extend([smap[bit] for bit in reversed(iterable)])
+            else:
+                seq.extend([smap[bit] for bit in iterable])
+        except KeyError:
+            raise BitSequenceError("Invalid binary character in initializer")
 
     def _init_from_sibling(self, value, msb):
         """Initialize from a fellow object"""
@@ -198,9 +198,10 @@ class BitSequence(object):
         """If a specific length is specified, extend the sequence as
            expected"""
         if length and (len(self) < length):
-            extra = [False] * (length-len(self))
+            extra = Array('B', [False] * (length-len(self)))
             if msb:
-                self._seq = extra + self._seq
+                extra.extend(self._seq)
+                self._seq = extra
             else:
                 self._seq.extend(extra)
 
@@ -230,7 +231,7 @@ class BitSequence(object):
             val = value.tobit()
             if len(self._seq) < index:
                 # auto-resize sequence
-                extra = [False] * (index+1-len(self))
+                extra = Array('B', [False] * (index+1-len(self)))
                 self._seq.extend(extra)
             self._seq[index] = val
 
@@ -296,17 +297,14 @@ class BitSequence(object):
 class BitZSequence(BitSequence):
     """Tri-state bit sequence manipulation"""
 
+    Z = 0xff # maximum byte value
+    
     def __init__(self, value=None, msb=False, length=0):
         BitSequence.__init__(self, value=value, msb=msb, length=length)
 
     def invert(self):
-        def invz(val):
-            """Compute the inverted value of a tristate Boolean"""
-            if val is None:
-                return None
-            else:
-                return not val
-        self._seq = [invz(x) for x in self._seq]
+        self._seq = [x in (None, BitZSequence.Z) and BitZSequence.Z or x^1 \
+                        for x in self._seq]
         return self
 
     def tobyte(self, msb=False):
@@ -318,36 +316,42 @@ class BitZSequence(BitSequence):
                                 type(self))
 
     def matches(self, other):
+        if not isinstance(self, BitSequence):
+            raise BitSequenceError('Not a BitSequence instance')
         # the bit sequence should be of the same length
         ld = len(self) - len(other)
         if ld:
             return ld
         for (x, y) in zip(self._seq, other.sequence()):
-            if None in (x, y):
+            if BitZSequence.Z in (x, y):
                 continue
             if not x is y:
                 return False
         return True
 
-    def _init_from_sequence(self, value, msb):
-        """Initialize from a Python sequence"""
-        smap = { '0': False, '1': True, 'Z': None,
-                 False: False, True: True, None: None }
-        pos = msb and -1 or 0
-        while value:
-            try:
-                bit = value.pop(pos)
-                self._seq.append(smap[bit])
-            except KeyError:
-                raise BitSequenceError("Invalid binary character: '%s'" % bit)
+    def _init_from_iterable(self, iterable, msb):
+        """Initialize from an iterable"""
+        smap = { '0': 0, '1': 1, 'Z': BitZSequence.Z,
+                 False: 0, True: 1, None: BitZSequence.Z, 
+                 0: 0, 1: 1, BitZSequence.Z: BitZSequence.Z }
+        seq = self._seq
+        try:
+            if msb:
+                seq.extend([smap[bit] for bit in reversed(iterable)])
+            else:
+                seq.extend([smap[bit] for bit in iterable])
+        except KeyError:
+            raise BitSequenceError("Invalid binary character in initializer")
+
 
     def __repr__(self):
-        smap = { False: '0', True: '1', None: 'Z' }
+        smap = { False: '0', True: '1', BitZSequence.Z: 'Z' }
         return ''.join([smap[b] for b in reversed(self._seq)])
 
     def __long__(self):
-        if None in self._seq:
-            raise BitSequenceError("Sequence cannot be converted to Integer")
+        if BitZSequence.Z in self._seq:
+            raise BitSequenceError("High-Z BitSequence cannot be converted to "
+                                   "an integral type")
         return BitSequence.__long__(self)
 
     def __int__(self):
@@ -371,8 +375,8 @@ class BitZSequence(BitSequence):
             raise BitSequenceError('Sequences must be the same size')
         def andz(x, y):
             """Compute the boolean AND operation for a tri-state boolean"""
-            if None in (x, y):
-                return None
+            if BitZSequence.Z in (x, y):
+                return BitZSequence.Z
             else:
                 return x and y
         return self.__class__(value=map(andz, self._seq, other.sequence()))
@@ -385,8 +389,8 @@ class BitZSequence(BitSequence):
             raise BitSequenceError('Sequences must be the same size')
         def orz(x, y):
             """Compute the boolean OR operation for a tri-state boolean"""
-            if None in (x, y):
-                return None
+            if BitZSequence.Z in (x, y):
+                return BitZSequence.Z
             else:
                 return x or y
         return self.__class__(value=map(orz, self._seq, other.sequence()))
@@ -412,7 +416,7 @@ class BitField(object):
 
     def to_seq(self, msb=0, lsb=0):
         """Return the BitFiled as a sequence of boolean value"""
-        seq = []
+        seq = array('B')
         count = 0
         value = self._val
         while value:

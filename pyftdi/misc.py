@@ -114,3 +114,11 @@ def crc16(data):
 def xor(_a_, _b_):
     """XOR operation"""
     return (not(_a_) and _b_) or (_a_ and not(_b_))
+
+def is_iterable(obj):
+    """Tells whether an instance is iterable or not"""
+    try:
+        iter(obj)
+        return True
+    except TypeError:
+        return False
