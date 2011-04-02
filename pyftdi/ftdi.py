@@ -222,7 +222,8 @@ class Ftdi(object):
     # to track (device, refcount) pairs if USBSCAN is available or simply
     # vendor/product
     DEVICES = {}
-    LOCK = threading.Lock()
+    LOCK = threading.RLock()
+    USBDEVICES = []
 
     def __init__(self):
         self.usb_dev = None
@@ -692,9 +693,7 @@ class Ftdi(object):
            or initialize a new one, and return it"""
         devices = []
         for vendor, product in vps:
-            devs = usb.core.find(find_all=True,
-                                 idVendor=vendor,
-                                 idProduct=product)
+            devs = Ftdi.find(find_all=True, idVendor=vendor, idProduct=product)
             for dev in devs:
                 sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
                 devices.append((vendor, product, sernum))
@@ -715,7 +714,7 @@ class Ftdi(object):
                     kwargs['idVendor'] = vendor
                 if product:
                     kwargs['idProduct'] = product
-                devs = usb.core.find(find_all=True, **kwargs)
+                devs = Ftdi.find(find_all=True, **kwargs)
                 if serial:
                     devs = [dev for dev in devs if \
                               usb.util.get_string(dev, 64, dev.iSerialNumber) \
@@ -725,7 +724,7 @@ class Ftdi(object):
                 except IndexError:
                     raise IOError("No such device")
             else:
-                dev = usb.core.find(idVendor=vendor, idProduct=product)
+                dev = Ftdi.find(idVendor=vendor, idProduct=product)
             if not dev:
                 raise IOError('Device not found')
             if usbscan:
@@ -940,3 +939,66 @@ class Ftdi(object):
                                     # Drain input buffer
         self.purge_rx_buffer()
         return actual_freq
+
+    @classmethod
+    def find(cls, find_all=False, backend = None, custom_match = None, **args):
+        """Find an USB device and return it.
+           This code re-implements the usb.core.find() method using a local
+           cache to avoid calling several times the underlying LibUSB and the
+           system USB calls to enumerate the available USB devices. As these
+           calls are time-hungry (about 1 second/call), the enumerated devices
+           are cached. It consumes a bit more memory but dramatically improves
+           start-up time.
+           Hopefully, this kludge is temporary and replaced with a better
+           implementation from PyUSB at some point.
+        """
+        def device_iter(k, v, devices):
+            for dev in devices:
+                d = usb.core.Device(dev, backend)
+                if (custom_match is None or custom_match(d)) and \
+                    _interop._reduce(
+                            lambda a, b: a and b,
+                            map(
+                                operator.eq,
+                                v,
+                                map(lambda i: getattr(d, i), k)
+                            ),
+                            True
+                        ):
+                    yield d
+        import operator
+        import usb._interop as _interop
+        cls.LOCK.acquire()
+        try:
+            if backend is None:
+                import usb.backend.libusb10 as libusb10
+                import usb.backend.libusb01 as libusb01
+                import usb.backend.openusb as openusb
+                for m in (libusb10, openusb, libusb01):
+                    backend = m.get_backend()
+                    if backend is not None:
+                        break
+                else:
+                    raise ValueError('No backend available')
+            if not cls.USBDEVICES:
+                # not freed until Python runtime completion
+                # enumerate_devices returns a generator, so back up the
+                # generated device into a list. To save memory, we only
+                # back up the supported devices
+                VENDOR_IDS = ( 0x0403, )
+                devlist = []
+                for dev in backend.enumerate_devices():
+                    vendor = usb.core.Device(dev, backend).idVendor
+                    if vendor in VENDOR_IDS:
+                        devlist.append(dev)
+                cls.USBDEVICES = devlist
+            k, v = args.keys(), args.values()
+            if find_all:
+                return [d for d in device_iter(k, v, cls.USBDEVICES)]
+            else:
+                try:
+                    return _interop._next(device_iter(k, v, cls.USBDEVICES))
+                except StopIteration:
+                    return None
+        finally:
+            cls.LOCK.release()

@@ -298,7 +298,7 @@ class BitZSequence(BitSequence):
     """Tri-state bit sequence manipulation"""
 
     Z = 0xff # maximum byte value
-    
+
     def __init__(self, value=None, msb=False, length=0):
         BitSequence.__init__(self, value=value, msb=msb, length=length)
 
@@ -332,7 +332,7 @@ class BitZSequence(BitSequence):
     def _init_from_iterable(self, iterable, msb):
         """Initialize from an iterable"""
         smap = { '0': 0, '1': 1, 'Z': BitZSequence.Z,
-                 False: 0, True: 1, None: BitZSequence.Z, 
+                 False: 0, True: 1, None: BitZSequence.Z,
                  0: 0, 1: 1, BitZSequence.Z: BitZSequence.Z }
         seq = self._seq
         try:
