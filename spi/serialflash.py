@@ -25,7 +25,7 @@
 
 import sys
 import time
-from pyftdi import Ftdi
+from pyftdi.ftdi import Ftdi
 from pyftdi.spi import SpiController
 from pyftdi.misc import hexdump
 from array import array as Array

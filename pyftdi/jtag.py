@@ -25,7 +25,7 @@
 
 import struct
 import time
-from pyftdi import Ftdi
+from pyftdi.ftdi import Ftdi
 from pyftdi.bits import BitSequence
 from pyftdi.misc import hexline
 

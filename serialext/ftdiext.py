@@ -25,7 +25,7 @@
 
 import re
 import time
-from pyftdi import Ftdi, FtdiError
+from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.misc import to_int
 
 BACKEND = 'pyftdi'
