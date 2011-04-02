@@ -79,62 +79,6 @@ class BitSequence(object):
             raise BitSequenceError("Cannot initialize from a %s" % type(value))
         self._update_length(length, msb)
 
-    @staticmethod
-    def _tomutable(value):
-        """Convert a immutable sequence into a mutable one"""
-        if isinstance(value, tuple):
-            # convert immutable sequence into a list so it can be popped out
-            value = list(value)
-        elif isinstance(value, str):
-            # convert immutable sequence into a list so it can be popped out
-            if value.startswith('0b'):
-                value = list(value[2:])
-            else:
-                value = list(value)
-        return value
-
-    def _init_from_integer(self, value, msb, length):
-        """Initialize from any integer value"""
-        l = length or -1
-        seq = self._seq
-        while l:
-            seq.append((value & 1) and True or False)
-            value >>= 1
-            if not value:
-                break
-            l -= 1
-        if msb:
-            seq.reverse()
-
-    def _init_from_sequence(self, value, msb):
-        """Initialize from a Python sequence"""
-        pos = msb and -1 or 0
-        smap = { '0': False, '1': True, False: False, True: True }
-        seq = self._seq
-        while value:
-            try:
-                bit = value.pop(pos)
-                seq.append(smap[bit])
-            except KeyError:
-                print value
-                raise BitSequenceError("Invalid binary character: '%s'" % bit)
-
-    def _init_from_sibling(self, value, msb):
-        """Initialize from a fellow object"""
-        self._seq = value.sequence()
-        if msb:
-            self._seq.reverse()
-
-    def _update_length(self, length, msb):
-        """If a specific length is specified, extend the sequence as
-           expected"""
-        if length and (len(self) < length):
-            extra = [False] * (length-len(self))
-            if msb:
-                self._seq = extra + self._seq
-            else:
-                self._seq.extend(extra)
-
     def sequence(self):
         """Return the internal representation as a new mutable sequence"""
         return list(self._seq)
@@ -202,6 +146,62 @@ class BitSequence(object):
         if msby:
             bytes_.reverse()
         return bytes_
+
+    @staticmethod
+    def _tomutable(value):
+        """Convert a immutable sequence into a mutable one"""
+        if isinstance(value, tuple):
+            # convert immutable sequence into a list so it can be popped out
+            value = list(value)
+        elif isinstance(value, str):
+            # convert immutable sequence into a list so it can be popped out
+            if value.startswith('0b'):
+                value = list(value[2:])
+            else:
+                value = list(value)
+        return value
+
+    def _init_from_integer(self, value, msb, length):
+        """Initialize from any integer value"""
+        l = length or -1
+        seq = self._seq
+        while l:
+            seq.append((value & 1) and True or False)
+            value >>= 1
+            if not value:
+                break
+            l -= 1
+        if msb:
+            seq.reverse()
+
+    def _init_from_sequence(self, value, msb):
+        """Initialize from a Python sequence"""
+        pos = msb and -1 or 0
+        smap = { '0': False, '1': True, False: False, True: True }
+        seq = self._seq
+        while value:
+            try:
+                bit = value.pop(pos)
+                seq.append(smap[bit])
+            except KeyError:
+                print value
+                raise BitSequenceError("Invalid binary character: '%s'" % bit)
+
+    def _init_from_sibling(self, value, msb):
+        """Initialize from a fellow object"""
+        self._seq = value.sequence()
+        if msb:
+            self._seq.reverse()
+
+    def _update_length(self, length, msb):
+        """If a specific length is specified, extend the sequence as
+           expected"""
+        if length and (len(self) < length):
+            extra = [False] * (length-len(self))
+            if msb:
+                self._seq = extra + self._seq
+            else:
+                self._seq.extend(extra)
 
     def __iter__(self):
         return self._seq.__iter__()
@@ -298,30 +298,6 @@ class BitZSequence(BitSequence):
     def __init__(self, value=None, msb=False, length=0):
         BitSequence.__init__(self, value=value, msb=msb, length=length)
 
-    def _init_from_sequence(self, value, msb):
-        """Initialize from a Python sequence"""
-        smap = { '0': False, '1': True, 'Z': None,
-                 False: False, True: True, None: None }
-        pos = msb and -1 or 0
-        while value:
-            try:
-                bit = value.pop(pos)
-                self._seq.append(smap[bit])
-            except KeyError:
-                raise BitSequenceError("Invalid binary character: '%s'" % bit)
-
-    def __repr__(self):
-        smap = { False: '0', True: '1', None: 'Z' }
-        return ''.join([smap[b] for b in reversed(self._seq)])
-
-    def __long__(self):
-        if None in self._seq:
-            raise BitSequenceError("Sequence cannot be converted to Integer")
-        return BitSequence.__long__(self)
-
-    def __int__(self):
-        return int(long(self))
-
     def invert(self):
         def invz(val):
             """Compute the inverted value of a tristate Boolean"""
@@ -351,6 +327,30 @@ class BitZSequence(BitSequence):
             if not x is y:
                 return False
         return True
+
+    def _init_from_sequence(self, value, msb):
+        """Initialize from a Python sequence"""
+        smap = { '0': False, '1': True, 'Z': None,
+                 False: False, True: True, None: None }
+        pos = msb and -1 or 0
+        while value:
+            try:
+                bit = value.pop(pos)
+                self._seq.append(smap[bit])
+            except KeyError:
+                raise BitSequenceError("Invalid binary character: '%s'" % bit)
+
+    def __repr__(self):
+        smap = { False: '0', True: '1', None: 'Z' }
+        return ''.join([smap[b] for b in reversed(self._seq)])
+
+    def __long__(self):
+        if None in self._seq:
+            raise BitSequenceError("Sequence cannot be converted to Integer")
+        return BitSequence.__long__(self)
+
+    def __int__(self):
+        return int(long(self))
 
     def __cmp__(self, other):
         # the bit sequence should be of the same length
@@ -409,6 +409,18 @@ class BitField(object):
     def __init__(self, value=0):
         self._val = value
 
+    def to_seq(self, msb=0, lsb=0):
+        """Return the BitFiled as a sequence of boolean value"""
+        seq = []
+        count = 0
+        value = self._val
+        while value:
+            count += 1
+            value >>= 1
+        for x in xrange(lsb, max(msb, count)):
+            seq.append(bool((self._val >> x) & 1))
+        return tuple(reversed(seq))
+
     def __getitem__(self, index):
         if isinstance(index, slice):
             if index.stop == index.start:
@@ -445,15 +457,3 @@ class BitField(object):
 
     def __int__(self):
         return self._val
-
-    def to_seq(self, msb=0, lsb=0):
-        """Return the BitFiled as a sequence of boolean value"""
-        seq = []
-        count = 0
-        value = self._val
-        while value:
-            count += 1
-            value >>= 1
-        for x in xrange(lsb, max(msb, count)):
-            seq.append(bool((self._val >> x) & 1))
-        return tuple(reversed(seq))
