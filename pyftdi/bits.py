@@ -30,7 +30,7 @@
 from numbers import Integral
 from pyftdi.misc import xor
 
-__all__ = ['BitSequence', 'BitZSequence', 'BitError', 'BitField']
+__all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
 # Hints for PyLint:
 #   use map(), use short variable names
@@ -38,7 +38,7 @@ __all__ = ['BitSequence', 'BitZSequence', 'BitError', 'BitField']
 #pylint: disable-msg=C0103
 
 
-class BitError(Exception):
+class BitSequenceError(Exception):
     """Bit sequence error"""
     pass
 
@@ -49,14 +49,15 @@ class BitSequence(object):
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
         self._seq = []
         if value and bytes_:
-            raise BitError("Cannot inialize with both a value and bytes_")
+            raise BitSequenceError("Cannot inialize with both a value and "
+                                   "bytes")
         if bytes_:
             provider = msby and list(bytes_).__iter__() or reversed(bytes_)
             for byte in provider:
                 if isinstance(byte, str):
                     byte = ord(byte)
                 elif byte > 0xff:
-                    raise BitError("Invalid byte value")
+                    raise BitSequenceError("Invalid byte value")
                 b = []
                 for x in xrange(8):
                     b.append(byte&0x1 and True or False)
@@ -75,7 +76,7 @@ class BitSequence(object):
         elif value is None:
             pass
         else:
-            raise BitError("Cannot initialize from a %s" % type(value))
+            raise BitSequenceError("Cannot initialize from a %s" % type(value))
         self._update_length(length, msb)
 
     @staticmethod
@@ -95,26 +96,28 @@ class BitSequence(object):
     def _init_from_integer(self, value, msb, length):
         """Initialize from any integer value"""
         l = length or -1
+        seq = self._seq
         while l:
-            self._seq.append((value & 1) and True or False)
+            seq.append((value & 1) and True or False)
             value >>= 1
             if not value:
                 break
             l -= 1
         if msb:
-            self._seq.reverse()
+            seq.reverse()
 
     def _init_from_sequence(self, value, msb):
         """Initialize from a Python sequence"""
         pos = msb and -1 or 0
         smap = { '0': False, '1': True, False: False, True: True }
+        seq = self._seq
         while value:
             try:
                 bit = value.pop(pos)
-                self._seq.append(smap[bit])
+                seq.append(smap[bit])
             except KeyError:
                 print value
-                raise BitError("Invalid binary character: '%s'" % bit)
+                raise BitSequenceError("Invalid binary character: '%s'" % bit)
 
     def _init_from_sibling(self, value, msb):
         """Initialize from a fellow object"""
@@ -166,13 +169,13 @@ class BitSequence(object):
     def tobit(self):
         """Degenerate the sequence into a single bit, if possible"""
         if len(self) != 1:
-            raise BitError("BitSequence should be a scalar")
+            raise BitSequenceError("BitSequence should be a scalar")
         return self._seq[0]
 
     def tobyte(self, msb=False):
         """Convert the sequence into a single byte value, if possible"""
         if len(self) > 8:
-            raise BitError("Cannot fit into a single byte")
+            raise BitSequenceError("Cannot fit into a single byte")
         byte = 0
         pos = not msb and -1 or 0
         # copy the sequence
@@ -218,7 +221,8 @@ class BitSequence(object):
         else:
             if issubclass(value.__class__, self.__class__) and \
                value.__class__ != self.__class__:
-                raise BitError("Cannot set item with instance of a subclass")
+                raise BitSequenceError("Cannot set item with instance of a "
+                                       "subclass")
         if isinstance(index, slice):
             self._seq[index] = value.sequence()
         else:
@@ -270,17 +274,17 @@ class BitSequence(object):
 
     def __and__(self, other):
         if type(other) is not type(self.__class__()):
-            raise BitError('Need a BitSequence to combine')
+            raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
-            raise BitError('Sequences must be the same size')
+            raise BitSequenceError('Sequences must be the same size')
         return self.__class__(value=map(lambda x, y: x and y,
                                         self._seq, other.sequence()))
 
     def __or__(self, other):
         if type(other) is not type(self.__class__()):
-            raise BitError('Need a BitSequence to combine')
+            raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
-            raise BitError('Sequences must be the same size')
+            raise BitSequenceError('Sequences must be the same size')
         return self.__class__(value=map(lambda x, y: x or y,
                                         self._seq, other.sequence()))
 
@@ -304,7 +308,7 @@ class BitZSequence(BitSequence):
                 bit = value.pop(pos)
                 self._seq.append(smap[bit])
             except KeyError:
-                raise BitError("Invalid binary character: '%s'" % bit)
+                raise BitSequenceError("Invalid binary character: '%s'" % bit)
 
     def __repr__(self):
         smap = { False: '0', True: '1', None: 'Z' }
@@ -312,7 +316,7 @@ class BitZSequence(BitSequence):
 
     def __long__(self):
         if None in self._seq:
-            raise BitError("Sequence cannot be converted to Integer")
+            raise BitSequenceError("Sequence cannot be converted to Integer")
         return BitSequence.__long__(self)
 
     def __int__(self):
@@ -329,10 +333,12 @@ class BitZSequence(BitSequence):
         return self
 
     def tobyte(self, msb=False):
-        raise BitError("Type %s cannot be converted to byte" % type(self))
+        raise BitSequenceError("Type %s cannot be converted to byte" % \
+                                type(self))
 
     def tobytes(self, msb=False, msby=False):
-        raise BitError("Type %s cannot be converted to bytes" % type(self))
+        raise BitSequenceError("Type %s cannot be converted to bytes" % \
+                                type(self))
 
     def matches(self, other):
         # the bit sequence should be of the same length
@@ -358,9 +364,10 @@ class BitZSequence(BitSequence):
 
     def __and__(self, other):
         if not isinstance(self, BitSequence):
-            raise BitError('Need a BitSequence-compliant object to combine')
+            raise BitSequenceError('Need a BitSequence-compliant object to '
+                                   'combine')
         if len(self) != len(other):
-            raise BitError('Sequences must be the same size')
+            raise BitSequenceError('Sequences must be the same size')
         def andz(x, y):
             """Compute the boolean AND operation for a tri-state boolean"""
             if None in (x, y):
@@ -371,9 +378,10 @@ class BitZSequence(BitSequence):
 
     def __or__(self, other):
         if not isinstance(self, BitSequence):
-            raise BitError('Need a BitSequence-compliant object to combine')
+            raise BitSequenceError('Need a BitSequence-compliant object to '
+                                   'combine')
         if len(self) != len(other):
-            raise BitError('Sequences must be the same size')
+            raise BitSequenceError('Sequences must be the same size')
         def orz(x, y):
             """Compute the boolean OR operation for a tri-state boolean"""
             if None in (x, y):
