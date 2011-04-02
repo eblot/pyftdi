@@ -48,6 +48,7 @@ class BitSequence(object):
 
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
         self._seq = []
+        seq = self._seq
         if value and bytes_:
             raise BitSequenceError("Cannot inialize with both a value and "
                                    "bytes")
@@ -64,7 +65,7 @@ class BitSequence(object):
                     byte >>= 1
                 if msb:
                     b.reverse()
-                self._seq.extend(b)
+                seq.extend(b)
         else:
             value = self._tomutable(value)
         if isinstance(value, Integral):
