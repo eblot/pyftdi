@@ -24,6 +24,7 @@ License: LGPL, originally based on libftdi C library
 Caveats: Only tested with FT2232 and FT4232 FTDI devices
 Require: pyusb
 """
+
 # PyUSB 1.0.0a1 + patch is required to run this module
 _USB_SCAN = False
 
@@ -235,12 +236,21 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None # disable dynamic latency
-        self.device = (None, None, None)
 
     # --- Public API -------------------------------------------------------
 
-    def usb_find_all(self, vps):
-        return self._enumerate(vps)
+    def find_all(self, vps):
+        """Find a previously open device with the same vendor/product
+           or initialize a new one, and return it"""
+        devices = []
+        for vendor, product in vps:
+            devs = Ftdi._find_devices(find_all=True,
+                                      idVendor=vendor, idProduct=product)
+            for dev in devs:
+                sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
+                devices.append((vendor, product, sernum))
+                del dev
+        return devices
 
     def open(self, vendor, product, interface, index=0, serial=None):
         """Open a new interface to the specified FTDI device"""
@@ -250,7 +260,6 @@ class Ftdi(object):
         if interface > config.bNumInterfaces:
             raise FtdiError('No such FTDI port: %d' % interface)
         self._set_interface(interface)
-        self.device = (vendor, product, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
         self.set_latency_timer(self.LATENCY_MIN)
@@ -684,19 +693,6 @@ class Ftdi(object):
 
     # --- Private implementation -------------------------------------------
 
-    @staticmethod
-    def _enumerate(vps):
-        """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
-        devices = []
-        for vendor, product in vps:
-            devs = Ftdi.find(find_all=True, idVendor=vendor, idProduct=product)
-            for dev in devs:
-                sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-                devices.append((vendor, product, sernum))
-                del dev
-        return devices
-
     @classmethod
     def _get_device(cls, vendor, product, index, serial):
         """Find a previously open device with the same vendor/product
@@ -711,7 +707,7 @@ class Ftdi(object):
                     kwargs['idVendor'] = vendor
                 if product:
                     kwargs['idProduct'] = product
-                devs = Ftdi.find(find_all=True, **kwargs)
+                devs = Ftdi._find_devices(find_all=True, **kwargs)
                 if serial:
                     devs = [dev for dev in devs if \
                               usb.util.get_string(dev, 64, dev.iSerialNumber) \
@@ -721,7 +717,7 @@ class Ftdi(object):
                 except IndexError:
                     raise IOError("No such device")
             else:
-                dev = Ftdi.find(idVendor=vendor, idProduct=product)
+                dev = Ftdi._find_devices(idVendor=vendor, idProduct=product)
             if not dev:
                 raise IOError('Device not found')
             if usbscan:
@@ -942,7 +938,8 @@ class Ftdi(object):
         return actual_freq
 
     @classmethod
-    def find(cls, find_all=False, backend = None, custom_match = None, **args):
+    def _find_devices(cls, find_all=False, backend = None, custom_match = None,
+                      **args):
         """Find an USB device and return it.
            This code re-implements the usb.core.find() method using a local
            cache to avoid calling several times the underlying LibUSB and the

@@ -162,7 +162,7 @@ class SerialFtdi:
                     products = self.PRODUCT_IDS.get(v, [])
                     for p in products:
                         vps.add((v, products[p]))
-                devices = self.ftdi.usb_find_all(vps)
+                devices = self.ftdi.find_all(vps)
                 candidates = []
                 if sernum:
                     if sernum not in [dev[2] for dev in devices]:

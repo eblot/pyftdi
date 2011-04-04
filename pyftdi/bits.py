@@ -295,12 +295,16 @@ class BitSequence(object):
 
     def __ilshift__(self, count):
         count %= len(self)
-        self._seq[:] = [False]*count + self._seq[:-count]
+        seq = Array('B', [0]*count)
+        seq.extend(self._seq[:-count])
+        self._seq = seq
         return self
 
     def __irshift__(self, count):
         count %= len(self)
-        self._seq[:] = self._seq[count:] + [False]*count
+        seq = self._seq[count:]
+        seq.extend([0]*count)
+        self._seq = seq
         return self
 
     def inc(self):
