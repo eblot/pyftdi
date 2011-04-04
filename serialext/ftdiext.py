@@ -205,7 +205,13 @@ class SerialFtdi:
         self.ftdi = None
 
     def inWaiting(self):
-        """Return the number of characters currently in the input buffer."""
+        """Return the number of characters currently in the input buffer.
+           It seems that FTDI does not offer a way to check if some data are
+           already available in the input FIFO, so this method is pretty
+           useless. This method only reports if data are ready and the RX FIFO
+           buffer is already full. A workaround is to actually read data and
+           count the received bytes. In any case, USB polling is required.
+        """
         try:
             status = self.ftdi.poll_modem_status()
         except FtdiError, e:
@@ -244,12 +250,12 @@ class SerialFtdi:
 
     def flushInput(self):
         """Clear input buffer, discarding all that is in the buffer."""
-        self.ftdi.usb_purge_rx_buffer()
+        self.ftdi.purge_rx_buffer()
 
     def flushOutput(self):
         """Clear output buffer, aborting the current output and
         discarding all that is in the buffer."""
-        self.ftdi.usb_purge_tx_buffer()
+        self.ftdi.purge_tx_buffer()
 
     def sendBreak(self):
         """Send break condition."""
