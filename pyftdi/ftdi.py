@@ -37,7 +37,6 @@ from array import array as Array
 
 __all__ = ['Ftdi', 'FtdiError']
 
-
 class FtdiError(IOError):
     """Communication error with the FTDI device"""
     pass

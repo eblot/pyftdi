@@ -47,6 +47,8 @@ class BitSequenceError(Exception):
 class BitSequence(object):
     """Bit sequence manipulation"""
 
+    __slots__ = [ '_seq' ]
+
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
         self._seq = Array('B')
         seq = self._seq
@@ -343,6 +345,8 @@ class BitSequence(object):
 class BitZSequence(BitSequence):
     """Tri-state bit sequence manipulation"""
 
+    __slots__ = [ '_seq' ]
+
     Z = 0xff # maximum byte value
 
     def __init__(self, value=None, msb=False, length=0):
@@ -456,6 +460,8 @@ class BitField(object):
        Beware the slices does not behave as regular Python slices:
        bitfield[3:5] means b3..b5, NOT b3..b4 as with regular slices
     """
+
+    __slots__ = [ '_val' ]
 
     def __init__(self, value=0):
         self._val = value
