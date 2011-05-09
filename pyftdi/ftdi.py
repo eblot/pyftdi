@@ -226,6 +226,7 @@ class Ftdi(object):
         self.readbuffer_chunksize = 4 << 10 # 4KB
         self.writebuffer_chunksize = 4 << 10 # 4KB
         self.max_packet_size = 0
+        self.interface = None
         self.index = None
         self.in_ep = None
         self.out_ep = None
@@ -258,7 +259,7 @@ class Ftdi(object):
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
             raise FtdiError('No such FTDI port: %d' % interface)
-        self._set_interface(interface)
+        self._set_interface(config, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
         self.set_latency_timer(self.LATENCY_MIN)
@@ -530,7 +531,7 @@ class Ftdi(object):
                     write_size = size - offset
                 length = self.usb_dev.write(self.in_ep,
                                             data[offset:offset+write_size],
-                                            self.index-1,
+                                            self.interface,
                                             self.usb_write_timeout)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
@@ -565,7 +566,7 @@ class Ftdi(object):
                 while True:
                     tempbuf = self.usb_dev.read(self.out_ep,
                                                 self.readbuffer_chunksize,
-                                                self.index-1,
+                                                self.interface,
                                                 self.usb_read_timeout)
                     attempt -= 1
                     length = len(tempbuf)
@@ -766,16 +767,16 @@ class Ftdi(object):
         finally:
             cls.LOCK.release()
 
-    def _set_interface(self, interface):
+    def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
-        if interface == 0:
-            interface = 1
-        if interface not in xrange(1, 5):
-            # should use the actual interface count, depending on the device
-            raise ValueError("Interface does not exist")
-        self.index = interface
-        self.in_ep = 2*interface
+        if ifnum == 0:
+            ifnum = 1
+        if ifnum-1 not in xrange(config.bNumInterfaces):
+            raise ValueError("No such interface for this device")
+        self.index = ifnum
+        self.in_ep = 2 * ifnum
         self.out_ep = 0x80 + self.in_ep - 1
+        self.interface = config[(ifnum-1, 0)]
 
     def _reset_device(self):
         """Reset the ftdi device"""
@@ -807,16 +808,14 @@ class Ftdi(object):
         """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
             raise AssertionError("Device is not yet known")
+        if not self.interface:
+            raise AssertionError("Interface is not yet known")
         if self.type in ('ft2232h', 'ft4232h'):
             packet_size = 512
         else:
             packet_size = 64
-        cfg_iter = self.usb_dev.__iter__()
-        cfg = next(cfg_iter)
-        if self.index < cfg.bNumInterfaces:
-            interface = cfg[(self.index, 0)]
-            endpoint = interface[0]
-            packet_size = endpoint.wMaxPacketSize
+        endpoint = self.interface[0]
+        packet_size = endpoint.wMaxPacketSize
         return packet_size
 
     def _convert_baudrate(self, baudrate):
