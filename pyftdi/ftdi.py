@@ -45,10 +45,6 @@ class FtdiError(IOError):
 class Ftdi(object):
     """FTDI device driver"""
 
-    # Bus clocks
-    BUS_CLOCK_HIGH = 30.0E6
-    BUS_CLOCK_BASE = 6.0E6
-
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
     WRITE_BYTES_NVE_MSB = 0x11
@@ -200,12 +196,23 @@ class Ftdi(object):
     MODEM_STATUS = [('_0 _1 _2 _3 cts dsr ri dcd'.split()),
                     ('dr oe pe fe bi thre temt error'.split())]
 
-    BAUDRATE_REF_CLOCK = 3000000 # 3 MHz
+    # Clocks and baudrates
+    BUS_CLOCK_BASE = 6.0E6 # 6 MHz
+    BUS_CLOCK_HIGH = 30.0E6 # 30 MHz
+    BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
+    BAUDRATE_REF_HIGH = int(12.0E6) # 12 MHz
+    BAUDRATE_REF_SPECIAL = int(2.0E6)  # 3 MHz
     BAUDRATE_TOLERANCE = 3.0 # acceptable clock drift, in %
     BITBANG_CLOCK_MULTIPLIER = 4
+
+    # Latency
     LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_THRESHOLD = 1000
+
+    # Special devices
+    LEGACY_DEVICES = ('ft232am')
+    HISPEED_DEVICES = ('ft2232h', 'ft4232h')
 
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
@@ -332,7 +339,7 @@ class Ftdi(object):
     @property
     def frequency_max(self):
         """Tells the maximum frequency for MPSSE clock"""
-        if self.type in ('ft2232h', 'ft4232h'):
+        if self.type in self.HISPEED_DEVICES:
             return Ftdi.BUS_CLOCK_HIGH
         return Ftdi.BUS_CLOCK_BASE
 
@@ -343,7 +350,8 @@ class Ftdi(object):
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise AssertionError('Cannot represent baudrate')
+            raise AssertionError('Baudrate tolerance exceeded: %.02f%%' % \
+                                 delta)
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_BAUDRATE, value,
@@ -810,7 +818,7 @@ class Ftdi(object):
             raise AssertionError("Device is not yet known")
         if not self.interface:
             raise AssertionError("Interface is not yet known")
-        if self.type in ('ft2232h', 'ft4232h'):
+        if self.type in self.HISPEED_DEVICES:
             packet_size = 512
         else:
             packet_size = 64
@@ -821,46 +829,46 @@ class Ftdi(object):
     def _convert_baudrate(self, baudrate):
         """Convert a requested baudrate into the closest possible baudrate
            that can be assigned to the FTDI device"""
+        if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
+            raise AssertionError('Invalid baudrate (too low)')
+        if baudrate > self.BAUDRATE_REF_BASE:
+            if self.type not in self.HISPEED_DEVICES or \
+                baudrate > self.BAUDRATE_REF_HIGH:
+                    raise AssertionError('Invalid baudrate (too high)')
+            refclock = self.BAUDRATE_REF_HIGH
+            hispeed = True
+        else:
+            refclock = self.BAUDRATE_REF_BASE
+            hispeed = False
+        # AM legacy device only supports 3 sub-integer dividers, where the
+        # other devices supports 8 sub-integer dividers
         am_adjust_up = [0, 0, 0, 1, 0, 3, 2, 1]
         am_adjust_dn = [0, 0, 0, 1, 0, 1, 2, 3]
+        # Sub-divider code are not ordered in the natural order
         frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
-        #int divisor, best_divisor, best_baud, best_baud_diff
-        #unsigned long encoded_divisor
-        #int i
-        ref_clock = Ftdi.BAUDRATE_REF_CLOCK
-        hispeed = False
-        if baudrate <= 0:
-            raise AssertionError('Invalid baudrate: %d' % baudrate)
-        if self.type in ('ft2232h', 'ft2432h'):
-            # these chips can support a 12MHz clock in addition to the original
-            # 3MHz clock. This allows higher baudrate (up to 12Mbps) and more
-            # precise baudrates for baudrate > 3Mbps/2
-            if baudrate > (Ftdi.BAUDRATE_REF_CLOCK>>1):
-                ref_clock *= 4 # 12 MHz
-                hispeed = True
-        divisor = (ref_clock<<3) // baudrate
-        if self.type == 'ft232am':
+        divisor = (refclock*8) // baudrate
+        if self.type in self.LEGACY_DEVICES:
             # Round down to supported fraction (AM only)
             divisor -= am_adjust_dn[divisor & 7]
         # Try this divisor and the one above it (because division rounds down)
         best_divisor = 0
         best_baud = 0
         best_baud_diff = 0
-        for i in xrange(0, 2):
+        for i in xrange(2):
             try_divisor = divisor + i
             if not hispeed:
                 # Round up to supported divisor value
                 if try_divisor <= 8:
                     # Round up to minimum supported divisor
                     try_divisor = 8
-                elif self.type not in 'ft232am' and try_divisor < 12:
+                elif self.type not in self.LEGACY_DEVICES and try_divisor < 12:
                     # BM doesn't support divisors 9 through 11 inclusive
                     try_divisor = 12
                 elif divisor < 16:
                     # AM doesn't support divisors 9 through 15 inclusive
                     try_divisor = 16
                 else:
-                    if self.type in 'ft232am':
+                    if self.type in self.LEGACY_DEVICES:
                         # Round up to supported fraction (AM only)
                         try_divisor += am_adjust_up[try_divisor & 7]
                         if try_divisor > 0x1FFF8:
@@ -871,7 +879,7 @@ class Ftdi(object):
                             # Round down to maximum supported div value (BM)
                             try_divisor = 0x1FFFF
             # Get estimated baud rate (to nearest integer)
-            baud_estimate = ((ref_clock<<3) + (try_divisor//2))//try_divisor
+            baud_estimate = ((refclock*8) + (try_divisor//2))//try_divisor
             # Get absolute difference from requested baud rate
             if baud_estimate < baudrate:
                 baud_diff = baudrate - baud_estimate
@@ -894,7 +902,7 @@ class Ftdi(object):
             encoded_divisor = 1 # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.type in ('ft2232d', 'ft2232h', 'ft4232h'):
+        if self.type in self.HISPEED_DEVICES:
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -922,7 +930,7 @@ class Ftdi(object):
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # Send the command twice, as it seems that cold initialization is a
         # bit buggy. FTDI expects little endian
-        if self.type in ('ft2232h', 'ft4232h'):
+        if self.type in self.HISPEED_DEVICES:
             cmd = Array('B', [divcode])
         else:
             cmd = Array('B')

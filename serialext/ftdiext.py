@@ -89,7 +89,7 @@ class SerialFtdi:
                 pass
         except FtdiError, e:
             err = self.ftdi.get_error_string()
-            raise serial.SerialException("%s (%s)" % str(e), err)
+            raise serial.SerialException("%s (%s)" % (str(e), err))
 
     @property
     def fifoSizes(self):
