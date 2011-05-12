@@ -35,6 +35,8 @@ import usb.core
 import usb.util
 from array import array as Array
 
+from misc import hexdump, hexline
+
 __all__ = ['Ftdi', 'FtdiError']
 
 class FtdiError(IOError):
@@ -124,6 +126,7 @@ class Ftdi(object):
     BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
     BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
     BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
+    BITMODE_MASK = 0x4F     # Mask for all bitmodes
 
     # USB control requests
     REQ_OUT = usb.util.build_request_type(
@@ -286,14 +289,16 @@ class Ftdi(object):
         # Set chunk size
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
-        # Disable loopback
-        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
-        # Configure I/O
-        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, initial, direction]))
+        # Drain input buffer
+        self.purge_buffers()
         # Enable MPSSE mode
         self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
         # Configure clock
         frequency = self._set_frequency(frequency)
+        # Configure I/O
+        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, initial, direction]))
+        # Disable loopback
+        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
         self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
@@ -410,7 +415,7 @@ class Ftdi(object):
 
     def set_bitmode(self, bitmask, mode):
         """Enable/disable bitbang modes."""
-        value = bitmask | (mode << 8)
+        value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitbang_mode = mode
@@ -934,9 +939,7 @@ class Ftdi(object):
             cmd = Array('B', [divcode])
         else:
             cmd = Array('B')
-        cmd.extend([Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff,
-                    Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff,
-                    Ftdi.SEND_IMMEDIATE])
+        cmd.extend([Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff])
         self.write_data(cmd)
         self.validate_mpsse()
         # Drain input buffer

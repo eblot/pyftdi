@@ -87,8 +87,8 @@ class SpiController(object):
            SPI bus)
         """
         self._ftdi = Ftdi()
-        self._cs_bits = ((SpiController.CS_BIT << cs_count) - 1) - \
-                         (SpiController.CS_BIT - 1)
+        self._cs_bits = ((SpiController.CS_BIT << cs_count) - 1) & \
+                         ~(SpiController.CS_BIT - 1)
         self._ports = [None] * cs_count
         self._direction = self._cs_bits | \
                           SpiController.DO_BIT | \
@@ -102,7 +102,7 @@ class SpiController(object):
         self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
         # Restore idle state
         self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                                self._direction])
+                              self._direction])
         self._immediate = Array('B', [Ftdi.SEND_IMMEDIATE])
         self._frequency = 0.0
 
@@ -127,13 +127,14 @@ class SpiController(object):
         if cs >= len(self._ports):
             raise SpiIOError("No such SPI port")
         if not self._ports[cs]:
-            cs_bits = SpiController.SCK_BIT | \
-                      SpiController.DO_BIT | \
-                      (SpiController.CS_BIT<<cs)
-            cs_cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW,
-                                 (~cs_bits)&0xff, self._direction)
+            cs_state = 0xFF & ~((SpiController.CS_BIT<<cs) |
+                                 SpiController.SCK_BIT |
+                                 SpiController.DO_BIT)
+            cs_cmd = Array('B', [Ftdi.SET_BITS_LOW,
+                                 cs_state,
+                                 self._direction])
             self._ports[cs] = SpiPort(self, cs_cmd)
-            self._release_bus()
+            self._flush()
         return self._ports[cs]
 
     @property
@@ -145,11 +146,6 @@ class SpiController(object):
     def frequency(self):
         """Returns the current SPI clock"""
         return self._frequency
-
-    def _release_bus(self):
-        """Release the SPI bus: flush all data and move all /CS lines up"""
-        self._ftdi.write_data(self._cs_high)
-        self._flush()
 
     def _exchange(self, frequency, cs_cmd, out, readlen):
         """Perform a half-duplex transaction with the SPI slave"""

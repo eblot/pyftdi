@@ -85,8 +85,11 @@ Supported features
 * SPI master. PyFtdi includes several examples that demonstrate how to use
   the FTDI SPI master, with a pure-Python serial flash device driver for
   several common serial flash devices.
-  These tests show an average 400 KB/s read out from the flash devices running
+  For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only mode supported. It should be
+  easy to extend the SPI master to deal with less common modes.
+  These tests show an average 470 KB/s read out from flash devices running
   with a 6MHz SPI clock on a Core2Duo Mac Book Pro.
+* JTAG is under development and is not fully supported yet.
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
 
