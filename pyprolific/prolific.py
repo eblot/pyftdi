@@ -117,11 +117,6 @@ class Prolific(object):
         self.in_ep = None
         self.out_ep = None
         self.int_ep = None
-        self.latency = 0
-        self.latency_count = 0
-        #self.latency_min = self.LATENCY_MIN
-        #self.latency_max = self.LATENCY_MAX
-        self.latency_threshold = None # disable dynamic latency
         self._type = None
         self._lines = 0x00
 
@@ -137,12 +132,10 @@ class Prolific(object):
         self._set_interface(config, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
-        #self.set_latency_timer(self.LATENCY_MIN)
         self._do_black_magic()
 
     def close(self):
         """Close the FTDI interface"""
-        # self.set_latency_timer(self.LATENCY_MAX)
         UsbTools.release_device(self.usb_dev)
 
     @property
@@ -220,21 +213,12 @@ class Prolific(object):
     # --- end of todo section ---------------------
 
     def set_latency_timer(self, latency):
-        """Set latency timer
-           The FTDI chip keeps data in the internal buffer for a specific
-           amount of time if the buffer is not full yet to decrease
-           load on the usb bus."""
-        #if not (Prolific.LATENCY_MIN <= latency <= Prolific.LATENCY_MAX):
-        #    raise AssertionError("Latency out of range")
-        #if self._ctrl_transfer_out(Prolific.SIO_SET_LATENCY_TIMER, latency):
-        #    raise ProlificError('Unable to latency timer')
+        """Set latency timer"""
+        pass
 
     def get_latency_timer(self):
         """Get latency timer"""
-        #latency = self._ctrl_transfer_in(Prolific.SIO_GET_LATENCY_TIMER, 1)
-        #if not latency:
-        #    raise ProlificError('Unable to get latency')
-        #return latency[0]
+        return 0
 
     def poll_modem_status(self):
         """Poll modem status information
@@ -331,9 +315,8 @@ class Prolific(object):
             raise ProlificError('UsbError: %s' % str(e))
 
     def read_data_bytes(self, size, attempt=1):
-        """Read data in chunks from the chip.
-           Automatically strips the two modem status bytes transfered during
-           every read."""
+        """Read data in chunks from the chip."""
+        # Attempt is useless with PL2303
         # Packet size sanity check
         if not self.max_packet_size:
             raise ProlificError("max_packet_size is bogus")
@@ -353,69 +336,43 @@ class Prolific(object):
         # read from USB, filling in the local cache as it is empty
         try:
             while (len(data) < size) and (length > 0):
-                while True:
+                try:
                     tempbuf = self.usb_dev.read(self.out_ep,
                                                 self.readbuffer_chunksize,
                                                 self.interface,
                                                 self.usb_read_timeout)
-                    attempt -= 1
                     length = len(tempbuf)
-                    # the received buffer contains at least one useful databyte
-                    # (first 2 bytes in each packet represent the current modem
-                    # status)
-                    if length > 2:
-                        if self.latency_threshold:
-                            self.latency_count = 0
-                            if self.latency != self.latency_min:
-                                self.set_latency_timer(self.latency_min)
-                                self.latency = self.latency_min
-                        # skip the status bytes
-                        chunks = (length+packet_size-1) // packet_size
-                        count = packet_size - 2
-                        self.readbuffer = Array('B')
-                        self.readoffset = 0
-                        srcoff = 2
-                        for i in xrange(chunks):
-                            self.readbuffer += tempbuf[srcoff:srcoff+count]
-                            srcoff += packet_size
-                        length = len(self.readbuffer)
-                        break
-                    else:
-                        # received buffer only contains the modem status bytes
-                        # no data received, may be late, try again
-                        if attempt > 0:
-                            continue
-                        # no actual data
-                        self.readbuffer = Array('B')
-                        self.readoffset = 0
-                        if self.latency_threshold:
-                            self.latency_count += 1
-                            if self.latency != self.latency_max:
-                                if self.latency_count > self.latency_threshold:
-                                    self.set_latency_timer(self.latency_max)
-                                    self.latency = self.latency_max
-                        # no more data to read?
+                except usb.core.USBError:
+                    # todo how to differentiate regular timeout from
+                    # unexpected issues?
+                    length = 0
+                # the received buffer contains at least one useful databyte
+                if not length:
+                    # no actual data
+                    self.readbuffer = Array('B')
+                    self.readoffset = 0
+                    return data
+                self.readbuffer = tempbuf
+                self.readoffset = 0
+                # data still fits in buf?
+                if (len(data) + length) <= size:
+                    data += self.readbuffer[self.readoffset: \
+                                            self.readoffset+length]
+                    self.readoffset += length
+                    # did we read exactly the right amount of bytes?
+                    if len(data) == size:
                         return data
-                if length > 0:
-                    # data still fits in buf?
-                    if (len(data) + length) <= size:
-                        data += self.readbuffer[self.readoffset: \
-                                                self.readoffset+length]
-                        self.readoffset += length
-                        # did we read exactly the right amount of bytes?
-                        if len(data) == size:
-                            return data
-                    else:
-                        # partial copy, not enough bytes in the local cache to
-                        # fulfill the request
-                        part_size = min(size-len(data),
-                                        len(self.readbuffer)-self.readoffset)
-                        if part_size < 0:
-                            raise AssertionError("Internal Error")
-                        data += self.readbuffer[self.readoffset:\
-                                                self.readoffset+part_size]
-                        self.readoffset += part_size
-                        return data
+                else:
+                    # partial copy, not enough bytes in the local cache to
+                    # fulfill the request
+                    part_size = min(size-len(data),
+                                    len(self.readbuffer)-self.readoffset)
+                    if part_size < 0:
+                        raise AssertionError("Internal Error")
+                    data += self.readbuffer[self.readoffset:\
+                                            self.readoffset+part_size]
+                    self.readoffset += part_size
+                return data
         except usb.core.USBError, e:
             raise ProlificError('UsbError: %s' % str(e))
         # never reached
@@ -426,21 +383,6 @@ class Prolific(object):
            Automatically strips the two modem status bytes transfered during
            every read."""
         return self.read_data_bytes(size).tostring()
-
-    def set_dynamic_latency(self, lmin, lmax, threshold):
-        """Set up or disable latency values"""
-        #if not threshold:
-        #    self.latency_count = 0
-        #    self.latency_threshold = None
-        #else:
-        #    for lat in (lmin, lmax):
-        #        if not (0 < lat < 256):
-        #            raise AssertionError("Latency out of range: %d")
-        #    self.latency_min = lmin
-        #    self.latency_max = lmax
-        #    self.latency_threshold = threshold
-        #    self.latency = lmax
-        #    self.set_latency_timer(self.latency)
 
     def get_error_string(self):
         """Wrapper for libftdi compatibility"""
@@ -508,15 +450,13 @@ class Prolific(object):
 
     def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
-        if ifnum == 0:
-            ifnum = 1
-        if ifnum-1 not in xrange(config.bNumInterfaces):
+        if ifnum not in (0, 1):
             raise ValueError("No such interface for this device")
-        self.index = ifnum
-        self.in_ep = 2 * ifnum
-        self.out_ep = 0x80 + self.in_ep - 1
+        self.index = 1
+        self.in_ep = 0x02
+        self.out_ep = 0x83
         self.int_ep = 0x81
-        self.interface = config[(ifnum-1, 0)]
+        self.interface = config[(0, 0)]
 
     def _reset_device(self):
         """Reset the ftdi device"""
@@ -531,8 +471,8 @@ class Prolific(object):
         if not self.interface:
             raise AssertionError("Interface is not yet known")
         for endpoint in self.interface:
-            # look for the input endpoint
-            if endpoint.bEndpointAddress == self.in_ep:
+            # look for the 'read' endpoint
+            if endpoint.bEndpointAddress == self.out_ep:
                 packet_size = endpoint.wMaxPacketSize
                 return packet_size
         return 0

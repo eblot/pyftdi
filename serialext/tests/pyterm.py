@@ -176,7 +176,7 @@ def get_options():
                              help='Use full terminal mode, exit with [Ctrl]+A')
     optparser.add_option('-p', '--port', dest='device',
                          help='Serial port device name (list available ports '
-                              'with \'ftdi:///?\')')
+                              'with \'ftdi:///?\' or \'prolific:///?\') ')
     optparser.add_option('-b', '--baudrate', dest='baudrate',
                          help='Serial port baudrate', default='115200')
     optparser.add_option('-r', '--reset', dest='reset',

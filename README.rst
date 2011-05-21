@@ -2,9 +2,8 @@
  PyFtdi
 ========
 
---------
 Overview
---------
+~~~~~~~~
 
 PyFtdi aims at providing a user-space driver for modern FTDI_ devices,
 implemented in pure Python language.
@@ -19,9 +18,17 @@ Other FTDI_ devices could also been supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi, and therefore have
 not been tested with PyFtdi.
 
--------------
+Extras
+------
+This module also contains a basic driver for Prolific PL2303 chip written in
+pure Python. PL2303 is not a FTDI device, but serves the same purpose.
+
+As such, a Python driver for this device has been added to this project since
+version 0.4.0, so that using a PL2303 serial adaptor can be used as an FTDI
+alternative to drive a serial port.
+
 Primary goals
--------------
+~~~~~~~~~~~~~
 
 It should support the following modes:
 
@@ -38,9 +45,8 @@ drop-in module to access USB-serial converters based on FTDI_ devices.
 .. _pyserial: http://pyserial.sourceforge.net/
 
 
-------------
 Requirements
-------------
+~~~~~~~~~~~~
 
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
@@ -58,9 +64,8 @@ Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
 .. _Python: http://python.org/
 
 
-------
 Status
-------
+~~~~~~
 
 This project is still in an early alpha development stage.
 
@@ -93,9 +98,8 @@ Supported features
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
 
------------
 Development
------------
+~~~~~~~~~~~
 
 PyFtdi is developed on Mac OS X platforms (including 64-bit kernels), and is
 validated on a regular basis on Linux hosts.
