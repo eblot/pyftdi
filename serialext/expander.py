@@ -57,6 +57,13 @@ class SerialExpander(object):
             type_ = type('SerialFtdi', (serial.SerialBase,),
                          dict(SerialFtdi.__dict__))
             type_.backend = BACKEND
+        elif device.startswith('prolific://'):
+            # for now, assume the USB device is a Prolific device
+            # a USB dispatcher should be implemented here
+            from plext import SerialProlific, BACKEND
+            type_ = type('SerialProlific', (serial.SerialBase,),
+                         dict(SerialProlific.__dict__))
+            type_.backend = BACKEND
         elif os.path.exists(device):
             import stat
             from socketext import SerialSocket

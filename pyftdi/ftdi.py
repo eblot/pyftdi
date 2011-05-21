@@ -30,11 +30,11 @@ _USB_SCAN = False
 
 import os
 import struct
-import threading
 import usb.core
 import usb.util
 from array import array as Array
 
+from usbtools import UsbTools
 from misc import hexdump, hexline
 
 __all__ = ['Ftdi', 'FtdiError']
@@ -217,15 +217,6 @@ class Ftdi(object):
     LEGACY_DEVICES = ('ft232am')
     HISPEED_DEVICES = ('ft2232h', 'ft4232h')
 
-    # Need to maintain a list of reference USB devices, to circumvent a
-    # limitation in pyusb that prevents from opening several times the same
-    # USB device. The following dictionary used bus/address/vendor/product keys
-    # to track (device, refcount) pairs if USBSCAN is available or simply
-    # vendor/product
-    DEVICES = {}
-    LOCK = threading.RLock()
-    USBDEVICES = []
-
     def __init__(self):
         self.usb_dev = None
         self.usb_read_timeout = 5000
@@ -248,19 +239,6 @@ class Ftdi(object):
         self.latency_threshold = None # disable dynamic latency
 
     # --- Public API -------------------------------------------------------
-
-    def find_all(self, vps):
-        """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
-        devices = []
-        for vendor, product in vps:
-            devs = Ftdi._find_devices(find_all=True,
-                                      idVendor=vendor, idProduct=product)
-            for dev in devs:
-                sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-                devices.append((vendor, product, sernum))
-                del dev
-        return devices
 
     def open(self, vendor, product, interface, index=0, serial=None):
         """Open a new interface to the specified FTDI device"""
@@ -675,110 +653,18 @@ class Ftdi(object):
         """Wrapper for libftdi compatibility"""
         return "Unknown error"
 
-    @staticmethod
-    def is_usbscan_available():
-        """Check if the required extension to manage USB buses and addresses
-        """
-        try:
-            from pkg_resources import get_distribution, parse_version
-        except ImportError:
-            # if pkg_resources is not available, do not try to test PyUSB
-            # version
-            return False
-        try:
-            pyusb_version = parse_version(get_distribution("pyusb").version)
-        except Exception:
-            # if pyusb is not installed as a distribution, cannot check
-            # version
-            return False
-        # check if the required version is installed
-        req_version = ('00000001', '*a', '00000001', '*final')
-        if pyusb_version < req_version:
-            return False
-        # check if the required patches are installed
-        from usb.core import Device as UsbDevice
-        for extension in ['get_bus_number', 'get_device_address']:
-            try:
-                getattr(UsbDevice, extension)
-            except AttributeError:
-                return False
-        return True
-
     # --- Private implementation -------------------------------------------
 
     @classmethod
     def _get_device(cls, vendor, product, index, serial):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
-        usbscan = cls.is_usbscan_available()
-        cls.LOCK.acquire()
-        try:
-            if index or serial:
-                dev = None
-                kwargs = {}
-                if vendor:
-                    kwargs['idVendor'] = vendor
-                if product:
-                    kwargs['idProduct'] = product
-                devs = Ftdi._find_devices(find_all=True, **kwargs)
-                if serial:
-                    devs = [dev for dev in devs if \
-                              usb.util.get_string(dev, 64, dev.iSerialNumber) \
-                                == serial]
-                try:
-                    dev = devs[index]
-                except IndexError:
-                    raise IOError("No such device")
-            else:
-                dev = Ftdi._find_devices(idVendor=vendor, idProduct=product)
-            if not dev:
-                raise IOError('Device not found')
-            if usbscan:
-                bus = dev.get_bus_number()
-                address = dev.get_device_address()
-                devkey = (bus, address, vendor, product)
-            else:
-                devkey = (vendor, product)
-            if devkey not in cls.DEVICES:
-                for configuration in dev:
-                    # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        if not dev.is_kernel_driver_active(ifnum):
-                            continue
-                        try:
-                            dev.detach_kernel_driver(ifnum)
-                        except usb.core.USBError, e:
-                            pass
-                dev.set_configuration()
-                cls.DEVICES[devkey] = [dev, 1]
-            else:
-                cls.DEVICES[devkey][1] += 1
-            return cls.DEVICES[devkey][0]
-        finally:
-            cls.LOCK.release()
+        return UsbTools.get_device(vendor, product, index, serial)
 
     @classmethod
     def _release_device(cls, usb_dev):
         """Release a previously open device, if it not used anymore"""
-        # Lookup for ourselves in the class dictionary
-        cls.LOCK.acquire()
-        try:
-            for devkey in cls.DEVICES:
-                dev, refcount = cls.DEVICES[devkey]
-                if dev == usb_dev:
-                    # found
-                    if refcount > 1:
-                        # another interface is open, decrement
-                        cls.DEVICES[devkey][1] -= 1
-                    else:
-                        # last interface in use, release
-                        dispose_resources(cls.DEVICES[devkey][0])
-                        del cls.DEVICES[devkey]
-                    break
-        finally:
-            cls.LOCK.release()
+        UsbTools.release_device(usb_dev)
 
     def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
@@ -945,67 +831,3 @@ class Ftdi(object):
         # Drain input buffer
         self.purge_rx_buffer()
         return actual_freq
-
-    @classmethod
-    def _find_devices(cls, find_all=False, backend = None, custom_match = None,
-                      **args):
-        """Find an USB device and return it.
-           This code re-implements the usb.core.find() method using a local
-           cache to avoid calling several times the underlying LibUSB and the
-           system USB calls to enumerate the available USB devices. As these
-           calls are time-hungry (about 1 second/call), the enumerated devices
-           are cached. It consumes a bit more memory but dramatically improves
-           start-up time.
-           Hopefully, this kludge is temporary and replaced with a better
-           implementation from PyUSB at some point.
-        """
-        def device_iter(k, v, devices):
-            for dev in devices:
-                d = usb.core.Device(dev, backend)
-                if (custom_match is None or custom_match(d)) and \
-                    _interop._reduce(
-                            lambda a, b: a and b,
-                            map(
-                                operator.eq,
-                                v,
-                                map(lambda i: getattr(d, i), k)
-                            ),
-                            True
-                        ):
-                    yield d
-        import operator
-        import usb._interop as _interop
-        cls.LOCK.acquire()
-        try:
-            if backend is None:
-                import usb.backend.libusb10 as libusb10
-                import usb.backend.libusb01 as libusb01
-                import usb.backend.openusb as openusb
-                for m in (libusb10, openusb, libusb01):
-                    backend = m.get_backend()
-                    if backend is not None:
-                        break
-                else:
-                    raise ValueError('No backend available')
-            if not cls.USBDEVICES:
-                # not freed until Python runtime completion
-                # enumerate_devices returns a generator, so back up the
-                # generated device into a list. To save memory, we only
-                # back up the supported devices
-                VENDOR_IDS = ( 0x0403, )
-                devlist = []
-                for dev in backend.enumerate_devices():
-                    vendor = usb.core.Device(dev, backend).idVendor
-                    if vendor in VENDOR_IDS:
-                        devlist.append(dev)
-                cls.USBDEVICES = devlist
-            k, v = args.keys(), args.values()
-            if find_all:
-                return [d for d in device_iter(k, v, cls.USBDEVICES)]
-            else:
-                try:
-                    return _interop._next(device_iter(k, v, cls.USBDEVICES))
-                except StopIteration:
-                    return None
-        finally:
-            cls.LOCK.release()
