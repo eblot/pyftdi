@@ -189,7 +189,9 @@ class SerialProlific:
                             raise serial.SerialException("No Prolific device" \
                                                          " #%d" % idx)
             if show_devices:
-                self._show_devices(candidates)
+                UsbTools.show_devices(self.SCHEME, self.VENDOR_IDS,
+                                      self.PRODUCT_IDS, self.INTERFACES, 
+                                      candidates)
                 raise SystemExit('Please specify the Prolific device')
             self.pl.open(vendor, product, interface, idx, sernum)
         except ProlificError:
@@ -288,55 +290,3 @@ class SerialProlific:
         """Read terminal status line: Carrier Detect"""
         status = self.pl.poll_modem_status()
         return (status & Prolific.MODEM_RLSD) and True or False
-
-    def _show_devices(self, candidates, out=None):
-        from string import printable as printablechars
-        if not out:
-            import sys
-            out = sys.stdout
-        print >> out, "Available interfaces:"
-        indices = {}
-        for (v, p, s) in candidates:
-            try:
-                ifcount = self.INTERFACES[v][p]
-            except KeyError, e:
-                continue
-            ikey = (v, p)
-            indices[ikey] = indices.get(ikey, 0) + 1
-            # try to find a matching string for the current vendor
-            vendors = []
-            # fallback if no matching string for the current vendor is found
-            vendor = '%04x' % v
-            for vc in self.VENDOR_IDS:
-                if self.VENDOR_IDS[vc] == v:
-                    vendors.append(vc)
-            if vendors:
-                vendors.sort(key=len)
-                vendor = vendors[0]
-            # try to find a matching string for the current vendor
-            # fallback if no matching string for the current product is found
-            product = '%04x' % p
-            try:
-                products = []
-                productids = self.PRODUCT_IDS[v]
-                for pc in productids:
-                    if productids[pc] == p:
-                        products.append(pc)
-                if products:
-                    products.sort(key=len)
-                    product = products[0]
-            except KeyError:
-                pass
-            # if the serial number is an ASCII char, use it, or use the index
-            # value
-            if [c for c in s if c not in printablechars or c == '?']:
-                serial = '%d' % indices[ikey]
-            else:
-                serial = s
-            # Now print out the prettiest URL syntax
-            for i in range(1, ifcount+1):
-                # On most configurations, low interfaces are used for MPSSE,
-                # high interfaces are dedicated to UARTs
-                print >> out, '  %s%s:%s:%s/%d' % \
-                    (self.SCHEME, vendor, product, serial, i)
-        print >> out, ''
