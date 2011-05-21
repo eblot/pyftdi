@@ -30,10 +30,11 @@ import usb.util
 from array import array as Array
 
 from pyftdi.misc import hexdump, hexline
+from pyftdi.usbtools import UsbTools, UsbError
 
 __all__ = ['Prolific', 'ProlificError']
 
-class ProlificError(IOError):
+class ProlificError(UsbError):
     """Communication error with the Prolific device"""
     pass
 

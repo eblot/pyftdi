@@ -19,6 +19,11 @@ import threading
 import usb.core
 import usb.util
 
+
+class UsbError(IOError):
+    """Base class for error with a USB device"""
+
+
 class UsbTools(object):
     """
     """

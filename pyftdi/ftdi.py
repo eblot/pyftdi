@@ -34,12 +34,12 @@ import usb.core
 import usb.util
 from array import array as Array
 
-from usbtools import UsbTools
+from usbtools import UsbTools, UsbError
 from misc import hexdump, hexline
 
 __all__ = ['Ftdi', 'FtdiError']
 
-class FtdiError(IOError):
+class FtdiError(UsbError):
     """Communication error with the FTDI device"""
     pass
 

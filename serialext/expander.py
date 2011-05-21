@@ -26,6 +26,8 @@
 import os
 import sys
 
+import usbext
+
 __all__ = ['SerialExpander', 'SerialExpanderError']
 
 
@@ -54,14 +56,16 @@ class SerialExpander(object):
             # for now, assume the USB device is a FTDI device
             # a USB dispatcher should be implemented here
             from ftdiext import SerialFtdi, BACKEND
-            type_ = type('SerialFtdi', (serial.SerialBase,),
+            type_ = type('SerialFtdi',
+                         (serial.SerialBase, usbext.SerialUsb),
                          dict(SerialFtdi.__dict__))
             type_.backend = BACKEND
         elif device.startswith('prolific://'):
             # for now, assume the USB device is a Prolific device
             # a USB dispatcher should be implemented here
             from plext import SerialProlific, BACKEND
-            type_ = type('SerialProlific', (serial.SerialBase,),
+            type_ = type('SerialProlific',
+                         (serial.SerialBase, usbext.SerialUsb),
                          dict(SerialProlific.__dict__))
             type_.backend = BACKEND
         elif os.path.exists(device):
