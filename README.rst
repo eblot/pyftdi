@@ -21,11 +21,12 @@ not been tested with PyFtdi.
 Extras
 ------
 This module also contains a basic driver for Prolific PL2303 chip written in
-pure Python. PL2303 is not a FTDI device, but serves the same purpose.
+pure Python. PL2303 is not an FTDI device, but it may serve the same purpose -
+a USB-to-serial adapter.
 
 As such, a Python driver for this device has been added to this project since
 version 0.4.0, so that using a PL2303 serial adaptor can be used as an FTDI
-alternative to drive a serial port.
+alternative to drive a serial port from a USB bus.
 
 Primary goals
 ~~~~~~~~~~~~~
@@ -57,6 +58,9 @@ libraries:
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules.
+
+To use the serial port feature of PyFtdi, the pyserial_ 2.5 or above should be
+installed.
 
 Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
 
@@ -108,3 +112,43 @@ As it contains no native code, it should work on any platforms PyUSB_ and
 libusb_ support (including, but not limited to, Windows).
 
 .. _libusb: http://www.libusb.org/
+
+Examples
+--------
+
+Serial port
+...........
+
+``serialext/tests/pyterm.py`` is a simple serial terminal that can be used
+to test the serial port feature.
+
+::
+
+  Usage: pyterm.py [options]
+  Configure a remote Neotion board over a serial line
+
+  Options:
+    -h, --help            show this help message and exit
+    -d, --debug           Enable debug mode
+    -f, --fullmode        Use full terminal mode, exit with [Ctrl]+A
+    -p DEVICE, --port=DEVICE
+                          Serial port device name (list available ports with
+                          'ftdi:///?' or 'prolific:///?')
+    -b BAUDRATE, --baudrate=BAUDRATE
+                          Serial port baudrate
+    -r RESET, --reset=RESET
+                          HW reset on DTR line
+    -o LOGFILE, --logfile=LOGFILE
+                          Path to the log file
+
+If the pyftdi module is not yet installed and ``pyterm.py`` is ran from the
+archive directory, ``PYTHONPATH`` should be defined to the current directory:
+
+- ``PYTHONPATH=$PWD ./serialext/tests/pyterm.py -p ftdi:///?``
+
+The above command lists all the available FTDI device ports available.
+
+To start up a serial terminal session, use the ``-p`` option switch to select
+the proper port, for example
+
+- ``PYTHONPATH=$PWD ./serialext/tests/pyterm.py -p ftdi://ftdi:2232/1``
