@@ -242,7 +242,7 @@ class Ftdi(object):
 
     def open(self, vendor, product, interface, index=0, serial=None):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = self._get_device(vendor, product, index, serial)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
         # detect invalid interface as early as possible
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
@@ -255,7 +255,7 @@ class Ftdi(object):
     def close(self):
         """Close the FTDI interface"""
         self.set_latency_timer(self.LATENCY_MAX)
-        self._release_device(self)
+        UsbTools.release_device(self.usb_dev)
 
     def open_mpsse(self, vendor, product, interface=1,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
@@ -447,7 +447,10 @@ class Ftdi(object):
 
     def set_flowctrl(self, flowctrl):
         """Set flowcontrol for ftdi chip"""
-        value = flowctrl | self.index
+        ctrl = { 'hw' : Ftdi.SIO_RTS_CTS_HS,
+                 'sw' : Ftdi.SIO_XON_XOFF_HS,
+                 '' : Ftdi.SIO_DISABLE_FLOW_CTRL }
+        value = ctrl[flowctrl] | self.index
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_FLOW_CTRL, 0,
@@ -492,18 +495,34 @@ class Ftdi(object):
         if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
-    def set_line_property(self, bits, stopbits, parity, break_=0):
+    def set_line_property(self, bits, stopbit, parity, break_=0):
         """Set (RS232) line characteristics"""
+        bytelength = { 7 : Ftdi.BITS_7,
+                       8 : Ftdi.BITS_8 }
+        parities  = { 'N' : Ftdi.PARITY_NONE,
+                      'O' : Ftdi.PARITY_ODD,
+                      'E' : Ftdi.PARITY_EVEN,
+                      'M' : Ftdi.PARITY_MARK,
+                      'S' : Ftdi.PARITY_SPACE }
+        stopbits  = { 1 : Ftdi.STOP_BIT_1,
+                      1.5 : Ftdi.STOP_BIT_15,
+                      2 : Ftdi.STOP_BIT_2 }
+        if parity not in parities:
+            raise FtdiError("Unsupported parity")
+        if bits not in bytelength:
+            raise FtdiError("Unsupported byte length")
+        if stopbit not in stopbits:
+            raise FtdiError("Unsupported stop bits")
         value = bits & 0x0F
         try:
             value |= { Ftdi.PARITY_NONE : 0x00 << 8,
                        Ftdi.PARITY_ODD : 0x01 << 8,
                        Ftdi.PARITY_EVEN : 0x02 << 8,
                        Ftdi.PARITY_MARK : 0x03 << 8,
-                       Ftdi.PARITY_SPACE : 0x04 << 8 }[parity]
+                       Ftdi.PARITY_SPACE : 0x04 << 8 }[parities[parity]]
             value |= { Ftdi.STOP_BIT_1 : 0x00 << 11,
                        Ftdi.STOP_BIT_15 : 0x01 << 11,
-                       Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits]
+                       Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits[stopbit]]
             if break_ == Ftdi.BREAK_ON:
                 value |= 0x01 << 14
         except KeyError:
@@ -654,17 +673,6 @@ class Ftdi(object):
         return "Unknown error"
 
     # --- Private implementation -------------------------------------------
-
-    @classmethod
-    def _get_device(cls, vendor, product, index, serial):
-        """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
-        return UsbTools.get_device(vendor, product, index, serial)
-
-    @classmethod
-    def _release_device(cls, usb_dev):
-        """Release a previously open device, if it not used anymore"""
-        UsbTools.release_device(usb_dev)
 
     def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""

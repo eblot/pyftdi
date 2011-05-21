@@ -69,10 +69,9 @@ class UsbTools(object):
         if pyusb_version < req_version:
             return False
         # check if the required patches are installed
-        from usb.core import Device as UsbDevice
         for extension in ['get_bus_number', 'get_device_address']:
             try:
-                getattr(UsbDevice, extension)
+                getattr(usb.core.UsbDevice, extension)
             except AttributeError:
                 return False
         return True
@@ -144,7 +143,7 @@ class UsbTools(object):
                         cls.DEVICES[devkey][1] -= 1
                     else:
                         # last interface in use, release
-                        dispose_resources(cls.DEVICES[devkey][0])
+                        usb.util.dispose_resources(cls.DEVICES[devkey][0])
                         del cls.DEVICES[devkey]
                     break
         finally:

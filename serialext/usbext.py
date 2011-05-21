@@ -211,3 +211,26 @@ class SerialUsb:
         """Read terminal status line: Carrier Detect"""
         status = self.udev.poll_modem_status()
         return (status & self.MODEM_RLSD) and True or False
+
+    def _reconfigurePort(self):
+        try:
+            self.udev.set_baudrate(self._baudrate)
+            self.udev.set_line_property(self._bytesize,
+                                        self._stopbits,
+                                        self._parity)
+            if self._rtscts:
+                self.udev.set_flowctrl('hw')
+            elif self._xonxoff:
+                self.udev.set_flowctrl('sw')
+            else:
+                self.udev.set_flowctrl('')
+            try:
+                self.udev.set_dynamic_latency(2, 200, 400)
+            except AttributeError:
+                # backend does not support this feature
+                pass
+        except UsbError, e:
+            import serial
+            err = self.udev.get_error_string()
+            raise serial.SerialException("%s (%s)" % (str(e), err))
+

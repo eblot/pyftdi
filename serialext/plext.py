@@ -28,6 +28,7 @@ import re
 import time
 
 from pyprolific.prolific import Prolific
+from pyftdi.usbtools import UsbError
 
 BACKEND = 'pyprolific'
 
@@ -50,7 +51,9 @@ class SerialProlific:
     @property
     def fifoSizes(self):
         """Return the (TX, RX) tupple of hardware FIFO sizes"""
-        return (128, 128) # random value for now
+        # for HWD devices, should be checked for older devices
+        # moreover, HWD devices can be reconfigured as (128, 384)
+        return (256, 256)
 
     def open(self):
         super(self.__class__, self).open(Prolific, 
@@ -60,57 +63,8 @@ class SerialProlific:
                                          SerialProlific.INTERFACES,
                                          SerialProlific.DEFAULT_VENDOR)
 
-    def _reconfigurePort(self):
-        import serial
-        BYTESIZES = { 7 : Prolific.BITS_7,
-                      8 : Prolific.BITS_8 }
-        PARITIES  = { 'N' : Prolific.PARITY_NONE,
-                      'O' : Prolific.PARITY_ODD,
-                      'E' : Prolific.PARITY_EVEN,
-                      'M' : Prolific.PARITY_MARK,
-                      'S' : Prolific.PARITY_SPACE }
-        STOPBITS  = { 1 : Prolific.STOP_BIT_1,
-                      1.5 : Prolific.STOP_BIT_15,
-                      2 : Prolific.STOP_BIT_2 }
-        if self._parity not in PARITIES:
-            raise serial.SerialException("Unsupported parity")
-        if self._bytesize not in BYTESIZES:
-            raise serial.SerialException("Unsupported byte size")
-        if self._stopbits not in STOPBITS:
-            raise serial.SerialException("Unsupported stop bits")
-        try:
-            self.udev.set_baudrate(self._baudrate)
-            self.udev.set_line_property(BYTESIZES[self._bytesize],
-                                        STOPBITS[self._stopbits],
-                                        PARITIES[self._parity])
-            if self._rtscts:
-                self.udev.set_flowctrl(Prolific.SIO_RTS_CTS_HS)
-            elif self._xonxoff:
-                self.udev.set_flowctrl(Prolific.SIO_XON_XOFF_HS)
-            else:
-                self.udev.set_flowctrl(Prolific.SIO_DISABLE_FLOW_CTRL)
-            try:
-                self.udev.set_dynamic_latency(2, 200, 400)
-            except AttributeError:
-                # backend does not support this feature
-                pass
-        except UsbError, e:
-            err = self.udev.get_error_string()
-            raise serial.SerialException("%s (%s)" % (str(e), err))
-
     def inWaiting(self):
         """Return the number of characters currently in the input buffer.
-           It seems that Prolific does not offer a way to check if some data
-           are already available in the input FIFO, so this method is pretty
-           useless. This method only reports if data are ready and the RX FIFO
-           buffer is already full. A workaround is to actually read data and
-           count the received bytes. In any case, USB polling is required.
         """
-        try:
-            status = self.udev.poll_modem_status()
-        except UsbError, e:
-            raise IOError('Prolific communication error: %s' % str(e))
-        if (status & Prolific.MODEM_DR):
-            return 1
+        # not implemented
         return 0
-

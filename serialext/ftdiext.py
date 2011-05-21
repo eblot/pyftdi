@@ -27,6 +27,7 @@ import re
 import time
 
 from pyftdi.ftdi import Ftdi
+from pyftdi.usbtools import UsbError
 
 BACKEND = 'pyftdi'
 
@@ -70,44 +71,6 @@ class SerialFtdi:
                                          SerialFtdi.PRODUCT_IDS,
                                          SerialFtdi.INTERFACES,
                                          SerialFtdi.DEFAULT_VENDOR)
-
-    def _reconfigurePort(self):
-        import serial
-        BYTESIZES = { 7 : Ftdi.BITS_7,
-                      8 : Ftdi.BITS_8 }
-        PARITIES  = { 'N' : Ftdi.PARITY_NONE,
-                      'O' : Ftdi.PARITY_ODD,
-                      'E' : Ftdi.PARITY_EVEN,
-                      'M' : Ftdi.PARITY_MARK,
-                      'S' : Ftdi.PARITY_SPACE }
-        STOPBITS  = { 1 : Ftdi.STOP_BIT_1,
-                      1.5 : Ftdi.STOP_BIT_15,
-                      2 : Ftdi.STOP_BIT_2 }
-        if self._parity not in PARITIES:
-            raise serial.SerialException("Unsupported parity")
-        if self._bytesize not in BYTESIZES:
-            raise serial.SerialException("Unsupported byte size")
-        if self._stopbits not in STOPBITS:
-            raise serial.SerialException("Unsupported stop bits")
-        try:
-            self.udev.set_baudrate(self._baudrate)
-            self.udev.set_line_property(BYTESIZES[self._bytesize],
-                                        STOPBITS[self._stopbits],
-                                        PARITIES[self._parity])
-            if self._rtscts:
-                self.udev.set_flowctrl(Ftdi.SIO_RTS_CTS_HS)
-            elif self._xonxoff:
-                self.udev.set_flowctrl(Ftdi.SIO_XON_XOFF_HS)
-            else:
-                self.udev.set_flowctrl(Ftdi.SIO_DISABLE_FLOW_CTRL)
-            try:
-                self.udev.set_dynamic_latency(2, 200, 400)
-            except AttributeError:
-                # backend does not support this feature
-                pass
-        except UsbError, e:
-            err = self.udev.get_error_string()
-            raise serial.SerialException("%s (%s)" % (str(e), err))
 
     def inWaiting(self):
         """Return the number of characters currently in the input buffer.
