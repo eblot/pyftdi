@@ -184,13 +184,13 @@ class SerialUsb:
         # Not supported
         pass
 
-    def setRTS(self,on=1):
+    def setRTS(self, level=True):
         """Set terminal status line: Request To Send"""
-        self.udev.set_rts(on)
+        self.udev.set_rts(level)
 
-    def setDTR(self,on=1):
+    def setDTR(self, level=True):
         """Set terminal status line: Data Terminal Ready"""
-        self.udev.set_dtr(on)
+        self.udev.set_dtr(level)
 
     def getCTS(self):
         """Read terminal status line: Clear To Send"""
