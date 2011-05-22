@@ -42,9 +42,7 @@ class ProlificError(UsbError):
 class Prolific(object):
     """PL2303 device driver"""
 
-    #SET_LINE_REQUEST_TYPE = 0x21
     SET_LINE_REQUEST = 0x20
-    #SET_CONTROL_REQUEST_TYPE = 0x21
     SET_CONTROL_REQUEST = 0x22
     CONTROL_DTR = 0x01
     CONTROL_RTS = 0x02
@@ -52,14 +50,11 @@ class Prolific(object):
     BREAK_REQUEST = 0x23
     BREAK_ON = 0xffff
     BREAK_OFF = 0x0000
-    #GET_LINE_REQUEST_TYPE = 0xa1
     GET_LINE_REQUEST = 0x21
-    #VENDOR_WRITE_REQUEST_TYPE = 0x40
     VENDOR_WRITE_REQUEST = 0x01
-    #VENDOR_READ_REQUEST_TYPE = 0xc0
     VENDOR_READ_REQUEST = 0x01
-    FLUSH_RX_REQUEST = 0x09
-    FLUSH_TX_REQUEST = 0x08
+    FLUSH_RX_REQUEST = 0x08
+    FLUSH_TX_REQUEST = 0x09
     SET_FLOWCONTROL_REQUEST = 0x00
     FLOWCONTROL_HW = 0x41
     FLOWCONTROL_HW_HX = 0x61
@@ -76,25 +71,22 @@ class Prolific(object):
     UART_CTS = 0x80
 
     # USB control requests
-    VENDOR_OUT = usb.util.build_request_type(    # 40
+    VENDOR_OUT = usb.util.build_request_type(        # 40
                   usb.util.CTRL_OUT,                 # 00
                   usb.util.CTRL_TYPE_VENDOR,         # 40
                   usb.util.CTRL_RECIPIENT_DEVICE)    # 00
-    VENDOR_IN = usb.util.build_request_type(     # c0
+    VENDOR_IN = usb.util.build_request_type(         # c0
                   usb.util.CTRL_IN,                  # 80
                   usb.util.CTRL_TYPE_VENDOR,         # 40
                   usb.util.CTRL_RECIPIENT_DEVICE)    # 00
-    CTRL_OUT = usb.util.build_request_type(      # 21
+    CTRL_OUT = usb.util.build_request_type(          # 21
                   usb.util.CTRL_OUT,                 # 00
                   usb.util.CTRL_TYPE_CLASS,          # 20
                   usb.util.CTRL_RECIPIENT_INTERFACE) # 01
-    CTRL_IN = usb.util.build_request_type(       # a1
+    CTRL_IN = usb.util.build_request_type(           # a1
                   usb.util.CTRL_IN,                  # 80
                   usb.util.CTRL_TYPE_CLASS,          # 20
                   usb.util.CTRL_RECIPIENT_INTERFACE) # 00
-
-    # Break type
-    BREAK_OFF, BREAK_ON = range(2)
 
     BAUDRATES = [ 75, 150, 300, 600, 1200, 1800, 2400, 3600,
                   4800, 7200, 9600, 14400, 19200, 28800, 38400,
@@ -104,7 +96,7 @@ class Prolific(object):
 
     def __init__(self):
         self.usb_dev = None
-        self.usb_read_timeout = 5000
+        self.usb_read_timeout = 1000
         self.usb_write_timeout = 5000
         self.baudrate = -1
         self.readbuffer = Array('B')
@@ -131,11 +123,13 @@ class Prolific(object):
             raise ProlificError('No such Prolific port: %d' % interface)
         self._set_interface(config, interface)
         self.max_packet_size = self._get_max_packet_size()
+        self._set_control_lines(self._lines)
         self._reset_device()
         self._do_black_magic()
 
     def close(self):
         """Close the FTDI interface"""
+        self._reset_device()
         UsbTools.release_device(self.usb_dev)
 
     @property
@@ -241,31 +235,40 @@ class Prolific(object):
 
     def set_dtr(self, state):
         """Set dtr line"""
+        lines = self._lines
         if state:
-            self._lines |= Prolific.CONTROL_DTR
+            lines |= Prolific.CONTROL_DTR
         else:
-            self._lines &= ~Prolific.CONTROL_DTR
-        self._set_control_lines(self._lines)
+            lines &= ~Prolific.CONTROL_DTR
+        if self._lines != lines:
+            self._lines = lines
+            self._set_control_lines(lines)
 
     def set_rts(self, state):
         """Set rts line"""
+        lines = self._lines
         if state:
-            self._lines |= Prolific.CONTROL_RTS
+            lines |= Prolific.CONTROL_RTS
         else:
-            self._lines &= ~Prolific.CONTROL_RTS
-        self._set_control_lines(self._lines)
+            lines &= ~Prolific.CONTROL_RTS
+        if self._lines != lines:
+            self._lines = lines
+            self._set_control_lines(lines)
 
     def set_dtr_rts(self, dtr, rts):
         """Set dtr and rts lines"""
+        lines = self._lines
         if dtr:
-            self._lines |= Prolific.CONTROL_DTR
+            lines |= Prolific.CONTROL_DTR
         else:
-            self._lines &= ~Prolific.CONTROL_DTR
+            lines &= ~Prolific.CONTROL_DTR
         if rts:
-            self._lines |= Prolific.CONTROL_RTS
+            lines |= Prolific.CONTROL_RTS
         else:
-            self._lines &= ~Prolific.CONTROL_RTS
-        self._set_control_lines(self._lines)
+            lines &= ~Prolific.CONTROL_RTS
+        if self._lines != lines:
+            self._lines = lines
+            self._set_control_lines(lines)
 
     def set_line_property(self, bits, stopbits, parity, break_=0):
         """Set (RS232) line characteristics"""
@@ -290,8 +293,8 @@ class Prolific(object):
             raise ProlificError('Invalid line request')
         (br, sbits, pbit, blen) = struct.unpack('<IBBB', data.tostring())
         new_data = Array('B', struct.pack('<IBBB', br, ns, np, bits))
-        if new_data != data:
-            self._ctrl_out(Prolific.SET_LINE_REQUEST, 0, 0, data)
+        self._ctrl_out(Prolific.SET_LINE_REQUEST, 0, 0, new_data)
+        self._reset_device()
 
     def write_data(self, data):
         """Write data in chunks to the chip"""
@@ -315,7 +318,7 @@ class Prolific(object):
 
     def read_data_bytes(self, size, attempt=1):
         """Read data in chunks from the chip."""
-        # Attempt is useless with PL2303
+        # Attempt count is useless with PL2303
         # Packet size sanity check
         if not self.max_packet_size:
             raise ProlificError("max_packet_size is bogus")
@@ -355,8 +358,7 @@ class Prolific(object):
                 self.readoffset = 0
                 # data still fits in buf?
                 if (len(data) + length) <= size:
-                    data += self.readbuffer[self.readoffset: \
-                                            self.readoffset+length]
+                    data += self.readbuffer[:length]
                     self.readoffset += length
                     # did we read exactly the right amount of bytes?
                     if len(data) == size:
@@ -371,7 +373,7 @@ class Prolific(object):
                     data += self.readbuffer[self.readoffset:\
                                             self.readoffset+part_size]
                     self.readoffset += part_size
-                return data
+            return data
         except usb.core.USBError, e:
             raise ProlificError('UsbError: %s' % str(e))
         # never reached
@@ -412,7 +414,6 @@ class Prolific(object):
     def _vendor_out(self, value, index, data=''):
         """Send a vendor message to the device"""
         try:
-            #print "VENDOR OUT", hex(value), index, len(data)
             return self.usb_dev.ctrl_transfer(Prolific.VENDOR_OUT,
                 Prolific.VENDOR_WRITE_REQUEST, value, index, data,
                 self.usb_write_timeout)
@@ -422,7 +423,6 @@ class Prolific(object):
     def _vendor_in(self, value, index, length):
         """Request for a vendor message from the device"""
         try:
-            #print "VENDOR IN", hex(value), index, length
             return self.usb_dev.ctrl_transfer(Prolific.VENDOR_IN,
                 Prolific.VENDOR_READ_REQUEST, value, index, length,
                 self.usb_read_timeout)
@@ -440,8 +440,6 @@ class Prolific(object):
     def _ctrl_in(self, req, value, index, length):
         """Request for a vendor message from the device"""
         try:
-            #print "CTRL IN", hex(Prolific.CTRL_IN), hex(req),
-            # value, index, length
             return self.usb_dev.ctrl_transfer(Prolific.CTRL_IN,
                 req, value, index, length, self.usb_read_timeout)
         except usb.core.USBError, e:
@@ -480,6 +478,7 @@ class Prolific(object):
     def _reset_device(self):
         """Reset the ftdi device"""
         # Invalidate data in the readbuffer
+        self.purge_buffers()
         self.readoffset = 0
         self.readbuffer = Array('B')
 
