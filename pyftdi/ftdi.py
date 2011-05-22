@@ -647,6 +647,26 @@ class Ftdi(object):
            every read."""
         return self.read_data_bytes(size).tostring()
 
+    def get_cts(self):
+        """Read terminal status line: Clear To Send"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_CTS) and True or False
+
+    def get_dsr(self):
+        """Read terminal status line: Data Set Ready"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_DSR) and True or False
+
+    def get_ri(self):
+        """Read terminal status line: Ring Indicator"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_RI) and True or False
+
+    def get_cd(self):
+        """Read terminal status line: Carrier Detect"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_RLSD) and True or False
+
     def set_dynamic_latency(self, lmin, lmax, threshold):
         """Set up or disable latency values"""
         if not threshold:

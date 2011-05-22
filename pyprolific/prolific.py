@@ -224,10 +224,9 @@ class Prolific(object):
         """Poll modem status information
            This function allows the retrieve the two status bytes of the device.
         """
-        #print "IRQ READ"
-        #data = self.usb_dev.read(self.int_ep, 9, self.interface,
-        #                         self.usb_read_timeout)
-        #print "IRQ READ done", length(data)
+        # deadlock on the second call, to be investigated, reading from an
+        # interrupt endpoint is not yet known
+        #data = self.usb_dev.read(self.int_ep, 10, self.interface, 10)
         return 0
 
     def set_flowctrl(self, flowctrl):
@@ -383,6 +382,26 @@ class Prolific(object):
            Automatically strips the two modem status bytes transfered during
            every read."""
         return self.read_data_bytes(size).tostring()
+
+    def get_cts(self):
+        """Read terminal status line: Clear To Send"""
+        status = self.poll_modem_status()
+        return 0
+
+    def get_dsr(self):
+        """Read terminal status line: Data Set Ready"""
+        status = self.poll_modem_status()
+        return 0
+
+    def get_ri(self):
+        """Read terminal status line: Ring Indicator"""
+        status = self.poll_modem_status()
+        return 0
+
+    def get_cd(self):
+        """Read terminal status line: Carrier Detect"""
+        status = self.poll_modem_status()
+        return 0
 
     def get_error_string(self):
         """Wrapper for libftdi compatibility"""

@@ -194,23 +194,19 @@ class SerialUsb:
 
     def getCTS(self):
         """Read terminal status line: Clear To Send"""
-        status = self.udev.poll_modem_status()
-        return (status & self.MODEM_CTS) and True or False
+        return self.udev.get_cts()
 
     def getDSR(self):
         """Read terminal status line: Data Set Ready"""
-        status = self.udev.poll_modem_status()
-        return (status & self.MODEM_DSR) and True or False
+        return self.udev.get_dsr()
 
     def getRI(self):
         """Read terminal status line: Ring Indicator"""
-        status = self.udev.poll_modem_status()
-        return (status & self.MODEM_RI) and True or False
+        return self.udev.get_ri()
 
     def getCD(self):
         """Read terminal status line: Carrier Detect"""
-        status = self.udev.poll_modem_status()
-        return (status & self.MODEM_RLSD) and True or False
+        return self.udev.get_cd()
 
     def _reconfigurePort(self):
         try:
