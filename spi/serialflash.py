@@ -64,30 +64,30 @@ class SerialFlash(object):
 
     def read(self, address, length):
         """Read a sequence of bytes from the specified address."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def write(self, address, data):
         """Write a sequence of bytes, starting at the specified address."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def erase(self, address, length):
         """Erase a block of bytes. Address and length depends upon device-
            specific constraints."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def can_erase(self, address, length):
         """Tells whether a defined area can be erased on the Spansion flash
            device. It does not take into account any locking scheme."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def is_busy(self):
         """Reports whether the flash may receive commands or is actually
            being performing internal work"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_capacity(self):
         """Get the flash device capacity in bytes"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def get_capabilities(self):
         """Flash device capabilities."""
@@ -95,12 +95,12 @@ class SerialFlash(object):
 
     def get_locks(self):
         """Report the currently write-protected areas of the device."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def set_lock(self, address, length, otp=False):
         """Create a write-protected area. Device should have been unlocked
            first."""
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def unlock(self):
         """Make the whole device read/write"""
@@ -108,7 +108,7 @@ class SerialFlash(object):
 
     def get_unique_id(self):
         """Return the unique ID of the flash, if it exists"""
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class SerialFlashManager(object):
@@ -432,6 +432,7 @@ class Sst25FlashDevice(_Gen25FlashDevice):
     SERIALFLASH_ID = 0x25
     CMD_PROGRAM_BYTE = 0x02
     CMD_PROGRAM_WORD = 0xAD # Auto address increment (for write command)
+    CMD_WRITE_STATUS_REGISTER = 0x01
     SST25_AAI = 0b01000000 # AAI mode activation flag
     DEVICES = { 0x41 : 2<<20, 0x4A : 4<<20 }
     ERASE_SUBSECTOR_TIMES = (0.025, 0.025) # 25 ms
@@ -476,6 +477,7 @@ class Sst25FlashDevice(_Gen25FlashDevice):
         length = len(data)
         if (address&0x1) or (length&0x1) or (length==0):
             raise AssertionError("Alignement/size not supported")
+        self._unprotect()
         self._enable_write()
         aai_cmd = Array('B', [Sst25FlashDevice.CMD_PROGRAM_WORD,
                               (address>>16)&0xff,
@@ -486,7 +488,6 @@ class Sst25FlashDevice(_Gen25FlashDevice):
         percent = 0.0
         while True:
             percent = (1000.0*offset/length)
-            #print "Address %06x (%2.1f%%)\r" % (address + offset, percent/10),
             offset += 2
             self._spi.exchange(aai_cmd)
             while self.is_busy():
@@ -495,8 +496,30 @@ class Sst25FlashDevice(_Gen25FlashDevice):
                 break
             aai_cmd = Array('B', [Sst25FlashDevice.CMD_PROGRAM_WORD,
                                   data.pop(0), data.pop(0)])
-        #print ""
         self._disable_write()
+
+    def can_erase(self, address, length):
+        """Verifies that a defined area can be erased on the SST flash device.
+        """
+        # SST25 does not support OTP locking, for now only test the erase
+        # range validity
+        if address & (self.SUBSECTOR_SIZE-1):
+            raise SerialFlashValueError('Start address should be aligned on a '
+                                        'subsector boundary')
+        if length & (self.SUBSECTOR_SIZE-1):
+            raise SerialFlashValueError('End address should be aligned on a '
+                                        'subsector boundary')
+        if (address + length) > len(self):
+            raise SerialFlashValueError('Would erase over the flash capacity')
+
+    def _unprotect(self):
+        """Disable default protection for all sectors"""
+        unprotect = Array('B',
+                          [Sst25FlashDevice.CMD_WRITE_STATUS_REGISTER, 0x00])
+        self._enable_write()
+        self._spi.exchange(unprotect)
+        while self.is_busy():
+            time.sleep(0.01) # 10 ms
 
 
 class S25FlFlashDevice(_Gen25FlashDevice):
