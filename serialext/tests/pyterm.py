@@ -165,24 +165,24 @@ def get_options():
     """Parse and execute the command line and optionnally a config file"""
     from optparse import OptionParser
     usage = '%prog [options]\n' \
-            'Configure a remote Neotion board over a serial line\n'
+            'Pure python simple serial terminal\n'
     optparser = OptionParser(usage=usage)
     optparser.add_option('-d', '--debug', dest='debug',
                          action='store_true',
-                         help='Enable debug mode')
+                         help='enable debug mode')
     if os.name in ('posix', ):
         optparser.add_option('-f', '--fullmode', dest='fullmode',
                              action='store_true',
-                             help='Use full terminal mode, exit with [Ctrl]+A')
+                             help='use full terminal mode, exit with [Ctrl]+A')
     optparser.add_option('-p', '--port', dest='device',
-                         help='Serial port device name (list available ports '
-                              'with \'ftdi:///?\')')
+                         help='serial port device name (list available ports '
+                              'with \'ftdi:///?\' or \'prolific:///?\') ')
     optparser.add_option('-b', '--baudrate', dest='baudrate',
-                         help='Serial port baudrate', default='115200')
+                         help='serial port baudrate', default='115200')
     optparser.add_option('-r', '--reset', dest='reset',
                          help='HW reset on DTR line')
     optparser.add_option('-o', '--logfile', dest='logfile',
-                         help='Path to the log file')
+                         help='path to the log file')
     options, _ = optparser.parse_args(sys.argv[1:])
     return optparser, options
 

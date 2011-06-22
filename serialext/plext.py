@@ -1,4 +1,5 @@
 # Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2011, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,53 +27,42 @@
 import re
 import time
 
-from pyftdi.ftdi import Ftdi
+from pyprolific.prolific import Prolific
 from pyftdi.usbtools import UsbError
 
-BACKEND = 'pyftdi'
+BACKEND = 'pyprolific'
 
-__all__ = ['SerialFtdi']
+__all__ = ['SerialProlific']
 
 
-class SerialFtdi:
-    """Serial port implementation for FTDI compatible with pyserial API"""
+class SerialProlific:
+    """Serial port implementation for Prolific compatible with pyserial API"""
 
-    SCHEME = 'ftdi://'
-    VENDOR_IDS = { 'ftdi': 0x0403 }
-    PRODUCT_IDS = { 0x0403 : \
-                      { '232': 0x6001,
-                        '2232': 0x6010,
-                        '4232': 0x6011,
-                        'ft232': 0x6001,
-                        'ft2232': 0x6010,
-                        'ft4232': 0x6011
+    SCHEME = 'prolific://'
+    VENDOR_IDS = { 'prolific': 0x067b }
+    PRODUCT_IDS = { 0x067b : \
+                      { '2303': 0x2303,
+                        'pl2303': 0x2303
                       }
                   }
-    INTERFACES = { 0x403 : { 0x6001 : 1, 0x6010 : 2, 0x6011 : 4 } }
-    DEFAULT_VENDOR = 0x403
+    INTERFACES = { 0x067b : { 0x2303 : 1 } }
+    DEFAULT_VENDOR = 0x067b
 
     @property
     def fifoSizes(self):
         """Return the (TX, RX) tupple of hardware FIFO sizes"""
-        try:
-            # Note that the FTDI datasheets contradict themselves, so
-            # the following values may not be the right ones...
-            fifo_sizes = { 0x6001: (128,  256),   # TX: 128, RX: 256
-                           0x6010: (4096, 4096),  # TX: 4KiB, RX: 4KiB
-                           0x6011: (2048, 2048) } # TX: 2KiB, RX: 2KiB
-            return fifo_sizes[self._product]
-        except KeyError:
-            return (128, 128) # unknown product
+        # for HWD devices, should be checked for older devices
+        # moreover, HWD devices can be reconfigured as (128, 384)
+        return (256, 256)
 
     def open(self):
-        super(self.__class__, self).open(Ftdi, 
-                                         SerialFtdi.SCHEME,
-                                         SerialFtdi.VENDOR_IDS,
-                                         SerialFtdi.PRODUCT_IDS,
-                                         SerialFtdi.INTERFACES,
-                                         SerialFtdi.DEFAULT_VENDOR)
+        super(self.__class__, self).open(Prolific, 
+                                         SerialProlific.SCHEME,
+                                         SerialProlific.VENDOR_IDS,
+                                         SerialProlific.PRODUCT_IDS,
+                                         SerialProlific.INTERFACES,
+                                         SerialProlific.DEFAULT_VENDOR)
 
     def inWaiting(self):
         """Return the number of characters currently in the input buffer."""
         return 0
-
