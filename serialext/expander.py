@@ -25,7 +25,6 @@
 
 import os
 import sys
-
 import usbext
 
 __all__ = ['SerialExpander', 'SerialExpanderError']

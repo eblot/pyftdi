@@ -28,8 +28,6 @@ import threading
 import usb.core
 import usb.util
 from array import array as Array
-
-from pyftdi.misc import hexdump, hexline
 from pyftdi.usbtools import UsbTools, UsbError
 
 __all__ = ['Prolific', 'ProlificError']

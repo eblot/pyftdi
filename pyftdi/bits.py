@@ -468,7 +468,7 @@ class BitField(object):
 
     def to_seq(self, msb=0, lsb=0):
         """Return the BitFiled as a sequence of boolean value"""
-        seq = array('B')
+        seq = Array('B')
         count = 0
         value = self._val
         while value:

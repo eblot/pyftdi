@@ -58,8 +58,8 @@ class SerialFtdi:
             # Note that the FTDI datasheets contradict themselves, so
             # the following values may not be the right ones...
             fifo_sizes = { 0x6001: (128,  256),   # TX: 128, RX: 256
-                           0x6010: (4096, 4096),  # TX: 4KB, RX: 4KB
-                           0x6011: (2048, 2048) } # TX: 2KB, RX: 2KB
+                           0x6010: (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                           0x6011: (2048, 2048) } # TX: 2KiB, RX: 2KiB
             return fifo_sizes[self._product]
         except KeyError:
             return (128, 128) # unknown product
@@ -74,16 +74,13 @@ class SerialFtdi:
 
     def inWaiting(self):
         """Return the number of characters currently in the input buffer.
-           It seems that Prolific does not offer a way to check if some data
-           are already available in the input FIFO, so this method is pretty
+           It seems that FTDI does not offer a way to check if some data are
+           already available in the input FIFO, so this method is pretty
            useless. This method only reports if data are ready and the RX FIFO
            buffer is already full. A workaround is to actually read data and
            count the received bytes. In any case, USB polling is required.
         """
-        try:
-            status = self.udev.poll_modem_status()
-        except UsbError, e:
-            raise IOError('Prolific communication error: %s' % str(e))
+        status = self.ftdi.poll_modem_status()
         if (status & Ftdi.MODEM_DR):
             return 1
         return 0

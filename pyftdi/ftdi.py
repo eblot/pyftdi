@@ -25,19 +25,15 @@ Caveats: Only tested with FT2232 and FT4232 FTDI devices
 Require: pyusb
 """
 
-# PyUSB 1.0.0a1 + patch is required to run this module
-_USB_SCAN = False
-
 import os
 import struct
 import usb.core
 import usb.util
 from array import array as Array
-
 from usbtools import UsbTools, UsbError
-from misc import hexdump, hexline
 
 __all__ = ['Ftdi', 'FtdiError']
+
 
 class FtdiError(UsbError):
     """Communication error with the FTDI device"""
@@ -224,8 +220,8 @@ class Ftdi(object):
         self.baudrate = -1
         self.readbuffer = Array('B')
         self.readoffset = 0
-        self.readbuffer_chunksize = 4 << 10 # 4KB
-        self.writebuffer_chunksize = 4 << 10 # 4KB
+        self.readbuffer_chunksize = 4 << 10 # 4KiB
+        self.writebuffer_chunksize = 4 << 10 # 4KiB
         self.max_packet_size = 0
         self.interface = None
         self.index = None
