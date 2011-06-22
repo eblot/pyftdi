@@ -64,7 +64,5 @@ class SerialProlific:
                                          SerialProlific.DEFAULT_VENDOR)
 
     def inWaiting(self):
-        """Return the number of characters currently in the input buffer.
-        """
-        # not implemented
+        """Return the number of characters currently in the input buffer."""
         return 0
