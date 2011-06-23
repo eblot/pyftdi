@@ -26,9 +26,7 @@
 
 import re
 import time
-
 from pyprolific.prolific import Prolific
-from pyftdi.usbtools import UsbError
 
 BACKEND = 'pyprolific'
 
@@ -39,30 +37,19 @@ class SerialProlific:
     """Serial port implementation for Prolific compatible with pyserial API"""
 
     SCHEME = 'prolific://'
+    # the following dictionaries should be augmented to support the various
+    # VID/PID that actually map to a USB-serial Prolific device
     VENDOR_IDS = { 'prolific': 0x067b }
     PRODUCT_IDS = { 0x067b : \
                       { '2303': 0x2303,
                         'pl2303': 0x2303
                       }
                   }
-    INTERFACES = { 0x067b : { 0x2303 : 1 } }
     DEFAULT_VENDOR = 0x067b
-
-    @property
-    def fifoSizes(self):
-        """Return the (TX, RX) tupple of hardware FIFO sizes"""
-        # for HWD devices, should be checked for older devices
-        # moreover, HWD devices can be reconfigured as (128, 384)
-        return (256, 256)
 
     def open(self):
         super(self.__class__, self).open(Prolific, 
                                          SerialProlific.SCHEME,
                                          SerialProlific.VENDOR_IDS,
                                          SerialProlific.PRODUCT_IDS,
-                                         SerialProlific.INTERFACES,
                                          SerialProlific.DEFAULT_VENDOR)
-
-    def inWaiting(self):
-        """Return the number of characters currently in the input buffer."""
-        return 0

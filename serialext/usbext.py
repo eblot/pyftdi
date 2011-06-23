@@ -26,9 +26,7 @@
 
 import re
 import time
-
 from pyftdi.misc import to_int
-from pyftdi.usbtools import UsbTools, UsbError
 
 __all__ = ['SerialUsb']
 
@@ -45,13 +43,13 @@ class SerialUsb:
     def makeDeviceName(self, port):
         return port
 
-    def open(self, devclass, scheme, vdict, pdict, idict, default_vendor):
-        import serial
+    def open(self, devclass, scheme, vdict, pdict, default_vendor):
+        from serial import SerialException
         if self._port is None:
-            raise serial.SerialException("Port must be configured before use.")
+            raise SerialException("Port must be configured before use.")
         portstr = self.portstr
         if not portstr.startswith(scheme):
-            raise serial.SerialException("Invalid URL")
+            raise SerialException("Invalid URL")
         plloc = portstr[len(scheme):].split('/')
         plcomps = plloc[0].split(':') + [''] * 2
         try:
@@ -69,14 +67,14 @@ class SerialUsb:
             else:
                 product = None
             if not plloc[1]:
-                raise serial.SerialException('Invalid device port')
+                raise SerialException('Invalid device port')
             if plloc[1] == '?':
                 show_devices = True
             else:
                 interface = to_int(plloc[1])
                 show_devices = False
         except (IndexError, ValueError):
-            raise serial.SerialException('Invalid device URL')
+            raise SerialException('Invalid device URL')
         sernum = None
         idx = 0
         if plcomps[2]:
@@ -100,39 +98,46 @@ class SerialUsb:
                     products = pdict.get(v, [])
                     for p in products:
                         vps.add((v, products[p]))
-                devices = UsbTools.find_all(vps)
+                devices = devclass.find_all(vps)
                 candidates = []
                 if sernum:
                     if sernum not in [dev[2] for dev in devices]:
-                        raise serial.SerialException("No USB device " \
-                                                     "with S/N %s" % sernum)
-                    for v, p, s in devices:
+                        raise SerialException("No USB device with S/N %s" % \
+                                              sernum)
+                    for v, p, s, i in devices:
                         if s != sernum:
                             continue
                         if vendor and vendor != v:
                             continue
                         if product and product != p:
                             continue
-                        candidates.append((v, p, s))
+                        candidates.append((v, p, s, i))
                 else:
-                    for v, p, s in devices:
+                    for v, p, s, i in devices:
                         if vendor and vendor != v:
                             continue
                         if product and product != p:
                             continue
-                        candidates.append((v, p, s))
+                        candidates.append((v, p, s, i))
                     if not show_devices:
                         try:
-                            vendor, product, _ = candidates[idx]
+                            vendor, product, ifport, ifcount = candidates[idx]
                         except IndexError:
-                            raise serial.SerialException("No USB device #%d" \
-                                                         % idx)
+                            raise SerialException("No USB device #%d" % idx)
             if show_devices:
-                UsbTools.show_devices(scheme, vdict, pdict, idict, candidates)
-                raise SystemExit('Please specify the USB device')
+                self.show_devices(scheme, vdict, pdict, candidates)
+                raise SystemExit(candidates and \
+                                    'Please specify the USB device' or \
+                                    'No USB-Serial device has been detected')
+            if vendor not in pdict:
+                raise SerialException('Vendor ID 0x%04x not supported' % \
+                                      vendor)
+            if product not in pdict[vendor].values():
+                raise SerialException('Product ID 0x%04x not supported' % \
+                                      product)
             self.udev.open(vendor, product, interface, idx, sernum)
-        except UsbError:
-            raise IOError('Unable to open USB port %s' % self.portstr)
+        except IOError:
+            raise SerialException('Unable to open USB port %s' % self.portstr)
         self._isOpen = True
         self._reconfigurePort()
         self._product = product
@@ -208,6 +213,16 @@ class SerialUsb:
         """Read terminal status line: Carrier Detect"""
         return self.udev.get_cd()
 
+    def inWaiting(self):
+        """Return the number of characters currently in the input buffer."""
+        # not implemented
+        return 0
+
+    @property
+    def fifoSizes(self):
+        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        return self.udev.fifo_sizes
+
     def _reconfigurePort(self):
         try:
             self.udev.set_baudrate(self._baudrate)
@@ -225,8 +240,60 @@ class SerialUsb:
             except AttributeError:
                 # backend does not support this feature
                 pass
-        except UsbError, e:
-            import serial
+        except IOError, e:
+            from serial import SerialException
             err = self.udev.get_error_string()
-            raise serial.SerialException("%s (%s)" % (str(e), err))
+            raise SerialException("%s (%s)" % (str(e), err))
 
+    @staticmethod
+    def show_devices(scheme, vdict, pdict, candidates, out=None):
+        from string import printable as printablechars
+        if not out:
+            import sys
+            out = sys.stdout
+        indices = {}
+        interfaces = []
+        for (v, p, s, i) in candidates:
+            ikey = (v, p)
+            indices[ikey] = indices.get(ikey, 0) + 1
+            # try to find a matching string for the current vendor
+            vendors = []
+            # fallback if no matching string for the current vendor is found
+            vendor = '%04x' % v
+            for vc in vdict:
+                if vdict[vc] == v:
+                    vendors.append(vc)
+            if vendors:
+                vendors.sort(key=len)
+                vendor = vendors[0]
+            # try to find a matching string for the current vendor
+            # fallback if no matching string for the current product is found
+            product = '%04x' % p
+            try:
+                products = []
+                productids = pdict[v]
+                for pc in productids:
+                    if productids[pc] == p:
+                        products.append(pc)
+                if products:
+                    products.sort(key=len)
+                    product = products[0]
+            except KeyError:
+                pass
+            # if the serial number is an ASCII char, use it, or use the index
+            # value
+            if [c for c in s if c not in printablechars or c == '?']:
+                serial = '%d' % indices[ikey]
+            else:
+                serial = s
+            # Now print out the prettiest URL syntax
+            for j in range(1, i+1):
+                # On most configurations, low interfaces are used for MPSSE,
+                # high interfaces are dedicated to UARTs
+                interfaces.append((scheme, vendor, product, serial, j))
+        if interfaces:
+            print >> out, "Available interfaces:"
+            for scheme, vendor, product, serial, j in interfaces:
+                print >> out, '  %s%s:%s:%s/%d' % \
+                    (scheme, vendor, product, serial, j)
+            print >> out, ''

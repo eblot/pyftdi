@@ -25,9 +25,7 @@
 
 import re
 import time
-
-from pyftdi.ftdi import Ftdi
-from pyftdi.usbtools import UsbError
+from neo.util import to_int
 
 BACKEND = 'pyftdi'
 
@@ -38,6 +36,8 @@ class SerialFtdi:
     """Serial port implementation for FTDI compatible with pyserial API"""
 
     SCHEME = 'ftdi://'
+    # the following dictionaries should be augmented to support the various
+    # VID/PID that actually map to a USB-serial FTDI device
     VENDOR_IDS = { 'ftdi': 0x0403 }
     PRODUCT_IDS = { 0x0403 : \
                       { '232': 0x6001,
@@ -48,31 +48,11 @@ class SerialFtdi:
                         'ft4232': 0x6011
                       }
                   }
-    INTERFACES = { 0x403 : { 0x6001 : 1, 0x6010 : 2, 0x6011 : 4 } }
     DEFAULT_VENDOR = 0x403
-
-    @property
-    def fifoSizes(self):
-        """Return the (TX, RX) tupple of hardware FIFO sizes"""
-        try:
-            # Note that the FTDI datasheets contradict themselves, so
-            # the following values may not be the right ones...
-            fifo_sizes = { 0x6001: (128,  256),   # TX: 128, RX: 256
-                           0x6010: (4096, 4096),  # TX: 4KiB, RX: 4KiB
-                           0x6011: (2048, 2048) } # TX: 2KiB, RX: 2KiB
-            return fifo_sizes[self._product]
-        except KeyError:
-            return (128, 128) # unknown product
 
     def open(self):
         super(self.__class__, self).open(Ftdi, 
                                          SerialFtdi.SCHEME,
                                          SerialFtdi.VENDOR_IDS,
                                          SerialFtdi.PRODUCT_IDS,
-                                         SerialFtdi.INTERFACES,
                                          SerialFtdi.DEFAULT_VENDOR)
-
-    def inWaiting(self):
-        """Return the number of characters currently in the input buffer."""
-        return 0
-

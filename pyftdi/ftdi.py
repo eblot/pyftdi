@@ -30,12 +30,12 @@ import struct
 import usb.core
 import usb.util
 from array import array as Array
-from usbtools import UsbTools, UsbError
+from usbtools import UsbTools
 
 __all__ = ['Ftdi', 'FtdiError']
 
 
-class FtdiError(UsbError):
+class FtdiError(IOError):
     """Communication error with the FTDI device"""
     pass
 
@@ -236,6 +236,12 @@ class Ftdi(object):
 
     # --- Public API -------------------------------------------------------
 
+    @staticmethod
+    def find_all(vps):
+        """Find all devices that match the vendor/product pairs of the vps
+           list."""
+        return UsbTools.find_all(vps)
+
     def open(self, vendor, product, interface, index=0, serial=None):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
@@ -321,6 +327,17 @@ class Ftdi(object):
         if self.type in self.HISPEED_DEVICES:
             return Ftdi.BUS_CLOCK_HIGH
         return Ftdi.BUS_CLOCK_BASE
+
+    @property
+    def fifo_sizes(self):
+        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        # Note that the FTDI datasheets contradict themselves, so
+        # the following values may not be the right ones...
+        sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
+                  'ft2232d': (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                  'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                  'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
+        return sizes.get(self.type, (128, 128)) # default sizes
 
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""

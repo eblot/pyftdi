@@ -28,11 +28,12 @@ import threading
 import usb.core
 import usb.util
 from array import array as Array
-from pyftdi.usbtools import UsbTools, UsbError
+from pyftdi.usbtools import UsbTools
 
 __all__ = ['Prolific', 'ProlificError']
 
-class ProlificError(UsbError):
+
+class ProlificError(IOError):
     """Communication error with the Prolific device"""
     pass
 
@@ -144,6 +145,13 @@ class Prolific(object):
             else:
                 self._type = 'unknown'
         return self._type
+
+    @property
+    def fifo_sizes(self):
+        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        # for HWD devices, should be checked for older devices
+        # moreover, HWD devices can be reconfigured as (128, 384)
+        return (256, 256)
 
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""

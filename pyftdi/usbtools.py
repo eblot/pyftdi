@@ -20,13 +20,8 @@ import usb.core
 import usb.util
 
 
-class UsbError(IOError):
-    """Base class for error with a USB device"""
-
-
 class UsbTools(object):
-    """
-    """
+    """Helpers to obtain information about connected USB devices."""
     
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
@@ -39,13 +34,14 @@ class UsbTools(object):
 
     @staticmethod
     def find_all(vps):
-        """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
+        """Find all devices that match the vendor/product pairs of the vps
+           list."""
         devices = []
         devs = UsbTools._find_devices(vps)
         for dev in devs:
+            ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-            devices.append((dev.idVendor, dev.idProduct, sernum))
+            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount))
         return devices
 
     @staticmethod
@@ -196,57 +192,3 @@ class UsbTools(object):
             return cls.USBDEVICES
         finally:
             cls.LOCK.release()
-
-    @staticmethod
-    def show_devices(scheme, vdict, pdict, idict, candidates,
-                     out=None):
-        from string import printable as printablechars
-        if not out:
-            import sys
-            out = sys.stdout
-        print >> out, "Available interfaces:"
-        indices = {}
-        for (v, p, s) in candidates:
-            try:
-                ifcount = idict[v][p]
-            except KeyError, e:
-                continue
-            ikey = (v, p)
-            indices[ikey] = indices.get(ikey, 0) + 1
-            # try to find a matching string for the current vendor
-            vendors = []
-            # fallback if no matching string for the current vendor is found
-            vendor = '%04x' % v
-            for vc in vdict:
-                if vdict[vc] == v:
-                    vendors.append(vc)
-            if vendors:
-                vendors.sort(key=len)
-                vendor = vendors[0]
-            # try to find a matching string for the current vendor
-            # fallback if no matching string for the current product is found
-            product = '%04x' % p
-            try:
-                products = []
-                productids = pdict[v]
-                for pc in productids:
-                    if productids[pc] == p:
-                        products.append(pc)
-                if products:
-                    products.sort(key=len)
-                    product = products[0]
-            except KeyError:
-                pass
-            # if the serial number is an ASCII char, use it, or use the index
-            # value
-            if [c for c in s if c not in printablechars or c == '?']:
-                serial = '%d' % indices[ikey]
-            else:
-                serial = s
-            # Now print out the prettiest URL syntax
-            for i in range(1, ifcount+1):
-                # On most configurations, low interfaces are used for MPSSE,
-                # high interfaces are dedicated to UARTs
-                print >> out, '  %s%s:%s:%s/%d' % \
-                    (scheme, vendor, product, serial, i)
-        print >> out, ''

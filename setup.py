@@ -27,7 +27,7 @@ def _read(fname):
 
 setup(
     name='pyftdi',
-    version='0.4.0',
+    version='0.4.1',
     description='FTDI device driver',
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
