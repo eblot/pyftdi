@@ -27,11 +27,12 @@
 import re
 import time
 from pyftdi.misc import to_int
+from serial import SerialBase
 
 __all__ = ['SerialUsb']
 
 
-class SerialUsb:
+class SerialUsb(SerialBase):
     """Base class for Serial port implementation compatible with pyserial API
        using a USB device.
     """
