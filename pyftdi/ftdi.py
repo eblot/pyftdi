@@ -210,7 +210,8 @@ class Ftdi(object):
     LATENCY_THRESHOLD = 1000
 
     # Special devices
-    LEGACY_DEVICES = ('ft232am')
+    LEGACY_DEVICES = ('ft232am', )
+    EXSPEED_DEVICES = ('ft2232d', )
     HISPEED_DEVICES = ('ft2232h', 'ft4232h')
 
     def __init__(self):
@@ -834,7 +835,7 @@ class Ftdi(object):
             encoded_divisor = 1 # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.type in self.HISPEED_DEVICES:
+        if self.type in self.EXSPEED_DEVICES + self.HISPEED_DEVICES:
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -860,8 +861,7 @@ class Ftdi(object):
             actual_freq = Ftdi.BUS_CLOCK_MAX/(divisor+1)
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
-        # Send the command twice, as it seems that cold initialization is a
-        # bit buggy. FTDI expects little endian
+        # FTDI expects little endian
         if self.type in self.HISPEED_DEVICES:
             cmd = Array('B', [divcode])
         else:
