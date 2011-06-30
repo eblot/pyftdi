@@ -29,11 +29,12 @@ import select
 import socket
 import sys
 from pyftdi.misc import hexdump
+from serial import SerialBase
 
 __all__ = ['SerialSocket']
 
 
-class SerialSocket:
+class SerialSocket(SerialBase):
     """Fake serial port redirected to a Unix socket.
        This is basically a copy of the serialposix serial port implementation
        with redefined IO for a Unix socket"""

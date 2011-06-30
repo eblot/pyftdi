@@ -25,14 +25,17 @@
 
 import re
 import time
-from neo.util import to_int
+from pyftdi.ftdi import Ftdi, FtdiError
+from pyftdi.misc import to_int
+from usbext import SerialUsb
 
 BACKEND = 'pyftdi'
 
 __all__ = ['SerialFtdi']
 
 
-class SerialFtdi:
+
+class SerialFtdi(SerialUsb):
     """Serial port implementation for FTDI compatible with pyserial API"""
 
     SCHEME = 'ftdi://'

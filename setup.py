@@ -32,7 +32,7 @@ setup(
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
-    keywords = 'driver ftdi usb serial spi jtag',
+    keywords = 'driver ftdi usb serial spi jtag prolific rs232',
     url='http://github.com/eblot/pyftdi',
     download_url='https://github.com/eblot/pyftdi/tarball/master',
     packages=['pyftdi'],

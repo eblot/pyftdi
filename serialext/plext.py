@@ -27,13 +27,14 @@
 import re
 import time
 from pyprolific.prolific import Prolific
+from usbext import SerialUsb
 
 BACKEND = 'pyprolific'
 
 __all__ = ['SerialProlific']
 
 
-class SerialProlific:
+class SerialProlific(SerialUsb):
     """Serial port implementation for Prolific compatible with pyserial API"""
 
     SCHEME = 'prolific://'
