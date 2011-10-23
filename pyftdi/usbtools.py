@@ -19,6 +19,7 @@ import threading
 import usb.core
 import usb.util
 
+
 class UsbTools(object):
     """Helpers to obtain information about connected USB devices."""
     
@@ -40,8 +41,9 @@ class UsbTools(object):
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-            descr = usb.util.get_string(dev, 64, dev.iProduct)
-            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount, descr))
+            description = usb.util.get_string(dev, 64, dev.iProduct)
+            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount,
+                            description))
         return devices
 
     @staticmethod

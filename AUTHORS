@@ -4,3 +4,6 @@ Main developers:
  * Emmanuel Bouaziz <ebouaziz@free.fr>
 
 Contributors:
+
+ * Nikus-V <>:
+  * Add open device by description, USB timeout support, RTS bug fix
