@@ -19,7 +19,6 @@ import threading
 import usb.core
 import usb.util
 
-
 class UsbTools(object):
     """Helpers to obtain information about connected USB devices."""
     
@@ -41,7 +40,8 @@ class UsbTools(object):
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount))
+            descr = usb.util.get_string(dev, 64, dev.iProduct)
+            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount, descr))
         return devices
 
     @staticmethod
@@ -73,18 +73,22 @@ class UsbTools(object):
         return True
 
     @classmethod
-    def get_device(cls, vendor, product, index, serial):
+    def get_device(cls, vendor, product, index, serial, description):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
         usbscan = cls.is_usbscan_available()
         cls.LOCK.acquire()
         try:
             vps = [(vendor, product)]
-            if index or serial:
+            if index or serial or description:
                 dev = None
                 if not vendor:
                     raise AssertionError('Vendor identifier is required')
-                devs = Ftdi._find_devices(vps)
+                devs = cls._find_devices(vps)
+                if description:
+                    devs = [dev for dev in devs if \
+                              usb.util.get_string(dev, 64, dev.iProduct) \
+                                == description]
                 if serial:
                     devs = [dev for dev in devs if \
                               usb.util.get_string(dev, 64, dev.iSerialNumber) \

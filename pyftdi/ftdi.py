@@ -243,9 +243,9 @@ class Ftdi(object):
            list."""
         return UsbTools.find_all(vps)
 
-    def open(self, vendor, product, interface, index=0, serial=None):
+    def open(self, vendor, product, interface, index=0, serial=None, description=None):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial, description)
         # detect invalid interface as early as possible
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
@@ -261,10 +261,11 @@ class Ftdi(object):
         UsbTools.release_device(self.usb_dev)
 
     def open_mpsse(self, vendor, product, interface=1,
+                   index=0, serial=None, description=None,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface)
+        self.open(vendor, product, interface, index, serial, description)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -287,10 +288,11 @@ class Ftdi(object):
         return frequency
 
     def open_bitbang(self, vendor, product, interface=1,
+                     index=0, serial=None, description=None,
                      direction=0x0, baudrate=115200, latency=16):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface)
+        self.open(vendor, product, interface, index, serial, description)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -320,7 +322,10 @@ class Ftdi(object):
     @property
     def bitbang_enabled(self):
         """Tell whether some bitbang mode is activated"""
-        return not (self.bitbang_mode == Ftdi.BITMODE_RESET)
+        return not self.bitbang_mode in [
+                Ftdi.BITMODE_RESET,
+                Ftdi.BITMODE_CBUS           # CBUS bitband mode does not change base frequency
+        ]
 
     @property
     def frequency_max(self):
@@ -347,8 +352,8 @@ class Ftdi(object):
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise AssertionError('Baudrate tolerance exceeded: %.02f%%' % \
-                                 delta)
+            raise AssertionError('Baudrate tolerance exceeded: %.02f%% (wanted %d, resulted %d)' % \
+                                 (delta, baudrate, actual) )
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_BAUDRATE, value,
@@ -378,6 +383,15 @@ class Ftdi(object):
         """Clear the buffers on the chip and the internal read buffer."""
         self.purge_rx_buffer()
         self.purge_tx_buffer()
+
+    def __get_timeouts(self):
+        return self.usb_read_timeout, self.usb_write_timeout
+
+    def __set_timeouts(self, (read_timeout, write_timeout)):
+        self.usb_read_timeout = read_timeout
+        self.usb_write_timeout = write_timeout
+
+    timeouts = property(__get_timeouts, __set_timeouts)
 
     # --- todo: Replace with properties -----------
     def write_data_set_chunksize(self, chunksize):
@@ -489,7 +503,7 @@ class Ftdi(object):
         """Set dtr and rts lines"""
         value = 0
         value |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
-        value |= state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        value |= rts and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 

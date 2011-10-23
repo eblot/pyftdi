@@ -105,7 +105,7 @@ class SerialUsb(SerialBase):
                     if sernum not in [dev[2] for dev in devices]:
                         raise SerialException("No USB device with S/N %s" % \
                                               sernum)
-                    for v, p, s, i in devices:
+                    for v, p, s, i, d in devices:
                         if s != sernum:
                             continue
                         if vendor and vendor != v:
@@ -114,7 +114,7 @@ class SerialUsb(SerialBase):
                             continue
                         candidates.append((v, p, s, i))
                 else:
-                    for v, p, s, i in devices:
+                    for v, p, s, i, d in devices:
                         if vendor and vendor != v:
                             continue
                         if product and product != p:
