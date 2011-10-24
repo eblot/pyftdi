@@ -22,7 +22,7 @@ import usb.util
 
 class UsbTools(object):
     """Helpers to obtain information about connected USB devices."""
-    
+
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
     # USB device. The following dictionary used bus/address/vendor/product keys

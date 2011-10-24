@@ -341,8 +341,11 @@ class Ftdi(object):
         """Return the (TX, RX) tupple of hardware FIFO sizes"""
         # Note that the FTDI datasheets contradict themselves, so
         # the following values may not be the right ones...
+        # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
+        # Values here are seen from the host perspective, whereas datasheet
+        # values are defined from the device perspective
         sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
-                  'ft2232d': (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                  'ft2232d': (384, 128),    # TX: 384, RX: 128
                   'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
                   'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
         return sizes.get(self.type, (128, 128)) # default sizes
