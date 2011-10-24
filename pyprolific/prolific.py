@@ -113,9 +113,11 @@ class Prolific(object):
 
     # --- Public API -------------------------------------------------------
 
-    def open(self, vendor, product, interface, index=0, serial=None):
+    def open(self, vendor, product, interface, index=0, serial=None,
+             description=None):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
+                                           description)
         # detect invalid interface as early as possible
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
@@ -500,3 +502,12 @@ class Prolific(object):
                 packet_size = endpoint.wMaxPacketSize
                 return packet_size
         return 0
+
+    def __get_timeouts(self):
+        return self.usb_read_timeout, self.usb_write_timeout
+
+    def __set_timeouts(self, (read_timeout, write_timeout)):
+        self.usb_read_timeout = read_timeout
+        self.usb_write_timeout = write_timeout
+
+    timeouts = property(__get_timeouts, __set_timeouts)
