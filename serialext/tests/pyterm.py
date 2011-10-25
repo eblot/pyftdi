@@ -65,9 +65,12 @@ class MiniTerm(object):
         except Exception:
             pass
 
-    def run(self, fullmode=False, reset=None):
+    def run(self, fullmode=False, reset=None, select=None):
         """Switch to a pure serial terminal application"""
-        if reset:
+        if select is not None:
+            selmode = to_bool(select)
+            self._port.setRTS(selmode)
+        if reset is not None:
             hwreset = to_bool(reset)
             self._port.setDTR(hwreset)
             time.sleep(0.200)
@@ -180,7 +183,9 @@ def get_options():
     optparser.add_option('-b', '--baudrate', dest='baudrate',
                          help='serial port baudrate', default='115200')
     optparser.add_option('-r', '--reset', dest='reset',
-                         help='HW reset on DTR line')
+                         help='HW reset on DTR line', default=None)
+    optparser.add_option('-s', '--select', dest='select',
+                         help='Mode selection on RTS line', default=None)
     optparser.add_option('-o', '--logfile', dest='logfile',
                          help='path to the log file')
     options, _ = optparser.parse_args(sys.argv[1:])
@@ -194,7 +199,7 @@ def main():
                             baudrate=to_int(options.baudrate),
                             logfile=options.logfile,
                             debug=options.debug)
-        miniterm.run(options.fullmode, options.reset)
+        miniterm.run(options.fullmode, options.reset, options.select)
     except (AssertionError, IOError, ValueError), e:
         print >> sys.stderr, '\nError: %s' % e
         if options.debug:
