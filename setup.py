@@ -20,6 +20,7 @@
 
 from distutils.core import setup
 
+VERSION='0.4.5'
 
 def _read(fname):
     import os
@@ -27,14 +28,15 @@ def _read(fname):
 
 setup(
     name='pyftdi',
-    version='0.4.5',
+    version=VERSION,
     description='FTDI device driver',
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
     keywords = 'driver ftdi usb serial spi jtag prolific rs232',
     url='http://github.com/eblot/pyftdi',
-    download_url='https://github.com/eblot/pyftdi/tarball/master',
+    download_url=''.join(('https://github.com/eblot/pyftdi/tarball/v', 
+                          VERSION)),
     packages=['pyftdi'],
     requires=[ 'pyusb (>= 1.0.0a2)' ],
     classifiers=[
