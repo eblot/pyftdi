@@ -27,7 +27,7 @@ def _read(fname):
 
 setup(
     name='pyftdi',
-    version='0.4.4',
+    version='0.4.5',
     description='FTDI device driver',
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
@@ -36,7 +36,7 @@ setup(
     url='http://github.com/eblot/pyftdi',
     download_url='https://github.com/eblot/pyftdi/tarball/master',
     packages=['pyftdi'],
-    requires=[ 'pyusb (>= 1.0.0a1)' ],
+    requires=[ 'pyusb (>= 1.0.0a2)' ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',

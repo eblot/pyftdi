@@ -26,8 +26,7 @@ class UsbTools(object):
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
     # USB device. The following dictionary used bus/address/vendor/product keys
-    # to track (device, refcount) pairs if USBSCAN is available or simply
-    # vendor/product
+    # to track (device, refcount) pairs
     DEVICES = {}
     LOCK = threading.RLock()
     USBDEVICES = []
@@ -46,39 +45,10 @@ class UsbTools(object):
                             description))
         return devices
 
-    @staticmethod
-    def is_usbscan_available():
-        """Check if the required extension to manage USB buses and addresses
-        """
-        try:
-            from pkg_resources import get_distribution, parse_version
-        except ImportError:
-            # if pkg_resources is not available, do not try to test PyUSB
-            # version
-            return False
-        try:
-            pyusb_version = parse_version(get_distribution("pyusb").version)
-        except Exception:
-            # if pyusb is not installed as a distribution, cannot check
-            # version
-            return False
-        # check if the required version is installed
-        req_version = ('00000001', '*a', '00000001', '*final')
-        if pyusb_version < req_version:
-            return False
-        # check if the required patches are installed
-        for extension in ['get_bus_number', 'get_device_address']:
-            try:
-                getattr(usb.core.UsbDevice, extension)
-            except AttributeError:
-                return False
-        return True
-
     @classmethod
     def get_device(cls, vendor, product, index, serial, description):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
-        usbscan = cls.is_usbscan_available()
         cls.LOCK.acquire()
         try:
             vps = [(vendor, product)]
@@ -104,11 +74,12 @@ class UsbTools(object):
                 dev = devs and devs[0] or None
             if not dev:
                 raise IOError('Device not found')
-            if usbscan:
-                bus = dev.get_bus_number()
-                address = dev.get_device_address()
-                devkey = (bus, address, vendor, product)
-            else:
+            try:
+                devkey = (dev.bus, dev.address, vendor, product)
+                if None in devkey[0:2]:
+                    raise AttributeError('USB back does not support bus '
+                                         'enumeration')
+            except AttributeError:
                 devkey = (vendor, product)
             if devkey not in cls.DEVICES:
                 for configuration in dev:

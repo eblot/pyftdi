@@ -2,19 +2,13 @@
 
 == Overview ==
 
-To support device selection based on index or serial number, this version
-requires an extension to pyusb. Without this extension, it is not possible to
-select a specific FTDI device if more than one FTDI devices are connected to
-the host, and the behaviour of PyFTDI may be unreliable in this case.
+Since PyUSB 1.0.0a2, USB bus enumeration can be performed without applying
+any patch.
 
 == Installation ==
- * Download pyusb-1.0.0a1
- * Apply the patch available from: https://gist.github.com/878301
+ * Download pyusb-1.0.0a2
  * Install pyusb
  * Install pyftdi
-
-Support for USB bus and device information is expected to be part of the next
-iteration of pyusb.
 
 = Serial port emulation, see serialext/tests/pyterm.py =
 
@@ -23,10 +17,9 @@ virtualenv ~/.pyusb
 # one out of the two following lines:
   ~/.pyusb/bin/pip install pyserial
   ~/.pyusb/bin/easy_install install pyserial
-wget http://pypi.python.org/packages/source/p/pyusb/pyusb-1.0.0-a1.zip
-unzip pyusb-1.0.0-a1.zip
-cd .../pyusb-1.0.0-a1
-wget -O - https://gist.github.com/raw/878301/4e750cb913fd4979a76fbd3286615bce7517c264/pyusb-1.0.0a1-usbbus.patch | patch -p1
+wget http://pypi.python.org/packages/source/p/pyusb/pyusb-1.0.0a2.tar.gz
+tar xzvf pyusb-1.0.0a2.tar.gz
+cd pyusb-1.0.0a2
  ~/.pyusb/bin/python setup.py install
 PYTHONPATH=. ~/.pyusb/bin/python serialext/tests/pyterm.py -p ftdi:///?
 
