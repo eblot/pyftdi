@@ -112,17 +112,18 @@ class SerialUsb(SerialBase):
                             continue
                         if product and product != p:
                             continue
-                        candidates.append((v, p, s, i))
+                        candidates.append((v, p, s, i, d))
                 else:
                     for v, p, s, i, d in devices:
                         if vendor and vendor != v:
                             continue
                         if product and product != p:
                             continue
-                        candidates.append((v, p, s, i))
+                        candidates.append((v, p, s, i, d))
                     if not show_devices:
                         try:
-                            vendor, product, ifport, ifcount = candidates[idx]
+                            vendor, product, ifport, ifcount, description = \
+                                candidates[idx]
                         except IndexError:
                             raise SerialException("No USB device #%d" % idx)
             if show_devices:
@@ -254,7 +255,7 @@ class SerialUsb(SerialBase):
             out = sys.stdout
         indices = {}
         interfaces = []
-        for (v, p, s, i) in candidates:
+        for (v, p, s, i, d) in candidates:
             ikey = (v, p)
             indices[ikey] = indices.get(ikey, 0) + 1
             # try to find a matching string for the current vendor
@@ -291,10 +292,12 @@ class SerialUsb(SerialBase):
             for j in range(1, i+1):
                 # On most configurations, low interfaces are used for MPSSE,
                 # high interfaces are dedicated to UARTs
-                interfaces.append((scheme, vendor, product, serial, j))
+                interfaces.append((scheme, vendor, product, serial, j, d))
         if interfaces:
             print >> out, "Available interfaces:"
-            for scheme, vendor, product, serial, j in interfaces:
-                print >> out, '  %s%s:%s:%s/%d' % \
-                    (scheme, vendor, product, serial, j)
+            for scheme, vendor, product, serial, j, d in interfaces:
+                if d:
+                    desc = '  (%s)' % d
+                print >> out, '  %s%s:%s:%s/%d%s' % \
+                    (scheme, vendor, product, serial, j, desc)
             print >> out, ''
