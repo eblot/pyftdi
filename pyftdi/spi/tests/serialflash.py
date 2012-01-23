@@ -25,8 +25,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from array import array as Array
-from pyftdi.misc import hexdump
-from spi.serialflash import SerialFlashManager
+from pyftdi.pyftdi.misc import hexdump
+from pyftdi.spi.serialflash import SerialFlashManager
 import sys
 import time
 import unittest

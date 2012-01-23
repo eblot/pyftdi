@@ -26,8 +26,8 @@
 
 import sys
 import time
-from pyftdi.jtag import JtagEngine
-from pyftdi.bits import BitSequence
+from pyftdi.pyftdi.jtag import JtagEngine
+from pyftdi.pyftdi.bits import BitSequence
 
 # ARM 926
 JTAG_INSTR = {'EXTEST'  : BitSequence('0000', msb=True, length=4),

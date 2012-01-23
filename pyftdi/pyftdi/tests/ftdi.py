@@ -1,4 +1,7 @@
-# Copyright (c) 2008-2011, Neotion
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,39 +26,35 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
-import time
-from pyftdi.ftdi import Ftdi, FtdiError
-from pyftdi.misc import to_int
-from usbext import SerialUsb
-
-BACKEND = 'pyftdi'
-
-__all__ = ['SerialFtdi']
+import sys
+import unittest
+from pyftdi.pyftdi.ftdi import Ftdi
 
 
+class FtdiTestCase(unittest.TestCase):
+    """FTDI driver test case"""
 
-class SerialFtdi(SerialUsb):
-    """Serial port implementation for FTDI compatible with pyserial API"""
+    def test_multiple_interface(self):
+        # the following calls used to create issues (several interfaces from
+        # the same device)
+        ftdi1 = Ftdi()
+        ftdi1.open(interface=1)
+        ftdi2 = Ftdi()
+        ftdi2.open(interface=2)
+        import time
+        for x in range(5):
+            print "If#1: ", hex(ftdi1.poll_modem_status())
+            print "If#2: ", ftdi2.modem_status()
+            time.sleep(0.500)
+        ftdi1.close()
+        ftdi2.close()
 
-    SCHEME = 'ftdi://'
-    # the following dictionaries should be augmented to support the various
-    # VID/PID that actually map to a USB-serial FTDI device
-    VENDOR_IDS = { 'ftdi': 0x0403 }
-    PRODUCT_IDS = { 0x0403 : \
-                      { '232': 0x6001,
-                        '2232': 0x6010,
-                        '4232': 0x6011,
-                        'ft232': 0x6001,
-                        'ft2232': 0x6010,
-                        'ft4232': 0x6011
-                      }
-                  }
-    DEFAULT_VENDOR = 0x403
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
+    return suite
 
-    def open(self):
-        super(self.__class__, self).open(Ftdi, 
-                                         SerialFtdi.SCHEME,
-                                         SerialFtdi.VENDOR_IDS,
-                                         SerialFtdi.PRODUCT_IDS,
-                                         SerialFtdi.DEFAULT_VENDOR)
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(sys.modules[__name__])
+    unittest.main(defaultTest='suite')

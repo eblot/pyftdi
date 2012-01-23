@@ -26,7 +26,7 @@
 
 import re
 import time
-from pyftdi.misc import to_int
+from pyftdi.pyftdi.misc import to_int
 from serial import SerialBase
 
 __all__ = ['SerialUsb']

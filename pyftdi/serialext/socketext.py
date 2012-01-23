@@ -28,7 +28,7 @@ import os
 import select
 import socket
 import sys
-from pyftdi.misc import hexdump
+from pyftdi.pyftdi.misc import hexdump
 from serial import SerialBase
 
 __all__ = ['SerialSocket']

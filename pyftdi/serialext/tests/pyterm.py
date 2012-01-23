@@ -33,7 +33,7 @@ import os
 import sys
 import time
 import threading
-from pyftdi.misc import to_bool, to_int
+from pyftdi.pyftdi.misc import to_bool, to_int
 from term import getkey
 
 class MiniTerm(object):
@@ -144,7 +144,7 @@ class MiniTerm(object):
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        from serialext import SerialExpander
+        from pyftdi.serialext import SerialExpander
         serialclass = SerialExpander.serialclass(device, logfile and True)
         import serial
         try:

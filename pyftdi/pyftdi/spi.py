@@ -26,7 +26,7 @@
 import struct
 import time
 from array import array as Array
-from pyftdi.ftdi import Ftdi
+from pyftdi.pyftdi.ftdi import Ftdi
 
 __all__ = ['SpiPort', 'SpiController']
 

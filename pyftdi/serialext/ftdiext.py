@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, Neotion
+# Copyright (c) 2008-2011, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,3 +22,40 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import re
+import time
+from pyftdi.pyftdi.ftdi import Ftdi, FtdiError
+from pyftdi.pyftdi.misc import to_int
+from usbext import SerialUsb
+
+BACKEND = 'pyftdi'
+
+__all__ = ['SerialFtdi']
+
+
+
+class SerialFtdi(SerialUsb):
+    """Serial port implementation for FTDI compatible with pyserial API"""
+
+    SCHEME = 'ftdi://'
+    # the following dictionaries should be augmented to support the various
+    # VID/PID that actually map to a USB-serial FTDI device
+    VENDOR_IDS = { 'ftdi': 0x0403 }
+    PRODUCT_IDS = { 0x0403 : \
+                      { '232': 0x6001,
+                        '2232': 0x6010,
+                        '4232': 0x6011,
+                        'ft232': 0x6001,
+                        'ft2232': 0x6010,
+                        'ft4232': 0x6011
+                      }
+                  }
+    DEFAULT_VENDOR = 0x403
+
+    def open(self):
+        super(self.__class__, self).open(Ftdi, 
+                                         SerialFtdi.SCHEME,
+                                         SerialFtdi.VENDOR_IDS,
+                                         SerialFtdi.PRODUCT_IDS,
+                                         SerialFtdi.DEFAULT_VENDOR)

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2011, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,36 +22,3 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import sys
-import unittest
-from pyftdi.ftdi import Ftdi
-
-
-class FtdiTestCase(unittest.TestCase):
-    """FTDI driver test case"""
-
-    def test_multiple_interface(self):
-        # the following calls used to create issues (several interfaces from
-        # the same device)
-        ftdi1 = Ftdi()
-        ftdi1.open(interface=1)
-        ftdi2 = Ftdi()
-        ftdi2.open(interface=2)
-        import time
-        for x in range(5):
-            print "If#1: ", hex(ftdi1.poll_modem_status())
-            print "If#2: ", ftdi2.modem_status()
-            time.sleep(0.500)
-        ftdi1.close()
-        ftdi2.close()
-
-def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
-    return suite
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(sys.modules[__name__])
-    unittest.main(defaultTest='suite')

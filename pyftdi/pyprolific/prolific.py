@@ -28,7 +28,7 @@ import threading
 import usb.core
 import usb.util
 from array import array as Array
-from pyftdi.usbtools import UsbTools
+from pyftdi.pyftdi.usbtools import UsbTools
 
 __all__ = ['Prolific', 'ProlificError']
 

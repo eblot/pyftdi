@@ -24,7 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
-from pyftdi.misc import hexdump
+from pyftdi.pyftdi.misc import hexdump
 
 __all__ = ['SerialLoggerPort']
 

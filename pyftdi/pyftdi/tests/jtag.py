@@ -27,8 +27,8 @@
 import sys
 import time
 import unittest
-from pyftdi.jtag import JtagEngine, JtagTool
-from pyftdi.bits import BitSequence
+from pyftdi.pyftdi.jtag import JtagEngine, JtagTool
+from pyftdi.pyftdi.bits import BitSequence
 
 # Should match the tested device
 JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),

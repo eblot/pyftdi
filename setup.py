@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2011 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2010-2011 Neotion
+# Copyright (c) 2010-2012 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2012 Neotion
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,12 @@
 
 from distutils.core import setup
 
-VERSION='0.4.5'
+VERSION='0.5.0'
 
 def _read(fname):
     import os
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__),
+                'pyftdi', fname)).read()
 
 setup(
     name='pyftdi',
@@ -35,10 +36,12 @@ setup(
     license='LGPL v2',
     keywords = 'driver ftdi usb serial spi jtag prolific rs232',
     url='http://github.com/eblot/pyftdi',
-    download_url=''.join(('https://github.com/eblot/pyftdi/tarball/v', 
+    download_url=''.join(('https://github.com/eblot/pyftdi/tarball/v',
                           VERSION)),
-    packages=['pyftdi'],
-    requires=[ 'pyusb (>= 1.0.0a2)' ],
+    packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
+    package_data={'pyftdi': ['*.rst'],
+                  'pyftdi.serialext' : ['*.rst']},
+    requires=['pyusb (>= 1.0.0a2)'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',

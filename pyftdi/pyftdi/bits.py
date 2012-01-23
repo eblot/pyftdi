@@ -29,7 +29,7 @@
 
 from array import array as Array
 from numbers import Integral
-from pyftdi.misc import is_iterable, xor
+from pyftdi.pyftdi.misc import is_iterable, xor
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
