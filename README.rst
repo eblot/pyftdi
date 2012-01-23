@@ -1,1 +1,1 @@
-.. include:: pyftdi/README.rst
+pyftdi/README.rst
