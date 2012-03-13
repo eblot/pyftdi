@@ -58,6 +58,7 @@ class MiniTerm(object):
         self._port = self._open_port(self._device, self._baudrate,
                                      self._logfile, debug)
         self._resume = False
+        self._debug = debug
 
     def __del__(self):
         try:
@@ -105,6 +106,9 @@ class MiniTerm(object):
             return
         except Exception, e:
             print "Exception: %s" % e
+            if self._debug:
+                import traceback
+                print >> sys.stderr, traceback.format_exc()
             import thread
             thread.interrupt_main()
 
@@ -199,7 +203,8 @@ def main():
                             baudrate=to_int(options.baudrate),
                             logfile=options.logfile,
                             debug=options.debug)
-        miniterm.run(options.fullmode, options.reset, options.select)
+        miniterm.run(os.name in ('posix', ) and options.fullmode or False,
+                     options.reset, options.select)
     except (AssertionError, IOError, ValueError), e:
         print >> sys.stderr, '\nError: %s' % e
         if options.debug:

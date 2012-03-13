@@ -15,6 +15,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import os
 import threading
 import usb.core
 import usb.util
@@ -82,17 +83,18 @@ class UsbTools(object):
             except AttributeError:
                 devkey = (vendor, product)
             if devkey not in cls.DEVICES:
-                for configuration in dev:
-                    # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        if not dev.is_kernel_driver_active(ifnum):
-                            continue
-                        try:
-                            dev.detach_kernel_driver(ifnum)
-                        except usb.core.USBError, e:
-                            pass
+                if os.name in ('posix', ):
+                    for configuration in dev:
+                        # we need to detach any kernel driver from the device
+                        # be greedy: reclaim all device interfaces from the ker
+                        for interface in configuration:
+                            ifnum = interface.bInterfaceNumber
+                            if not dev.is_kernel_driver_active(ifnum):
+                                continue
+                            try:
+                                dev.detach_kernel_driver(ifnum)
+                            except usb.core.USBError, e:
+                                pass
                 dev.set_configuration()
                 cls.DEVICES[devkey] = [dev, 1]
             else:
