@@ -725,9 +725,9 @@ class Ftdi(object):
         if ifnum-1 not in xrange(config.bNumInterfaces):
             raise ValueError("No such interface for this device")
         self.index = ifnum
-        self.in_ep = 2 * ifnum
-        self.out_ep = 0x80 + self.in_ep - 1
         self.interface = config[(ifnum-1, 0)]
+        endpoints = sorted([ep.bEndpointAddress for ep in self.interface])
+        self.in_ep, self.out_ep = endpoints[:2]
 
     def _reset_device(self):
         """Reset the ftdi device"""

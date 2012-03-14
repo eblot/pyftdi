@@ -34,7 +34,6 @@ BACKEND = 'pyftdi'
 __all__ = ['SerialFtdi']
 
 
-
 class SerialFtdi(SerialUsb):
     """Serial port implementation for FTDI compatible with pyserial API"""
 
@@ -54,7 +53,7 @@ class SerialFtdi(SerialUsb):
     DEFAULT_VENDOR = 0x403
 
     def open(self):
-        super(self.__class__, self).open(Ftdi, 
+        super(self.__class__, self).open(Ftdi,
                                          SerialFtdi.SCHEME,
                                          SerialFtdi.VENDOR_IDS,
                                          SerialFtdi.PRODUCT_IDS,
