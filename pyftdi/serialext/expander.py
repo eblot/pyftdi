@@ -82,12 +82,12 @@ class SerialExpander(object):
                         if b > 230400:
                             del serial.baudrate_constants[b]
                     from darwinext import SerialDarwin
-                    type_ = type('SerialDarwin', (serial.Serial,),
-                                 dict(SerialDarwin.__dict__))
+                    class SerialDarwinAdapter(SerialDarwin, type_):
+                        backend = type_.backend
+                    type_ = SerialDarwinAdapter
         if use_logger:
             from loggerext import SerialLoggerPort
-            backend = type_.backend
-            type_ = type('SerialLoggerPort', (type_,),
-                         dict(SerialLoggerPort.__dict__))
-            type_.backend = backend
+            class SerialLoggerAdapter(SerialLoggerPort, type_):
+                backend = type_.backend
+            type_ = SerialLoggerAdapter
         return type_

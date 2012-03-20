@@ -53,8 +53,8 @@ class SerialFtdi(SerialUsb):
     DEFAULT_VENDOR = 0x403
 
     def open(self):
-        super(self.__class__, self).open(Ftdi,
-                                         SerialFtdi.SCHEME,
-                                         SerialFtdi.VENDOR_IDS,
-                                         SerialFtdi.PRODUCT_IDS,
-                                         SerialFtdi.DEFAULT_VENDOR)
+        super(SerialFtdi, self).open(Ftdi,
+                                     SerialFtdi.SCHEME,
+                                     SerialFtdi.VENDOR_IDS,
+                                     SerialFtdi.PRODUCT_IDS,
+                                     SerialFtdi.DEFAULT_VENDOR)

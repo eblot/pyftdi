@@ -37,7 +37,10 @@ class SerialLoggerPort(object):
         if 'logger' in kwargs:
             self.set_logger(kwargs['logger'])
             del kwargs['logger']
-        super(self.__class__, self).__init__(**kwargs)
+        super(SerialLoggerPort, self).__init__(**kwargs)
+
+    def open(self, **kwargs):
+        return super(SerialLoggerPort, self).open(**kwargs)
 
     def _log_read(self, data):
         if not self._logger:
@@ -79,28 +82,28 @@ class SerialLoggerPort(object):
                 "Cannot log data to %s" % kwargs['logger']
 
     def read(self, size=1):
-        data = super(self.__class__, self).read(size)
+        data = super(SerialLoggerPort, self).read(size)
         self._log_read(data)
         return data
 
     def write(self, data):
-        super(self.__class__, self).write(data)
+        super(SerialLoggerPort, self).write(data)
         if len(data):
             self._log_write(data)
 
     def inWaiting(self):
-        wait = super(self.__class__, self).inWaiting()
+        wait = super(SerialLoggerPort, self).inWaiting()
         self._log_waiting(wait)
         return wait
 
     def flush(self):
         self._log_flush('I+O')
-        super(self.__class__, self).flush()
+        super(SerialLoggerPort, self).flush()
 
     def flushInput(self):
         self._log_flush('I')
-        super(self.__class__, self).flushInput()
+        super(SerialLoggerPort, self).flushInput()
 
     def flushOutput(self):
         self._log_flush('O')
-        super(self.__class__, self).flushOutput()
+        super(SerialLoggerPort, self).flushOutput()

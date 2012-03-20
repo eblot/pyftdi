@@ -20,7 +20,7 @@
 
 from distutils.core import setup
 
-VERSION='0.5.1'
+VERSION='0.5.2'
 
 def _read(fname):
     import os

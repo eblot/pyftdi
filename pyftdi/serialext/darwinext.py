@@ -29,7 +29,7 @@ import serial
 __all__ = ['SerialDarwin']
 
 
-class SerialDarwin:
+class SerialDarwin(object):
     """Serial port implementation dedicated to the Darwin kernel (Mac OS X)
        It allows to circumvent the POSIX/termios current limitation of the
        baudrate to 230400bps.
