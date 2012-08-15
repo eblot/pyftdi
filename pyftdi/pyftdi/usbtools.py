@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2011 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2012 Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
@@ -15,11 +15,11 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os
 import threading
 import usb.core
 import usb.util
 
+__all__ = ['UsbTools']
 
 class UsbTools(object):
     """Helpers to obtain information about connected USB devices."""
@@ -83,18 +83,20 @@ class UsbTools(object):
             except AttributeError:
                 devkey = (vendor, product)
             if devkey not in cls.DEVICES:
-                if os.name in ('posix', ):
-                    for configuration in dev:
-                        # we need to detach any kernel driver from the device
-                        # be greedy: reclaim all device interfaces from the ker
-                        for interface in configuration:
-                            ifnum = interface.bInterfaceNumber
+                for configuration in dev:
+                    # we need to detach any kernel driver from the device
+                    # be greedy: reclaim all device interfaces from the kernel
+                    for interface in configuration:
+                        ifnum = interface.bInterfaceNumber
+                        try:
                             if not dev.is_kernel_driver_active(ifnum):
                                 continue
-                            try:
-                                dev.detach_kernel_driver(ifnum)
-                            except usb.core.USBError, e:
-                                pass
+                            dev.detach_kernel_driver(ifnum)
+                        except NotImplementedError, e:
+                            # only libusb 1.x backend implements this method
+                            break
+                        except usb.core.USBError, e:
+                            pass
                 dev.set_configuration()
                 cls.DEVICES[devkey] = [dev, 1]
             else:
@@ -139,10 +141,15 @@ class UsbTools(object):
         cls.LOCK.acquire()
         try:
             backend = None
-            import usb.backend.libusb10 as libusb10
-            import usb.backend.libusb01 as libusb01
-            import usb.backend.openusb as openusb
-            for m in (libusb10, openusb, libusb01):
+            candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01',
+                          'openusb')
+            um = __import__('usb.backend', globals(), locals(),
+                            candidates, -1)
+            for c in candidates:
+                try:
+                    m = getattr(um, c)
+                except AttributeError:
+                    continue
                 backend = m.get_backend()
                 if backend is not None:
                     break

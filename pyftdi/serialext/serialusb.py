@@ -1,5 +1,5 @@
-# Copyright (c) 2008-2011, Neotion
-# Copyright (c) 2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2012, Neotion
+# Copyright (c) 2011-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,10 @@ import time
 from pyftdi.pyftdi.misc import to_int
 from serial import SerialBase
 
-__all__ = ['SerialUsb']
+__all__ = ['UsbSerial']
 
 
-class SerialUsb(SerialBase):
+class UsbSerial(SerialBase):
     """Base class for Serial port implementation compatible with pyserial API
        using a USB device.
     """
@@ -45,6 +45,7 @@ class SerialUsb(SerialBase):
         return port
 
     def open(self, devclass, scheme, vdict, pdict, default_vendor):
+        """Open the initialized serial port"""
         from serial import SerialException
         if self._port is None:
             raise SerialException("Port must be configured before use.")
@@ -145,6 +146,7 @@ class SerialUsb(SerialBase):
         self._product = product
 
     def close(self):
+        """Close the open port"""
         self._isOpen = False
         self.udev.close()
         self.udev = None
@@ -249,6 +251,7 @@ class SerialUsb(SerialBase):
 
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
+        """Show supported USB-to-serial devices"""
         from string import printable as printablechars
         if not out:
             import sys

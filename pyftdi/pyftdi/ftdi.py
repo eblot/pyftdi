@@ -37,7 +37,6 @@ __all__ = ['Ftdi', 'FtdiError']
 
 class FtdiError(IOError):
     """Communication error with the FTDI device"""
-    pass
 
 
 class Ftdi(object):

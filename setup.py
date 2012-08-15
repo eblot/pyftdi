@@ -20,7 +20,7 @@
 
 from distutils.core import setup
 
-VERSION='0.5.2'
+VERSION='0.6.0'
 
 def _read(fname):
     import os
@@ -41,7 +41,10 @@ setup(
     packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
-    requires=['pyusb (>= 1.0.0a2)'],
+    requires=['pyusb (>= 1.0.0a2)',
+              'pyserial (>= 2.7)'],
+    install_requires=['pyusb>=1.0.0a2',
+                      'pyserial>=2.7'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',
@@ -50,7 +53,6 @@ setup(
             'Lesser General Public License (LGPL)',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX',
-        'Operating System :: Microsoft :: Windows :: Windows 95/98/2000',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Libraries :: Python Modules',

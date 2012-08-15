@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2012, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,8 +23,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Serial expander modules to augment pyserial module with dedicated backend
-
+"""Serial modules compliant with pyserial APIs
 """
 
-from expander import *
+try:
+    from serial import protocol_handler_packages
+    protocol_handler_packages.append('pyftdi.serialext')
+except ImportError:
+    raise AssertionError('Cannot register pyftdi extensions')

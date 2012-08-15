@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2012, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,23 +24,39 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
+import types
 from pyftdi.pyftdi.misc import hexdump
 
-__all__ = ['SerialLoggerPort']
+__all__ = ['SerialLogger']
 
 
-class SerialLoggerPort(object):
-    """Serial port implementation to log input/output data to a log file"""
+class SerialLogger(object):
+    """Serial port wrapper to log input/output data to a log file"""
 
-    def __init__(self, **kwargs):
-        self._logger = None
-        if 'logger' in kwargs:
-            self.set_logger(kwargs['logger'])
-            del kwargs['logger']
-        super(SerialLoggerPort, self).__init__(**kwargs)
+    def __init__(self, logpath):
+        try:
+            self._logger = open(logpath, "wt")
+        except IOError, e:
+            print >> sys.stderr, \
+                "Cannot log data to %s" % kwargs['logger']
+        self._port = None
+        self._methods = {}
 
-    def open(self, **kwargs):
-        return super(SerialLoggerPort, self).open(**kwargs)
+    def spy(self, port):
+        self._port = port
+        methods = [m for m in self.__class__.__dict__ \
+                   if not m.startswith('_') and \
+                      hasattr(getattr(self.__class__, m), '__call__') and \
+                      m != 'spy']
+        # replace the spied instance method with our own methods
+        for method_name in methods:
+            try:
+                old_method = getattr(port.__class__, method_name)
+            except AttributeError:
+                pass
+            new_method = getattr(self.__class__, method_name)
+            setattr(port, method_name, types.MethodType(new_method, self))
+            self._methods[method_name] = old_method
 
     def _log_read(self, data):
         if not self._logger:
@@ -72,38 +88,35 @@ class SerialLoggerPort(object):
         try:
             print >>self._logger, "INWAITING: %d\n" % count
         except:
-            print >>sys.stderr, 'Cannot log flush'
+            print >>sys.stderr, 'Cannot log inwaiting'
 
-    def set_logger(self, logger):
-        try:
-            self._logger = open(logger, "wt")
-        except IOError, e:
-            print >> sys.stderr, \
-                "Cannot log data to %s" % kwargs['logger']
+    def close(self):
+        self._logger.close()
+        self._methods['close'](self._port)
 
     def read(self, size=1):
-        data = super(SerialLoggerPort, self).read(size)
+        data = self._methods['read'](self._port, size)
         self._log_read(data)
         return data
 
     def write(self, data):
-        super(SerialLoggerPort, self).write(data)
+        self._methods['write'](self._port, data)
         if len(data):
             self._log_write(data)
 
     def inWaiting(self):
-        wait = super(SerialLoggerPort, self).inWaiting()
+        wait = self._methods['inWaiting'](self._port)
         self._log_waiting(wait)
         return wait
 
     def flush(self):
         self._log_flush('I+O')
-        super(SerialLoggerPort, self).flush()
+        self._methods['flush'](self._port)
 
     def flushInput(self):
         self._log_flush('I')
-        super(SerialLoggerPort, self).flushInput()
+        self._methods['flushInput'](self._port)
 
     def flushOutput(self):
         self._log_flush('O')
-        super(SerialLoggerPort, self).flushOutput()
+        self._methods['flushOutput'](self._port)

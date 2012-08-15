@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,6 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Simple Python serial terminal
-
 """
 
 import os
@@ -148,13 +147,12 @@ class MiniTerm(object):
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        from pyftdi.serialext import SerialExpander
-        serialclass = SerialExpander.serialclass(device, logfile and True)
         import serial
+        import pyftdi.serialext
         try:
-            port = serialclass(port=device,
-                               baudrate=baudrate,
-                               timeout=0)
+            port = serial.serial_for_url(device,
+                                         baudrate=baudrate,
+                                         timeout=0)
             if logfile:
                 port.set_logger(logfile)
             if not port.isOpen():

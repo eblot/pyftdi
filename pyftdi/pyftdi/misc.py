@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2012, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,11 @@ ASCIIFILTER = ''.join([(len(repr(chr(_x)))==3) and chr(_x) or \
 
 
 def hexdump(data):
-    """Convert a binary buffer into a hexadecimal representation."""
+    """Convert a binary buffer into a hexadecimal representation.
+
+       Return a multi-line strings with hexadecimal values and ASCII
+       representation of the buffer data.
+    """
     src = ''.join(data)
     length = 16
     result = []
@@ -52,31 +56,58 @@ def hexdump(data):
                       (i, length*3, hexa, printable))
     return ''.join(result)
 
-def hexline(data):
-    """Convert a binary buffer into a hexadecimal representation"""
+def hexline(data, sep=' '):
+    """Convert a binary buffer into a hexadecimal representation
+
+       Return a string with hexadecimal values and ASCII representation
+       of the buffer data
+    """
     src = ''.join(data)
-    hexa = ' '.join(["%02x" % ord(x) for x in src])
+    hexa = sep.join(["%02x" % ord(x) for x in src])
     printable = src.translate(ASCIIFILTER)
     return "(%d) %s : %s" % (len(data), hexa, printable)
 
 def to_int(value):
-    """Parse a string and convert it into a value"""
+    """Parse a value and convert it into an integer value if possible.
+
+       Input value may be:
+       - a string with an integer coded as a decimal value
+       - a string with an integer coded as a hexadecimal value
+       - a integral value
+       - a integral value with a unit specifier (kilo or mega)
+    """
     if not value:
         return 0
     if isinstance(value, int):
         return value
     if isinstance(value, long):
         return int(value)
-    mo = re.match('(?i)^\s*(\d+)\s*(?:([KM])B?)?\s*$', value)
+    mo = re.match('^\s*(\d+)\s*(?:([KMkm])(i?)B?)?\s*$', value)
     if mo:
-        mult = { 'k': (1<<10), 'm': (1<<20) }
+        if mo.group(2) and not mo.group(3):
+            unit = mo.group(2)
+            import sys
+            print >> sys.stderr, \
+                "Obsolete unit %sB (%s), please use %siB" % \
+                    (unit, value, unit.upper())
+        mult = { 'K': (1<<10), 'M': (1<<20) }
         value = int(mo.group(1))
-        value *= mo.group(2) and mult[mo.group(2).lower()] or 1
+        value *= mo.group(2) and mult[mo.group(2).upper()] or 1
         return value
     return int(value.strip(), value.startswith('0x') and 16 or 10)
 
 def to_bool(value, permissive=True, allow_int=False):
-    """Parse a string and convert it into a boolean value"""
+    """Parse a string and convert it into a boolean value if possible.
+
+       :param value: the value to parse and convert
+       :param permissive: default to the False value if parsing fails
+       :param allow_int: allow an integral type as the input value
+
+       Input value may be:
+       - a string with an integer value, if `allow_int` is enabled
+       - a boolean value
+       - a string with a common boolean definition
+    """
     if value is None:
         return False
     if isinstance(value, bool):

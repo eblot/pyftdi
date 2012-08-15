@@ -45,11 +45,28 @@ class BitSequenceError(Exception):
 
 
 class BitSequence(object):
-    """Bit sequence manipulation"""
+    """Bit sequence.
+
+       Support most of the common bit operations: or, and, shift, comparison,
+       and conversion from and to integral values.
+
+       Bit sequence objects are iterable.
+
+       Can be initialized with another bit sequence, a integral value,
+       a sequence of bytes or an iterable of common boolean values.
+
+       :param value:  initial value
+       :param msb:    most significant bit first or not
+       :param length: count of signficant bits in the bit sequence
+       :param bytes_: initial value specified as a sequence of bytes
+       :param msby:   most significant byte first or not
+    """
 
     __slots__ = [ '_seq' ]
 
     def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
+        """Instanciate a new bit sequence.
+        """
         self._seq = Array('B')
         seq = self._seq
         if value and bytes_:
@@ -220,21 +237,20 @@ class BitSequence(object):
             return self._seq[index]
 
     def __setitem__(self, index, value):
-        if not isinstance(value, BitSequence):
-            value = self.__class__(value)
-        else:
+        if isinstance(value, BitSequence):
             if issubclass(value.__class__, self.__class__) and \
                value.__class__ != self.__class__:
                 raise BitSequenceError("Cannot set item with instance of a "
                                        "subclass")
         if isinstance(index, slice):
+            value = self.__class__(value, length=len(self._seq[index]))
             self._seq[index] = value.sequence()
         else:
+            if not isinstance(value, BitSequence):
+                value = self.__class__(value)
             val = value.tobit()
-            if len(self._seq) < index:
-                # auto-resize sequence
-                extra = Array('B', [False] * (index+1-len(self)))
-                self._seq.extend(extra)
+            if index > len(self._seq):
+                raise BitSequenceError("Cannot change the sequence size")
             self._seq[index] = val
 
     def __len__(self):
@@ -327,6 +343,7 @@ class BitSequence(object):
 
     def invariant(self):
         """Tells whether all bits of the sequence are of the same value.
+
            Return the value, or ValueError if the bits are not of the same
            value
         """
@@ -343,7 +360,14 @@ class BitSequence(object):
 
 
 class BitZSequence(BitSequence):
-    """Tri-state bit sequence manipulation"""
+    """Tri-state bit sequence manipulation.
+
+       Support most of the BitSequence operations, with an extra high-Z state
+
+       :param value:  initial value
+       :param msb:    most significant bit first or not
+       :param length: count of signficant bits in the bit sequence
+    """
 
     __slots__ = [ '_seq' ]
 
@@ -456,7 +480,8 @@ class BitZSequence(BitSequence):
 
 
 class BitField(object):
-    """Bitfield manipulation
+    """Bit field class to access and modify an integral value
+
        Beware the slices does not behave as regular Python slices:
        bitfield[3:5] means b3..b5, NOT b3..b4 as with regular slices
     """

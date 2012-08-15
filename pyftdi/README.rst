@@ -18,16 +18,6 @@ Other FTDI_ devices could also be supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi, and therefore have
 not been tested with PyFtdi.
 
-Extras
-------
-This module also contains a basic driver for Prolific PL2303 chip written in
-pure Python. PL2303 is not an FTDI device, but it may serve the same purpose:
-a USB-to-serial adapter.
-
-As such, a Python driver for this device has been added to this project sarting
-at version 0.4.0, so that a PL2303 serial adaptor can be used as an FTDI
-alternative to drive a serial port from a USB bus.
-
 Primary goals
 ~~~~~~~~~~~~~
 
@@ -52,15 +42,15 @@ Requirements
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb-1.0 (recommended)
-* libusb-0.1 (deprecated)
+* libusb-1.0 (recommended), currently tested with 1.0.9
+* libusb-0.1 (deprecated), currently tested with 0.1.4
 * openusb (not tested with pyftdi)
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules.
 
-To use the serial port feature of PyFtdi, pyserial_ 2.5+ module should be
-installed.
+To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
+installed. Previous versions of pyserial_ will NOT work.
 
 Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
 
@@ -106,7 +96,7 @@ Installation
 Since PyUSB 1.0.0a2, USB bus enumeration can be performed without applying
 any patch.
 
- * Download pyusb-1.0.0a2
+ * Download pyusb-1.0.0a3
  * Install pyusb
  * Install pyftdi
 
@@ -122,7 +112,8 @@ Troubleshooting
 
   * On Mac OS X: ``export DYLD_LIBRARY_PATH=.../lib``
 
-   where <path> is the directory containing the ``libusb-1.*.dylib`` library file
+   where <path> is the directory containing the ``libusb-1.*.dylib`` library
+   file
 
 Development
 ~~~~~~~~~~~
@@ -131,7 +122,8 @@ PyFtdi is developed on Mac OS X platforms (including 64-bit kernels), and is
 validated on a regular basis on Linux hosts.
 
 As it contains no native code, it should work on any PyUSB_ and libusb_
-supported platforms, including but not limited to, Windows.
+supported platforms. However, Ms Windows is a seamless source of issues and is
+not supported. Your mileage may vary.
 
 .. _libusb: http://www.libusb.org/
 

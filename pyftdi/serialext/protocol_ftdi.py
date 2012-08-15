@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2012, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,18 +25,19 @@
 
 import re
 import time
+from io import RawIOBase
+
 from pyftdi.pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.pyftdi.misc import to_int
-from usbext import SerialUsb
+from serialusb import UsbSerial
 
-BACKEND = 'pyftdi'
-
-__all__ = ['SerialFtdi']
+__all__ = ['Serial']
 
 
-class SerialFtdi(SerialUsb):
+class FtdiSerial(UsbSerial):
     """Serial port implementation for FTDI compatible with pyserial API"""
 
+    BACKEND = 'pyftdi'
     SCHEME = 'ftdi://'
     # the following dictionaries should be augmented to support the various
     # VID/PID that actually map to a USB-serial FTDI device
@@ -53,8 +54,19 @@ class SerialFtdi(SerialUsb):
     DEFAULT_VENDOR = 0x403
 
     def open(self):
-        super(SerialFtdi, self).open(Ftdi,
-                                     SerialFtdi.SCHEME,
-                                     SerialFtdi.VENDOR_IDS,
-                                     SerialFtdi.PRODUCT_IDS,
-                                     SerialFtdi.DEFAULT_VENDOR)
+        """Open the initialized serial port"""
+        from serial.serialutil import SerialException
+        try:
+            UsbSerial.open(self, Ftdi,
+                           FtdiSerial.SCHEME,
+                           FtdiSerial.VENDOR_IDS,
+                           FtdiSerial.PRODUCT_IDS,
+                           FtdiSerial.DEFAULT_VENDOR)
+        except FtdiError, e:
+            raise SerialException(str(e))
+
+
+# assemble Serial class with the platform specifc implementation and the base
+# for file-like behavior.
+class Serial(FtdiSerial, RawIOBase):
+    pass
