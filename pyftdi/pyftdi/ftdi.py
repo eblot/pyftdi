@@ -862,12 +862,12 @@ class Ftdi(object):
             divcode = Ftdi.ENABLE_CLK_DIV5
             divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
             actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
-        elif frequency <= Ftdi.BUS_CLOCK_MAX:
+        elif frequency <= Ftdi.BUS_CLOCK_HIGH:
             # not supported on non-H device, however it seems that 2232D
             # devices simply ignore the settings. Could be improved though
             divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_MAX/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_MAX/(divisor+1)
+            divisor = int(Ftdi.BUS_CLOCK_HIGH/frequency)-1
+            actual_freq = Ftdi.BUS_CLOCK_HIGH/(divisor+1)
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
