@@ -1,4 +1,5 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2012, Neotion
+# Copyright (c) 2011-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,8 +24,44 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Serial expander modules to augment pyserial module with dedicated backend
+import re
+import time
+from io import RawIOBase
+from pyprolific.prolific import Prolific, ProlificError
+from serialusb import UsbSerial
 
-"""
+__all__ = ['Serial']
 
-from expander import *
+
+class ProlificSerial(UsbSerial):
+    """Serial port implementation for Prolific compatible with pyserial API"""
+
+    BACKEND = 'pyprolific'
+    SCHEME = 'prolific://'
+    # the following dictionaries should be augmented to support the various
+    # VID/PID that actually map to a USB-serial Prolific device
+    VENDOR_IDS = { 'prolific': 0x067b }
+    PRODUCT_IDS = { 0x067b : \
+                      { '2303': 0x2303,
+                        'pl2303': 0x2303
+                      }
+                  }
+    DEFAULT_VENDOR = 0x067b
+
+    def open(self):
+        """Open the initialized serial port"""
+        from serial.serialutil import SerialException
+        try:
+            UsbSerial.open(self, Prolific,
+                           ProlificSerial.SCHEME,
+                           ProlificSerial.VENDOR_IDS,
+                           ProlificSerial.PRODUCT_IDS,
+                           ProlificSerial.DEFAULT_VENDOR)
+        except ProlificError, e:
+            raise SerialException(str(e))
+
+
+# assemble Serial class with the platform specifc implementation and the base
+# for file-like behavior.
+class Serial(ProlificSerial, RawIOBase):
+    pass

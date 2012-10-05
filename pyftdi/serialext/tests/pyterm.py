@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,13 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """Simple Python serial terminal
-
 """
 
 import os
 import sys
 import time
 import threading
-from pyftdi.misc import to_bool, to_int
+from pyftdi.pyftdi.misc import to_bool, to_int
 from term import getkey
 
 class MiniTerm(object):
@@ -58,6 +57,7 @@ class MiniTerm(object):
         self._port = self._open_port(self._device, self._baudrate,
                                      self._logfile, debug)
         self._resume = False
+        self._debug = debug
 
     def __del__(self):
         try:
@@ -65,9 +65,12 @@ class MiniTerm(object):
         except Exception:
             pass
 
-    def run(self, fullmode=False, reset=None):
+    def run(self, fullmode=False, reset=None, select=None):
         """Switch to a pure serial terminal application"""
-        if reset:
+        if select is not None:
+            selmode = to_bool(select)
+            self._port.setRTS(selmode)
+        if reset is not None:
             hwreset = to_bool(reset)
             self._port.setDTR(hwreset)
             time.sleep(0.200)
@@ -102,6 +105,9 @@ class MiniTerm(object):
             return
         except Exception, e:
             print "Exception: %s" % e
+            if self._debug:
+                import traceback
+                print >> sys.stderr, traceback.format_exc()
             import thread
             thread.interrupt_main()
 
@@ -141,13 +147,12 @@ class MiniTerm(object):
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        from serialext import SerialExpander
-        serialclass = SerialExpander.serialclass(device, logfile and True)
         import serial
+        import pyftdi.serialext
         try:
-            port = serialclass(port=device,
-                               baudrate=baudrate,
-                               timeout=0)
+            port = serial.serial_for_url(device,
+                                         baudrate=baudrate,
+                                         timeout=0)
             if logfile:
                 port.set_logger(logfile)
             if not port.isOpen():
@@ -165,23 +170,26 @@ def get_options():
     """Parse and execute the command line and optionnally a config file"""
     from optparse import OptionParser
     usage = '%prog [options]\n' \
-            'Configure a remote Neotion board over a serial line\n'
+            'Pure python simple serial terminal\n'
     optparser = OptionParser(usage=usage)
     optparser.add_option('-d', '--debug', dest='debug',
                          action='store_true',
-                         help='Enable debug mode')
+                         help='enable debug mode')
     if os.name in ('posix', ):
         optparser.add_option('-f', '--fullmode', dest='fullmode',
                              action='store_true',
-                             help='Use full terminal mode, exit with [Ctrl]+A')
+                             help='use full terminal mode, exit with [Ctrl]+A')
     optparser.add_option('-p', '--port', dest='device',
-                         help='Serial port device name')
+                         help='serial port device name (list available ports '
+                              'with \'ftdi:///?\' or \'prolific:///?\') ')
     optparser.add_option('-b', '--baudrate', dest='baudrate',
-                         help='Serial port baudrate', default='115200')
+                         help='serial port baudrate', default='115200')
     optparser.add_option('-r', '--reset', dest='reset',
-                         help='HW reset on DTR line')
+                         help='HW reset on DTR line', default=None)
+    optparser.add_option('-s', '--select', dest='select',
+                         help='Mode selection on RTS line', default=None)
     optparser.add_option('-o', '--logfile', dest='logfile',
-                         help='Path to the log file')
+                         help='path to the log file')
     options, _ = optparser.parse_args(sys.argv[1:])
     return optparser, options
 
@@ -193,7 +201,8 @@ def main():
                             baudrate=to_int(options.baudrate),
                             logfile=options.logfile,
                             debug=options.debug)
-        miniterm.run(options.fullmode, options.reset)
+        miniterm.run(os.name in ('posix', ) and options.fullmode or False,
+                     options.reset, options.select)
     except (AssertionError, IOError, ValueError), e:
         print >> sys.stderr, '\nError: %s' % e
         if options.debug:
@@ -202,13 +211,6 @@ def main():
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(2)
-
-# pip install virtualenv
-# virtualenv ~/.pyusb
-# ~/.pyusb/bin/python pip install pyserial
-# cd .../pyusb-1.0.0-a0 && ~/.pyusb/bin/python setup.py install
-# DYLD_LIBRARY_PATH=/usr/local/homebrew/lib PYTHONPATH=.
-#   ~/.pyusb/bin/python serialext/tests/pyterm.py -p ftdi://ftdi:ft4232/3
 
 if __name__ == '__main__':
     main()

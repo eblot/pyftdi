@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,16 @@ import os
 import select
 import socket
 import sys
-from pyftdi.misc import hexdump
+from io import RawIOBase
+from pyftdi.pyftdi.misc import hexdump
+from serial import SerialBase
 
-__all__ = ['SerialSocket']
+__all__ = ['Serial']
 
 
-class SerialSocket:
+class SocketSerial(SerialBase):
     """Fake serial port redirected to a Unix socket.
+
        This is basically a copy of the serialposix serial port implementation
        with redefined IO for a Unix socket"""
 
@@ -45,6 +48,7 @@ class SerialSocket:
         return port
 
     def open(self):
+        """Open the initialized serial port"""
         if self._port is None:
             import serial
             raise serial.SerialException("Port must be configured before use.")
@@ -52,7 +56,8 @@ class SerialSocket:
         self.sock = None
         try:
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            self.sock.connect(self.portstr)
+            filename = self.portstr[self.portstr.index('://')+3:]
+            self.sock.connect(filename)
         except Exception, msg:
             self.sock = None
             import serial
@@ -167,3 +172,9 @@ class SerialSocket:
 
     def dump(self, enable):
         self._dump = enable
+
+
+# assemble Serial class with the platform specifc implementation and the base
+# for file-like behavior.
+class Serial(SocketSerial, RawIOBase):
+    pass

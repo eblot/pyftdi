@@ -26,7 +26,7 @@
 import struct
 import time
 from array import array as Array
-from pyftdi import Ftdi
+from pyftdi.pyftdi.ftdi import Ftdi
 
 __all__ = ['SpiPort', 'SpiController']
 
@@ -37,8 +37,12 @@ class SpiIOError(IOError):
 
 class SpiPort(object):
     """SPI port"""
+
     def __init__(self, controller, cs_cmd):
-        """Instanciate a new SPI port"""
+        """Instanciate a new SPI port.
+
+           An SPI port is never instanciated directly.
+           Use SpiController.get_port() method to obtain an SPI port"""
         self._controller = controller
         self._cs_cmd = cs_cmd
         self._frequency = self._controller.frequency
@@ -58,6 +62,7 @@ class SpiPort(object):
 
     @property
     def frequency(self):
+        """Return the current SPI bus block"""
         return self._frequency
 
 
@@ -68,28 +73,46 @@ class SpiController(object):
     DO_BIT = 0x02
     DI_BIT = 0x04
     CS_BIT = 0x08
-    CS_COUNT = 4
     PAYLOAD_MAX_LENGTH = 0x10000 # 16 bits max
 
-    def __init__(self):
+    def __init__(self, silent_clock=False, cs_count=4):
+        """Instanciate a SpiController.
+           silent_clock should be set to avoid clocking out SCLK when all /CS
+           signals are released. This clock beat is used to enforce a delay
+           between /CS signal activation. When weird SPI devices are used,
+           SCLK beating may cause trouble. In this case, silent_clock should
+           be set but beware that SCLK line should be fitted with a pull-down
+           resistor, as SCLK is high-Z during this short period of time.
+           cs_count is the number of /CS lines (one per device to drive on the
+           SPI bus)
+        """
         self._ftdi = Ftdi()
-        self._cs_bits = ((SpiController.CS_BIT<<SpiController.CS_COUNT)-1) - \
-                         (SpiController.CS_BIT-1)
-        self._ports = [None] * SpiController.CS_COUNT
+        self._cs_bits = ((SpiController.CS_BIT << cs_count) - 1) & \
+                         ~(SpiController.CS_BIT - 1)
+        self._ports = [None] * cs_count
         self._direction = self._cs_bits | \
                           SpiController.DO_BIT | \
                           SpiController.SCK_BIT
-        self._cs_high = Array('B', [Ftdi.SET_BITS_LOW,
-                                    self._cs_bits, self._direction,
-                                    # /CS to SCLK delay
-                                    Ftdi.WRITE_BITS_TMS_NVE, 7, 0xff])
+        self._cs_high = Array('B')
+        if silent_clock:
+            # Set SCLK as input to avoid emitting clock beats
+            self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
+                                    self._direction&~SpiController.SCK_BIT])
+        # /CS to SCLK delay, use 8 clock cycles as a HW tempo
+        self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
+        # Restore idle state
+        self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
+                              self._direction])
         self._immediate = Array('B', [Ftdi.SEND_IMMEDIATE])
         self._frequency = 0.0
 
     def configure(self, vendor, product, interface, frequency=6.0E6):
         """Configure the FTDI interface as a SPI master"""
-        self._frequency = self._ftdi.open_mpsse(vendor, product, interface,
-                                                self._direction, frequency)
+        self._frequency = \
+            self._ftdi.open_mpsse(vendor, product, interface,
+                                  direction=self._direction,
+                                  initial=self._cs_bits, # /CS all high
+                                  frequency=frequency)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -104,26 +127,25 @@ class SpiController(object):
         if cs >= len(self._ports):
             raise SpiIOError("No such SPI port")
         if not self._ports[cs]:
-            cs_bits = SpiController.SCK_BIT | \
-                      SpiController.DO_BIT | \
-                      (SpiController.CS_BIT<<cs)
-            cs_cmd = struct.pack('<BBB', Ftdi.SET_BITS_LOW,
-                                 (~cs_bits)&0xff, self._direction)
+            cs_state = 0xFF & ~((SpiController.CS_BIT<<cs) |
+                                 SpiController.SCK_BIT |
+                                 SpiController.DO_BIT)
+            cs_cmd = Array('B', [Ftdi.SET_BITS_LOW,
+                                 cs_state,
+                                 self._direction])
             self._ports[cs] = SpiPort(self, cs_cmd)
-            self._release_bus()
+            self._flush()
         return self._ports[cs]
 
     @property
     def frequency_max(self):
+        """Returns the maximum SPI clock"""
         return self._ftdi.frequency_max
 
     @property
     def frequency(self):
+        """Returns the current SPI clock"""
         return self._frequency
-
-    def _release_bus(self):
-        self._ftdi.write_data(self._cs_high)
-        self._flush()
 
     def _exchange(self, frequency, cs_cmd, out, readlen):
         """Perform a half-duplex transaction with the SPI slave"""

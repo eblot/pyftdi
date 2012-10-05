@@ -22,38 +22,25 @@
 Author:  Emmanuel Blot <emmanuel.blot@free.fr>
 License: LGPL, originally based on libftdi C library
 Caveats: Only tested with FT2232 and FT4232 FTDI devices
+Require: pyusb
 """
 
 import os
 import struct
-import threading
 import usb.core
 import usb.util
 from array import array as Array
+from usbtools import UsbTools
 
 __all__ = ['Ftdi', 'FtdiError']
 
 
 class FtdiError(IOError):
     """Communication error with the FTDI device"""
-    pass
 
 
 class Ftdi(object):
     """FTDI device driver"""
-
-    # Bus clocks
-    BUS_CLOCK_HIGH = 30.0E6
-    BUS_CLOCK_BASE = 6.0E6
-
-    # Shifting commands IN MPSSE Mode
-    MPSSE_WRITE_NEG = 0x01 # Write TDI/DO on negative TCK/SK edge
-    MPSSE_BITMODE = 0x02   # Write bits, not bytes
-    MPSSE_READ_NEG = 0x04  # Sample TDO/DI on negative TCK/SK edge
-    MPSSE_LSB = 0x08       # LSB first
-    MPSSE_DO_WRITE = 0x10  # Write TDI/DO
-    MPSSE_DO_READ = 0x20   # Read TDO/DI
-    MPSSE_WRITE_TMS = 0x40 # Write TMS/CS
 
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
@@ -72,7 +59,14 @@ class Ftdi(object):
     READ_BYTES_NVE_LSB = 0x2c
     READ_BITS_PVE_LSB = 0x2a
     READ_BITS_NVE_LSB = 0x2e
-    RW_BYTES_NVE_LSB = 0x3d
+    RW_BYTES_PVE_PVE_LSB = 0x38
+    RW_BYTES_PVE_NVE_LSB = 0x39
+    RW_BYTES_NVE_PVE_LSB = 0x3c
+    RW_BYTES_NVE_NVE_LSB = 0x3d
+    RW_BITS_PVE_PVE_LSB = 0x3a
+    RW_BITS_PVE_NVE_LSB = 0x3b
+    RW_BITS_NVE_PVE_LSB = 0x3e
+    RW_BITS_NVE_NVE_LSB = 0x3f
     WRITE_BITS_TMS_PVE = 0x4a
     WRITE_BITS_TMS_NVE = 0x4b
     RW_BITS_TMS_PVE_PVE = 0x6a
@@ -91,6 +85,10 @@ class Ftdi(object):
     WAIT_ON_LOW = 0x89
     DISABLE_CLK_DIV5 = 0x8a
     ENABLE_CLK_DIV5 = 0x8b
+    READ_SHORT = 0x90
+    READ_EXTENDED = 0x91
+    WRITE_SHORT = 0x92
+    WRITE_EXTENDED = 0x93
 
     # Modem status
     MODEM_CTS = (1 << 4)    # Clear to send
@@ -123,17 +121,7 @@ class Ftdi(object):
     BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
     BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
     BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
-
-    # Commands in MPSSE and Host Emulation Mode
-    SEND_IMMEDIATE = 0x87
-    WAIT_ON_HIGH = 0x88
-    WAIT_ON_LOW = 0x89
-
-    # Commands in Host Emulation Mode
-    READ_SHORT = 0x90
-    READ_EXTENDED = 0x91
-    WRITE_SHORT = 0x92
-    WRITE_EXTENDED = 0x93
+    BITMODE_MASK = 0x4F     # Mask for all bitmodes
 
     # USB control requests
     REQ_OUT = usb.util.build_request_type(
@@ -206,19 +194,24 @@ class Ftdi(object):
     MODEM_STATUS = [('_0 _1 _2 _3 cts dsr ri dcd'.split()),
                     ('dr oe pe fe bi thre temt error'.split())]
 
-    BAUDRATE_REF_CLOCK = 3000000 # 3 MHz
+    # Clocks and baudrates
+    BUS_CLOCK_BASE = 6.0E6 # 6 MHz
+    BUS_CLOCK_HIGH = 30.0E6 # 30 MHz
+    BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
+    BAUDRATE_REF_HIGH = int(12.0E6) # 12 MHz
+    BAUDRATE_REF_SPECIAL = int(2.0E6)  # 3 MHz
     BAUDRATE_TOLERANCE = 3.0 # acceptable clock drift, in %
     BITBANG_CLOCK_MULTIPLIER = 4
+
+    # Latency
     LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_THRESHOLD = 1000
 
-    # Need to maintain a list of reference USB devices, to circumvent a
-    # limitation in pyusb that prevents from opening several times the same
-    # USB device. The following dictionary used vendor/product keys
-    # to track (device, refcount) pairs
-    DEVICES = {}
-    LOCK = threading.Lock()
+    # Special devices
+    LEGACY_DEVICES = ('ft232am', )
+    EXSPEED_DEVICES = ('ft2232d', )
+    HISPEED_DEVICES = ('ft2232h', 'ft4232h')
 
     def __init__(self):
         self.usb_dev = None
@@ -227,9 +220,10 @@ class Ftdi(object):
         self.baudrate = -1
         self.readbuffer = Array('B')
         self.readoffset = 0
-        self.readbuffer_chunksize = 4 << 10 # 4KB
-        self.writebuffer_chunksize = 4 << 10 # 4KB
+        self.readbuffer_chunksize = 4 << 10 # 4KiB
+        self.writebuffer_chunksize = 4 << 10 # 4KiB
         self.max_packet_size = 0
+        self.interface = None
         self.index = None
         self.in_ep = None
         self.out_ep = None
@@ -239,51 +233,67 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None # disable dynamic latency
-        self.device = (None, None, None)
 
     # --- Public API -------------------------------------------------------
 
-    def open(self, vendor, product, interface=1):
+    @staticmethod
+    def find_all(vps):
+        """Find all devices that match the vendor/product pairs of the vps
+           list."""
+        return UsbTools.find_all(vps)
+
+    def open(self, vendor, product, interface, index=0, serial=None,
+             description=None):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = self._get_device(vendor, product)
-        self._set_interface(interface)
-        self.device = (vendor, product, interface)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
+                                           description)
+        # detect invalid interface as early as possible
+        config = self.usb_dev.get_active_configuration()
+        if interface > config.bNumInterfaces:
+            raise FtdiError('No such FTDI port: %d' % interface)
+        self._set_interface(config, interface)
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
+        self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self):
         """Close the FTDI interface"""
-        self._release_device(self)
+        self.set_latency_timer(self.LATENCY_MAX)
+        UsbTools.release_device(self.usb_dev)
 
     def open_mpsse(self, vendor, product, interface=1,
-                   direction=0x0, frequency=6.0E6, latency=16):
+                   index=0, serial=None, description=None,
+                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface)
+        self.open(vendor, product, interface, index, serial, description)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
-        # Disable loopback
-        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
-        # Configure I/O
-        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, 0, direction]))
+        # Drain input buffer
+        self.purge_buffers()
         # Enable MPSSE mode
         self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
         # Configure clock
         frequency = self._set_frequency(frequency)
+        # Configure I/O
+        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, initial, direction]))
+        # Disable loopback
+        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
+        self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
-        self.read_data(16)
         # Return the actual frequency
         return frequency
 
     def open_bitbang(self, vendor, product, interface=1,
+                     index=0, serial=None, description=None,
                      direction=0x0, baudrate=115200, latency=16):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface)
+        self.open(vendor, product, interface, index, serial, description)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -295,9 +305,9 @@ class Ftdi(object):
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate
         self.set_baudrate(baudrate)
+        self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
-        self.read_data(16)
 
     @property
     def type(self):
@@ -313,14 +323,31 @@ class Ftdi(object):
     @property
     def bitbang_enabled(self):
         """Tell whether some bitbang mode is activated"""
-        return not (self.bitbang_mode == Ftdi.BITMODE_RESET)
+        return not self.bitbang_mode in [
+                Ftdi.BITMODE_RESET,
+                Ftdi.BITMODE_CBUS # CBUS mode does not change base frequency
+        ]
 
     @property
     def frequency_max(self):
         """Tells the maximum frequency for MPSSE clock"""
-        if self.type in ('ft2232h', 'ft4232h'):
+        if self.type in self.HISPEED_DEVICES:
             return Ftdi.BUS_CLOCK_HIGH
         return Ftdi.BUS_CLOCK_BASE
+
+    @property
+    def fifo_sizes(self):
+        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        # Note that the FTDI datasheets contradict themselves, so
+        # the following values may not be the right ones...
+        # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
+        # Values here are seen from the host perspective, whereas datasheet
+        # values are defined from the device perspective
+        sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
+                  'ft2232d': (384, 128),    # TX: 384, RX: 128
+                  'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                  'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
+        return sizes.get(self.type, (128, 128)) # default sizes
 
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""
@@ -329,7 +356,8 @@ class Ftdi(object):
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise AssertionError('Cannot represent baudrate')
+            raise AssertionError('Baudrate tolerance exceeded: %.02f%% '
+                '(wanted %d, achievable %d)' % (delta, baudrate, actual) )
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_BAUDRATE, value,
@@ -388,7 +416,7 @@ class Ftdi(object):
 
     def set_bitmode(self, bitmask, mode):
         """Enable/disable bitbang modes."""
-        value = bitmask | (mode << 8)
+        value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitbang_mode = mode
@@ -442,7 +470,10 @@ class Ftdi(object):
 
     def set_flowctrl(self, flowctrl):
         """Set flowcontrol for ftdi chip"""
-        value = flowctrl | self.index
+        ctrl = { 'hw' : Ftdi.SIO_RTS_CTS_HS,
+                 'sw' : Ftdi.SIO_XON_XOFF_HS,
+                 '' : Ftdi.SIO_DISABLE_FLOW_CTRL }
+        value = ctrl[flowctrl] | self.index
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_FLOW_CTRL, 0,
@@ -467,7 +498,7 @@ class Ftdi(object):
         """Set dtr and rts lines"""
         value = 0
         value |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
-        value |= state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        value |= rts and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
@@ -487,18 +518,34 @@ class Ftdi(object):
         if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
-    def set_line_property(self, bits, stopbits, parity, break_=0):
+    def set_line_property(self, bits, stopbit, parity, break_=0):
         """Set (RS232) line characteristics"""
+        bytelength = { 7 : Ftdi.BITS_7,
+                       8 : Ftdi.BITS_8 }
+        parities  = { 'N' : Ftdi.PARITY_NONE,
+                      'O' : Ftdi.PARITY_ODD,
+                      'E' : Ftdi.PARITY_EVEN,
+                      'M' : Ftdi.PARITY_MARK,
+                      'S' : Ftdi.PARITY_SPACE }
+        stopbits  = { 1 : Ftdi.STOP_BIT_1,
+                      1.5 : Ftdi.STOP_BIT_15,
+                      2 : Ftdi.STOP_BIT_2 }
+        if parity not in parities:
+            raise FtdiError("Unsupported parity")
+        if bits not in bytelength:
+            raise FtdiError("Unsupported byte length")
+        if stopbit not in stopbits:
+            raise FtdiError("Unsupported stop bits")
         value = bits & 0x0F
         try:
             value |= { Ftdi.PARITY_NONE : 0x00 << 8,
                        Ftdi.PARITY_ODD : 0x01 << 8,
                        Ftdi.PARITY_EVEN : 0x02 << 8,
                        Ftdi.PARITY_MARK : 0x03 << 8,
-                       Ftdi.PARITY_SPACE : 0x04 << 8 }[parity]
+                       Ftdi.PARITY_SPACE : 0x04 << 8 }[parities[parity]]
             value |= { Ftdi.STOP_BIT_1 : 0x00 << 11,
                        Ftdi.STOP_BIT_15 : 0x01 << 11,
-                       Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits]
+                       Ftdi.STOP_BIT_2 : 0x02 << 11 }[stopbits[stopbit]]
             if break_ == Ftdi.BREAK_ON:
                 value |= 0x01 << 14
         except KeyError:
@@ -517,7 +564,7 @@ class Ftdi(object):
                     write_size = size - offset
                 length = self.usb_dev.write(self.in_ep,
                                             data[offset:offset+write_size],
-                                            self.index-1,
+                                            self.interface,
                                             self.usb_write_timeout)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
@@ -552,7 +599,7 @@ class Ftdi(object):
                 while True:
                     tempbuf = self.usb_dev.read(self.out_ep,
                                                 self.readbuffer_chunksize,
-                                                self.index-1,
+                                                self.interface,
                                                 self.usb_read_timeout)
                     attempt -= 1
                     length = len(tempbuf)
@@ -623,6 +670,26 @@ class Ftdi(object):
            every read."""
         return self.read_data_bytes(size).tostring()
 
+    def get_cts(self):
+        """Read terminal status line: Clear To Send"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_CTS) and True or False
+
+    def get_dsr(self):
+        """Read terminal status line: Data Set Ready"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_DSR) and True or False
+
+    def get_ri(self):
+        """Read terminal status line: Ring Indicator"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_RI) and True or False
+
+    def get_cd(self):
+        """Read terminal status line: Carrier Detect"""
+        status = self.poll_modem_status()
+        return (status & self.MODEM_RLSD) and True or False
+
     def set_dynamic_latency(self, lmin, lmax, threshold):
         """Set up or disable latency values"""
         if not threshold:
@@ -638,72 +705,28 @@ class Ftdi(object):
             self.latency = lmax
             self.set_latency_timer(self.latency)
 
+    def validate_mpsse(self):
+        # only useful in MPSSE mode
+        bytes_ = self.read_data(2)
+        if (len(bytes_) >=2 ) and (bytes_[0] == '\xfa'):
+            raise FtdiError("Invalid command @ %d" % ord(bytes_[1]))
+
     def get_error_string(self):
         """Wrapper for libftdi compatibility"""
         return "Unknown error"
 
     # --- Private implementation -------------------------------------------
 
-    @classmethod
-    def _get_device(cls, vendor, product):
-        """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
-        device = (vendor<<16)+product
-        cls.LOCK.acquire()
-        try:
-            if device not in cls.DEVICES:
-                dev = usb.core.find(idVendor=vendor, idProduct=product)
-                if not dev:
-                    raise ValueError('Device not found')
-                for configuration in dev:
-                    # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        if not dev.is_kernel_driver_active(ifnum):
-                            continue
-                        try:
-                            dev.detach_kernel_driver(ifnum)
-                        except usb.core.USBError, e:
-                            pass
-                dev.set_configuration()
-                cls.DEVICES[device] = [dev, 1]
-            else:
-                cls.DEVICES[device][1] += 1
-            return cls.DEVICES[device][0]
-        finally:
-            cls.LOCK.release()
-
-    @classmethod
-    def _release_device(cls, usb_dev):
-        """Release a previously open device, if it not used anymore"""
-        # Lookup for ourselves in the class dictionary
-        cls.LOCK.acquire()
-        try:
-            for device in cls.DEVICES:
-                dev, refcount = cls.DEVICES[device]
-                if dev == usb_dev:
-                    # found
-                    if refcount > 1:
-                        # another interface is open, decrement
-                        cls.DEVICES[device][1] -= 1
-                    else:
-                        # last interface in use, release
-                        del cls.DEVICES[device]
-                    break
-        finally:
-            cls.LOCK.release()
-
-    def _set_interface(self, interface):
+    def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
-        if interface == 0:
-            interface = 1
-        if interface not in xrange(1, 5):
-            # should use the actual interface count, depending on the device
-            raise ValueError("Interface does not exist")
-        self.index = interface
-        self.in_ep = 2*interface
-        self.out_ep = 0x80 + self.in_ep - 1
+        if ifnum == 0:
+            ifnum = 1
+        if ifnum-1 not in xrange(config.bNumInterfaces):
+            raise ValueError("No such interface for this device")
+        self.index = ifnum
+        self.interface = config[(ifnum-1, 0)]
+        endpoints = sorted([ep.bEndpointAddress for ep in self.interface])
+        self.in_ep, self.out_ep = endpoints[:2]
 
     def _reset_device(self):
         """Reset the ftdi device"""
@@ -735,61 +758,59 @@ class Ftdi(object):
         """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
             raise AssertionError("Device is not yet known")
-        if self.type in ('ft2232h', 'ft4232h'):
+        if not self.interface:
+            raise AssertionError("Interface is not yet known")
+        if self.type in self.HISPEED_DEVICES:
             packet_size = 512
         else:
             packet_size = 64
-        cfg_iter = self.usb_dev.__iter__()
-        cfg = next(cfg_iter)
-        if self.index < cfg.bNumInterfaces:
-            interface = cfg[(self.index, 0)]
-            endpoint = interface[0]
-            packet_size = endpoint.wMaxPacketSize
+        endpoint = self.interface[0]
+        packet_size = endpoint.wMaxPacketSize
         return packet_size
 
     def _convert_baudrate(self, baudrate):
         """Convert a requested baudrate into the closest possible baudrate
            that can be assigned to the FTDI device"""
+        if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
+            raise AssertionError('Invalid baudrate (too low)')
+        if baudrate > self.BAUDRATE_REF_BASE:
+            if self.type not in self.HISPEED_DEVICES or \
+                baudrate > self.BAUDRATE_REF_HIGH:
+                    raise AssertionError('Invalid baudrate (too high)')
+            refclock = self.BAUDRATE_REF_HIGH
+            hispeed = True
+        else:
+            refclock = self.BAUDRATE_REF_BASE
+            hispeed = False
+        # AM legacy device only supports 3 sub-integer dividers, where the
+        # other devices supports 8 sub-integer dividers
         am_adjust_up = [0, 0, 0, 1, 0, 3, 2, 1]
         am_adjust_dn = [0, 0, 0, 1, 0, 1, 2, 3]
+        # Sub-divider code are not ordered in the natural order
         frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
-        #int divisor, best_divisor, best_baud, best_baud_diff
-        #unsigned long encoded_divisor
-        #int i
-        ref_clock = Ftdi.BAUDRATE_REF_CLOCK
-        hispeed = False
-        if baudrate <= 0:
-            raise AssertionError('Invalid baudrate: %d' % baudrate)
-        if self.type in ('ft2232h', 'ft2432h'):
-            # these chips can support a 12MHz clock in addition to the original
-            # 3MHz clock. This allows higher baudrate (up to 12Mbps) and more
-            # precise baudrates for baudrate > 3Mbps/2
-            if baudrate > (Ftdi.BAUDRATE_REF_CLOCK>>1):
-                ref_clock *= 4 # 12 MHz
-                hispeed = True
-        divisor = (ref_clock<<3) // baudrate
-        if self.type == 'ft232am':
+        divisor = (refclock*8) // baudrate
+        if self.type in self.LEGACY_DEVICES:
             # Round down to supported fraction (AM only)
             divisor -= am_adjust_dn[divisor & 7]
         # Try this divisor and the one above it (because division rounds down)
         best_divisor = 0
         best_baud = 0
         best_baud_diff = 0
-        for i in xrange(0, 2):
+        for i in xrange(2):
             try_divisor = divisor + i
             if not hispeed:
                 # Round up to supported divisor value
                 if try_divisor <= 8:
                     # Round up to minimum supported divisor
                     try_divisor = 8
-                elif self.type not in 'ft232am' and try_divisor < 12:
+                elif self.type not in self.LEGACY_DEVICES and try_divisor < 12:
                     # BM doesn't support divisors 9 through 11 inclusive
                     try_divisor = 12
                 elif divisor < 16:
                     # AM doesn't support divisors 9 through 15 inclusive
                     try_divisor = 16
                 else:
-                    if self.type in 'ft232am':
+                    if self.type in self.LEGACY_DEVICES:
                         # Round up to supported fraction (AM only)
                         try_divisor += am_adjust_up[try_divisor & 7]
                         if try_divisor > 0x1FFF8:
@@ -800,7 +821,7 @@ class Ftdi(object):
                             # Round down to maximum supported div value (BM)
                             try_divisor = 0x1FFFF
             # Get estimated baud rate (to nearest integer)
-            baud_estimate = ((ref_clock<<3) + (try_divisor//2))//try_divisor
+            baud_estimate = ((refclock*8) + (try_divisor//2))//try_divisor
             # Get absolute difference from requested baud rate
             if baud_estimate < baudrate:
                 baud_diff = baudrate - baud_estimate
@@ -823,7 +844,7 @@ class Ftdi(object):
             encoded_divisor = 1 # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.type in ('ft2232d', 'ft2232h', 'ft4232h'):
+        if self.type in self.EXSPEED_DEVICES + self.HISPEED_DEVICES:
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -841,21 +862,31 @@ class Ftdi(object):
             divcode = Ftdi.ENABLE_CLK_DIV5
             divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
             actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
-        elif frequency <= Ftdi.BUS_CLOCK_MAX:
+        elif frequency <= Ftdi.BUS_CLOCK_HIGH:
             # not supported on non-H device, however it seems that 2232D
             # devices simply ignore the settings. Could be improved though
             divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_MAX/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_MAX/(divisor+1)
+            divisor = int(Ftdi.BUS_CLOCK_HIGH/frequency)-1
+            actual_freq = Ftdi.BUS_CLOCK_HIGH/(divisor+1)
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
-        # Send the command twice, as it seems that cold initialization is a
-        # bit buggy. FTDI expects little endian
-        self.write_data(Array('B', [divcode, Ftdi.TCK_DIVISOR,
-                                    divisor&0xff, (divisor>>8)&0xff,
-                                    Ftdi.TCK_DIVISOR,
-                                    divisor&0xff, (divisor>>8)&0xff,
-                                    Ftdi.SEND_IMMEDIATE]))
-                                    # Drain input buffer
+        # FTDI expects little endian
+        if self.type in self.HISPEED_DEVICES:
+            cmd = Array('B', [divcode])
+        else:
+            cmd = Array('B')
+        cmd.extend([Ftdi.TCK_DIVISOR, divisor&0xff, (divisor>>8)&0xff])
+        self.write_data(cmd)
+        self.validate_mpsse()
+        # Drain input buffer
         self.purge_rx_buffer()
         return actual_freq
+
+    def __get_timeouts(self):
+        return self.usb_read_timeout, self.usb_write_timeout
+
+    def __set_timeouts(self, (read_timeout, write_timeout)):
+        self.usb_read_timeout = read_timeout
+        self.usb_write_timeout = write_timeout
+
+    timeouts = property(__get_timeouts, __set_timeouts)

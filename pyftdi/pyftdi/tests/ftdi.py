@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
@@ -27,7 +28,7 @@
 
 import sys
 import unittest
-from pyftdi.ftdi import Ftdi
+from pyftdi.pyftdi.ftdi import Ftdi
 
 
 class FtdiTestCase(unittest.TestCase):

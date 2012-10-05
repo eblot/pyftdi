@@ -25,8 +25,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from array import array as Array
-from pyftdi.misc import hexdump
-from spi.serialflash import SerialFlashManager
+from pyftdi.pyftdi.misc import hexdump
+from pyftdi.spi.serialflash import SerialFlashManager
 import sys
 import time
 import unittest
@@ -56,11 +56,16 @@ class SerialFlashTestCase(unittest.TestCase):
 
     def test_flashdevice_small_rw(self):
         self.flash.erase(0x007000, 4096)
-        data = self.flash.read(0x007020, 128).tostring()
-        print hexdump(data)
-        self.flash.write(0x007020, 'This is a serial SPI flash test')
-        data = self.flash.read(0x007020, 128).tostring()
-        print hexdump(data)
+        data = self.flash.read(0x007020, 128)
+        ref = Array('B', [0xff] * 128)
+        self.assertEqual(data, ref)
+        string = 'This is a serial SPI flash test'
+        ref2 = Array('B', string)
+        self.flash.write(0x007020, string)
+        data = self.flash.read(0x007020, 128)
+        ref2.extend(ref)
+        ref2 = ref2[:128]
+        self.assertEqual(data, ref2)
 
     def test_flashdevice_long_rw(self):
         # Fill in the whole flash with a monotonic increasing value, that is
@@ -68,8 +73,10 @@ class SerialFlashTestCase(unittest.TestCase):
         # properly read back
         from hashlib import sha1
         buf = Array('I')
+        length = len(self.flash)
+        #length = 4096
         print "Build sequence"
-        for address in range(0, len(self.flash), 4):
+        for address in range(0, length, 4):
             buf.append(address)
         # Expect to run on x86 or ARM (little endian), so swap the values
         # to ease debugging
@@ -77,7 +84,7 @@ class SerialFlashTestCase(unittest.TestCase):
         print "Swap sequence"
         buf.byteswap()
         print "Erase flash (may take a while...)"
-        self.flash.erase(0, len(self.flash))
+        self.flash.erase(0, length)
         # Cannot use buf, as it's an I-array, and SPI expects a B-array
         bufstr = buf.tostring()
         print "Write flash", len(bufstr)
@@ -86,7 +93,7 @@ class SerialFlashTestCase(unittest.TestCase):
         wmd.update(buf.tostring())
         refdigest = wmd.hexdigest()
         print "Read flash"
-        data = self.flash.read(0, len(self.flash))
+        data = self.flash.read(0, length)
         #print "Dump flash"
         #print hexdump(data.tostring())
         print "Verify flash"
@@ -94,7 +101,7 @@ class SerialFlashTestCase(unittest.TestCase):
         rmd.update(data.tostring())
         newdigest = rmd.hexdigest()
         print "Reference:", refdigest
-        print "Retrieved:", newdigest 
+        print "Retrieved:", newdigest
         if refdigest != newdigest:
             raise AssertionError('Data comparison mismatch')
 
