@@ -5,5 +5,7 @@ Main developers:
 
 Contributors:
 
- * Nikus-V <>:
-  * Add open device by description, USB timeout support, RTS bug fix
+ * Nikus-V:
+  * Added open device by description, USB timeout support, RTS bug fix
+ * Dave McCoy:
+  * Fixe a long-lasting syntax issue with bus hi-speed management
