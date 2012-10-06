@@ -153,3 +153,31 @@ def is_iterable(obj):
         return True
     except TypeError:
         return False
+
+def pretty_size(size, sep=' ', lim_k=1<<10, lim_m=10<<20, plural=True,
+                floor=True):
+    """Convert a size into a more readable unit-indexed size (KiB, MiB)
+
+       :param size:   integral value to convert
+       :param sep:    the separator character between the integral value and
+                      the unit specifier
+       :param lim_k:  any value above this limit is a candidate for KiB
+                      conversion.
+       :param lim_m:  any value above this limit is a candidate for MiB
+                      conversion.
+       :param plural: whether to append a final 's' to byte(s)
+       :param floor:  how to behave when exact conversion cannot be achieved:
+                      take the closest, smaller value or fallback to the next
+                      unit that allows the exact representation of the input
+                      value
+    """
+    size = int(size)
+    if size > lim_m:
+        ssize = size>>20
+        if floor or ssize<<20 == size:
+            return '%d%sMiB' % (ssize, sep)
+    if size > lim_k:
+        ssize = size>>10
+        if floor or ssize<<10 == size:
+            return '%d%sKiB' % (ssize, sep)
+    return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))
