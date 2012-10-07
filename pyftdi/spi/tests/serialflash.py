@@ -48,7 +48,7 @@ class SerialFlashTestCase(unittest.TestCase):
         """
         print "Flash device: %s" % self.flash
 
-    def test_flashdevice_2_read_bandwidth(self):
+    def test_flashdevice_5_read_bandwidth(self):
         """Read the whole device to get READ bandwith
         """
         delta = time.time()
