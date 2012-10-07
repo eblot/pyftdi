@@ -61,7 +61,7 @@ Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
 Status
 ~~~~~~
 
-This project is still at an early alpha development stage.
+This project is still in beta development stage.
 
 However, PyFtdi is being forked from a closed-source software implementation
 that has been successfully used for over a year - including serial, spi and
@@ -85,8 +85,8 @@ Supported features
   FTDI SPI master with a pure-Python serial flash device driver for several
   common devices. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
-  modes. These tests show an average 470 KB/s read out from flash devices
-  running with a 6 MHz SPI clock on a Core2Duo Mac Book Pro.
+  modes. These tests show an average 1.3MiB/s read out from flash devices
+  on a Core i7 Mac Book Pro.
 * JTAG is under development and is not fully supported yet.
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
@@ -134,3 +134,5 @@ See the developer page available from http://github.com/eblot/pyftdi for SPI
 and JTAG examples.
 
 .. include:: serialext/README.rst
+.. include:: spi/README.rst
+
