@@ -60,6 +60,7 @@ class SerialFlashTestCase(unittest.TestCase):
     def test_flashdevice_3_small_rw(self):
         """Short R/W test
         """
+        self.flash.unlock()
         self.flash.erase(0x007000, 4096)
         data = self.flash.read(0x007020, 128)
         ref = Array('B', [0xff] * 128)
@@ -88,6 +89,7 @@ class SerialFlashTestCase(unittest.TestCase):
         print "Erase %s from flash (may take a while...)" % \
             pretty_size(length)
         delta = time.time()
+        self.flash.unlock()
         self.flash.erase(start, length, True)
         delta = time.time()-delta
         self._report_bw('Erased', length, delta)
