@@ -769,7 +769,7 @@ class M25PxFlashDevice(_Gen25FlashDevice):
             raise SerialFlashUnknownJedec(jedec)
         device, capacity = _SpiFlashDevice.jedec2int(jedec)[1:3]
         self._device = self.DEVICES[device]
-        self._size = M25PxFlashDevice.DEVICES[device]
+        self._size = M25PxFlashDevice.SIZES[capacity]
         self._spi.set_frequency(M25PxFlashDevice.SPI_FREQ_MAX*1E06)
 
     def __str__(self):
