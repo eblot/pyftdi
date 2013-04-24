@@ -237,10 +237,10 @@ class Ftdi(object):
     # --- Public API -------------------------------------------------------
 
     @staticmethod
-    def find_all(vps):
+    def find_all(vps, nocache=False):
         """Find all devices that match the vendor/product pairs of the vps
            list."""
-        return UsbTools.find_all(vps)
+        return UsbTools.find_all(vps, nocache)
 
     def open(self, vendor, product, interface, index=0, serial=None,
              description=None):
