@@ -33,11 +33,11 @@ class UsbTools(object):
     USBDEVICES = []
 
     @staticmethod
-    def find_all(vps):
+    def find_all(vps, nocache=False):
         """Find all devices that match the vendor/product pairs of the vps
            list."""
         devices = []
-        devs = UsbTools._find_devices(vps)
+        devs = UsbTools._find_devices(vps, nocache)
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
@@ -127,7 +127,7 @@ class UsbTools(object):
             cls.LOCK.release()
 
     @classmethod
-    def _find_devices(cls, vps):
+    def _find_devices(cls, vps, nocache=False):
         """Find an USB device and return it.
            This code re-implements the usb.core.find() method using a local
            cache to avoid calling several times the underlying LibUSB and the
@@ -155,11 +155,12 @@ class UsbTools(object):
                     break
             else:
                 raise ValueError('No backend available')
-            if not cls.USBDEVICES:
+            if not cls.USBDEVICES or nocache:
                 # not freed until Python runtime completion
                 # enumerate_devices returns a generator, so back up the
                 # generated device into a list. To save memory, we only
                 # back up the supported devices
+                cls.USBDEVICES = []
                 devlist = []
                 vpdict = {}
                 for v, p in vps:
