@@ -1,4 +1,4 @@
-#  Copyright (c) 2008-2012, Neotion
+# Copyright (c) 2008-2012, Neotion
 # Copyright (c) 2011-2012, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
