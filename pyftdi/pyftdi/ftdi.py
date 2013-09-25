@@ -326,8 +326,6 @@ class Ftdi(object):
         vendorId = self.usb_dev.idVendor
         productId = self.usb_dev.idProduct
         bcdDevice = self.usb_dev.bcdDevice
-        #print "vendorId: %x productId: %x bcdDevice %x" % (vendorId, productId, bcdDevice)
-        #print "type: %s" % types[ (vendorId, productId, bcdDevice) ]
         return types[ (vendorId, productId, bcdDevice) ]
 
     @property
