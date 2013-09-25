@@ -88,6 +88,9 @@ class UsbTools(object):
                     # be greedy: reclaim all device interfaces from the kernel
                     for interface in configuration:
                         ifnum = interface.bInterfaceNumber
+                        print dev.__class__.__name__
+                        dev.set_configuration()
+                        usb.util.claim_interface(dev, interface)
                         try:
                             if not dev.is_kernel_driver_active(ifnum):
                                 continue

@@ -140,6 +140,10 @@ class UsbSerial(SerialBase):
                                       product)
             self.udev.open(vendor, product, interface, idx, sernum)
         except IOError:
+            import traceback
+            print '>>> traceback <<<'
+            traceback.print_exc()
+            print '>>> end of traceback <<<'
             raise SerialException('Unable to open USB port %s' % self.portstr)
         self._isOpen = True
         self._reconfigurePort()
