@@ -97,7 +97,10 @@ class UsbTools(object):
                             break
                         except usb.core.USBError, e:
                             pass
-                dev.set_configuration()
+                try:
+                  dev.set_configuration()
+                except usb.core.USBError, e:
+                   pass # if there is no such device, it's probably already been detached (2 or more FTDI chips attached)
                 cls.DEVICES[devkey] = [dev, 1]
             else:
                 cls.DEVICES[devkey][1] += 1
