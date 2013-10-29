@@ -39,21 +39,42 @@ ASCIIFILTER = ''.join([(len(repr(chr(_x)))==3) and chr(_x) or \
                     '.' for _x in range(256)])
 
 
-def hexdump(data):
+def hexdump(data, full=False, abbreviate=False):
     """Convert a binary buffer into a hexadecimal representation.
 
        Return a multi-line strings with hexadecimal values and ASCII
        representation of the buffer data.
+       :full: use `hexdump -Cv` format
+       :abbreviate: replace identical lines with '*'
     """
+    if isinstance(data, Array):
+        data = data.tostring()
     src = ''.join(data)
     length = 16
     result = []
+    last = ''
+    abv = False
     for i in xrange(0, len(src), length):
         s = src[i:i+length]
+        if abbreviate:
+            if s == last:
+                if not abv:
+                    result.append('*\n')
+                    abv = True
+                continue
+            else:
+                abv = False
         hexa = ' '.join(["%02x" % ord(x) for x in s])
         printable = s.translate(ASCIIFILTER)
-        result.append("%06x   %-*s   %s\n" % \
-                      (i, length*3, hexa, printable))
+        if full:
+            hx1, hx2 = hexa[:3*8], hexa[3*8:]
+            l = length/2
+            result.append("%08x  %-*s %-*s |%s|\n" % \
+                            (i, l*3, hx1, l*3, hx2, printable))
+        else:
+            result.append("%06x   %-*s  %s\n" % \
+                            (i, length*3, hexa, printable))
+        last = s
     return ''.join(result)
 
 def hexline(data, sep=' '):
@@ -62,6 +83,8 @@ def hexline(data, sep=' '):
        Return a string with hexadecimal values and ASCII representation
        of the buffer data
     """
+    if isinstance(data, Array):
+        data = data.tostring()
     src = ''.join(data)
     hexa = sep.join(["%02x" % ord(x) for x in src])
     printable = src.translate(ASCIIFILTER)

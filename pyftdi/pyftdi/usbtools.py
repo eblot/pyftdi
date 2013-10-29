@@ -18,8 +18,15 @@
 import threading
 import usb.core
 import usb.util
+from misc.util import to_int
+from urlparse import urlsplit
 
 __all__ = ['UsbTools']
+
+
+class UsbToolsError(Exception):
+    """UsbTools error"""
+
 
 class UsbTools(object):
     """Helpers to obtain information about connected USB devices."""
@@ -179,3 +186,147 @@ class UsbTools(object):
             return cls.USBDEVICES
         finally:
             cls.LOCK.release()
+
+    @staticmethod
+    def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor):
+        urlparts = urlsplit(urlstr)
+        if scheme != urlparts.scheme:
+            raise UsbToolsError("Invalid URL: %s" % urlstr)
+        plcomps = urlparts.netloc.split(':') + [''] * 2
+        try:
+            plcomps[0] = vdict.get(plcomps[0], plcomps[0])
+            if plcomps[0]:
+                vendor = to_int(plcomps[0])
+            else:
+                vendor = None
+            product_ids = pdict.get(vendor, None)
+            if not product_ids:
+                product_ids = pdict[default_vendor]
+            plcomps[1] = product_ids.get(plcomps[1], plcomps[1])
+            if plcomps[1]:
+                product = to_int(plcomps[1])
+            else:
+                product = None
+            if not urlparts.path:
+                raise UsbToolsError('URL string is missing device port')
+            path = urlparts.path.strip('/')
+            if path == '?':
+                show_devices = True
+            else:
+                interface = to_int(path)
+                show_devices = False
+        except (IndexError, ValueError):
+            raise UsbToolsError('Invalid device URL: %s' % urlstr)
+        sernum = None
+        idx = 0
+        if plcomps[2]:
+            try:
+                idx = to_int(plcomps[2])
+                if idx > 255:
+                    idx = 0
+                    raise ValueError
+                if idx:
+                    idx -= 1
+            except ValueError:
+                sernum = plcomps[2]
+        if not vendor or not product or sernum or idx:
+            # Need to enumerate USB devices to find a matching device
+            vendors = vendor and [vendor] or \
+                set(vdict.values())
+            vps = set()
+            for v in vendors:
+                products = pdict.get(v, [])
+                for p in products:
+                    vps.add((v, products[p]))
+            devices = devclass.find_all(vps)
+            candidates = []
+            if sernum:
+                if sernum not in [dev[2] for dev in devices]:
+                    raise UsbToolsError("No USB device with S/N %s" % sernum)
+                for v, p, s, i, d in devices:
+                    if s != sernum:
+                        continue
+                    if vendor and vendor != v:
+                        continue
+                    if product and product != p:
+                        continue
+                    candidates.append((v, p, s, i, d))
+            else:
+                for v, p, s, i, d in devices:
+                    if vendor and vendor != v:
+                        continue
+                    if product and product != p:
+                        continue
+                    candidates.append((v, p, s, i, d))
+                if not show_devices:
+                    try:
+                        vendor, product, ifport, ifcount, description = \
+                            candidates[idx]
+                    except IndexError:
+                        raise UsbToolsError("No USB device #%d" % idx)
+        if show_devices:
+            UsbTools.show_devices(scheme, vdict, pdict, candidates)
+            raise SystemExit(candidates and \
+                                'Please specify the USB device' or \
+                                'No USB-Serial device has been detected')
+        if vendor not in pdict:
+            raise UsbToolsError('Vendor ID 0x%04x not supported' % vendor)
+        if product not in pdict[vendor].values():
+            raise UsbToolsError('Product ID 0x%04x not supported' % product)
+        return vendor, product, interface, sernum, idx
+
+    @staticmethod
+    def show_devices(scheme, vdict, pdict, candidates, out=None):
+        """Show supported devices"""
+        from string import printable as printablechars
+        if not out:
+            import sys
+            out = sys.stdout
+        indices = {}
+        interfaces = []
+        for (v, p, s, i, d) in candidates:
+            ikey = (v, p)
+            indices[ikey] = indices.get(ikey, 0) + 1
+            # try to find a matching string for the current vendor
+            vendors = []
+            # fallback if no matching string for the current vendor is found
+            vendor = '%04x' % v
+            for vc in vdict:
+                if vdict[vc] == v:
+                    vendors.append(vc)
+            if vendors:
+                vendors.sort(key=len)
+                vendor = vendors[0]
+            # try to find a matching string for the current vendor
+            # fallback if no matching string for the current product is found
+            product = '%04x' % p
+            try:
+                products = []
+                productids = pdict[v]
+                for pc in productids:
+                    if productids[pc] == p:
+                        products.append(pc)
+                if products:
+                    products.sort(key=len)
+                    product = products[0]
+            except KeyError:
+                pass
+            # if the serial number is an ASCII char, use it, or use the index
+            # value
+            if [c for c in s if c not in printablechars or c == '?']:
+                serial = '%d' % indices[ikey]
+            else:
+                serial = s
+            # Now print out the prettiest URL syntax
+            for j in range(1, i+1):
+                # On most configurations, low interfaces are used for MPSSE,
+                # high interfaces are dedicated to UARTs
+                interfaces.append((scheme, vendor, product, serial, j, d))
+        if interfaces:
+            print >> out, "Available interfaces:"
+            for scheme, vendor, product, serial, j, d in interfaces:
+                if d:
+                    desc = '  (%s)' % d
+                print >> out, '  %s%s:%s:%s/%d%s' % \
+                    (scheme, vendor, product, serial, j, desc)
+            print >> out, ''

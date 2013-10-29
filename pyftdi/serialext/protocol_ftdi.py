@@ -38,7 +38,7 @@ class FtdiSerial(UsbSerial):
     """Serial port implementation for FTDI compatible with pyserial API"""
 
     BACKEND = 'pyftdi'
-    SCHEME = 'ftdi://'
+    SCHEME = 'ftdi'
     # the following dictionaries should be augmented to support the various
     # VID/PID that actually map to a USB-serial FTDI device
     VENDOR_IDS = { 'ftdi': 0x0403 }

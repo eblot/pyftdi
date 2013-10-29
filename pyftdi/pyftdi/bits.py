@@ -539,3 +539,6 @@ class BitField(object):
 
     def __int__(self):
         return self._val
+
+    def __str__(self):
+        return bin(self._val)
