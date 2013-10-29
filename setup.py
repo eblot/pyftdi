@@ -18,7 +18,16 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from distutils.core import setup
+try:
+    # try to use setuptools first, so extended command set such as 
+    # python setup.py develop is available
+    # Note: do not add setuptools-specific configuration parameters
+    # to the setup() arguments!
+    from setuptools import setup
+except ImportError:
+    # if setuptools package is not available, fall back to the default
+    # distribution package.
+    from distutils.core import setup
 
 VERSION='0.7.0'
 
