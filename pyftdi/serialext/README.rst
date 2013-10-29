@@ -27,14 +27,14 @@ to test the serial port feature.::
 If the PyFtdi module is not yet installed and ``pyterm.py`` is run from the
 archive directory, ``PYTHONPATH`` should be defined to the current directory::
 
-    PYTHONPATH=$PWD ./serialext/tests/pyterm.py -p ftdi:///?
+    PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi:///?
 
 The above command lists all the available FTDI device ports.
 
 To start up a serial terminal session, use the ``-p`` option switch to select
 the proper port, for example::
 
-    PYTHONPATH=$PWD ./serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
+    PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
 
 
 Quick step-by-step instruction guide

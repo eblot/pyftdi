@@ -42,8 +42,9 @@ Requirements
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb-1.0 (recommended), currently tested with 1.0.9
-* libusb-0.1 (deprecated), currently tested with 0.1.4
+* libusbx-1.0 (recommended), currently tested with 1.0.16
+* libusb-1.0, tested with 1.0.9
+* libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
 
 PyFtdi does not depend on any other native library, and only uses standard
@@ -74,31 +75,37 @@ Meanwhile, PyFtdi is developed as an open-source solution.
 
 Supported features
 ------------------
+
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
+
 * Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
   offers transparent access to the FTDI serial ports through a pyserial_-
   compliant API. The ``serialext`` directory contains a minimal serial terminal
   demonstrating the use of this extension, and a dispatcher automatically
   selecting the serial backend (pyserial_, PyFtdi), based on the serial port
   name.
+
 * SPI master. PyFtdi includes several examples demonstrating how to use the
   FTDI SPI master with a pure-Python serial flash device driver for several
   common devices. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
   modes. These tests show an average 1.3MiB/s read out from flash devices
   on a Core i7 Mac Book Pro.
+
 * JTAG is under development and is not fully supported yet.
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
 
 Installation
 ~~~~~~~~~~~~
-Since PyUSB 1.0.0a2, USB bus enumeration can be performed without applying
-any patch.
+* Download & install pyusb-1.0.0b1: ``pip install [--pre] pyusb``
 
- * Download pyusb-1.0.0a3
- * Install pyusb
- * Install pyftdi
+  * ``--pre`` tag is required with latest release of pip, as pyusb is still
+    in beta status
+
+* Download & install pyserial: ``pip install pyserial``
+
+* Install pyftdi
 
 Troubleshooting
 ---------------
@@ -110,10 +117,22 @@ Troubleshooting
 
    where <path> is the directory containing the ``libusb-1.*.so`` library file
 
-  * On Mac OS X: ``export DYLD_LIBRARY_PATH=.../lib``
+  * On OS X: ``export DYLD_LIBRARY_PATH=.../lib``
 
    where <path> is the directory containing the ``libusb-1.*.dylib`` library
    file
+
+*"Error: Access denied (insufficient permissions)"*
+
+  * On OS X 10.9+: starting with Mavericks, OS X ships with a native FTDI
+    driver that preempts access to the FTDI device.
+
+    The driver can be unloaded this way:
+
+      ``sudo kextunload [-v] -bundle com.apple.driver.AppleUSBFTDI``
+
+    Please note that the system automatically reloads the driver, so it may be
+    useful to move the kernel extension so that the system never loads it.
 
 Development
 ~~~~~~~~~~~
