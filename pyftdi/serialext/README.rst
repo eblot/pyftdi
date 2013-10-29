@@ -16,7 +16,7 @@ to test the serial port feature.::
     -f, --fullmode        use full terminal mode, exit with [Ctrl]+A
     -p DEVICE, --port=DEVICE
                           serial port device name (list available ports with
-                          'ftdi:///?' or 'prolific:///?')
+                          'ftdi:///?)
     -b BAUDRATE, --baudrate=BAUDRATE
                           serial port baudrate
     -r RESET, --reset=RESET
