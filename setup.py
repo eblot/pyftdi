@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2012 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2010-2012 Neotion
+# Copyright (c) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2013 Neotion
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -20,7 +20,7 @@
 
 from distutils.core import setup
 
-VERSION='0.6.3'
+VERSION='0.7.0'
 
 def _read(fname):
     import os
@@ -41,9 +41,9 @@ setup(
     packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
-    requires=['pyusb (>= 1.0.0a2)',
+    requires=['pyusb (>= 1.0.0b1)',
               'pyserial (>= 2.7)'],
-    install_requires=['pyusb>=1.0.0a2',
+    install_requires=['pyusb>=1.0.0b1',
                       'pyserial>=2.7'],
     classifiers=[
         'Development Status :: 4 - Beta',
