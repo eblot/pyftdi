@@ -11,6 +11,7 @@ implemented in pure Python language.
 Modern FTDI_ devices include:
 
 * FT2232D (dual port, clock up to 6 MHz)
+* FT232H (single port, clock up to 30 MHz)
 * FT2232H (dual port, clock up to 30 MHz)
 * FT4232H (quad port, clock up to 30 MHz)
 
@@ -133,6 +134,13 @@ Troubleshooting
 
     Please note that the system automatically reloads the driver, so it may be
     useful to move the kernel extension so that the system never loads it.
+
+*serial.serialutil.SerialException: Unable to open USB port*
+   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try uninstalling
+   the driver. On Mac OS, refer to this guide:
+
+   http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
+
 
 Development
 ~~~~~~~~~~~

@@ -211,7 +211,7 @@ class Ftdi(object):
     # Special devices
     LEGACY_DEVICES = ('ft232am', )
     EXSPEED_DEVICES = ('ft2232d', )
-    HISPEED_DEVICES = ('ft2232h', 'ft4232h')
+    HISPEED_DEVICES = ('ft232h', 'ft2232h', 'ft4232h')
 
     def __init__(self):
         self.usb_dev = None
@@ -311,14 +311,22 @@ class Ftdi(object):
 
     @property
     def type(self):
-        """Return the current type of the FTDI device as a string"""
-        types = { 0x200: 'ft232am',
-                  0x400: 'ft232bm', # bug with S/N == 0 not handled
-                  0x500: 'ft2232d',
-                  0x600: 'ft232c',
-                  0x700: 'ft2232h',
-                  0x800: 'ft4232h' }
-        return types[self.usb_dev.bcdDevice]
+        """Return the current type of the FTDI device as a string
+        
+        vendorId and productId taken from http://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
+        
+        """
+        types = { (0x0403, 0x6001, 0x200) : 'ft232am', 
+                  (0x0403, 0x6001, 0x400) : 'ft232bm', # bug with S/N == 0 not handled 
+                  (0x0403, 0x6014, 0x900) : 'ft232h',
+                  (0x0403, 0x6010, 0x500) : 'ft2232d',
+                  (0x0403, 0x6010, 0x600) : 'ft232c',
+                  (0x0403, 0x6010, 0x700) : 'ft2232h',
+                  (0x0403, 0x6011, 0x800) : 'ft4232h' }
+        vendorId = self.usb_dev.idVendor
+        productId = self.usb_dev.idProduct
+        bcdDevice = self.usb_dev.bcdDevice
+        return types[ (vendorId, productId, bcdDevice) ]
 
     @property
     def bitbang_enabled(self):
@@ -345,6 +353,7 @@ class Ftdi(object):
         # values are defined from the device perspective
         sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
                   'ft2232d': (384, 128),    # TX: 384, RX: 128
+                  'ft232h': (1024, 1024),  # TX: 1KiB, RX: 1KiB
                   'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
                   'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
         return sizes.get(self.type, (128, 128)) # default sizes
