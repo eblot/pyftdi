@@ -115,12 +115,12 @@ Troubleshooting
 
   * On Linux: ``export LD_LIBRARY_PATH=<path>``
 
-   where <path> is the directory containing the ``libusb-1.*.so`` library file
+    where <path> is the directory containing the ``libusb-1.*.so`` library file
 
   * On OS X: ``export DYLD_LIBRARY_PATH=.../lib``
 
-   where <path> is the directory containing the ``libusb-1.*.dylib`` library
-   file
+    where <path> is the directory containing the ``libusb-1.*.dylib`` library
+    file
 
 *"Error: Access denied (insufficient permissions)"*
 
