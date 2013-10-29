@@ -8,4 +8,8 @@ Contributors:
  * Nikus-V:
   * Added open device by description, USB timeout support, RTS bug fix
  * Dave McCoy:
-  * Fixe a long-lasting syntax issue with bus hi-speed management
+  * Fix a long-lasting syntax issue with bus hi-speed management
+ * David Brown:
+  * Fix M25Px flash device size in SPI management
+ * Adam Feuer:
+  * Add support for FT232H FTDI device
