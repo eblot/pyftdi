@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2012 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # This library is free software; you can redistribute it and/or

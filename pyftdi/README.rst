@@ -124,6 +124,7 @@ Troubleshooting
     file
 
 *"Error: Access denied (insufficient permissions)"*
+  The system may already be using the device.
 
   * On OS X 10.9+: starting with Mavericks, OS X ships with a native FTDI
     driver that preempts access to the FTDI device.
@@ -135,12 +136,11 @@ Troubleshooting
     Please note that the system automatically reloads the driver, so it may be
     useful to move the kernel extension so that the system never loads it.
 
-*serial.serialutil.SerialException: Unable to open USB port*
-   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try uninstalling
-   the driver. On Mac OS, refer to this guide:
+*"serial.serialutil.SerialException: Unable to open USB port"*
+  May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
+  uninstalling the driver. On OS X, refer to this FTDI guide_:
 
-   http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
-
+.. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 
 Development
 ~~~~~~~~~~~

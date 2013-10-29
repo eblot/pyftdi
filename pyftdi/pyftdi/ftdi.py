@@ -1,5 +1,5 @@
 # pyftdi - A pure Python FTDI driver
-# Copyright (C) 2010-2011 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
 #
@@ -312,12 +312,11 @@ class Ftdi(object):
     @property
     def type(self):
         """Return the current type of the FTDI device as a string
-        
-        vendorId and productId taken from http://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
-        
+           vendorId and productId taken from http://www.ftdichip.com/Support/
+              Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
         """
-        types = { (0x0403, 0x6001, 0x200) : 'ft232am', 
-                  (0x0403, 0x6001, 0x400) : 'ft232bm', # bug with S/N == 0 not handled 
+        types = { (0x0403, 0x6001, 0x200) : 'ft232am',
+                  (0x0403, 0x6001, 0x400) : 'ft232bm',
                   (0x0403, 0x6014, 0x900) : 'ft232h',
                   (0x0403, 0x6010, 0x500) : 'ft2232d',
                   (0x0403, 0x6010, 0x600) : 'ft232c',
@@ -353,7 +352,7 @@ class Ftdi(object):
         # values are defined from the device perspective
         sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
                   'ft2232d': (384, 128),    # TX: 384, RX: 128
-                  'ft232h': (1024, 1024),  # TX: 1KiB, RX: 1KiB
+                  'ft232h': (1024, 1024),   # TX: 1KiB, RX: 1KiB
                   'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
                   'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
         return sizes.get(self.type, (128, 128)) # default sizes
