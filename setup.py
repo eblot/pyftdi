@@ -29,7 +29,7 @@ except ImportError:
     # distribution package.
     from distutils.core import setup
 
-VERSION='0.7.0'
+VERSION='0.8.0'
 
 def _read(fname):
     import os
@@ -43,7 +43,7 @@ setup(
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
-    keywords = 'driver ftdi usb serial spi jtag rs232',
+    keywords = 'driver ftdi usb serial spi rs232',
     url='http://github.com/eblot/pyftdi',
     download_url=''.join(('https://github.com/eblot/pyftdi/tarball/v',
                           VERSION)),
@@ -51,9 +51,9 @@ setup(
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
     requires=['pyusb (>= 1.0.0b1)',
-              'pyserial (>= 2.7)'],
+              'pyserial (>= 2.6)'],
     install_requires=['pyusb>=1.0.0b1',
-                      'pyserial>=2.7'],
+                      'pyserial>=2.6'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',
