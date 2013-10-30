@@ -18,7 +18,7 @@
 import threading
 import usb.core
 import usb.util
-from misc.util import to_int
+from misc import to_int
 from urlparse import urlsplit
 
 __all__ = ['UsbTools']
@@ -210,7 +210,7 @@ class UsbTools(object):
             if not urlparts.path:
                 raise UsbToolsError('URL string is missing device port')
             path = urlparts.path.strip('/')
-            if path == '?':
+            if path == '?' or (not path and urlstr.endswith('?')):
                 show_devices = True
             else:
                 interface = to_int(path)
@@ -327,6 +327,6 @@ class UsbTools(object):
             for scheme, vendor, product, serial, j, d in interfaces:
                 if d:
                     desc = '  (%s)' % d
-                print >> out, '  %s%s:%s:%s/%d%s' % \
+                print >> out, '  %s://%s:%s:%s/%d%s' % \
                     (scheme, vendor, product, serial, j, desc)
             print >> out, ''

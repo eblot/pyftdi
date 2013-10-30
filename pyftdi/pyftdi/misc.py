@@ -35,8 +35,8 @@ TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
 # String values evaluated as false boolean values
 FALSE_BOOLEANS = ['off', 'false', 'disable', 'disabled', 'no', 'low', '0']
 # ASCII or '.' filter
-ASCIIFILTER = ''.join([(len(repr(chr(_x)))==3) and chr(_x) or \
-                    '.' for _x in range(256)])
+ASCIIFILTER = ''.join([((len(repr(chr(_x))) == 3) or (_x == 0x5c)) and chr(_x)
+                      or '.' for _x in range(256)])
 
 
 def hexdump(data, full=False, abbreviate=False):
@@ -69,13 +69,14 @@ def hexdump(data, full=False, abbreviate=False):
         if full:
             hx1, hx2 = hexa[:3*8], hexa[3*8:]
             l = length/2
-            result.append("%08x  %-*s %-*s |%s|\n" % \
-                            (i, l*3, hx1, l*3, hx2, printable))
+            result.append("%08x  %-*s %-*s |%s|\n" %
+                          (i, l*3, hx1, l*3, hx2, printable))
         else:
-            result.append("%06x   %-*s  %s\n" % \
-                            (i, length*3, hexa, printable))
+            result.append("%06x   %-*s  %s\n" %
+                          (i, length*3, hexa, printable))
         last = s
     return ''.join(result)
+
 
 def hexline(data, sep=' '):
     """Convert a binary buffer into a hexadecimal representation
@@ -89,6 +90,7 @@ def hexline(data, sep=' '):
     hexa = sep.join(["%02x" % ord(x) for x in src])
     printable = src.translate(ASCIIFILTER)
     return "(%d) %s : %s" % (len(data), hexa, printable)
+
 
 def to_int(value):
     """Parse a value and convert it into an integer value if possible.
@@ -105,19 +107,18 @@ def to_int(value):
         return value
     if isinstance(value, long):
         return int(value)
-    mo = re.match('^\s*(\d+)\s*(?:([KMkm])(i?)B?)?\s*$', value)
+    mo = re.match('^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
     if mo:
-        if mo.group(2) and not mo.group(3):
-            unit = mo.group(2)
-            import sys
-            print >> sys.stderr, \
-                "Obsolete unit %sB (%s), please use %siB" % \
-                    (unit, value, unit.upper())
-        mult = { 'K': (1<<10), 'M': (1<<20) }
+        mult = {'K': (1000),
+                'KI': (1 << 10),
+                'M': (1000 * 1000),
+                'MI': (1 << 20)}
         value = int(mo.group(1))
-        value *= mo.group(2) and mult[mo.group(2).upper()] or 1
+        if mo.group(2):
+            value *= mult[mo.group(2).upper()]
         return value
     return int(value.strip(), value.startswith('0x') and 16 or 10)
+
 
 def to_bool(value, permissive=True, allow_int=False):
     """Parse a string and convert it into a boolean value if possible.
@@ -148,7 +149,8 @@ def to_bool(value, permissive=True, allow_int=False):
         return False
     raise ValueError('"Invalid boolean value: "%s"' % value)
 
-def _crccomp():
+
+def _crccomp16():
     """Internal function used by crc16()"""
     try:
         from crcmod import mkCrcFun
@@ -160,14 +162,30 @@ def _crccomp():
     while True:
         yield crc
 
+
+def _crccomp32():
+    """Internal function used by crc32()"""
+    try:
+        from crcmod import mkCrcFun
+    except ImportError:
+        raise AssertionError("Python crcmod module not installed")
+    crc_polynomial = 0x104C11DB7
+    crc_initial = 0xFFFFFFFFL
+    crc = mkCrcFun(crc_polynomial, crc_initial, False)
+    while True:
+        yield crc
+
+
 def crc16(data):
     """Compute the CCITT CRC-16 checksum"""
-    crc = next(_crccomp())
+    crc = next(_crccomp16())
     return crc(data)
 
-def xor(_a_, _b_):
-    """XOR operation"""
-    return (not(_a_) and _b_) or (_a_ and not(_b_))
+
+def crc32(data):
+    """Compute the MPEG2 CRC-32 checksum"""
+    crc = next(_crccomp32())
+    return crc(data)
 
 def is_iterable(obj):
     """Tells whether an instance is iterable or not"""
@@ -177,7 +195,7 @@ def is_iterable(obj):
     except TypeError:
         return False
 
-def pretty_size(size, sep=' ', lim_k=1<<10, lim_m=10<<20, plural=True,
+def pretty_size(size, sep=' ', lim_k=1 << 10, lim_m=10 << 20, plural=True,
                 floor=True):
     """Convert a size into a more readable unit-indexed size (KiB, MiB)
 
@@ -196,11 +214,11 @@ def pretty_size(size, sep=' ', lim_k=1<<10, lim_m=10<<20, plural=True,
     """
     size = int(size)
     if size > lim_m:
-        ssize = size>>20
-        if floor or ssize<<20 == size:
+        ssize = size >> 20
+        if floor or (ssize << 20) == size:
             return '%d%sMiB' % (ssize, sep)
     if size > lim_k:
-        ssize = size>>10
-        if floor or ssize<<10 == size:
+        ssize = size >> 10
+        if floor or (ssize << 10) == size:
             return '%d%sKiB' % (ssize, sep)
     return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))

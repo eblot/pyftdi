@@ -147,12 +147,22 @@ class MiniTerm(object):
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        import serial
+        try:
+            from serial.serialutil import SerialException
+        except ImportError:
+            raise ImportError("Python serial module not installed")
+        try:
+            from serial import serial_for_url, VERSION as serialver
+            versions = [int(x) for x in serialver.split('.', 1)]
+            if (versions[0] < 2) or (versions[1] < 6):
+                raise ValueError
+        except (ValueError, IndexError, ImportError):
+            raise ImportError("pyserial 2.6+ is required")
         import pyftdi.serialext
         try:
-            port = serial.serial_for_url(device,
-                                         baudrate=baudrate,
-                                         timeout=0)
+            port = serial_for_url(device,
+                                  baudrate=baudrate,
+                                  timeout=0)
             if logfile:
                 port.set_logger(logfile)
             if not port.isOpen():
@@ -160,9 +170,9 @@ class MiniTerm(object):
             if not port.isOpen():
                 raise AssertionError('Cannot open port "%s"' % device)
             if debug:
-                print "Using serial backend '%s'" % serialclass.backend
+                print "Using serial backend '%s'" % port.BACKEND
             return port
-        except serial.serialutil.SerialException, e:
+        except SerialException, e:
             raise AssertionError(str(e))
 
 

@@ -27,7 +27,7 @@ import errno
 import os
 import select
 import socket
-import sys
+import stat
 from io import RawIOBase
 from pyftdi.pyftdi.misc import hexdump
 from serial import SerialBase
@@ -57,12 +57,18 @@ class SocketSerial(SerialBase):
         try:
             self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             filename = self.portstr[self.portstr.index('://')+3:]
-            self.sock.connect(filename)
+            if filename.startswith('~/'):
+                home = os.getenv('HOME')
+                if home:
+                    filename = os.path.join(home, filename[2:])
+            self._filename = filename
+            self.sock.connect(self._filename)
         except Exception, msg:
             self.sock = None
             import serial
             raise serial.SerialException("Could not open port: %s" % msg)
         self._isOpen = True
+        self._lastdtr = None
 
     def close(self):
         if self.sock:
@@ -78,44 +84,50 @@ class SocketSerial(SerialBase):
            until the requested number of bytes is read."""
         if self.sock is None:
             import serial
-            raise serial.portNotOpenError
+            raise serial.portNotOpenError()
         read = ''
-        inp = None
         if size > 0:
             while len(read) < size:
-                ready,_,_ = select.select([self.sock],[],[], self._timeout)
+                ready, _, _ = select.select([self.sock], [], [], self._timeout)
                 if not ready:
-                    break   #timeout
+                    break   # timeout
                 buf = self.sock.recv(size-len(read))
+                if not len(buf):
+                    # Some character is ready, but none can be read
+                    # it seems that this is a marker for a dead peer
+                    # Exception does not work, for some reason (missing ioctl?)
+                    import serial
+                    raise serial.SerialException('Peer disconnected')
                 read = read + buf
                 if self._timeout >= 0 and not buf:
-                    break  #early abort on timeout
+                    break  # early abort on timeout
         return read
 
     def write(self, data):
         """Output the given string over the serial port."""
         if self.sock is None:
-            raise serial.portNotOpenError
+            import serial
+            raise serial.portNotOpenError()
         t = len(data)
         d = data
         while t > 0:
             try:
                 if self._writeTimeout is not None and self._writeTimeout > 0:
-                    _,ready,_ = select.select([],[self.sock],[],
-                                                  self._writeTimeout)
+                    _, ready, _ = select.select([], [self.sock], [],
+                                                self._writeTimeout)
                     if not ready:
                         raise serial.writeTimeoutError
                 n = self.sock.send(d)
                 if self._dump:
                     print hexdump(d[:n])
                 if self._writeTimeout is not None and self._writeTimeout > 0:
-                    _,ready,_ = select.select([],[self.sock],[],
-                                              self._writeTimeout)
+                    _, ready, _ = select.select([], [self.sock], [],
+                                                self._writeTimeout)
                     if not ready:
                         raise serial.writeTimeoutError
                 d = d[n:]
                 t = t - n
-            except OSError,v:
+            except OSError, v:
                 if v.errno != errno.EAGAIN:
                     raise
 

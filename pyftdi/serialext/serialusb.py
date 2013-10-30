@@ -27,7 +27,7 @@
 import re
 import time
 from pyftdi.pyftdi.misc import to_int
-from neo.usbtools import UsbTools, UsbToolsError
+from pyftdi.pyftdi.usbtools import UsbTools, UsbToolsError
 from serial import SerialBase
 
 __all__ = ['UsbSerial']

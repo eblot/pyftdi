@@ -533,6 +533,8 @@ class BitField(object):
             mask = mask << offset
             self._val = (self._val & ~mask) | value
         else:
+            if isinstance(value, bool):
+                value = int(value)
             value = (value&1L)<<index
             mask = (1L)<<index
             self._val = (self._val & ~mask) | value

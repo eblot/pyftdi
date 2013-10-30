@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2013, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -430,10 +430,10 @@ class _Gen25FlashDevice(_SpiFlashDevice):
     @classmethod
     def get_size(cls, kind):
         try:
-            div = getattr('%s_DIV', kind.upper())
+            div = getattr(cls, '%s_DIV' % kind.upper())
             return (1<<div)
         except AttributeError:
-            raise AssertionError('%s erase is not supported' % kind.title())
+            raise AssertionError('%s size is not supported' % kind.title())
 
     @classmethod
     def get_erase_command(cls, block):
@@ -1140,3 +1140,51 @@ class At45FlashDevice(_SpiFlashDevice):
         self._spi.exchange(wcmd)
         raise AssertionError("Please power-cycle the device to enable "
                              "binary page size mode")
+
+
+class N25QFlashDevice(_Gen25FlashDevice):
+    """Micron N25Q flash device implementation"""
+
+    JEDEC_ID = 0x20
+    DEVICES = { 0xBA: 'N25Q' }
+    SIZES = { 0x15 : 2<<20, 0x16 : 4<<20, 0x17 : 8<<20, 0x18 : 16<<20 }
+    SPI_FREQ_MAX = 105  # MHz, using 3 dummy bytes
+    TIMINGS = { 'page' : (0.0005, 0.005), # 0.5/5 ms
+                'subsector' : (0.3, 3.0), # 300/3000 ms
+                'sector' : (0.7, 3.0), # 700/3000 ms
+                'bulk' : (60, 120), # seconds
+                # 'lock' : (0.0015, 0.003), # 1.5/3 ms
+    }
+    FEATURES = SerialFlash.FEAT_SECTERASE | \
+               SerialFlash.FEAT_SUBSECTERASE
+    CMD_WRLR = 0xE5
+    SECTOR_LOCK_DOWN = 1
+    SECTOR_WRITE_LOCK = 0
+
+    def __init__(self, spi, jedec):
+        super(N25QFlashDevice, self).__init__(spi)
+        if not N25QFlashDevice.match(jedec):
+            raise SerialFlashUnknownJedec(jedec)
+        device, capacity = _SpiFlashDevice.jedec2int(jedec)[1:]
+        self._size = self.SIZES[capacity]
+        self._device = self.DEVICES[device]
+        self._spi.set_frequency(N25QFlashDevice.SPI_FREQ_MAX*1E06)
+
+    def __str__(self):
+        return 'Micron %s%03d %s' % \
+            (self._device, len(self)>>17,
+             pretty_size(self._size, lim_m=1<<20))
+
+    def unlock(self):
+        self._enable_write()
+        for sector in xrange(len(self)>>16):
+            addr = sector<<16
+            wcmd = Array('B', [self.CMD_WRLR, 
+                               (addr>>16) & 0xff,
+                               (addr>>8) & 0xff,
+                               (addr>>0) & 0xff,
+                               (0<<self.SECTOR_LOCK_DOWN) |
+                               (0<<self.SECTOR_WRITE_LOCK)])
+        self._spi.exchange(wcmd)
+
+
