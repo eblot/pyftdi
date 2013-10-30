@@ -43,9 +43,10 @@ class SerialFlashTestCase(unittest.TestCase):
         del self.flash
 
     def test_flashdevice_1_name(self):
-        """Retrive device name
+        """Retrieve device name
         """
-        print "Flash device: %s" % self.flash
+        print "Flash device: %s @ SPI freq %0.1f MHz" % \
+            (self.flash, self.flash.spi_frequency/1E6)
 
     def test_flashdevice_2_read_bandwidth(self):
         """Read the whole device to get READ bandwith
@@ -75,18 +76,21 @@ class SerialFlashTestCase(unittest.TestCase):
     def test_flashdevice_4_long_rw(self):
         """Long R/W test
         """
+        # Max size to perform the test on
+        size = 1<<20
+        # Whether to test with random value, or contiguous values to ease debug
+        randomize = True
         # Fill in the whole flash with a monotonic increasing value, that is
         # the current flash 32-bit address, then verify the sequence has been
         # properly read back
         from hashlib import sha1
-        buf = Array('B')
         # limit the test to 1MiB to keep the test duration short, but performs
         # test at the end of the flash to verify that high addresses may be
         # reached
-        length = min(len(self.flash), 1<<20)
+        length = min(len(self.flash), size)
         start = len(self.flash)-length
-        print "Erase %s from flash (may take a while...)" % \
-            pretty_size(length)
+        print "Erase %s from flash @ 0x%06x(may take a while...)" % \
+            (pretty_size(length), start)
         delta = time.time()
         self.flash.unlock()
         self.flash.erase(start, length, True)
@@ -98,15 +102,24 @@ class SerialFlashTestCase(unittest.TestCase):
             # enough
             length = 16<<10
         print "Build test sequence"
-        buf.extend((randint(0, 255) for x in range(0, length)))
-        # for address in range(0, length, 4):
-        #     buf.append(address)
-        # # Expect to run on x86 or ARM (little endian), so swap the values
-        # # to ease debugging
-        # # A cleaner test would verify the host endianess, or use struct module
-        # print "Swap sequence"
-        # buf.byteswap()
-        # Cannot use buf, as it's an I-array, and SPI expects a B-array
+        if not randomize:
+            buf = Array('I')
+            back = Array('I')
+            for address in range(0, length, 4):
+                buf.append(address)
+            # Expect to run on x86 or ARM (little endian), so swap the values
+            # to ease debugging
+            # A cleaner test would verify the host endianess, or use struct
+            # module
+            buf.byteswap()
+            # Cannot use buf directly, as it's an I-array,
+            # and SPI expects a B-array
+        else:
+            from random import seed
+            seed(0)
+            buf = Array('B')
+            back = Array('B')
+            buf.extend((randint(0, 255) for x in range(0, length)))
         bufstr = buf.tostring()
         print "Writing %s to flash (may take a while...)" % \
             pretty_size(len(bufstr))
@@ -132,6 +145,16 @@ class SerialFlashTestCase(unittest.TestCase):
         print "Reference:", refdigest
         print "Retrieved:", newdigest
         if refdigest != newdigest:
+            errcount = 0
+            back.fromstring(data)
+            for pos in xrange(len(buf)):
+                if buf[pos] != data[pos]:
+                    print 'Invalid byte @ offset 0x%06x: 0x%02x / 0x%02x' % \
+                        (pos, buf[pos], back[pos])
+                    errcount += 1
+                    # Stop report after 16 errors
+                    if errcount >= 32:
+                        break
             raise AssertionError('Data comparison mismatch')
 
     @classmethod

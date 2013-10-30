@@ -47,7 +47,8 @@ def hexdump(data, full=False, abbreviate=False):
        :full: use `hexdump -Cv` format
        :abbreviate: replace identical lines with '*'
     """
-    if isinstance(data, Array):
+    from array import array
+    if isinstance(data, array):
         data = data.tostring()
     src = ''.join(data)
     length = 16
