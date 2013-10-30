@@ -144,7 +144,7 @@ class SerialFlashManager(object):
     @staticmethod
     def get_flash_device(vendor, product, interface=1, cs=0):
         """Obtain an instance of the detected flash device"""
-        ctrl = SpiController(silent_clock=False)
+        ctrl = SpiController(silent_clock=True)
         ctrl.configure(vendor, product, interface)
         spi = ctrl.get_port(cs)
         jedec = SerialFlashManager.read_jedec_id(spi)
@@ -194,6 +194,14 @@ class _SpiFlashDevice(SerialFlash):
 
     def __init__(self, spiport):
         self._spi = spiport
+
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        if self._spi:
+            self._spi.close()
+            self._spi = None
 
     def read(self, address, length):
         if address+length > len(self):

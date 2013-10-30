@@ -47,6 +47,12 @@ class SpiPort(object):
         self._cs_cmd = cs_cmd
         self._frequency = self._controller.frequency
 
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        pass
+
     def exchange(self, out='', readlen=0):
         """Perform a half-duplex transaction with the SPI slave"""
         return self._controller._exchange(self._frequency, self._cs_cmd,

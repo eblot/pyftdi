@@ -36,12 +36,11 @@ import unittest
 class SerialFlashTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.manager = SerialFlashManager(0x403, 0x6010, 1)
-        self.flash = self.manager.get_flash_device()
+        # FTDI device should be tweak to your actual setup
+        self.flash = SerialFlashManager.get_flash_device(0x403, 0x6010, 1)
 
     def tearDown(self):
         del self.flash
-        del self.manager
 
     def test_flashdevice_1_name(self):
         """Retrive device name
