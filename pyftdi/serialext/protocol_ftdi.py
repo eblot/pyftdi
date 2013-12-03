@@ -48,6 +48,7 @@ class FtdiSerial(UsbSerial):
                         '4232': 0x6011,
                         'ft232': 0x6001,
                         'ft232h': 0x6014,
+                        'ft232rq': 0x6014,
                         'ft2232': 0x6010,
                         'ft4232': 0x6011
                       }
