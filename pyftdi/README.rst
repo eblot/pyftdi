@@ -10,6 +10,7 @@ implemented in pure Python language.
 
 Modern FTDI_ devices include:
 
+* FT232R (single port, clock up to 6 MHz, 3Mbps)
 * FT2232D (dual port, clock up to 6 MHz)
 * FT232H (single port, clock up to 30 MHz)
 * FT2232H (dual port, clock up to 30 MHz)
