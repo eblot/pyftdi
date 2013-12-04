@@ -13,3 +13,5 @@ Contributors:
   * Fix M25Px flash device size in SPI management
  * Adam Feuer:
   * Add support for FT232H FTDI device
+ * endlesscoil:
+  * Add support for FT232R FTDI device
