@@ -44,11 +44,12 @@ class FtdiSerial(UsbSerial):
     VENDOR_IDS = { 'ftdi': 0x0403 }
     PRODUCT_IDS = { 0x0403 : \
                       { '232': 0x6001,
+                        '232r': 0x6001,
                         '2232': 0x6010,
                         '4232': 0x6011,
                         'ft232': 0x6001,
+                        'ft232r': 0x6001,
                         'ft232h': 0x6014,
-                        'ft232rq': 0x6014,
                         'ft2232': 0x6010,
                         'ft4232': 0x6011
                       }
