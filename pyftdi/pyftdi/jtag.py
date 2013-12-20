@@ -280,6 +280,9 @@ class JtagController(object):
     def write(self, out, use_last=True):
         """Write a sequence of bits to TDI"""
         if isinstance(out, str):
+            if len(out) > 1:
+                self._write_bytes_raw(out[:-1])
+                out = out[-1]
             out = BitSequence(bytes_=out)
         elif not isinstance(out, BitSequence):
             out = BitSequence(out)
@@ -403,6 +406,12 @@ class JtagController(object):
         cmd.extend(bytes_)
         self._stack_cmd(cmd)
 
+    def _write_bytes_raw(self, out):
+        """Output bytes on TDI"""
+        olen = len(out)-1
+        cmd = Array('B', [Ftdi.WRITE_BYTES_NVE_LSB, olen&0xff, (olen>>8)&0xff])
+        cmd.fromstring(out)
+        self._stack_cmd(cmd)
 
 class JtagEngine(object):
     """High-level JTAG engine controller"""
