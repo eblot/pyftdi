@@ -574,7 +574,6 @@ class Ftdi(object):
                     write_size = size - offset
                 length = self.usb_dev.write(self.in_ep,
                                             data[offset:offset+write_size],
-                                            self.interface,
                                             self.usb_write_timeout)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
@@ -609,7 +608,6 @@ class Ftdi(object):
                 while True:
                     tempbuf = self.usb_dev.read(self.out_ep,
                                                 self.readbuffer_chunksize,
-                                                self.interface,
                                                 self.usb_read_timeout)
                     attempt -= 1
                     length = len(tempbuf)
