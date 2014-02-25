@@ -47,8 +47,8 @@ class UsbTools(object):
         devs = UsbTools._find_devices(vps, nocache)
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
-            sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-            description = usb.util.get_string(dev, 64, dev.iProduct)
+            sernum = usb.util.get_string(dev, dev.iSerialNumber)
+            description = usb.util.get_string(dev, dev.iProduct)
             devices.append((dev.idVendor, dev.idProduct, sernum, ifcount,
                             description))
         return devices
@@ -67,11 +67,11 @@ class UsbTools(object):
                 devs = cls._find_devices(vps)
                 if description:
                     devs = [dev for dev in devs if \
-                              usb.util.get_string(dev, 64, dev.iProduct) \
+                              usb.util.get_string(dev, dev.iProduct) \
                                 == description]
                 if serial:
                     devs = [dev for dev in devs if \
-                              usb.util.get_string(dev, 64, dev.iSerialNumber) \
+                              usb.util.get_string(dev, dev.iSerialNumber) \
                                 == serial]
                 try:
                     dev = devs[index]
