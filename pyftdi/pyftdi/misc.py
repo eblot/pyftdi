@@ -182,6 +182,10 @@ def crc16(data):
     crc = next(_crccomp16())
     return crc(data)
 
+def xor(_a_, _b_):
+    """XOR operation"""
+    return (not(_a_) and _b_) or (_a_ and not(_b_))
+
 
 def crc32(data):
     """Compute the MPEG2 CRC-32 checksum"""
