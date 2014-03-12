@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2012, Neotion
+# Copyright (c) 2010-2014, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -22,3 +22,6 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+version_info = (0, 9, 2)
+__version__ = '.'.join(['%d' % v for v in version_info])

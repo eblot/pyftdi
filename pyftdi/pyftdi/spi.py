@@ -42,6 +42,7 @@ class SpiPort(object):
 
        Use SpiController.get_port() method to obtain an SPI port
     """
+
     def __init__(self, controller, cs_cmd):
         self._controller = controller
         self._cs_cmd = cs_cmd

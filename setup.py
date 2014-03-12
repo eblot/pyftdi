@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2010-2013 Neotion
+# Copyright (c) 2010-2014 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2014 Neotion
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -29,7 +29,7 @@ except ImportError:
     # distribution package.
     from distutils.core import setup
 
-VERSION='0.9.2'
+from pyftdi import __version__ as VERSION
 
 def _read(fname):
     import os
@@ -39,14 +39,14 @@ def _read(fname):
 setup(
     name='pyftdi',
     version=VERSION,
-    description='FTDI device driver',
+    description='FTDI device driver (pure Python)',
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
     keywords = 'driver ftdi usb serial spi rs232',
     url='http://github.com/eblot/pyftdi',
-    download_url=''.join(('https://github.com/eblot/pyftdi/tarball/v',
-                          VERSION)),
+    download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' % \
+                 VERSION,
     packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
