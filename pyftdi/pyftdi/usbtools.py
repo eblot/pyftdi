@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2014 Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
@@ -331,8 +331,13 @@ class UsbTools(object):
             for scheme, vendor, product, serial, j, d in interfaces:
                 if d:
                     desc = '  (%s)' % d
-                print >> out, '  %s://%s:%s:%s/%d%s' % \
+                report = '  %s://%s:%s:%s/%d%s' % \
                     (scheme, vendor, product, serial, j, desc)
+                # the description may contain characters that cannot be
+                # emitted in the output stream encoding format, so replace
+                # them
+                enc_report = report.encode(out.encoding, 'replace')
+                print >> out, enc_report
             print >> out, ''
 
     @staticmethod

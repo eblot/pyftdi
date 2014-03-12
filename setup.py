@@ -29,7 +29,7 @@ except ImportError:
     # distribution package.
     from distutils.core import setup
 
-VERSION='0.9.1'
+VERSION='0.9.2'
 
 def _read(fname):
     import os
