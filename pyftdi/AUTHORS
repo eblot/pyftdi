@@ -17,3 +17,5 @@ Contributors:
   * Add support for FT232R FTDI device
  * humm (Fabien Benureau):
   * Fix implementation for PyUSB 1.0.0b2 (API break)
+ *  dlharmon:
+  * JTAG speed optimisation for long transfer
