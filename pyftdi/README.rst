@@ -52,6 +52,9 @@ libraries:
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules.
 
+PyFTDI has been tested with PyUSB_ 1.0.0b1 and PyUSB_ 1.0.0b2. PyFTDI deals
+with the API break introduced with PyUSB_ 1.0.0b2.
+
 To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
 installed. Previous versions of pyserial_ will NOT work.
 
@@ -100,7 +103,7 @@ Supported features
 
 Installation
 ~~~~~~~~~~~~
-* Download & install pyusb-1.0.0b1: ``pip install [--pre] pyusb``
+* Download & install pyusb-1.0.0b1: ``pip install [--pre] pyusb==1.0.0b2``
 
   * ``--pre`` tag is required with latest release of pip, as pyusb is still
     in beta status

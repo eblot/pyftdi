@@ -1,5 +1,5 @@
 # pyftdi - A pure Python FTDI driver
-# Copyright (C) 2010-2013 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2014 Emmanuel Blot <emmanuel.blot@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
 #
@@ -31,6 +31,7 @@ import usb.core
 import usb.util
 from array import array as Array
 from usbtools import UsbTools
+
 
 __all__ = ['Ftdi', 'FtdiError']
 
@@ -233,6 +234,7 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None # disable dynamic latency
+        self._wrap_api()
 
     # --- Public API -------------------------------------------------------
 
@@ -572,10 +574,7 @@ class Ftdi(object):
                 write_size = self.writebuffer_chunksize
                 if offset + write_size > size:
                     write_size = size - offset
-                length = self.usb_dev.write(self.in_ep,
-                                            data[offset:offset+write_size],
-                                            self.interface,
-                                            self.usb_write_timeout)
+                length = self._write(data[offset:offset+write_size])
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
                 offset += length
@@ -607,10 +606,7 @@ class Ftdi(object):
         try:
             while (len(data) < size) and (length > 0):
                 while True:
-                    tempbuf = self.usb_dev.read(self.out_ep,
-                                                self.readbuffer_chunksize,
-                                                self.interface,
-                                                self.usb_read_timeout)
+                    tempbuf = self._read()
                     attempt -= 1
                     length = len(tempbuf)
                     # the received buffer contains at least one useful databyte
@@ -727,6 +723,18 @@ class Ftdi(object):
 
     # --- Private implementation -------------------------------------------
 
+    def _wrap_api(self):
+        """Deal with PyUSB API breaks"""
+        usb_api = 2
+        try:
+            from usb import version_info
+            if version_info[3] == 'b1':
+                usb_api = 1
+        except (ImportError, IndexError), e:
+            pass
+        for m in ('write', 'read'):
+            setattr(self, '_%s' % m, getattr(self, '_%s_v%d' % (m, usb_api)))
+
     def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
         if ifnum == 0:
@@ -763,6 +771,25 @@ class Ftdi(object):
                                               self.usb_read_timeout)
         except usb.core.USBError, e:
             raise FtdiError('UsbError: %s' % str(e))
+
+    def _write_v1(self, data):
+        """Write to FTDI, using the deprecated API"""
+        return self.usb_dev.write(self.in_ep, data,
+                                 self.interface, self.usb_write_timeout)
+
+    def _read_v1(self):
+        """Read from FTDI, using the deprecated API"""
+        return self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
+                                 self.interface, self.usb_read_timeout)
+
+    def _write_v2(self, data):
+        """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
+        return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
+
+    def _read_v2(self):
+        """Read from FTDI, using the API introduced with pyusb 1.0.0b2"""
+        return self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
+                                 self.usb_read_timeout)
 
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""

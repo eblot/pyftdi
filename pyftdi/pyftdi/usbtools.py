@@ -47,8 +47,8 @@ class UsbTools(object):
         devs = UsbTools._find_devices(vps, nocache)
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
-            sernum = usb.util.get_string(dev, 64, dev.iSerialNumber)
-            description = usb.util.get_string(dev, 64, dev.iProduct)
+            sernum = UsbTools.get_string(dev, dev.iSerialNumber)
+            description = UsbTools.get_string(dev, dev.iProduct)
             devices.append((dev.idVendor, dev.idProduct, sernum, ifcount,
                             description))
         return devices
@@ -67,11 +67,11 @@ class UsbTools(object):
                 devs = cls._find_devices(vps)
                 if description:
                     devs = [dev for dev in devs if \
-                              usb.util.get_string(dev, 64, dev.iProduct) \
+                              UsbTools.get_string(dev, dev.iProduct) \
                                 == description]
                 if serial:
                     devs = [dev for dev in devs if \
-                              usb.util.get_string(dev, 64, dev.iSerialNumber) \
+                              UsbTools.get_string(dev, dev.iSerialNumber) \
                                 == serial]
                 try:
                     dev = devs[index]
@@ -334,3 +334,15 @@ class UsbTools(object):
                 print >> out, '  %s://%s:%s:%s/%d%s' % \
                     (scheme, vendor, product, serial, j, desc)
             print >> out, ''
+
+    @staticmethod
+    def get_string(device, strname):
+        """Retrieve a string from the USB device, dealing with PyUSB API breaks
+        """
+        try:
+            from usb import version_info
+            if version_info[3] == 'b1':
+                return usb.util.get_string(device, 64, strname)
+        except (ImportError, IndexError), e:
+            pass
+        return usb.util.get_string(device, strname)
