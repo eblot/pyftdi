@@ -725,12 +725,13 @@ class Ftdi(object):
 
     def _wrap_api(self):
         """Deal with PyUSB API breaks"""
-        import inspect
-        args, varargs, varkw, defaults = inspect.getargspec(usb.core.Device.read)
-        if "interface" in args :
-            usb_api = 1			# Require "interface" parameter
-        else :
-            usb_api = 2
+        usb_api = 2
+        try:
+            from usb import version_info
+            if version_info[3] == 'b1':
+                usb_api = 1
+        except (ImportError, IndexError), e:
+            pass
         for m in ('write', 'read'):
             setattr(self, '_%s' % m, getattr(self, '_%s_v%d' % (m, usb_api)))
 
