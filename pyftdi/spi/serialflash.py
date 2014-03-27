@@ -743,7 +743,7 @@ class M25PxFlashDevice(_Gen25FlashDevice):
 
     JEDEC_ID = 0x20
     DEVICES = { 0x71 : 'M25P' , 0x20 : 'M25PX' }
-    SIZES = { 0x15 : 2<<20, 0x16 : 4<<20 }
+    SIZES = { 0x15 : 2<<20, 0x16 : 4<<20, 0x18 : 16<<20 }
     SPI_FREQ_MAX = 75 # MHz (P series only)
     TIMINGS = { 'page' : (0.0015, 0.003), # 1.5/3 ms
                 'subsector' : (0.150, 0.150), # 150/150 ms
