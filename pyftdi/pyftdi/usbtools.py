@@ -38,6 +38,7 @@ class UsbTools(object):
     DEVICES = {}
     LOCK = threading.RLock()
     USBDEVICES = []
+    USB_API = None
 
     @staticmethod
     def find_all(vps, nocache=False):
@@ -340,14 +341,19 @@ class UsbTools(object):
                 print >> out, enc_report
             print >> out, ''
 
-    @staticmethod
-    def get_string(device, strname):
+    @classmethod
+    def get_string(cls, device, strname):
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
         """
-        try:
-            from usb import version_info
-            if version_info[3] == 'b1':
-                return usb.util.get_string(device, 64, strname)
-        except (ImportError, IndexError), e:
-            pass
-        return usb.util.get_string(device, strname)
+        if cls.USB_API is None:
+            import inspect
+            args, varargs, varkw, defaults = \
+                inspect.getargspec(usb.util.get_string)
+            if (len(args) >= 3) and args[1] == 'length':
+                cls.USB_API = 1
+            else:
+                cls.USB_API = 2
+        if cls.USB_API == 2:
+            return usb.util.get_string(device, strname)
+        else:
+            return usb.util.get_string(device, 64, strname)

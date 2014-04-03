@@ -21,3 +21,4 @@ Contributors:
   * JTAG speed optimisation for long transfer
  * DavidWC:
   * Add support for larger Numonix serial data flash devices
+  * Update PyUSB API adaptation code
