@@ -19,3 +19,5 @@ Contributors:
   * Fix implementation for PyUSB 1.0.0b2 (API break)
  *  dlharmon:
   * JTAG speed optimisation for long transfer
+ * DavidWC:
+  * Add support for larger Numonix serial data flash devices
