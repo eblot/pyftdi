@@ -315,7 +315,7 @@ class Ftdi(object):
     def type(self):
         """Return the current type of the FTDI device as a string
            vendorId and productId taken from http://www.ftdichip.com/Support/
-              Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
+           Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
         """
         types = { (0x0403, 0x6001, 0x200) : 'ft232am',
                   (0x0403, 0x6001, 0x400) : 'ft232bm',
