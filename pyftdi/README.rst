@@ -15,6 +15,7 @@ Modern FTDI_ devices include:
 * FT232H (single port, clock up to 30 MHz)
 * FT2232H (dual port, clock up to 30 MHz)
 * FT4232H (quad port, clock up to 30 MHz)
+* FT230X (single port, clock up to 48 Mhz, 3Mbps)
 
 Other FTDI_ devices could also be supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi, and therefore have
