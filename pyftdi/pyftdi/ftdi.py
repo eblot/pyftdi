@@ -324,7 +324,8 @@ class Ftdi(object):
                   (0x0403, 0x6010, 0x500) : 'ft2232d',
                   (0x0403, 0x6010, 0x600) : 'ft232c',
                   (0x0403, 0x6010, 0x700) : 'ft2232h',
-                  (0x0403, 0x6011, 0x800) : 'ft4232h' }
+                  (0x0403, 0x6011, 0x800) : 'ft4232h',
+                  (0x0403, 0x6015, 0x1000) : 'ft230x' }
         vendorId = self.usb_dev.idVendor
         productId = self.usb_dev.idProduct
         bcdDevice = self.usb_dev.bcdDevice
@@ -358,7 +359,8 @@ class Ftdi(object):
                   'ft2232d': (384, 128),    # TX: 384, RX: 128
                   'ft232h': (1024, 1024),   # TX: 1KiB, RX: 1KiB
                   'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
-                  'ft4232h': (2048, 2048) } # TX: 2KiB, RX: 2KiB
+                  'ft4232h': (2048, 2048),  # TX: 2KiB, RX: 2KiB
+                  'ft230x': (512, 512) }    # TX: 512, RX: 512
         return sizes.get(self.type, (128, 128)) # default sizes
 
     def set_baudrate(self, baudrate):
