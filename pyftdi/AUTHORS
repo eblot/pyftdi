@@ -15,6 +15,7 @@ Contributors:
   * Add support for FT232H FTDI device
  * endlesscoil:
   * Add support for FT232R FTDI device
+  * Add support for FT232x FTDI device
  * humm (Fabien Benureau):
   * Fix implementation for PyUSB 1.0.0b2 (API break)
  *  dlharmon:
