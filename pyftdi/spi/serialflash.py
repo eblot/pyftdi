@@ -200,7 +200,6 @@ class _SpiFlashDevice(SerialFlash):
 
     def close(self):
         if self._spi:
-            self._spi.close()
             self._spi = None
 
     @property
