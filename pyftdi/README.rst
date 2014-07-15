@@ -162,8 +162,7 @@ not supported. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See the developer page available from http://github.com/eblot/pyftdi for SPI
-and JTAG examples.
+See the developer page available from http://github.com/eblot/pyftdi/examples 
+for SPI and JTAG examples.
 
 .. include:: serialext/README.rst
-
