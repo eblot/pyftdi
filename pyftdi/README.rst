@@ -45,8 +45,8 @@ Requirements
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusbx-1.0 (recommended), currently tested with 1.0.16
-* libusb-1.0, tested with 1.0.9
+* libusb-1.0 (recommended), tested with 1.0.18
+* libusbx-1.0, tested with 1.0.17
 * libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
 
