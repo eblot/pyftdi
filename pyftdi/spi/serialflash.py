@@ -195,14 +195,6 @@ class _SpiFlashDevice(SerialFlash):
     def __init__(self, spiport):
         self._spi = spiport
 
-    def __del__(self):
-        self.close()
-
-    def close(self):
-        if self._spi:
-            self._spi.close()
-            self._spi = None
-
     @property
     def spi_frequency(self):
         return self._spi and self._spi.frequency

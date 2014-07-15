@@ -23,3 +23,5 @@ Contributors:
  * DavidWC:
   * Add support for larger Numonix serial data flash devices
   * Update PyUSB API adaptation code
+ * Roger Hu:
+  * Remove deprecated call to SpiPort from generic 25 SPI flash device
