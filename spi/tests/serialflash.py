@@ -26,7 +26,7 @@
 
 from array import array as Array
 from pyftdi.pyftdi.misc import hexdump, pretty_size
-from pyftdi.spi.serialflash import SerialFlashManager
+from spi.serialflash import SerialFlashManager
 from random import randint
 import sys
 import time

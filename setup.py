@@ -28,8 +28,9 @@ except ImportError:
     # if setuptools package is not available, fall back to the default
     # distribution package.
     from distutils.core import setup
-
+#from distutils import dir_util
 from pyftdi import __version__ as VERSION
+#import os
 
 def _read(fname):
     import os
@@ -47,7 +48,8 @@ setup(
     url='http://github.com/eblot/pyftdi',
     download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' % \
                  VERSION,
-    packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext','pyftdi.spi'],
+    packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
+    extras_require={'spiflash' : []},
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
     requires=['pyusb (>= 1.0.0b1)',
@@ -69,3 +71,4 @@ setup(
     ],
     long_description=_read('README.rst'),
 )
+

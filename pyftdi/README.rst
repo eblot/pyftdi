@@ -166,5 +166,4 @@ See the developer page available from http://github.com/eblot/pyftdi for SPI
 and JTAG examples.
 
 .. include:: serialext/README.rst
-.. include:: spi/README.rst
 
