@@ -957,8 +957,8 @@ class At45FlashDevice(_SpiFlashDevice):
     SUBSECTOR_DIV = 12
     SECTOR_DIV = 16
     JEDEC_ID = 0x1F
-    SIZES = {0x2: 1 << 17, 0x3: 1 << 18, 0x4: 1 << 19, 0x5: 1 << 20,
-             0x6: 2 << 20, 0x07: 4 << 20}
+    SIZES = {0x2: 128 << 10, 0x3: 256 << 10, 0x4: 512 << 10,  # KiB
+             0x5: 1 << 20, 0x6: 2 << 20, 0x07: 4 << 20}       # MiB
     SPI_FREQ_MAX = 66 # MHz
     TIMINGS = { 'page' : (0.005, 0.035), # 5/35 ms
                 'subsector' : (0.05, 0.100), # 50/100 ms
