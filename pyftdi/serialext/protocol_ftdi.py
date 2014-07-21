@@ -39,11 +39,10 @@ class FtdiSerial(UsbSerial):
 
     BACKEND = 'pyftdi'
     SCHEME = 'ftdi'
-    # the following dictionaries should be augmented to support the various
-    # VID/PID that actually map to a USB-serial FTDI device
-    VENDOR_IDS = { 'ftdi': 0x0403 }
-    PRODUCT_IDS = { 0x0403 : \
-                      { '232': 0x6001,
+    FTDI_VENDOR = 0x403
+    VENDOR_IDS = { 'ftdi': FTDI_VENDOR }
+    PRODUCT_IDS = { FTDI_VENDOR: { 
+                        '232': 0x6001,
                         '232r': 0x6001,
                         '232h': 0x6014,
                         '2232': 0x6010,
@@ -55,9 +54,9 @@ class FtdiSerial(UsbSerial):
                         'ft2232': 0x6010,
                         'ft4232': 0x6011,
                         'ft230x': 0x6015
-                      }
+                        }
                   }
-    DEFAULT_VENDOR = 0x403
+    DEFAULT_VENDOR = FTDI_VENDOR
 
     def open(self):
         """Open the initialized serial port"""
@@ -70,6 +69,31 @@ class FtdiSerial(UsbSerial):
                            FtdiSerial.DEFAULT_VENDOR)
         except FtdiError, e:
             raise SerialException(str(e))
+
+    @classmethod
+    def add_custom_vendor(cls, vid, vidname=''):
+        """Add a custom USB vendor identifier.
+           It can be useful to use a pretty URL for opening FTDI device
+        """
+        if vid in cls.VENDOR_IDS:
+            raise ValueError('Vendor ID 0x%04x already registered' % vid)
+        if not vidname:
+            vidname = '0x%04x' % vid
+        cls.VENDOR_IDS[vidname] = vid
+
+    @classmethod
+    def add_custom_product(cls, vid, pid, pidname=''):
+        """Add a custom USB product identifier.
+           It is required for opening FTDI device with non-standard VID/PID
+           USB identifiers.
+        """
+        if vid not in cls.PRODUCT_IDS:
+            cls.PRODUCT_IDS[vid] = {}
+        elif pid in cls.PRODUCT_IDS[vid]:
+            raise ValueError('Product ID 0x%04x already registered' % vid)
+        if not pidname:
+            pidname = '0x%04x' % pid
+        cls.PRODUCT_IDS[vid][pidname] = pid
 
 
 # assemble Serial class with the platform specifc implementation and the base

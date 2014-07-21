@@ -312,24 +312,20 @@ class Ftdi(object):
         self.purge_buffers()
 
     @property
-    def type(self):
+    def ic_name(self):
         """Return the current type of the FTDI device as a string
-           vendorId and productId taken from http://www.ftdichip.com/Support/
+           see also http://www.ftdichip.com/Support/
            Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
         """
-        types = { (0x0403, 0x6001, 0x200) : 'ft232am',
-                  (0x0403, 0x6001, 0x400) : 'ft232bm',
-                  (0x0403, 0x6001, 0x600) : 'ft232r',
-                  (0x0403, 0x6014, 0x900) : 'ft232h',
-                  (0x0403, 0x6010, 0x500) : 'ft2232d',
-                  (0x0403, 0x6010, 0x600) : 'ft232c',
-                  (0x0403, 0x6010, 0x700) : 'ft2232h',
-                  (0x0403, 0x6011, 0x800) : 'ft4232h',
-                  (0x0403, 0x6015, 0x1000) : 'ft230x' }
-        vendorId = self.usb_dev.idVendor
-        productId = self.usb_dev.idProduct
-        bcdDevice = self.usb_dev.bcdDevice
-        return types[ (vendorId, productId, bcdDevice) ]
+        types = { 0x200 : 'ft232am',
+                  0x400 : 'ft232bm',
+                  0x500 : 'ft2232d',
+                  0x600 : 'ft232r',
+                  0x700 : 'ft2232h',
+                  0x800 : 'ft4232h',
+                  0x900 : 'ft232h',
+                  0x1000 : 'ft230x' }
+        return types[self.usb_dev.bcdDevice]
 
     @property
     def bitbang_enabled(self):
@@ -342,7 +338,7 @@ class Ftdi(object):
     @property
     def frequency_max(self):
         """Tells the maximum frequency for MPSSE clock"""
-        if self.type in self.HISPEED_DEVICES:
+        if self.ic_name in self.HISPEED_DEVICES:
             return Ftdi.BUS_CLOCK_HIGH
         return Ftdi.BUS_CLOCK_BASE
 
@@ -354,14 +350,13 @@ class Ftdi(object):
         # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
         # Values here are seen from the host perspective, whereas datasheet
         # values are defined from the device perspective
-        sizes = { 'ft232c': (128, 256),     # TX: 128, RX: 256
-                  'ft232r': (128, 256),     # TX: 128, RX: 256
-                  'ft2232d': (384, 128),    # TX: 384, RX: 128
-                  'ft232h': (1024, 1024),   # TX: 1KiB, RX: 1KiB
-                  'ft2232h': (4096, 4096),  # TX: 4KiB, RX: 4KiB
-                  'ft4232h': (2048, 2048),  # TX: 2KiB, RX: 2KiB
-                  'ft230x': (512, 512) }    # TX: 512, RX: 512
-        return sizes.get(self.type, (128, 128)) # default sizes
+        sizes = { 0x500: (384, 128),    # TX: 384, RX: 128
+                  0x600: (128, 256),    # TX: 128, RX: 256
+                  0x700: (4096, 4096),  # TX: 4KiB, RX: 4KiB
+                  0x800: (2048, 2048),  # TX: 2KiB, RX: 2KiB
+                  0x900: (1024, 1024),  # TX: 1KiB, RX: 1KiB
+                  0x1000: (512, 512) }  # TX: 512, RX: 512
+        return sizes.get(self.usb_dev.bcdDevice, (128, 128)) # default sizes
 
     def set_baudrate(self, baudrate):
         """Change the current interface baudrate"""
@@ -799,7 +794,7 @@ class Ftdi(object):
             raise AssertionError("Device is not yet known")
         if not self.interface:
             raise AssertionError("Interface is not yet known")
-        if self.type in self.HISPEED_DEVICES:
+        if self.ic_name in self.HISPEED_DEVICES:
             packet_size = 512
         else:
             packet_size = 64
@@ -813,7 +808,7 @@ class Ftdi(object):
         if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
             raise AssertionError('Invalid baudrate (too low)')
         if baudrate > self.BAUDRATE_REF_BASE:
-            if self.type not in self.HISPEED_DEVICES or \
+            if self.ic_name not in self.HISPEED_DEVICES or \
                 baudrate > self.BAUDRATE_REF_HIGH:
                     raise AssertionError('Invalid baudrate (too high)')
             refclock = self.BAUDRATE_REF_HIGH
@@ -828,7 +823,7 @@ class Ftdi(object):
         # Sub-divider code are not ordered in the natural order
         frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
         divisor = (refclock*8) // baudrate
-        if self.type in self.LEGACY_DEVICES:
+        if self.ic_name in self.LEGACY_DEVICES:
             # Round down to supported fraction (AM only)
             divisor -= am_adjust_dn[divisor & 7]
         # Try this divisor and the one above it (because division rounds down)
@@ -842,14 +837,15 @@ class Ftdi(object):
                 if try_divisor <= 8:
                     # Round up to minimum supported divisor
                     try_divisor = 8
-                elif self.type not in self.LEGACY_DEVICES and try_divisor < 12:
+                elif self.ic_name not in self.LEGACY_DEVICES and \
+                     try_divisor < 12:
                     # BM doesn't support divisors 9 through 11 inclusive
                     try_divisor = 12
                 elif divisor < 16:
                     # AM doesn't support divisors 9 through 15 inclusive
                     try_divisor = 16
                 else:
-                    if self.type in self.LEGACY_DEVICES:
+                    if self.ic_name in self.LEGACY_DEVICES:
                         # Round up to supported fraction (AM only)
                         try_divisor += am_adjust_up[try_divisor & 7]
                         if try_divisor > 0x1FFF8:
@@ -883,7 +879,7 @@ class Ftdi(object):
             encoded_divisor = 1 # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.type in self.EXSPEED_DEVICES + self.HISPEED_DEVICES:
+        if self.ic_name in self.EXSPEED_DEVICES + self.HISPEED_DEVICES:
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -910,7 +906,7 @@ class Ftdi(object):
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
-        if self.type in self.HISPEED_DEVICES:
+        if self.ic_name in self.HISPEED_DEVICES:
             cmd = Array('B', [divcode])
         else:
             cmd = Array('B')
