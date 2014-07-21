@@ -1081,7 +1081,6 @@ class At45FlashDevice(_SpiFlashDevice):
         while start < end:
             wcmd = Array('B', [command, (start>>16)&0xff,
                               (start>>8)&0xff, start&0xff])
-            from neo.util import hexline
             self._spi.exchange(wcmd)
             self._wait_for_completion(times)
             # very special case for first sector which is split in two
