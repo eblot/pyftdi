@@ -25,4 +25,4 @@ Contributors:
   * Update PyUSB API adaptation code
  * Roger Hu:
   * Remove deprecated call to SpiPort from generic 25 SPI flash device
-  * Add JEDEC information for low density W25Q flash devices
+  * Add JEDEC information for low density W25Q & AT45 flash devices
