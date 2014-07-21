@@ -91,16 +91,16 @@ Supported features
   selecting the serial backend (pyserial_, PyFtdi), based on the serial port
   name.
 
-* SPI master. PyFtdi includes several examples demonstrating how to use the
-  FTDI SPI master with a pure-Python serial flash device driver for several
-  common devices. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
+* SPI master. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
-  modes. These tests show an average 1.3MiB/s read out from flash devices
-  on a Core i7 Mac Book Pro.
+  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to 
+  use the FTDI SPI master with a pure-Python serial flash device driver for 
+  several common devices.
 
 * JTAG is under development and is not fully supported yet.
 
 .. _libftdi: http://www.intra2net.com/en/developer/libftdi/
+.. _pyspiflash: https://github.com/eblot/pyspiflash
 
 Installation
 ~~~~~~~~~~~~
@@ -162,6 +162,7 @@ not supported. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See pyftdi/examples directory for SPI and JTAG examples.
+See pyftdi/examples directory for JTAG examples.
+See pyspiflash_ module for SPI examples.
 
 .. include:: serialext/README.rst

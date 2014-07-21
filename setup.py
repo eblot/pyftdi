@@ -21,16 +21,12 @@
 try:
     # try to use setuptools first, so extended command set such as
     # python setup.py develop is available
-    # Note: do not add setuptools-specific configuration parameters
-    # to the setup() arguments!
     from setuptools import setup
 except ImportError:
     # if setuptools package is not available, fall back to the default
     # distribution package.
     from distutils.core import setup
-#from distutils import dir_util
 from pyftdi import __version__ as VERSION
-#import os
 
 def _read(fname):
     import os
