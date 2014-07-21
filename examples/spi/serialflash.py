@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2013, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2014, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -116,8 +116,7 @@ class SerialFlash(object):
         """Return the unique ID of the flash, if it exists"""
         raise NotImplementedError()
 
-    @classmethod
-    def get_timings(cls, time):
+    def get_timings(self, time):
         """Get a time tuple (typical, max)"""
         raise NotImplementedError()
 
@@ -320,15 +319,14 @@ class _SpiFlashDevice(SerialFlash):
         if (address + length) > len(self):
             raise SerialFlashValueError('Would erase over the flash capacity')
 
-    @classmethod
-    def get_erase_size(cls):
+    def get_erase_size(self):
         """Return the erase size in bytes"""
-        if cls.has_feature(SerialFlash.FEAT_SUBSECTERASE):
-            return cls.get_size('subsector')
-        if cls.has_feature(SerialFlash.FEAT_HSECTERASE):
-            return cls.get_size('hsector')
-        if cls.has_feature(SerialFlash.FEAT_SECTERASE):
-            return cls.get_size('sector')
+        if self.has_feature(SerialFlash.FEAT_SUBSECTERASE):
+            return self.get_size('subsector')
+        if self.has_feature(SerialFlash.FEAT_HSECTERASE):
+            return self.get_size('hsector')
+        if self.has_feature(SerialFlash.FEAT_SECTERASE):
+            return self.get_size('sector')
         raise SerialFlashNotSupported("Unknown erase size")
 
     @classmethod
@@ -370,8 +368,7 @@ class _SpiFlashDevice(SerialFlash):
         """Erase one or more blocks"""
         raise NotImplementedError()
 
-    @classmethod
-    def get_size(cls, kind):
+    def get_size(self, kind):
         raise NotImplementedError()
 
     @classmethod
@@ -431,10 +428,9 @@ class _Gen25FlashDevice(_SpiFlashDevice):
     def __len__(self):
         return self._size
 
-    @classmethod
-    def get_size(cls, kind):
+    def get_size(self, kind):
         try:
-            div = getattr(cls, '%s_DIV' % kind.upper())
+            div = getattr(self, '%s_DIV' % kind.upper())
             return (1<<div)
         except AttributeError:
             raise AssertionError('%s size is not supported' % kind.title())
@@ -454,12 +450,11 @@ class _Gen25FlashDevice(_SpiFlashDevice):
             raise AssertionError('Implementation error: no FEATURES defined')
         return bool(features & feature)
 
-    @classmethod
-    def get_timings(cls, time):
+    def get_timings(self, time):
         """Get a time tuple (typical, max)"""
         try:
             # all '25' devices use the same class properties
-            timings = cls.TIMINGS
+            timings = self.TIMINGS
         except AttributeError:
             raise AssertionError('Implementation error: no TIMINGS defined')
         return timings[time]
@@ -947,25 +942,55 @@ class At25FlashDevice(_Gen25FlashDevice):
             self._wait_for_completion(self.get_timings('page'))
 
 class At45FlashDevice(_SpiFlashDevice):
-    """Flash device implementation for AT45.
+    """Flash device implementation for AT45 (Atmel/Adesto)
 
        Except READ commands, the old AT45 series use a fully different
        command set than '25' series.
     """
 
-    PAGE_DIV = 9
-    SUBSECTOR_DIV = 12
-    SECTOR_DIV = 16
+    # for device ranging from 1Mb to 64Mb
+    PAGE_DIV = [8, 8, 8, 8, 9, 9, 8]
+    SUBSECTOR_DIV = [11, 11, 11, 11, 12, 12, 11]
+    SECTOR_DIV = [15, 15, 16, 16, 17, 16, 18]
+    CHIP_DIV = [17, 18, 19, 20, 21, 22, 23]
     JEDEC_ID = 0x1F
-    SIZES = {0x2: 128 << 10, 0x3: 256 << 10, 0x4: 512 << 10,  # KiB
-             0x5: 1 << 20, 0x6: 2 << 20, 0x07: 4 << 20}       # MiB
-    SPI_FREQ_MAX = 66 # MHz
-    TIMINGS = { 'page' : (0.005, 0.035), # 5/35 ms
-                'subsector' : (0.05, 0.100), # 50/100 ms
-                'sector' : (0.5, 5.0), # 0.5/5 seconds
-                'bulk' : (32, 64), # seconds
-                'lock' : (0.0015, 0.003), # 1.5/3 ms
-    }
+    SPI_FREQS_MAX = [66, 85, 85, 133, 85, 85, 85]
+    TIMINGS = {'page': [(0.002, 0.004),
+                        (0.0015, 0.003),
+                        (0.0015, 0.003),
+                        (0.002, 0.004),
+                        (0.003, 0.004),
+                        (0.003, 0.004),
+                        (0.0015, 0.005)],
+               # do not support page erasure
+               'subsector': [(0.018, 0.035),
+                             (0.025, 0.035),
+                             (0.030, 0.035),
+                             (0.030, 0.075),
+                             (0.045, 0.100),
+                             (0.045, 0.100),
+                             (0.025, 0.050)],
+               'sector': [(0.400, 0.700),
+                          (0.350, 0.550),
+                          (0.700, 1.100),
+                          (0.700, 1.300),
+                          (1.400, 2.000),
+                          (0.700, 1.400),
+                          (2.500, 6.500)],
+               'bulk': [(1.2, 3.0),
+                        (3.0, 4.0),
+                        (5.0, 17.0),
+                        (10.0, 20.0),
+                        (22.0, 40.0),
+                        (45.0, 80.0),
+                        (80.0, 208.0)],
+               'lock': [(1.0, 2.0),
+                        (1.0, 2.0),
+                        (1.0, 2.0),
+                        (1.0, 2.0),
+                        (1.0, 2.0),
+                        (1.0, 2.0),
+                        (1.0, 2.0)]}
     FEATURES = SerialFlash.FEAT_SECTERASE | \
                SerialFlash.FEAT_SUBSECTERASE
 
@@ -1015,9 +1040,11 @@ class At45FlashDevice(_SpiFlashDevice):
             raise SerialFlashUnknownJedec(jedec)
         code = _SpiFlashDevice.jedec2int(jedec)[1]
         capacity = (code>>self.CAPACITY_SHIFT) & self.CAPACITY_MASK
-        self._size = At45FlashDevice.SIZES[capacity]
+        self._devidx = capacity-2
+        assert 0 <= self._devidx < len(self.PAGE_DIV)
+        self._size = self.get_size('chip')
         self._device = 'AT45DB'
-        self._spi.set_frequency(At45FlashDevice.SPI_FREQ_MAX*1E06)
+        self._spi.set_frequency(self.SPI_FREQS_MAX[self._devidx]*1E06)
         self._fix_page_size()
 
     def __len__(self):
@@ -1027,11 +1054,10 @@ class At45FlashDevice(_SpiFlashDevice):
         return 'Atmel %s %s' % \
             (self._device, pretty_size(self._size, lim_m=1<<20))
 
-    @classmethod
-    def get_size(cls, kind):
+    def get_size(self, kind):
         try:
-            div = getattr(cls, '%s_DIV' % kind.upper())
-            return (1<<div)
+            divs = getattr(self, '%s_DIV' % kind.upper())
+            return (1 << divs[self._devidx])
         except AttributeError:
             raise AssertionError('%s erase is not supported' % kind.title())
 
@@ -1045,10 +1071,9 @@ class At45FlashDevice(_SpiFlashDevice):
         """Flash device feature"""
         return bool(cls.FEATURES & feature)
 
-    @classmethod
-    def get_timings(cls, time):
+    def get_timings(self, time):
         """Get a time tuple (typical, max)"""
-        return cls.TIMINGS[time]
+        return self.TIMINGS[time][self._devidx]
 
     @classmethod
     def match(cls, jedec):
@@ -1060,7 +1085,7 @@ class At45FlashDevice(_SpiFlashDevice):
         if device != cls.DEVICE_ID:
             return False
         capacity = (a>>cls.CAPACITY_SHIFT) & cls.CAPACITY_MASK
-        if capacity not in cls.SIZES:
+        if (capacity < 2) or ((capacity-2) >= len(cls.PAGE_DIV)):
             return False
         return True
 
@@ -1143,8 +1168,8 @@ class At45FlashDevice(_SpiFlashDevice):
             return
         wcmd = Array('B', [0x3d, 0x2a, 0x80, 0xa6])
         self._spi.exchange(wcmd)
-        raise AssertionError("Please power-cycle the device to enable "
-                             "binary page size mode")
+        raise IOError("Please power-cycle the device to enable "
+                      "binary page size mode")
 
 
 class N25QFlashDevice(_Gen25FlashDevice):
@@ -1158,7 +1183,6 @@ class N25QFlashDevice(_Gen25FlashDevice):
                 'subsector' : (0.3, 3.0), # 300/3000 ms
                 'sector' : (0.7, 3.0), # 700/3000 ms
                 'bulk' : (60, 120), # seconds
-                # 'lock' : (0.0015, 0.003), # 1.5/3 ms
     }
     FEATURES = SerialFlash.FEAT_SECTERASE | \
                SerialFlash.FEAT_SUBSECTERASE
