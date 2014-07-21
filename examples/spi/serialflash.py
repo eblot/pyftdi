@@ -953,11 +953,12 @@ class At45FlashDevice(_SpiFlashDevice):
        command set than '25' series.
     """
 
-    PAGE_DIV = 9
     SUBSECTOR_DIV = 12
     SECTOR_DIV = 16
     JEDEC_ID = 0x1F
-    SIZES = { 0x6 : 2<<20, 0x07 : 4<<20 }
+    PAGE_SIZES = [8, 9]
+    SIZES = { 0x2 : 1 << 17, 0x3 : 1 << 18, 0x4 : 1 << 19, 0x5 : 1 << 20,
+              0x6 : 2<<20, 0x07 : 4<<20 }
     SPI_FREQ_MAX = 66 # MHz
     TIMINGS = { 'page' : (0.005, 0.035), # 5/35 ms
                 'subsector' : (0.05, 0.100), # 50/100 ms
@@ -1015,6 +1016,12 @@ class At45FlashDevice(_SpiFlashDevice):
         code = _SpiFlashDevice.jedec2int(jedec)[1]
         capacity = (code>>self.CAPACITY_SHIFT) & self.CAPACITY_MASK
         self._size = At45FlashDevice.SIZES[capacity]
+
+        if capacity <= 3:  # page size vary depending on flash density
+            self.page_size = 1 << self.PAGE_SIZES[0]
+        else:
+            self.page_size = 1 << self.PAGE_SIZES[1]
+
         self._device = 'AT45DB'
         self._spi.set_frequency(At45FlashDevice.SPI_FREQ_MAX*1E06)
         self._fix_page_size()
@@ -1109,7 +1116,8 @@ class At45FlashDevice(_SpiFlashDevice):
         if not isinstance(data, Array):
             data = Array('B', data)
         pos = 0
-        page_size = self.get_size('page')
+        page_size = self.page_size
+
         while pos < length:
             boffset = (address+pos) & (page_size-1)
             poffset = (address+pos) & ~(page_size-1)
