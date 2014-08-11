@@ -44,7 +44,7 @@ setup(
     url='http://github.com/eblot/pyftdi',
     download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' % \
                  VERSION,
-    packages=['pyftdi','pyftdi.pyftdi','pyftdi.serialext'],
+    packages=['pyftdi','pyftdi.serialext'],
     extras_require={'spiflash' : []},
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},

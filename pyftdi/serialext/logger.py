@@ -25,7 +25,7 @@
 
 import sys
 import types
-from pyftdi.pyftdi.misc import hexdump
+from pyftdi.misc import hexdump
 
 __all__ = ['SerialLogger']
 
