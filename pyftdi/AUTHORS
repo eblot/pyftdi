@@ -20,3 +20,7 @@ Contributors:
   * JTAG speed optimisation for long transfer
  * DavidWC:
   * Update PyUSB API adaptation code
+ * Sebastian:
+  * Fix bitmask definition
+ * Anders (anders-code):
+  * Remove the double-layer directory structure, an historical mess :-)
