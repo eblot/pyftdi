@@ -32,6 +32,7 @@ from io import RawIOBase
 from pyftdi.misc import hexdump
 from serial import SerialBase, SerialException, portNotOpenError
 
+
 __all__ = ['Serial']
 
 

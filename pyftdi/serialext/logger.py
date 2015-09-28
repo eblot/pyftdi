@@ -39,17 +39,17 @@ class SerialLogger(object):
             self._logger = open(logpath, "wt")
         except IOError, e:
             print >> sys.stderr, \
-                "Cannot log data to %s" % logpath
+                "Cannot log data to %s: %s" % (logpath, str(e))
         self._port = None
         self._methods = {}
         self._last = time()
 
     def spy(self, port):
         self._port = port
-        methods = [m for m in self.__class__.__dict__ \
-                   if not m.startswith('_') and \
-                      hasattr(getattr(self.__class__, m), '__call__') and \
-                      m != 'spy']
+        methods = [m for m in self.__class__.__dict__
+                   if not m.startswith('_') and
+                   hasattr(getattr(self.__class__, m), '__call__') and
+                   m != 'spy']
         # replace the spied instance method with our own methods
         for method_name in methods:
             try:
@@ -65,7 +65,8 @@ class SerialLogger(object):
             now = time()
             delta = (now-self._last)*1000
             self._last = now
-            print >>self._logger, "%s (%3.3f ms):\n%s" % (header, delta, string)
+            print >>self._logger, "%s (%3.3f ms):\n%s" % \
+                (header, delta, string)
             self._logger.flush()
 
     def _log_read(self, data):

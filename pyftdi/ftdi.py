@@ -367,9 +367,9 @@ class Ftdi(object):
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise AssertionError('Baudrate tolerance exceeded: %.02f%% '
-                                 '(wanted %d, achievable %d)' %
-                                 (delta, baudrate, actual))
+            raise ValueError('Baudrate tolerance exceeded: %.02f%% '
+                             '(wanted %d, achievable %d)' %
+                             (delta, baudrate, actual))
         try:
             if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
                                           Ftdi.SIO_SET_BAUDRATE, value,
@@ -447,7 +447,7 @@ class Ftdi(object):
            amount of time if the buffer is not full yet to decrease
            load on the usb bus."""
         if not (Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX):
-            raise AssertionError("Latency out of range")
+            raise ValueError("Latency out of range")
         if self._ctrl_transfer_out(Ftdi.SIO_SET_LATENCY_TIMER, latency):
             raise FtdiError('Unable to latency timer')
 
@@ -562,7 +562,7 @@ class Ftdi(object):
             if break_ == Ftdi.BREAK_ON:
                 value |= 0x01 << 14
         except KeyError:
-            raise AssertionError('Invalid line property')
+            raise ValueError('Invalid line property')
         if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
             raise FtdiError('Unable to set line property')
 
@@ -661,7 +661,7 @@ class Ftdi(object):
                         part_size = min(size-len(data),
                                         len(self.readbuffer)-self.readoffset)
                         if part_size < 0:
-                            raise AssertionError("Internal Error")
+                            raise FtdiError("Internal Error")
                         data += self.readbuffer[self.readoffset:
                                                 self.readoffset+part_size]
                         self.readoffset += part_size
@@ -705,7 +705,7 @@ class Ftdi(object):
         else:
             for lat in (lmin, lmax):
                 if not (0 < lat < 256):
-                    raise AssertionError("Latency out of range: %d")
+                    raise ValueError("Latency out of range: %d")
             self.latency_min = lmin
             self.latency_max = lmax
             self.latency_threshold = threshold
@@ -795,9 +795,11 @@ class Ftdi(object):
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
-            raise AssertionError("Device is not yet known")
+            import errno
+            raise IOError("Device is not yet known", errno.ENODEV)
         if not self.interface:
-            raise AssertionError("Interface is not yet known")
+            import errno
+            raise IOError("Interface is not yet known", errno.ENODEV)
         if self.ic_name in self.HISPEED_DEVICES:
             packet_size = 512
         else:
@@ -810,11 +812,11 @@ class Ftdi(object):
         """Convert a requested baudrate into the closest possible baudrate
            that can be assigned to the FTDI device"""
         if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
-            raise AssertionError('Invalid baudrate (too low)')
+            raise ValueError('Invalid baudrate (too low)')
         if baudrate > self.BAUDRATE_REF_BASE:
             if self.ic_name not in self.HISPEED_DEVICES or \
                baudrate > self.BAUDRATE_REF_HIGH:
-                    raise AssertionError('Invalid baudrate (too high)')
+                    raise ValueError('Invalid baudrate (too high)')
             refclock = self.BAUDRATE_REF_HIGH
             hispeed = True
         else:

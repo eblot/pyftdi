@@ -30,4 +30,5 @@ try:
     from serial import protocol_handler_packages
     protocol_handler_packages.append('pyftdi.serialext')
 except ImportError:
-    raise AssertionError('Cannot register pyftdi extensions')
+    from serial import SerialException
+    raise SerialException('Cannot register pyftdi extensions')
