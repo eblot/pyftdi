@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2014, Neotion
+# Copyright (c) 2008-2015, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,12 +23,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
-import time
 from io import RawIOBase
 
 from pyftdi.ftdi import Ftdi, FtdiError
-from pyftdi.misc import to_int
 from pyftdi.serialext.serialusb import UsbSerial
 
 __all__ = ['Serial']
@@ -40,22 +37,23 @@ class FtdiSerial(UsbSerial):
     BACKEND = 'pyftdi'
     SCHEME = 'ftdi'
     FTDI_VENDOR = 0x403
-    VENDOR_IDS = { 'ftdi': FTDI_VENDOR }
-    PRODUCT_IDS = { FTDI_VENDOR: { 
-                        '232': 0x6001,
-                        '232r': 0x6001,
-                        '232h': 0x6014,
-                        '2232': 0x6010,
-                        '4232': 0x6011,
-                        '230x': 0x6015,
-                        'ft232': 0x6001,
-                        'ft232r': 0x6001,
-                        'ft232h': 0x6014,
-                        'ft2232': 0x6010,
-                        'ft4232': 0x6011,
-                        'ft230x': 0x6015
-                        }
-                  }
+    VENDOR_IDS = {'ftdi': FTDI_VENDOR}
+    PRODUCT_IDS = {
+        FTDI_VENDOR:
+            {'232': 0x6001,
+             '232r': 0x6001,
+             '232h': 0x6014,
+             '2232': 0x6010,
+             '4232': 0x6011,
+             '230x': 0x6015,
+             'ft232': 0x6001,
+             'ft232r': 0x6001,
+             'ft232h': 0x6014,
+             'ft2232': 0x6010,
+             'ft4232': 0x6011,
+             'ft230x': 0x6015
+             }
+        }
     DEFAULT_VENDOR = FTDI_VENDOR
 
     def open(self):

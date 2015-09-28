@@ -1,5 +1,5 @@
 # Copyright (c) 2008-2012, Neotion
-# Copyright (c) 2011-2012, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2015, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
 import time
-from pyftdi.misc import to_int
 from pyftdi.usbtools import UsbTools, UsbToolsError
 from serial import SerialBase
 
@@ -39,7 +37,7 @@ class UsbSerial(SerialBase):
     """
 
     BAUDRATES = sorted([9600 * (x+1) for x in range(6)] +
-                       range(115200, 1000000, 115200) + \
+                       range(115200, 1000000, 115200) +
                        range(1000000, 13000000, 100000))
 
     def makeDeviceName(self, port):

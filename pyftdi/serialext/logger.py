@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2012, Neotion
+# Copyright (c) 2008-2015, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,7 @@
 import sys
 import types
 from pyftdi.misc import hexdump
+from time import time
 
 __all__ = ['SerialLogger']
 
@@ -38,9 +39,10 @@ class SerialLogger(object):
             self._logger = open(logpath, "wt")
         except IOError, e:
             print >> sys.stderr, \
-                "Cannot log data to %s" % kwargs['logger']
+                "Cannot log data to %s" % logpath
         self._port = None
         self._methods = {}
+        self._last = time()
 
     def spy(self, port):
         self._port = port
@@ -58,37 +60,55 @@ class SerialLogger(object):
             setattr(port, method_name, types.MethodType(new_method, self))
             self._methods[method_name] = old_method
 
+    def _print(self, header, string):
+        if self._logger:
+            now = time()
+            delta = (now-self._last)*1000
+            self._last = now
+            print >>self._logger, "%s (%3.3f ms):\n%s" % (header, delta, string)
+            self._logger.flush()
+
     def _log_read(self, data):
-        if not self._logger:
-            return
         try:
-            print >>self._logger, "READ:\n%s" % hexdump(data)
-        except:
-            print >> sys.stderr, 'Cannot log read data'
+            self._print('READ', hexdump(data))
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log input data (%s)' % e
 
     def _log_write(self, data):
-        if not self._logger:
-            return
         try:
-            print >>self._logger, "WRITE:\n%s" % hexdump(data)
-        except:
-            print >>sys.stderr, 'Cannot log written data'
+            self._print('WRITE', hexdump(data))
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log output data (%s)' % e, data
 
     def _log_flush(self, type_):
-        if not self._logger:
-            return
         try:
-            print >>self._logger, "FLUSH:  %s\n" % type_
-        except:
-            print >>sys.stderr, 'Cannot log flush'
+            self._print('FLUSH', type_)
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log flush action (%s)' % e
 
     def _log_waiting(self, count):
-        if not self._logger:
-            return
         try:
-            print >>self._logger, "INWAITING: %d\n" % count
-        except:
-            print >>sys.stderr, 'Cannot log inwaiting'
+            self._print('INWAITING', '%d' % count)
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log inwaiting (%s)' % e
+
+    def _log_setBaudrate(self, baudrate):
+        try:
+            self._print('SETBAUDRATE', '%d' % baudrate)
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log setBaudrate (%s)' % e
+
+    def _log_setDTR(self, hwreset):
+        try:
+            self._print('SETDTR', '%s' % hwreset)
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log setDTR (%s)' % e
+
+    def _log_setRTS(self, startmode):
+        try:
+            self._print('SETRTS', '%d' % startmode)
+        except Exception, e:
+            print >>sys.stderr, 'Cannot log setRTS (%s)' % e
 
     def close(self):
         self._logger.close()
@@ -120,3 +140,15 @@ class SerialLogger(object):
     def flushOutput(self):
         self._log_flush('O')
         self._methods['flushOutput'](self._port)
+
+    def setBaudrate(self, baudrate):
+        self._log_setBaudrate(baudrate)
+        self._methods['setBaudrate'](self._port, baudrate)
+
+    def setDTR(self, hwreset):
+        self._log_setDTR(hwreset)
+        self._methods['setDTR'](self._port, hwreset)
+
+    def setRTS(self, startmode):
+        self._log_setRTS(startmode)
+        self._methods['setRTS'](self._port, startmode)

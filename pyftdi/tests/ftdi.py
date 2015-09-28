@@ -36,11 +36,11 @@ class FtdiTestCase(unittest.TestCase):
 
     def test_multiple_interface(self):
         # the following calls used to create issues (several interfaces from
-        # the same device)
+        # the same device). The test expect an FTDI 2232H here
         ftdi1 = Ftdi()
-        ftdi1.open(interface=1)
+        ftdi1.open(vendor=0x403, product=0x6010, interface=1)
         ftdi2 = Ftdi()
-        ftdi2.open(interface=2)
+        ftdi2.open(vendor=0x403, product=0x6010, interface=2)
         import time
         for x in range(5):
             print "If#1: ", hex(ftdi1.poll_modem_status())
@@ -48,6 +48,7 @@ class FtdiTestCase(unittest.TestCase):
             time.sleep(0.500)
         ftdi1.close()
         ftdi2.close()
+
 
 def suite():
     suite = unittest.TestSuite()

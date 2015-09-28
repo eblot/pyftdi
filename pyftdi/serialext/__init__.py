@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2012, Neotion
+# Copyright (c) 2008-2015, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
