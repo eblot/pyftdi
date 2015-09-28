@@ -122,7 +122,7 @@ class Ftdi(object):
     BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
     BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
     BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
-    BITMODE_MASK = 0x4F     # Mask for all bitmodes
+    BITMODE_MASK = 0x7F     # Mask for all bitmodes
 
     # USB control requests
     REQ_OUT = usb.util.build_request_type(
