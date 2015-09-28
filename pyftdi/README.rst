@@ -141,6 +141,9 @@ Troubleshooting
     Please note that the system automatically reloads the driver, so it may be
     useful to move the kernel extension so that the system never loads it.
 
+  * This error message may also be triggered whenever the communication port is
+    already in use.
+
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
   uninstalling the driver. On OS X, refer to this FTDI guide_:
