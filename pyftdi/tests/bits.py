@@ -119,7 +119,7 @@ class BitSequenceTestCase(unittest.TestCase):
         bssub = BitSequence(bs[1:3])
         self.assertEqual(str(bssub), '2: 10')
         bs[0:3] = '11'
-        self.assertEqual(str(bs), '3: 011')
+        self.assertEqual(str(bs), '4: 0011')
         bzs = BitZSequence(self.bzs4)
         self.assertEqual(bzs, self.bzs4)
         bs = BitSequence('11111010101001', msb=True)
@@ -195,7 +195,7 @@ class BitSequenceTestCase(unittest.TestCase):
         b = BitSequence(bytes_=[0xa0, '\x0f', 0x77], msb=True, msby=True)
         self.assertEqual(str(['%02x' % x for x in b.tobytes(True)]),
                          "['a0', '0f', '77']")
-        b = BitSequence(length=3)
+        b = BitSequence(length=7)
         b[6] = '1'
         self.assertEqual(str(b), '7: 1000000')
 

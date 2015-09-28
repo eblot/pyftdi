@@ -27,9 +27,9 @@ import re
 import time
 from io import RawIOBase
 
-from pyftdi.pyftdi.ftdi import Ftdi, FtdiError
-from pyftdi.pyftdi.misc import to_int
-from serialusb import UsbSerial
+from pyftdi.ftdi import Ftdi, FtdiError
+from pyftdi.misc import to_int
+from pyftdi.serialext.serialusb import UsbSerial
 
 __all__ = ['Serial']
 

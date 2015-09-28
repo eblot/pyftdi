@@ -30,7 +30,7 @@ import struct
 import usb.core
 import usb.util
 from array import array as Array
-from usbtools import UsbTools
+from pyftdi.usbtools import UsbTools
 
 
 __all__ = ['Ftdi', 'FtdiError']

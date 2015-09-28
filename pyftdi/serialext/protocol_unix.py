@@ -29,7 +29,7 @@ import select
 import socket
 import stat
 from io import RawIOBase
-from pyftdi.pyftdi.misc import hexdump
+from pyftdi.misc import hexdump
 from serial import SerialBase
 
 __all__ = ['Serial']

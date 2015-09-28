@@ -18,7 +18,7 @@
 import threading
 import usb.core
 import usb.util
-from misc import to_int
+from pyftdi.misc import to_int
 from urlparse import urlsplit
 
 __all__ = ['UsbTools']

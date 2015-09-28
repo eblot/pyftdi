@@ -32,7 +32,7 @@ import os
 import sys
 import time
 import threading
-from pyftdi.pyftdi.misc import to_bool, to_int
+from pyftdi.misc import to_bool, to_int
 from term import getkey
 
 class MiniTerm(object):

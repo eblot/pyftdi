@@ -18,9 +18,9 @@
 import struct
 import time
 from array import array as Array
-from pyftdi.pyftdi.ftdi import Ftdi
-from pyftdi.pyftdi.bits import BitSequence
-from pyftdi.pyftdi.misc import hexline
+from pyftdi.ftdi import Ftdi
+from pyftdi.bits import BitSequence
+from pyftdi.misc import hexline
 
 __all__ = ['JtagEngine', 'JtagTool']
 
