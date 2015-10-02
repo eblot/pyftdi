@@ -24,3 +24,5 @@ Contributors:
   * Fix bitmask definition
  * Anders (anders-code):
   * Remove the double-layer directory structure, an historical mess :-)
+ * Andrea Concil:
+  * Fix SPI implementation so that any SPI /CS can be addressed

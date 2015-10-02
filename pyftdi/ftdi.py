@@ -249,6 +249,7 @@ class Ftdi(object):
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
                                            description)
         # detect invalid interface as early as possible
+        self.usb_dev.set_configuration()
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
             raise FtdiError('No such FTDI port: %d' % interface)
@@ -742,8 +743,8 @@ class Ftdi(object):
             ifnum = 1
         if ifnum-1 not in xrange(config.bNumInterfaces):
             raise ValueError("No such interface for this device")
-        self.index = ifnum
         self.interface = config[(ifnum-1, 0)]
+        self.index = self.interface.bInterfaceNumber+1
         endpoints = sorted([ep.bEndpointAddress for ep in self.interface])
         self.in_ep, self.out_ep = endpoints[:2]
 

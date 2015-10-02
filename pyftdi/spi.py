@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2014, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2015, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,6 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import struct
-import time
 from array import array as Array
 from pyftdi.ftdi import Ftdi
 
@@ -87,21 +86,21 @@ class SpiController(object):
     DO_BIT = 0x02
     DI_BIT = 0x04
     CS_BIT = 0x08
-    PAYLOAD_MAX_LENGTH = 0x10000 # 16 bits max
+    PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
     def __init__(self, silent_clock=False, cs_count=4):
         self._ftdi = Ftdi()
-        self._cs_bits = ((SpiController.CS_BIT << cs_count) - 1) & \
-                         ~(SpiController.CS_BIT - 1)
+        self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
+                         ~(SpiController.CS_BIT - 1))
         self._ports = [None] * cs_count
-        self._direction = self._cs_bits | \
-                          SpiController.DO_BIT | \
-                          SpiController.SCK_BIT
+        self._direction = (self._cs_bits |
+                           SpiController.DO_BIT |
+                           SpiController.SCK_BIT)
         self._cs_high = Array('B')
         if silent_clock:
             # Set SCLK as input to avoid emitting clock beats
             self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                                    self._direction & ~SpiController.SCK_BIT])
+                                  self._direction & ~SpiController.SCK_BIT])
         # /CS to SCLK delay, use 8 clock cycles as a HW tempo
         self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
         # Restore idle state
@@ -110,13 +109,16 @@ class SpiController(object):
         self._immediate = Array('B', [Ftdi.SEND_IMMEDIATE])
         self._frequency = 0.0
 
-    def configure(self, vendor, product, interface, frequency=6.0E6):
+    def configure(self, vendor, product, interface, **kwargs):
         """Configure the FTDI interface as a SPI master"""
+        for k in ('direction', 'initial'):
+            if k in kwargs:
+                del kwargs[k]
         self._frequency = \
             self._ftdi.open_mpsse(vendor, product, interface,
                                   direction=self._direction,
-                                  initial=self._cs_bits, # /CS all high
-                                  frequency=frequency)
+                                  initial=self._cs_bits,  # /CS all high
+                                  **kwargs)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -131,9 +133,9 @@ class SpiController(object):
         if cs >= len(self._ports):
             raise SpiIOError("No such SPI port")
         if not self._ports[cs]:
-            cs_state = 0xFF & ~((SpiController.CS_BIT<<cs) |
-                                 SpiController.SCK_BIT |
-                                 SpiController.DO_BIT)
+            cs_state = 0xFF & ~((SpiController.CS_BIT << cs) |
+                                SpiController.SCK_BIT |
+                                SpiController.DO_BIT)
             cs_cmd = Array('B', [Ftdi.SET_BITS_LOW,
                                  cs_state,
                                  self._direction])
@@ -160,7 +162,7 @@ class SpiController(object):
         if readlen > SpiController.PAYLOAD_MAX_LENGTH:
             raise SpiIOError("Input payload is too large")
         if self._frequency != frequency:
-            freq = self._ftdi.set_frequency(frequency)
+            self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
