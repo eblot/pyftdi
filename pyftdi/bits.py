@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2015, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -62,9 +62,10 @@ class BitSequence(object):
        :param msby:   most significant byte first or not
     """
 
-    __slots__ = [ '_seq' ]
+    __slots__ = ['_seq']
 
-    def __init__(self, value=None, msb=False, length=0, bytes_=None, msby=True):
+    def __init__(self, value=None, msb=False, length=0, bytes_=None,
+                 msby=True):
         """Instanciate a new bit sequence.
         """
         self._seq = Array('B')
@@ -81,7 +82,7 @@ class BitSequence(object):
                     raise BitSequenceError("Invalid byte value")
                 b = []
                 for x in xrange(8):
-                    b.append(byte&0x1 and True or False)
+                    b.append(bool(byte & 0x1))
                     byte >>= 1
                 if msb:
                     b.reverse()
@@ -111,7 +112,7 @@ class BitSequence(object):
 
     def invert(self):
         """In-place invert sequence values"""
-        self._seq = Array('B', [x^1 for x in self._seq])
+        self._seq = Array('B', [x ^ 1 for x in self._seq])
         return self
 
     def append(self, seq):
@@ -135,7 +136,7 @@ class BitSequence(object):
         """Degenerate the sequence into a single bit, if possible"""
         if len(self) != 1:
             raise BitSequenceError("BitSequence should be a scalar")
-        return self._seq[0] and True or False
+        return bool(self._seq[0])
 
     def tobyte(self, msb=False):
         """Convert the sequence into a single byte value, if possible"""
@@ -187,7 +188,7 @@ class BitSequence(object):
         l = length or -1
         seq = self._seq
         while l:
-            seq.append((value & 1) and True or False)
+            seq.append(bool(value & 1))
             value >>= 1
             if not value:
                 break
@@ -197,7 +198,7 @@ class BitSequence(object):
 
     def _init_from_iterable(self, iterable, msb):
         """Initialize from an iterable"""
-        smap = { '0': 0, '1': 1, False: 0, True: 1, 0: 0, 1: 1 }
+        smap = {'0': 0, '1': 1, False: 0, True: 1, 0: 0, 1: 1}
         seq = self._seq
         try:
             if msb:
@@ -293,7 +294,7 @@ class BitSequence(object):
         return value
 
     def __and__(self, other):
-        if type(other) is not type(self.__class__()):
+        if not isinstance(other, self.__class__):
             raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
@@ -301,7 +302,7 @@ class BitSequence(object):
                                         self._seq, other.sequence()))
 
     def __or__(self, other):
-        if type(other) is not type(self.__class__()):
+        if not isinstance(other, self.__class__):
             raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
@@ -309,7 +310,7 @@ class BitSequence(object):
                                         self._seq, other.sequence()))
 
     def __add__(self, other):
-        return self.__class__(value = self._seq + other.sequence())
+        return self.__class__(value=self._seq + other.sequence())
 
     def __ilshift__(self, count):
         count %= len(self)
@@ -369,25 +370,25 @@ class BitZSequence(BitSequence):
        :param length: count of signficant bits in the bit sequence
     """
 
-    __slots__ = [ '_seq' ]
+    __slots__ = ['_seq']
 
-    Z = 0xff # maximum byte value
+    Z = 0xff  # maximum byte value
 
     def __init__(self, value=None, msb=False, length=0):
         BitSequence.__init__(self, value=value, msb=msb, length=length)
 
     def invert(self):
-        self._seq = [x in (None, BitZSequence.Z) and BitZSequence.Z or x^1 \
-                        for x in self._seq]
+        self._seq = [x in (None, BitZSequence.Z) and BitZSequence.Z or x ^ 1
+                     for x in self._seq]
         return self
 
     def tobyte(self, msb=False):
-        raise BitSequenceError("Type %s cannot be converted to byte" % \
-                                type(self))
+        raise BitSequenceError("Type %s cannot be converted to byte" %
+                               type(self))
 
     def tobytes(self, msb=False, msby=False):
-        raise BitSequenceError("Type %s cannot be converted to bytes" % \
-                                type(self))
+        raise BitSequenceError("Type %s cannot be converted to bytes" %
+                               type(self))
 
     def matches(self, other):
         if not isinstance(self, BitSequence):
@@ -399,15 +400,15 @@ class BitZSequence(BitSequence):
         for (x, y) in zip(self._seq, other.sequence()):
             if BitZSequence.Z in (x, y):
                 continue
-            if not x is y:
+            if x is not y:
                 return False
         return True
 
     def _init_from_iterable(self, iterable, msb):
         """Initialize from an iterable"""
-        smap = { '0': 0, '1': 1, 'Z': BitZSequence.Z,
-                 False: 0, True: 1, None: BitZSequence.Z,
-                 0: 0, 1: 1, BitZSequence.Z: BitZSequence.Z }
+        smap = {'0': 0, '1': 1, 'Z': BitZSequence.Z,
+                False: 0, True: 1, None: BitZSequence.Z,
+                0: 0, 1: 1, BitZSequence.Z: BitZSequence.Z}
         seq = self._seq
         try:
             if msb:
@@ -417,9 +418,8 @@ class BitZSequence(BitSequence):
         except KeyError:
             raise BitSequenceError("Invalid binary character in initializer")
 
-
     def __repr__(self):
-        smap = { False: '0', True: '1', BitZSequence.Z: 'Z' }
+        smap = {False: '0', True: '1', BitZSequence.Z: 'Z'}
         return ''.join([smap[b] for b in reversed(self._seq)])
 
     def __long__(self):
@@ -437,7 +437,7 @@ class BitZSequence(BitSequence):
         if ld:
             return ld
         for n, (x, y) in enumerate(zip(self._seq, other.sequence()), start=1):
-            if not x is y:
+            if x is not y:
                 return n
         return 0
 
@@ -447,6 +447,7 @@ class BitZSequence(BitSequence):
                                    'combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
+
         def andz(x, y):
             """Compute the boolean AND operation for a tri-state boolean"""
             if BitZSequence.Z in (x, y):
@@ -461,6 +462,7 @@ class BitZSequence(BitSequence):
                                    'combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
+
         def orz(x, y):
             """Compute the boolean OR operation for a tri-state boolean"""
             if BitZSequence.Z in (x, y):
@@ -486,7 +488,7 @@ class BitField(object):
        bitfield[3:5] means b3..b5, NOT b3..b4 as with regular slices
     """
 
-    __slots__ = [ '_val' ]
+    __slots__ = ['_val']
 
     def __init__(self, value=0):
         self._val = value
@@ -513,7 +515,7 @@ class BitField(object):
             else:
                 offset = index.start
                 count = index.stop-index.start+1
-            mask = (1<<count)-1
+            mask = (1 << count)-1
             return (self._val >> offset) & mask
         else:
             return (self._val >> index) & 1
@@ -528,15 +530,15 @@ class BitField(object):
             else:
                 offset = index.start
                 count = index.stop-index.start+1
-            mask = (1<<count)-1
+            mask = (1 << count)-1
             value = (value & mask) << offset
             mask = mask << offset
             self._val = (self._val & ~mask) | value
         else:
             if isinstance(value, bool):
                 value = int(value)
-            value = (value&1L)<<index
-            mask = (1L)<<index
+            value = (value & 1L) << index
+            mask = (1L) << index
             self._val = (self._val & ~mask) | value
 
     def __int__(self):
