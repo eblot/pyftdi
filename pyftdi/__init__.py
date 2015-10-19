@@ -23,5 +23,5 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-version_info = (0, 11, 2)
+version_info = (0, 11, 3)
 __version__ = '.'.join(['%d' % v for v in version_info])
