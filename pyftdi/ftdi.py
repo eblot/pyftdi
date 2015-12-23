@@ -248,8 +248,11 @@ class Ftdi(object):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
                                            description)
+        try:
+            self.usb_dev.set_configuration()
+        except usb.core.USBError:
+            pass
         # detect invalid interface as early as possible
-        self.usb_dev.set_configuration()
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
             raise FtdiError('No such FTDI port: %d' % interface)
