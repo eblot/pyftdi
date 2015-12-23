@@ -78,6 +78,9 @@ class SpiController(object):
                              be set but beware that SCLK line should be fitted
                              with a pull-down resistor, as SCLK is high-Z
                              during this short period of time.
+
+                             Note that in this mode, it is recommended to use
+                             an external pull-down on SCLK
         :param cs_count: is the number of /CS lines (one per device to drive on
                          the SPI bus)
     """
@@ -88,7 +91,7 @@ class SpiController(object):
     CS_BIT = 0x08
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=4):
+    def __init__(self, silent_clock=False, cs_count=4, turbo=True):
         self._ftdi = Ftdi()
         self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
                          ~(SpiController.CS_BIT - 1))
@@ -96,16 +99,20 @@ class SpiController(object):
         self._direction = (self._cs_bits |
                            SpiController.DO_BIT |
                            SpiController.SCK_BIT)
+        self._turbo = turbo
         self._cs_high = Array('B')
-        if silent_clock:
-            # Set SCLK as input to avoid emitting clock beats
-            self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                                  self._direction & ~SpiController.SCK_BIT])
-        # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-        self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
+        if self._turbo:
+            if silent_clock:
+                # Set SCLK as input to avoid emitting clock beats
+                self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
+                    self._direction & ~SpiController.SCK_BIT])
+            # /CS to SCLK delay, use 8 clock cycles as a HW tempo
+            self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
         # Restore idle state
         self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
                               self._direction])
+        if not self._turbo:
+            self._cs_high.append(Ftdi.SEND_IMMEDIATE)
         self._immediate = Array('B', [Ftdi.SEND_IMMEDIATE])
         self._frequency = 0.0
 
@@ -173,8 +180,12 @@ class SpiController(object):
             cmd.extend(out)
             cmd.fromstring(read_cmd)
             cmd.extend(self._immediate)
-            cmd.extend(self._cs_high)
-            self._ftdi.write_data(cmd)
+            if self._turbo:
+                cmd.extend(self._cs_high)
+                self._ftdi.write_data(cmd)
+            else:
+                self._ftdi.write_data(cmd)
+                self._ftdi.write_data(self._cs_high)
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
@@ -183,8 +194,12 @@ class SpiController(object):
             cmd = Array('B', cs_cmd)
             cmd.fromstring(write_cmd)
             cmd.extend(out)
-            cmd.extend(self._cs_high)
-            self._ftdi.write_data(cmd)
+            if self._turbo:
+                cmd.extend(self._cs_high)
+                self._ftdi.write_data(cmd)
+            else:
+                self._ftdi.write_data(cmd)
+                self._ftdi.write_data(self._cs_high)
             data = Array('B')
         return data
 
