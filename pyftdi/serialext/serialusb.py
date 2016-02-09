@@ -79,10 +79,7 @@ class UsbSerial(SerialBase):
             data += buf
             size -= len(buf)
             if self._timeout > 0:
-                if buf:
-                    break
-                ms = time.time()-start
-                if ms > self._timeout:
+                if time.time() - start > self._timeout:
                     break
             time.sleep(0.01)
         return data
