@@ -325,6 +325,8 @@ class UsbTools(object):
                 pass
             # if the serial number is an ASCII char, use it, or use the index
             # value
+            if not s:
+                s = ''
             if [c for c in s if c not in printablechars or c == '?']:
                 serial = '%d' % indices[ikey]
             else:
