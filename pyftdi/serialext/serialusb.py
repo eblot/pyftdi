@@ -26,7 +26,7 @@
 
 import time
 from pyftdi.usbtools import UsbTools, UsbToolsError
-from serial import SerialBase
+from serial import SerialBase, VERSION as pyserialver
 from six.moves import range
 
 __all__ = ['UsbSerial']
@@ -40,6 +40,8 @@ class UsbSerial(SerialBase):
     BAUDRATES = sorted([9600 * (x+1) for x in range(6)] +
                        list(range(115200, 1000000, 115200)) +
                        list(range(1000000, 13000000, 100000)))
+
+    PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
 
     def makeDeviceName(self, port):
         return port
@@ -57,15 +59,17 @@ class UsbSerial(SerialBase):
         try:
             self.udev = devclass()
             self.udev.open(vendor, product, interface, ix, sernum)
+            self.flushOutput()
+            self.flushInput()
         except IOError:
             raise SerialException('Unable to open USB port %s' % self.portstr)
-        self._isOpen = True
+        self._set_open_state(True)
         self._reconfigurePort()
         self._product = product
 
     def close(self):
         """Close the open port"""
-        self._isOpen = False
+        self._set_open_state(False)
         self.udev.close()
         self.udev = None
 
@@ -95,7 +99,7 @@ class UsbSerial(SerialBase):
     def flush(self):
         """Flush of file like objects. In this case, wait until all data
            is written."""
-         # do nothing
+        # do nothing
 
     def flushInput(self):
         """Clear input buffer, discarding all that is in the buffer."""
@@ -166,3 +170,11 @@ class UsbSerial(SerialBase):
             from serial import SerialException
             err = self.udev.get_error_string()
             raise SerialException("%s (%s)" % (str(e), err))
+
+    _reconfigure_port = _reconfigurePort
+
+    def _set_open_state(self, open_):
+        if self.PYSERIAL_VERSION < (3, 0):
+            self._isOpen = bool(open_)
+        else:
+            self.is_open = bool(open_)

@@ -30,7 +30,7 @@ import socket
 from io import RawIOBase
 from pyftdi.misc import hexdump
 from serial import SerialBase, SerialException, portNotOpenError, \
-                   writeTimeoutError
+                   writeTimeoutError, VERSION as pyserialver
 from six import print_
 
 
@@ -53,8 +53,12 @@ class SocketSerial(SerialBase):
     BACKEND = 'socket'
     VIRTUAL_DEVICE = True
 
+    PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
+
     def _reconfigurePort(self):
         pass
+
+    _reconfigure_port = _reconfigurePort
 
     def makeDeviceName(self, port):
         return port
@@ -63,7 +67,7 @@ class SocketSerial(SerialBase):
         """Open the initialized serial port"""
         if self._port is None:
             raise SerialException("Port must be configured before use.")
-        if self._isOpen:
+        if self.isOpen():
             raise SerialException("Port is already open.")
         self._dump = False
         self.sock = None
@@ -83,21 +87,21 @@ class SocketSerial(SerialBase):
                 raise SerialExceptionWithErrno(msg, e.errno)
             else:
                 raise SerialException(msg)
-        self._isOpen = True
+        self._set_open_state(True)
         self._lastdtr = None
 
     def close(self):
         if self.sock:
             try:
                 self.sock.shutdown(socket.SHUT_RDWR)
-            except Exception as e:
+            except Exception:
                 pass
             try:
                 self.sock.close()
-            except Exception as e:
+            except Exception:
                 pass
             self.sock = None
-        self._isOpen = False
+        self._set_open_state(False)
 
     def inWaiting(self):
         """Return the number of characters currently in the input buffer."""
@@ -174,7 +178,7 @@ class SocketSerial(SerialBase):
         """Set terminal status line: Request To Send"""
         pass
 
-    def setDTR(self,on=1):
+    def setDTR(self, on=1):
         """Set terminal status line: Data Terminal Ready"""
         pass
 
@@ -204,6 +208,14 @@ class SocketSerial(SerialBase):
 
     def dump(self, enable):
         self._dump = enable
+
+    # - - Helpers - -
+
+    def _set_open_state(self, open_):
+        if self.PYSERIAL_VERSION < (3, 0):
+            self._isOpen = bool(open_)
+        else:
+            self.is_open = bool(open_)
 
 
 # assemble Serial class with the platform specifc implementation and the base
