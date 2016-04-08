@@ -344,7 +344,7 @@ class JtagController(object):
             bs.append(bitseq)
             #print_("pop %d bits" % bit_count)
         if len(bs) != length:
-            raise AssertionError("Internal error")
+            raise ValueError("Internal error")
         #self._ftdi.validate_mpsse()
         return bs
 

@@ -55,7 +55,7 @@ class MiniTerm(object):
                 else:
                     self._device = '/dev/ttyS0'
             else:
-                raise AssertionError('Serial port unknown')
+                raise ValueError('Serial port unknown')
         self._port = self._open_port(self._device, self._baudrate,
                                      self._logfile, debug)
         self._resume = False
@@ -171,12 +171,12 @@ class MiniTerm(object):
             if not port.isOpen():
                 port.open()
             if not port.isOpen():
-                raise AssertionError('Cannot open port "%s"' % device)
+                raise IOError('Cannot open port "%s"' % device)
             if debug:
                 print_("Using serial backend '%s'" % port.BACKEND)
             return port
         except SerialException as e:
-            raise AssertionError(str(e))
+            raise IOError(str(e))
 
 
 def get_options():
@@ -217,7 +217,7 @@ def main():
                             debug=options.debug)
         miniterm.run(os.name in ('posix', ) and options.fullmode or False,
                      options.reset, options.select)
-    except (AssertionError, IOError, ValueError) as e:
+    except (IOError, ValueError) as e:
         print_('\nError: %s' % e, file=sys.stderr)
         if options.debug:
             import traceback
@@ -225,6 +225,7 @@ def main():
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(2)
+
 
 if __name__ == '__main__':
     main()
