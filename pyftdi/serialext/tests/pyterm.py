@@ -30,6 +30,7 @@
 
 import os
 import sys
+import termios
 import time
 import threading
 from pyftdi.misc import to_bool, to_int
@@ -42,6 +43,9 @@ class MiniTerm(object):
 
     def __init__(self, device=None, baudrate=115200, logfile=None,
                  debug=False):
+        self._termstates = [(fd, termios.tcgetattr(fd)) for fd in
+                            (sys.stdin.fileno(), sys.stdout.fileno(),
+                             sys.stderr.fileno())]
         self._device = device
         self._baudrate = baudrate
         self._logfile = logfile
@@ -145,6 +149,8 @@ class MiniTerm(object):
             self._port.close()
             self._port = None
             print_('Bye.')
+        for fd, att in self._termstates:
+            termios.tcsetattr(fd, termios.TCSANOW, att)
 
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
