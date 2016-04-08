@@ -1,5 +1,5 @@
 # pyftdi - A pure Python FTDI driver
-# Copyright (C) 2010-2015 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
 #
@@ -28,7 +28,7 @@ Require: pyusb
 import struct
 import usb.core
 import usb.util
-from array import array as Array
+from six.moves import range
 from pyftdi.usbtools import UsbTools
 
 
@@ -218,7 +218,7 @@ class Ftdi(object):
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
-        self.readbuffer = Array('B')
+        self.readbuffer = bytearray()
         self.readoffset = 0
         self.readbuffer_chunksize = 4 << 10  # 4KiB
         self.writebuffer_chunksize = 4 << 10  # 4KiB
@@ -284,9 +284,9 @@ class Ftdi(object):
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
-        self.write_data(Array('B', [Ftdi.SET_BITS_LOW, initial, direction]))
+        self.write_data(bytes((Ftdi.SET_BITS_LOW, initial, direction)))
         # Disable loopback
-        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
+        self.write_data(bytes((Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
@@ -305,7 +305,7 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(Array('B', [Ftdi.LOOPBACK_END]))
+        self.write_data(bytes(Ftdi.LOOPBACK_END,))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate
@@ -377,7 +377,7 @@ class Ftdi(object):
                                           index, '', self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def set_frequency(self, frequency):
@@ -389,7 +389,7 @@ class Ftdi(object):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = bytearray()
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
@@ -414,7 +414,7 @@ class Ftdi(object):
         """Configure read buffer chunk size."""
         # Invalidate all remaining data
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = bytearray()
         import sys
         if sys.platform == 'linux':
             if chunksize > 16384:
@@ -493,7 +493,7 @@ class Ftdi(object):
                                           Ftdi.SIO_SET_FLOW_CTRL, 0,
                                           value, '', self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def set_dtr(self, state):
@@ -581,7 +581,7 @@ class Ftdi(object):
                     raise FtdiError("Usb bulk write error")
                 offset += length
             return offset
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def read_data_bytes(self, size, attempt=1):
@@ -593,7 +593,7 @@ class Ftdi(object):
             raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1  # initial condition to enter the usb_read loop
-        data = Array('B')
+        data = bytearray()
         # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
@@ -608,7 +608,8 @@ class Ftdi(object):
         try:
             while (len(data) < size) and (length > 0):
                 while True:
-                    tempbuf = self._read()
+                    # usb.core.Device.read() returns array.array objects
+                    tempbuf = bytearray(self._read())
                     attempt -= 1
                     length = len(tempbuf)
                     # the received buffer contains at least one useful databyte
@@ -623,10 +624,10 @@ class Ftdi(object):
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
-                        self.readbuffer = Array('B')
+                        self.readbuffer = bytearray()
                         self.readoffset = 0
                         srcoff = 2
-                        for i in xrange(chunks):
+                        for i in range(chunks):
                             self.readbuffer += tempbuf[srcoff:srcoff+count]
                             srcoff += packet_size
                         length = len(self.readbuffer)
@@ -637,7 +638,7 @@ class Ftdi(object):
                         if attempt > 0:
                             continue
                         # no actual data
-                        self.readbuffer = Array('B')
+                        self.readbuffer = bytearray()
                         self.readoffset = 0
                         if self.latency_threshold:
                             self.latency_count += 1
@@ -667,7 +668,7 @@ class Ftdi(object):
                                                 self.readoffset+part_size]
                         self.readoffset += part_size
                         return data
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
         # never reached
         raise FtdiError("Internal error")
@@ -676,7 +677,7 @@ class Ftdi(object):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
-        return self.read_data_bytes(size).tostring()
+        return self.read_data_bytes(size)
 
     def get_cts(self):
         """Read terminal status line: Clear To Send"""
@@ -741,7 +742,7 @@ class Ftdi(object):
         """Select the interface to use on the FTDI device"""
         if ifnum == 0:
             ifnum = 1
-        if ifnum-1 not in xrange(config.bNumInterfaces):
+        if ifnum-1 not in range(config.bNumInterfaces):
             raise ValueError("No such interface for this device")
         self.interface = config[(ifnum-1, 0)]
         self.index = self.interface.bInterfaceNumber+1
@@ -754,7 +755,7 @@ class Ftdi(object):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = bytearray()
 
     def _ctrl_transfer_out(self, reqtype, value, data=''):
         """Send a control message to the device"""
@@ -762,7 +763,7 @@ class Ftdi(object):
             return self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT, reqtype, value,
                                               self.index, data,
                                               self.usb_write_timeout)
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def _ctrl_transfer_in(self, reqtype, length):
@@ -771,7 +772,7 @@ class Ftdi(object):
             return self.usb_dev.ctrl_transfer(Ftdi.REQ_IN, reqtype, 0,
                                               self.index, length,
                                               self.usb_read_timeout)
-        except usb.core.USBError, e:
+        except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def _write_v1(self, data):
@@ -837,7 +838,7 @@ class Ftdi(object):
         best_divisor = 0
         best_baud = 0
         best_baud_diff = 0
-        for i in xrange(2):
+        for i in range(2):
             try_divisor = divisor + i
             if not hispeed:
                 # Round up to supported divisor value
@@ -914,10 +915,10 @@ class Ftdi(object):
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
         if self.ic_name in self.HISPEED_DEVICES:
-            cmd = Array('B', [divcode])
+            cmd = bytearray((divcode,))
         else:
-            cmd = Array('B')
-        cmd.extend([Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff])
+            cmd = bytearray()
+        cmd.extend((Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()
         # Drain input buffer
@@ -927,7 +928,8 @@ class Ftdi(object):
     def __get_timeouts(self):
         return self.usb_read_timeout, self.usb_write_timeout
 
-    def __set_timeouts(self, (read_timeout, write_timeout)):
+    def __set_timeouts(self, timeouts):
+        (read_timeout, write_timeout) = timeouts
         self.usb_read_timeout = read_timeout
         self.usb_write_timeout = write_timeout
 

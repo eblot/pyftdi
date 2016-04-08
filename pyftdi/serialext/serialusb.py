@@ -1,5 +1,5 @@
 # Copyright (c) 2008-2012, Neotion
-# Copyright (c) 2011-2015, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 import time
 from pyftdi.usbtools import UsbTools, UsbToolsError
 from serial import SerialBase
+from six.moves import range
 
 __all__ = ['UsbSerial']
 
@@ -37,8 +38,8 @@ class UsbSerial(SerialBase):
     """
 
     BAUDRATES = sorted([9600 * (x+1) for x in range(6)] +
-                       range(115200, 1000000, 115200) +
-                       range(1000000, 13000000, 100000))
+                       list(range(115200, 1000000, 115200)) +
+                       list(range(1000000, 13000000, 100000)))
 
     def makeDeviceName(self, port):
         return port
@@ -51,7 +52,7 @@ class UsbSerial(SerialBase):
         try:
             vendor, product, interface, sernum, ix = UsbTools.parse_url(
                 self.portstr, devclass, scheme, vdict, pdict, default_vendor)
-        except UsbToolsError, e:
+        except UsbToolsError as e:
             raise SerialException(str(e))
         try:
             self.udev = devclass()
@@ -72,7 +73,7 @@ class UsbSerial(SerialBase):
         """Read size bytes from the serial port. If a timeout is set it may
            return less characters as requested. With no timeout it will block
            until the requested number of bytes is read."""
-        data = ''
+        data = bytearray()
         start = time.time()
         while size > 0:
             buf = self.udev.read_data(size)
@@ -161,7 +162,7 @@ class UsbSerial(SerialBase):
             except AttributeError:
                 # backend does not support this feature
                 pass
-        except IOError, e:
+        except IOError as e:
             from serial import SerialException
             err = self.udev.get_error_string()
             raise SerialException("%s (%s)" % (str(e), err))

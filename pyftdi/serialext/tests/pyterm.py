@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2010-2012, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,9 @@ import sys
 import time
 import threading
 from pyftdi.misc import to_bool, to_int
+from six import print_
 from term import getkey
+
 
 class MiniTerm(object):
     """A mini serial terminal to demonstrate pyserial extensions"""
@@ -79,7 +81,7 @@ class MiniTerm(object):
         # wait forever, although Windows is stupid and does not signal Ctrl+C,
         # so wait use a 1/2-second timeout that gives some time to check for a
         # Ctrl+C break then polls again...
-        print 'Entering minicom mode'
+        print_('Entering minicom mode')
         sys.stdout.flush()
         self._port.timeout = 0.5
         self._resume = True
@@ -99,30 +101,30 @@ class MiniTerm(object):
             while self._resume:
                 data = self._port.read(4096)
                 if data:
-                    sys.stdout.write(data)
+                    sys.stdout.write(data.decode('utf8'))
                     sys.stdout.flush()
         except KeyboardInterrupt:
             return
-        except Exception, e:
-            print "Exception: %s" % e
+        except Exception as e:
+            print_("Exception: %s" % e)
             if self._debug:
                 import traceback
-                print >> sys.stderr, traceback.format_exc()
-            import thread
-            thread.interrupt_main()
+                print_(traceback.format_exc(), file=sys.stderr)
+            from six.moves import _thread
+            _thread.interrupt_main()
 
     def _writer(self, fullmode=False):
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
                 c = getkey(fullmode)
-                if fullmode and ord(c) == 0x1: # Ctrl+A
+                if fullmode and ord(c) == 0x1:  # Ctrl+A
                     self._cleanup()
                     return
                 else:
                     self._port.write(c)
             except KeyboardInterrupt:
-                print '%sAborting...' % os.linesep
+                print_('%sAborting...' % os.linesep)
                 self._cleanup()
                 return
 
@@ -142,7 +144,7 @@ class MiniTerm(object):
                 self._port.read()
             self._port.close()
             self._port = None
-            print 'Bye.'
+            print_('Bye.')
 
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
@@ -158,6 +160,7 @@ class MiniTerm(object):
                 raise ValueError
         except (ValueError, IndexError, ImportError):
             raise ImportError("pyserial 2.6+ is required")
+        # this import looks like it's unused but it is needed by serial_for_url
         import pyftdi.serialext
         try:
             port = serial_for_url(device,
@@ -170,9 +173,9 @@ class MiniTerm(object):
             if not port.isOpen():
                 raise AssertionError('Cannot open port "%s"' % device)
             if debug:
-                print "Using serial backend '%s'" % port.BACKEND
+                print_("Using serial backend '%s'" % port.BACKEND)
             return port
-        except SerialException, e:
+        except SerialException as e:
             raise AssertionError(str(e))
 
 
@@ -203,6 +206,7 @@ def get_options():
     options, _ = optparser.parse_args(sys.argv[1:])
     return optparser, options
 
+
 def main():
     """Main routine"""
     optparser, options = get_options()
@@ -213,11 +217,11 @@ def main():
                             debug=options.debug)
         miniterm.run(os.name in ('posix', ) and options.fullmode or False,
                      options.reset, options.select)
-    except (AssertionError, IOError, ValueError), e:
-        print >> sys.stderr, '\nError: %s' % e
+    except (AssertionError, IOError, ValueError) as e:
+        print_('\nError: %s' % e, file=sys.stderr)
         if options.debug:
             import traceback
-            print >> sys.stderr, traceback.format_exc()
+            print_(traceback.format_exc(), file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(2)

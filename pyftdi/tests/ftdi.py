@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@
 import sys
 import unittest
 from pyftdi.ftdi import Ftdi
+from six import print_
 
 
 class FtdiTestCase(unittest.TestCase):
@@ -43,17 +44,17 @@ class FtdiTestCase(unittest.TestCase):
         ftdi2.open(vendor=0x403, product=0x6010, interface=2)
         import time
         for x in range(5):
-            print "If#1: ", hex(ftdi1.poll_modem_status())
-            print "If#2: ", ftdi2.modem_status()
+            print_("If#1: ", hex(ftdi1.poll_modem_status()))
+            print_("If#2: ", ftdi2.modem_status())
             time.sleep(0.500)
         ftdi1.close()
         ftdi2.close()
 
 
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
-    return suite
+    suite_ = unittest.TestSuite()
+    suite_.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
+    return suite_
 
 if __name__ == '__main__':
     import doctest

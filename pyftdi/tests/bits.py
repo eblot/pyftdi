@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2011, Neotion
+# Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,11 @@
 
 import unittest
 from pyftdi.bits import BitSequence, BitZSequence, BitSequenceError
+from six import PY3
+
+if PY3:
+    long = int
+
 
 class BitSequenceTestCase(unittest.TestCase):
 
@@ -48,18 +53,18 @@ class BitSequenceTestCase(unittest.TestCase):
                                  length=len(self.bzs4))
 
     def test_bitwise_ops(self):
-        self.assertEqual(int(BitSequence(0x01, length=8) | \
+        self.assertEqual(int(BitSequence(0x01, length=8) |
                              BitSequence(0x02, length=8)), 3)
-        self.assertEqual(int(BitSequence(0x07, length=8) & \
+        self.assertEqual(int(BitSequence(0x07, length=8) &
                              BitSequence(0x02, length=8)), 2)
-        self.assertEqual(int(BitZSequence(0x01, length=8) | \
+        self.assertEqual(int(BitZSequence(0x01, length=8) |
                              BitSequence(0x02, length=8)), 3)
-        self.assertEqual(int(BitSequence(0x07, length=8) & \
+        self.assertEqual(int(BitSequence(0x07, length=8) &
                              BitZSequence(0x02, length=8)), 2)
         self.assertRaises(BitSequenceError, BitZSequence.__or__,
-                                    self.bzs4, self.bzs5)
+                          self.bzs4, self.bzs5)
         self.assertRaises(BitSequenceError, BitZSequence.__and__,
-                                    self.bzs4, self.bzs5)
+                          self.bzs4, self.bzs5)
         self.assertEqual(repr(self.bzs6), '00000000100Z01')
         self.assertEqual(repr(self.bzs6 | self.bzs4), '11Z1Z010ZZ0Z01')
         self.assertEqual(repr(self.bzs6 & self.bzs4), '00Z0Z000ZZ0Z00')
@@ -96,12 +101,12 @@ class BitSequenceTestCase(unittest.TestCase):
         self.assertEqual("%s / %r" % (self.bs4, self.bs4),
                          "11: 001 00000000 / 00100000000")
         self.assertEqual("%s / %r" % (self.bs5, self.bs5),
-                         "49: 1 00010000 11011001 00110001 01101110 10111111 "\
-                         "11111110 / 100010000110110010011000101101110101111"\
+                         "49: 1 00010000 11011001 00110001 01101110 10111111 "
+                         "11111110 / 100010000110110010011000101101110101111"
                          "1111111110")
         self.assertEqual("%s / %r" % (self.bs6, self.bs6),
-                         "49: 1 00010000 11011001 00110001 01101110 10111111 "\
-                         "11111111 / 100010000110110010011000101101110101111"\
+                         "49: 1 00010000 11011001 00110001 01101110 10111111 "
+                         "11111111 / 100010000110110010011000101101110101111"
                          "1111111111")
 
         self.assertEqual(repr(self.bzs4), '11Z1Z010ZZ0100')
@@ -111,7 +116,7 @@ class BitSequenceTestCase(unittest.TestCase):
         self.assertEqual(int(BitSequence([0, 0, 1, 0])), 4)
         self.assertEqual(int(BitSequence((0, 1, 0, 0), msb=True)), 4)
         self.assertEqual(int(BitSequence(4, length=8)), 4)
-        self.assertEqual(int(BitSequence(4L, msb=True, length=8)), 32)
+        self.assertEqual(int(BitSequence(long(4), msb=True, length=8)), 32)
         self.assertEqual(int(BitSequence("0010")), 4)
         self.assertEqual(int(BitSequence("0100", msb=True)), 4)
         bs = BitSequence("0100", msb=True)
@@ -123,27 +128,26 @@ class BitSequenceTestCase(unittest.TestCase):
         bzs = BitZSequence(self.bzs4)
         self.assertEqual(bzs, self.bzs4)
         bs = BitSequence('11111010101001', msb=True)
-        bs[8:12] = BitSequence(value = '0000')
+        bs[8:12] = BitSequence(value='0000')
         self.assertEqual(repr(bs), '11000010101001')
         try:
-            bs[8:12] = BitZSequence(value = 'ZZZZ')
+            bs[8:12] = BitZSequence(value='ZZZZ')
         except BitSequenceError:
             pass
-        except Exception, e:
+        except Exception as e:
             self.fail("Unexpected exception %s" % e)
         else:
             self.fail("Error was expected")
         bs = BitZSequence('1111101010100111Z1Z010ZZ0100', msb=True)
-        bs[8:12] = BitZSequence(value = 'ZZZZ')
+        bs[8:12] = BitZSequence(value='ZZZZ')
         self.assertEqual(repr(bs), '1111101010100111ZZZZ10ZZ0100')
-        bs[8:12] = BitSequence(value = '0000')
+        bs[8:12] = BitSequence(value='0000')
         self.assertEqual(repr(bs), '1111101010100111000010ZZ0100')
         n = 548521358
         bs = BitSequence(bin(n), msb=True)
         self.assertEqual(int(bs), n)
         bzs = BitZSequence(bin(n), msb=True)
-        self.assertEqual(str(bzs),
-            '30: 100000 10110001 11000101 10001110')
+        self.assertEqual(str(bzs), '30: 100000 10110001 11000101 10001110')
         bs = BitSequence(bytes_=[0x44, 0x66, 0xcc], msby=False)
         self.assertEqual(int(bs), 0x4466cc)
         bs = BitSequence(bytes_=(0x44, 0x66, 0xcc), msby=True)
@@ -152,7 +156,7 @@ class BitSequenceTestCase(unittest.TestCase):
            bs = BitSequence(bytes_=[0x44, 0x666, 0xcc], msby=False)
         except BitSequenceError:
             pass
-        except Exception, e:
+        except Exception as e:
             self.fail("Unexpected exception %s" % e)
         else:
             self.fail("Error was expected")
@@ -172,7 +176,7 @@ class BitSequenceTestCase(unittest.TestCase):
         ba = BitSequence(12, msb=True, length=16)
         bb = BitSequence(12, msb=True, length=14)
         l = [ba, bb]
-        l.sort()
+        l.sort(key=int)
         self.assertEqual(str(l), "[00110000000000, 0011000000000000]")
         self.assertEqual(str(ba.tobytes()), "[48, 0]")
         self.assertEqual(str(ba.tobytes(True)), "[0, 12]")
@@ -180,13 +184,13 @@ class BitSequenceTestCase(unittest.TestCase):
 
         b = BitSequence(length=254)
         b[0:4] = '1111'
-        self.assertEqual(str(b), '254: 000000 00000000 00000000 00000000 ' \
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 ' \
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 ' \
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 ' \
+        self.assertEqual(str(b), '254: 000000 00000000 00000000 00000000 '
+         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
+         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
+         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
          '00000000 00000000 00000000 00000000 00000000 00000000 00001111')
         self.assertEqual(str(b.tobytes()),
-            '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ' \
+            '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '
             '0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15]')
 
         b = BitSequence(bytes_=[0xa0, '\x0f', 0x77], msb=False, msby=False)
@@ -214,6 +218,7 @@ class BitSequenceTestCase(unittest.TestCase):
                          '1111101010100111Z1Z010ZZ0100')
         self.assertEqual(repr(self.bs7+self.bzs4),
                          '11Z1Z010ZZ010011111010101001')
+
 
 def suite():
     return unittest.makeSuite(BitSequenceTestCase, 'test_')

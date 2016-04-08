@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2015, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,10 +27,11 @@ import errno
 import os
 import select
 import socket
-import stat
 from io import RawIOBase
 from pyftdi.misc import hexdump
-from serial import SerialBase, SerialException, portNotOpenError
+from serial import SerialBase, SerialException, portNotOpenError, \
+                   writeTimeoutError
+from six import print_
 
 
 __all__ = ['Serial']
@@ -75,9 +76,9 @@ class SocketSerial(SerialBase):
                     filename = os.path.join(home, filename[2:])
             self._filename = filename
             self.sock.connect(self._filename)
-        except Exception, e:
+        except Exception as e:
             self.close()
-            msg = "Could not open port: %s" % (str(e))
+            msg = "Could not open port: %s" % (str(e),)
             if isinstance(e, socket.error):
                 raise SerialExceptionWithErrno(msg, e.errno)
             else:
@@ -89,11 +90,11 @@ class SocketSerial(SerialBase):
         if self.sock:
             try:
                 self.sock.shutdown(socket.SHUT_RDWR)
-            except Exception, e:
+            except Exception as e:
                 pass
             try:
                 self.sock.close()
-            except Exception, e:
+            except Exception as e:
                 pass
             self.sock = None
         self._isOpen = False
@@ -108,7 +109,7 @@ class SocketSerial(SerialBase):
            until the requested number of bytes is read."""
         if self.sock is None:
             raise portNotOpenError
-        read = ''
+        read = bytearray()
         if size > 0:
             while len(read) < size:
                 ready, _, _ = select.select([self.sock], [], [], self._timeout)
@@ -119,7 +120,7 @@ class SocketSerial(SerialBase):
                     # Some character is ready, but none can be read
                     # it is a marker for a disconnected peer
                     raise portNotOpenError
-                read = read + buf
+                read += buf
                 if self._timeout >= 0 and not buf:
                     break  # early abort on timeout
         return read
@@ -136,18 +137,18 @@ class SocketSerial(SerialBase):
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)
                     if not ready:
-                        raise serial.writeTimeoutError
+                        raise writeTimeoutError
                 n = self.sock.send(d)
                 if self._dump:
-                    print hexdump(d[:n])
+                    print_(hexdump(d[:n]))
                 if self._writeTimeout is not None and self._writeTimeout > 0:
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)
                     if not ready:
-                        raise serial.writeTimeoutError
+                        raise writeTimeoutError
                 d = d[n:]
                 t = t - n
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.EAGAIN:
                     raise
 

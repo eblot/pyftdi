@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010-2015 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2010-2015 Neotion
+# Copyright (c) 2010-2016 Neotion
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -49,9 +49,11 @@ setup(
     package_data={'pyftdi': ['*.rst'],
                   'pyftdi.serialext' : ['*.rst']},
     requires=['pyusb (>= 1.0.0b1)',
-              'pyserial (>= 2.6)'],
+              'pyserial (>= 2.6)', 'six'],
     install_requires=['pyusb>=1.0.0b1',
-                      'pyserial>=2.6'],
+                      'pyserial>=2.6',
+                      'six',
+                      'crcmod'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',
@@ -62,6 +64,8 @@ setup(
         'Operating System :: POSIX',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Hardware :: Hardware Drivers',
     ],

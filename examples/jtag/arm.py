@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import time
 from pyftdi.jtag import JtagEngine
 from pyftdi.bits import BitSequence
+from six import print_
 
 # ARM 926
 JTAG_INSTR = {'EXTEST'  : BitSequence('0000', msb=True, length=4),
@@ -52,7 +51,7 @@ class ArmJtag(object):
         """Read the IDCODE right after a JTAG reset"""
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print "IDCODE: 0x%x" % int(idcode)
+        print_("IDCODE: 0x%x" % int(idcode))
         return int(idcode)
 
     def get_idcode_from_instruction(self):
@@ -65,8 +64,8 @@ class ArmJtag(object):
         partnumber = idcode[12:28]
         manufacturer = idcode[1:12]
         ieee = idcode[0:1]
-        print "IDCODE: 0x%x %s %s %s %s" % (int(idcode),
-            revision, partnumber, manufacturer, ieee)
+        print_("IDCODE: 0x%x %s %s %s %s" % (int(idcode),
+               revision, partnumber, manufacturer, ieee))
         return idcode
 
 

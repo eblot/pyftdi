@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2014 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # This library is free software; you can redistribute it and/or
@@ -19,7 +19,8 @@ import threading
 import usb.core
 import usb.util
 from pyftdi.misc import to_int
-from urlparse import urlsplit
+from six import print_
+from six.moves.urllib.parse import urlsplit
 
 __all__ = ['UsbTools']
 
@@ -67,12 +68,12 @@ class UsbTools(object):
                     raise AssertionError('Vendor identifier is required')
                 devs = cls._find_devices(vps)
                 if description:
-                    devs = [dev for dev in devs if \
-                              UsbTools.get_string(dev, dev.iProduct) \
+                    devs = [dev for dev in devs if
+                              UsbTools.get_string(dev, dev.iProduct)
                                 == description]
                 if serial:
-                    devs = [dev for dev in devs if \
-                              UsbTools.get_string(dev, dev.iSerialNumber) \
+                    devs = [dev for dev in devs if
+                              UsbTools.get_string(dev, dev.iSerialNumber)
                                 == serial]
                 try:
                     dev = devs[index]
@@ -100,10 +101,10 @@ class UsbTools(object):
                             if not dev.is_kernel_driver_active(ifnum):
                                 continue
                             dev.detach_kernel_driver(ifnum)
-                        except NotImplementedError, e:
+                        except NotImplementedError as e:
                             # only libusb 1.x backend implements this method
                             break
-                        except usb.core.USBError, e:
+                        except usb.core.USBError as e:
                             pass
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
@@ -156,7 +157,7 @@ class UsbTools(object):
             candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01',
                           'openusb')
             um = __import__('usb.backend', globals(), locals(),
-                            candidates, -1)
+                            candidates, 0)
             for c in candidates:
                 try:
                     m = getattr(um, c)
@@ -271,9 +272,9 @@ class UsbTools(object):
                         raise UsbToolsError("No USB device #%d" % idx)
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
-            raise SystemExit(candidates and \
-                                'Please specify the USB device' or \
-                                'No USB-Serial device has been detected')
+            raise SystemExit(candidates and
+                             'Please specify the USB device' or
+                             'No USB-Serial device has been detected')
         if vendor not in pdict:
             raise UsbToolsError('Vendor ID 0x%04x not supported' % vendor)
         if product not in pdict[vendor].values():
@@ -328,7 +329,7 @@ class UsbTools(object):
                 # high interfaces are dedicated to UARTs
                 interfaces.append((scheme, vendor, product, serial, j, d))
         if interfaces:
-            print >> out, "Available interfaces:"
+            print_("Available interfaces:", file=out)
             for scheme, vendor, product, serial, j, d in interfaces:
                 if d:
                     desc = '  (%s)' % d
@@ -338,8 +339,8 @@ class UsbTools(object):
                 # emitted in the output stream encoding format, so replace
                 # them
                 enc_report = report.encode(out.encoding, 'replace')
-                print >> out, enc_report
-            print >> out, ''
+                print_(enc_report, file=out)
+            print_('', file=out)
 
     @classmethod
     def get_string(cls, device, strname):

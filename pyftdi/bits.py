@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2015, Neotion
+# Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +27,13 @@
 
 """
 
-from array import array as Array
 from numbers import Integral
 from pyftdi.misc import is_iterable, xor
+from six.moves import range
+from six import PY3
+
+if PY3:
+    long = int
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
@@ -68,7 +72,7 @@ class BitSequence(object):
                  msby=True):
         """Instanciate a new bit sequence.
         """
-        self._seq = Array('B')
+        self._seq = bytearray()
         seq = self._seq
         if value and bytes_:
             raise BitSequenceError("Cannot inialize with both a value and "
@@ -81,7 +85,7 @@ class BitSequence(object):
                 elif byte > 0xff:
                     raise BitSequenceError("Invalid byte value")
                 b = []
-                for x in xrange(8):
+                for x in range(8):
                     b.append(bool(byte & 0x1))
                     byte >>= 1
                 if msb:
@@ -103,7 +107,7 @@ class BitSequence(object):
 
     def sequence(self):
         """Return the internal representation as a new mutable sequence"""
-        return Array('B', self._seq)
+        return bytearray(self._seq)
 
     def reverse(self):
         """In-place reverse"""
@@ -112,7 +116,7 @@ class BitSequence(object):
 
     def invert(self):
         """In-place invert sequence values"""
-        self._seq = Array('B', [x ^ 1 for x in self._seq])
+        self._seq = bytearray([x ^ 1 for x in self._seq])
         return self
 
     def append(self, seq):
@@ -123,12 +127,12 @@ class BitSequence(object):
         return self
 
     def lsr(self, count):
-        "Left shift rotate"
+        """Left shift rotate"""
         count %= len(self)
         self._seq[:] = self._seq[count:] + self._seq[:count]
 
     def rsr(self, count):
-        "Right shift rotate"
+        """Right shift rotate"""
         count %= len(self)
         self._seq[:] = self._seq[-count:] + self._seq[:-count]
 
@@ -157,8 +161,8 @@ class BitSequence(object):
         sequence = list(self._seq)
         if not msb:
             sequence.reverse()
-        bytes_ = Array('B')
-        for pos in xrange(0, blength, 8):
+        bytes_ = bytearray()
+        for pos in range(0, blength, 8):
             seq = sequence[pos:pos+8]
             byte = 0
             while seq:
@@ -167,7 +171,7 @@ class BitSequence(object):
             bytes_.append(byte)
         if msby:
             bytes_.reverse()
-        return bytes_.tolist()
+        return list(bytes_)
 
     @staticmethod
     def _tomutable(value):
@@ -218,7 +222,7 @@ class BitSequence(object):
         """If a specific length is specified, extend the sequence as
            expected"""
         if length and (len(self) < length):
-            extra = Array('B', [False] * (length-len(self)))
+            extra = bytearray([False] * (length-len(self)))
             if msb:
                 extra.extend(self._seq)
                 self._seq = extra
@@ -257,6 +261,13 @@ class BitSequence(object):
     def __len__(self):
         return len(self._seq)
 
+    # py3 does not use __cmp__ anymore so define __eq__ and __ne__ from __cmp__
+    def __eq__(self, other):
+        return not bool(self.__cmp__(other))
+
+    def __ne__(self, other):
+        return bool(self.__cmp__(other))
+
     def __cmp__(self, other):
         # the bit sequence should be of the same length
         ld = len(self) - len(other)
@@ -275,7 +286,7 @@ class BitSequence(object):
         chunks = []
         srepr = repr(self)
         length = len(self)
-        for i in xrange(0, length, 8):
+        for i in range(0, length, 8):
             if i:
                 j = -i
             else:
@@ -284,7 +295,7 @@ class BitSequence(object):
         return '%d: %s' % (len(self), ' '.join(reversed(chunks)))
 
     def __int__(self):
-        return int(long(self))
+        return int(self.__long__())
 
     def __long__(self):
         value = 0
@@ -298,23 +309,23 @@ class BitSequence(object):
             raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
-        return self.__class__(value=map(lambda x, y: x and y,
-                                        self._seq, other.sequence()))
+        return self.__class__(value=list(map(lambda x, y: x and y,
+                                         self._seq, other.sequence())))
 
     def __or__(self, other):
         if not isinstance(other, self.__class__):
             raise BitSequenceError('Need a BitSequence to combine')
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
-        return self.__class__(value=map(lambda x, y: x or y,
-                                        self._seq, other.sequence()))
+        return self.__class__(value=list(map(lambda x, y: x or y,
+                                         self._seq, other.sequence())))
 
     def __add__(self, other):
         return self.__class__(value=self._seq + other.sequence())
 
     def __ilshift__(self, count):
         count %= len(self)
-        seq = Array('B', [0]*count)
+        seq = bytearray([0]*count)
         seq.extend(self._seq[:-count])
         self._seq = seq
         return self
@@ -429,7 +440,7 @@ class BitZSequence(BitSequence):
         return BitSequence.__long__(self)
 
     def __int__(self):
-        return int(long(self))
+        return int(self.__long__())
 
     def __cmp__(self, other):
         # the bit sequence should be of the same length
@@ -454,7 +465,8 @@ class BitZSequence(BitSequence):
                 return BitZSequence.Z
             else:
                 return x and y
-        return self.__class__(value=map(andz, self._seq, other.sequence()))
+        return self.__class__(
+            value=list(map(andz, self._seq, other.sequence())))
 
     def __or__(self, other):
         if not isinstance(self, BitSequence):
@@ -469,7 +481,7 @@ class BitZSequence(BitSequence):
                 return BitZSequence.Z
             else:
                 return x or y
-        return self.__class__(value=map(orz, self._seq, other.sequence()))
+        return self.__class__(value=list(map(orz, self._seq, other.sequence())))
 
     def __rand__(self, other):
         return self.__and__(other)
@@ -495,13 +507,13 @@ class BitField(object):
 
     def to_seq(self, msb=0, lsb=0):
         """Return the BitFiled as a sequence of boolean value"""
-        seq = Array('B')
+        seq = bytearray()
         count = 0
         value = self._val
         while value:
             count += 1
             value >>= 1
-        for x in xrange(lsb, max(msb, count)):
+        for x in range(lsb, max(msb, count)):
             seq.append(bool((self._val >> x) & 1))
         return tuple(reversed(seq))
 
@@ -532,13 +544,13 @@ class BitField(object):
                 count = index.stop-index.start+1
             mask = (1 << count)-1
             value = (value & mask) << offset
-            mask = mask << offset
+            mask <<= offset
             self._val = (self._val & ~mask) | value
         else:
             if isinstance(value, bool):
                 value = int(value)
-            value = (value & 1L) << index
-            mask = (1L) << index
+            value = (value & long(1)) << index
+            mask = long(1) << index
             self._val = (self._val & ~mask) | value
 
     def __int__(self):

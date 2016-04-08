@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2015, Neotion
+# Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -65,7 +65,7 @@ class FtdiSerial(UsbSerial):
                            FtdiSerial.VENDOR_IDS,
                            FtdiSerial.PRODUCT_IDS,
                            FtdiSerial.DEFAULT_VENDOR)
-        except FtdiError, e:
+        except FtdiError as e:
             raise SerialException(str(e))
 
     @classmethod
