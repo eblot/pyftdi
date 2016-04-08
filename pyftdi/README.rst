@@ -52,8 +52,9 @@ libraries:
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1. PyFTDI deals
-with the API break introduced with PyUSB_ 1.0.0b2.
+PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1 and 
+automatically deals with the API break introduced with PyUSB_ 1.0.0b2 (using
+the latest PyUSB_ version is nevertheless recommended)
 
 To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
 installed. Previous versions of pyserial_ will NOT work.
@@ -78,8 +79,8 @@ Supported features
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
 
-* Several FTDI adapters can be used simultaneously from the same Python
-  runtime.
+* Several FTDI adapters can be accessed simultaneously from the same Python
+  runtime instance.
 
 * Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
   offers transparent access to the FTDI serial ports through a pyserial_-
@@ -141,6 +142,13 @@ Troubleshooting
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
   uninstalling the driver. On OS X, refer to this FTDI guide_:
+
+*Slow initialisation on OS X El Capitan*
+ It may take several seconds to open or enumerate FTDI devices.
+
+ If you run libusb <= v1.20.0, be sure to read the 
+ `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_ 
+ with OS X 10.11+:
 
 .. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 
