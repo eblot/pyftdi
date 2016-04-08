@@ -155,8 +155,8 @@ class MiniTerm(object):
             raise ImportError("Python serial module not installed")
         try:
             from serial import serial_for_url, VERSION as serialver
-            versions = [int(x) for x in serialver.split('.', 1)]
-            if (versions[0] < 2) or (versions[1] < 6):
+            version = tuple([int(x) for x in serialver.split('.')])
+            if version < (2,6):
                 raise ValueError
         except (ValueError, IndexError, ImportError):
             raise ImportError("pyserial 2.6+ is required")
