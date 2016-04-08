@@ -166,38 +166,6 @@ def to_bool(value, permissive=True, allow_int=False):
     raise ValueError('"Invalid boolean value: "%s"' % value)
 
 
-def _crccomp16():
-    """Internal function used by crc16()"""
-    try:
-        from crcmod import mkCrcFun
-    except ImportError:
-        raise AssertionError("Python crcmod module not installed")
-    crc_polynomial = 0x11021
-    crc_initial = 0xFFFF
-    crc = mkCrcFun(crc_polynomial, crc_initial, False)
-    while True:
-        yield crc
-
-
-def _crccomp32():
-    """Internal function used by crc32()"""
-    try:
-        from crcmod import mkCrcFun
-    except ImportError:
-        raise AssertionError("Python crcmod module not installed")
-    crc_polynomial = 0x104C11DB7
-    crc_initial = long(0xFFFFFFFF)
-    crc = mkCrcFun(crc_polynomial, crc_initial, False)
-    while True:
-        yield crc
-
-
-def crc16(data):
-    """Compute the CCITT CRC-16 checksum"""
-    crc = next(_crccomp16())
-    return crc(data)
-
-
 def xor(_a_, _b_):
     """XOR logical operation.
 
