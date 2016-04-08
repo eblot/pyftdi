@@ -27,6 +27,7 @@
 
 """
 
+from array import array as Array
 from numbers import Integral
 from pyftdi.misc import is_iterable, xor
 from six.moves import range
@@ -72,7 +73,7 @@ class BitSequence(object):
                  msby=True):
         """Instanciate a new bit sequence.
         """
-        self._seq = bytearray()
+        self._seq = Array('B')
         seq = self._seq
         if value and bytes_:
             raise BitSequenceError("Cannot inialize with both a value and "
@@ -107,7 +108,7 @@ class BitSequence(object):
 
     def sequence(self):
         """Return the internal representation as a new mutable sequence"""
-        return bytearray(self._seq)
+        return Array('B', self._seq)
 
     def reverse(self):
         """In-place reverse"""
@@ -116,7 +117,7 @@ class BitSequence(object):
 
     def invert(self):
         """In-place invert sequence values"""
-        self._seq = bytearray([x ^ 1 for x in self._seq])
+        self._seq = Array('B', [x ^ 1 for x in self._seq])
         return self
 
     def append(self, seq):
@@ -161,7 +162,7 @@ class BitSequence(object):
         sequence = list(self._seq)
         if not msb:
             sequence.reverse()
-        bytes_ = bytearray()
+        bytes_ = Array('B')
         for pos in range(0, blength, 8):
             seq = sequence[pos:pos+8]
             byte = 0
@@ -171,7 +172,7 @@ class BitSequence(object):
             bytes_.append(byte)
         if msby:
             bytes_.reverse()
-        return list(bytes_)
+        return bytes_.tolist()
 
     @staticmethod
     def _tomutable(value):
@@ -222,7 +223,7 @@ class BitSequence(object):
         """If a specific length is specified, extend the sequence as
            expected"""
         if length and (len(self) < length):
-            extra = bytearray([False] * (length-len(self)))
+            extra = Array('B', [False] * (length-len(self)))
             if msb:
                 extra.extend(self._seq)
                 self._seq = extra
@@ -325,7 +326,7 @@ class BitSequence(object):
 
     def __ilshift__(self, count):
         count %= len(self)
-        seq = bytearray([0]*count)
+        seq = Array('B', [0]*count)
         seq.extend(self._seq[:-count])
         self._seq = seq
         return self
@@ -507,7 +508,7 @@ class BitField(object):
 
     def to_seq(self, msb=0, lsb=0):
         """Return the BitFiled as a sequence of boolean value"""
-        seq = bytearray()
+        seq = Array('B')
         count = 0
         value = self._val
         while value:

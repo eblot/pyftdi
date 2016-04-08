@@ -25,6 +25,7 @@ Caveats: Only tested with FT2232 and FT4232 FTDI devices
 Require: pyusb
 """
 
+from array import array as Array
 import struct
 import usb.core
 import usb.util
@@ -218,7 +219,7 @@ class Ftdi(object):
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
-        self.readbuffer = bytearray()
+        self.readbuffer = Array('B')
         self.readoffset = 0
         self.readbuffer_chunksize = 4 << 10  # 4KiB
         self.writebuffer_chunksize = 4 << 10  # 4KiB
@@ -284,9 +285,9 @@ class Ftdi(object):
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
-        self.write_data(bytes((Ftdi.SET_BITS_LOW, initial, direction)))
+        self.write_data(Array('B', (Ftdi.SET_BITS_LOW, initial, direction)))
         # Disable loopback
-        self.write_data(bytes((Ftdi.LOOPBACK_END,)))
+        self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
@@ -305,7 +306,7 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(bytes(Ftdi.LOOPBACK_END,))
+        self.write_data(Array('B', Ftdi.LOOPBACK_END,))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate
@@ -389,7 +390,7 @@ class Ftdi(object):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = bytearray()
+        self.readbuffer = Array('B')
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
@@ -414,7 +415,7 @@ class Ftdi(object):
         """Configure read buffer chunk size."""
         # Invalidate all remaining data
         self.readoffset = 0
-        self.readbuffer = bytearray()
+        self.readbuffer = Array('B')
         import sys
         if sys.platform == 'linux':
             if chunksize > 16384:
@@ -593,7 +594,7 @@ class Ftdi(object):
             raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1  # initial condition to enter the usb_read loop
-        data = bytearray()
+        data = Array('B')
         # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
@@ -608,8 +609,7 @@ class Ftdi(object):
         try:
             while (len(data) < size) and (length > 0):
                 while True:
-                    # usb.core.Device.read() returns array.array objects
-                    tempbuf = bytearray(self._read())
+                    tempbuf = self._read()
                     attempt -= 1
                     length = len(tempbuf)
                     # the received buffer contains at least one useful databyte
@@ -624,7 +624,7 @@ class Ftdi(object):
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
-                        self.readbuffer = bytearray()
+                        self.readbuffer = Array('B')
                         self.readoffset = 0
                         srcoff = 2
                         for i in range(chunks):
@@ -638,7 +638,7 @@ class Ftdi(object):
                         if attempt > 0:
                             continue
                         # no actual data
-                        self.readbuffer = bytearray()
+                        self.readbuffer = Array('B')
                         self.readoffset = 0
                         if self.latency_threshold:
                             self.latency_count += 1
@@ -677,7 +677,7 @@ class Ftdi(object):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
-        return self.read_data_bytes(size)
+        return self.read_data_bytes(size).tostring()
 
     def get_cts(self):
         """Read terminal status line: Clear To Send"""
@@ -755,7 +755,7 @@ class Ftdi(object):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = bytearray()
+        self.readbuffer = Array('B')
 
     def _ctrl_transfer_out(self, reqtype, value, data=''):
         """Send a control message to the device"""
@@ -915,9 +915,9 @@ class Ftdi(object):
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
         if self.ic_name in self.HISPEED_DEVICES:
-            cmd = bytearray((divcode,))
+            cmd = Array('B', (divcode,))
         else:
-            cmd = bytearray()
+            cmd = Array('B')
         cmd.extend((Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()

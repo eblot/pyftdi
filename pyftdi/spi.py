@@ -24,6 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import struct
+from array import array as Array
 from pyftdi.ftdi import Ftdi
 
 __all__ = ['SpiPort', 'SpiController']
@@ -99,7 +100,7 @@ class SpiController(object):
                            SpiController.DO_BIT |
                            SpiController.SCK_BIT)
         self._turbo = turbo
-        self._cs_high = bytearray()
+        self._cs_high = Array('B')
         if self._turbo:
             if silent_clock:
                 # Set SCLK as input to avoid emitting clock beats
@@ -112,7 +113,7 @@ class SpiController(object):
                               self._direction])
         if not self._turbo:
             self._cs_high.append(Ftdi.SEND_IMMEDIATE)
-        self._immediate = bytearray([Ftdi.SEND_IMMEDIATE])
+        self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
 
     def configure(self, vendor, product, interface, **kwargs):
@@ -142,9 +143,9 @@ class SpiController(object):
             cs_state = 0xFF & ~((SpiController.CS_BIT << cs) |
                                 SpiController.SCK_BIT |
                                 SpiController.DO_BIT)
-            cs_cmd = bytearray([Ftdi.SET_BITS_LOW,
-                               cs_state,
-                               self._direction])
+            cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
+                                 cs_state,
+                                 self._direction))
             self._ports[cs] = SpiPort(self, cs_cmd)
             self._flush()
         return self._ports[cs]
@@ -174,13 +175,13 @@ class SpiController(object):
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
-            cmd = bytearray(cs_cmd)
-            cmd += write_cmd
+            cmd = Array('B', cs_cmd)
+            cmd.fromstring(write_cmd)
             cmd.extend(out)
-            cmd += read_cmd
-            cmd += self._immediate
+            cmd.fromstring(read_cmd)
+            cmd.extend(self._immediate)
             if self._turbo:
-                cmd += self._cs_high
+                cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
@@ -190,16 +191,16 @@ class SpiController(object):
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         else:
-            cmd = bytearray(cs_cmd)
-            cmd += write_cmd
+            cmd = Array('B', cs_cmd)
+            cmd.fromstring(write_cmd)
             cmd.extend(out)
             if self._turbo:
-                cmd += self._cs_high
+                cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
                 self._ftdi.write_data(self._cs_high)
-            data = bytearray()
+            data = Array('B')
         return data
 
     def _flush(self):
