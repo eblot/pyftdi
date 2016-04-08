@@ -166,7 +166,7 @@ class MiniTerm(object):
                 raise ValueError
         except (ValueError, IndexError, ImportError):
             raise ImportError("pyserial 2.6+ is required")
-        # this import looks like it's unused but it is needed by serial_for_url
+        # the following import enables serial protocol extensions
         import pyftdi.serialext
         try:
             port = serial_for_url(device,

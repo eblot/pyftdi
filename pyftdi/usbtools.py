@@ -36,62 +36,69 @@ class UsbTools(object):
     # limitation in pyusb that prevents from opening several times the same
     # USB device. The following dictionary used bus/address/vendor/product keys
     # to track (device, refcount) pairs
-    DEVICES = {}
-    LOCK = threading.RLock()
-    USBDEVICES = []
-    USB_API = None
+    Devices = {}
+    Lock = threading.RLock()
+    UsbDevices = {}
+    UsbApi = None
 
     @staticmethod
     def find_all(vps, nocache=False):
         """Find all devices that match the vendor/product pairs of the vps
            list."""
-        devices = []
-        devs = UsbTools._find_devices(vps, nocache)
+        devs = set()
+        for v, p in vps:
+            devs.update(UsbTools._find_devices(v, p, nocache))
+        devices = set()
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = UsbTools.get_string(dev, dev.iSerialNumber)
             description = UsbTools.get_string(dev, dev.iProduct)
-            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount,
-                            description))
-        return devices
+            devices.add((dev.idVendor, dev.idProduct, sernum, ifcount,
+                         description))
+        return list(devices)
+
+    @classmethod
+    def flush_cache(cls):
+        cls.Lock.acquire()
+        cls.UsbDevices = {}
+        cls.Lock.release()
 
     @classmethod
     def get_device(cls, vendor, product, index, serial, description):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
-        cls.LOCK.acquire()
+        cls.Lock.acquire()
         try:
-            vps = [(vendor, product)]
             if index or serial or description:
                 dev = None
                 if not vendor:
                     raise ValueError('Vendor identifier is required')
-                devs = cls._find_devices(vps)
+                devs = cls._find_devices(vendor, product)
                 if description:
                     devs = [dev for dev in devs if
-                              UsbTools.get_string(dev, dev.iProduct)
-                                == description]
+                            UsbTools.get_string(dev, dev.iProduct) ==
+                            description]
                 if serial:
                     devs = [dev for dev in devs if
-                              UsbTools.get_string(dev, dev.iSerialNumber)
-                                == serial]
+                            UsbTools.get_string(dev, dev.iSerialNumber) ==
+                            serial]
                 try:
                     dev = devs[index]
                 except IndexError:
                     raise IOError("No such device")
             else:
-                devs = cls._find_devices(vps)
-                dev = devs and devs[0] or None
+                devs = cls._find_devices(vendor, product)
+                dev = devs and list(devs)[0] or None
             if not dev:
                 raise IOError('Device not found')
             try:
                 devkey = (dev.bus, dev.address, vendor, product)
                 if None in devkey[0:2]:
-                    raise AttributeError('USB back does not support bus '
+                    raise AttributeError('USB backend does not support bus '
                                          'enumeration')
             except AttributeError:
                 devkey = (vendor, product)
-            if devkey not in cls.DEVICES:
+            if devkey not in cls.Devices:
                 for configuration in dev:
                     # we need to detach any kernel driver from the device
                     # be greedy: reclaim all device interfaces from the kernel
@@ -101,46 +108,46 @@ class UsbTools(object):
                             if not dev.is_kernel_driver_active(ifnum):
                                 continue
                             dev.detach_kernel_driver(ifnum)
-                        except NotImplementedError as e:
+                        except NotImplementedError:
                             # only libusb 1.x backend implements this method
                             break
-                        except usb.core.USBError as e:
+                        except usb.core.USBError:
                             pass
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
                 if dev.get_active_configuration().bConfigurationValue != 1:
                     dev.set_configuration()
-                cls.DEVICES[devkey] = [dev, 1]
+                cls.Devices[devkey] = [dev, 1]
             else:
-                cls.DEVICES[devkey][1] += 1
-            return cls.DEVICES[devkey][0]
+                cls.Devices[devkey][1] += 1
+            return cls.Devices[devkey][0]
         finally:
-            cls.LOCK.release()
+            cls.Lock.release()
 
     @classmethod
     def release_device(cls, usb_dev):
         """Release a previously open device, if it not used anymore"""
         # Lookup for ourselves in the class dictionary
-        cls.LOCK.acquire()
+        cls.Lock.acquire()
         try:
-            for devkey in cls.DEVICES:
-                dev, refcount = cls.DEVICES[devkey]
+            for devkey in cls.Devices:
+                dev, refcount = cls.Devices[devkey]
                 if dev == usb_dev:
                     # found
                     if refcount > 1:
                         # another interface is open, decrement
-                        cls.DEVICES[devkey][1] -= 1
+                        cls.Devices[devkey][1] -= 1
                     else:
                         # last interface in use, release
-                        usb.util.dispose_resources(cls.DEVICES[devkey][0])
-                        del cls.DEVICES[devkey]
+                        usb.util.dispose_resources(cls.Devices[devkey][0])
+                        del cls.Devices[devkey]
                     break
         finally:
-            cls.LOCK.release()
+            cls.Lock.release()
 
     @classmethod
-    def _find_devices(cls, vps, nocache=False):
+    def _find_devices(cls, vendor, product, nocache=False):
         """Find an USB device and return it.
            This code re-implements the usb.core.find() method using a local
            cache to avoid calling several times the underlying LibUSB and the
@@ -151,7 +158,7 @@ class UsbTools(object):
            Hopefully, this kludge is temporary and replaced with a better
            implementation from PyUSB at some point.
         """
-        cls.LOCK.acquire()
+        cls.Lock.acquire()
         try:
             backend = None
             candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01',
@@ -168,17 +175,16 @@ class UsbTools(object):
                     break
             else:
                 raise ValueError('No backend available')
-            if not cls.USBDEVICES or nocache:
+            vp = (vendor, product)
+            if nocache or (vp not in cls.UsbDevices):
                 # not freed until Python runtime completion
                 # enumerate_devices returns a generator, so back up the
                 # generated device into a list. To save memory, we only
                 # back up the supported devices
-                cls.USBDEVICES = []
-                devlist = []
+                devs = set()
                 vpdict = {}
-                for v, p in vps:
-                    vpdict.setdefault(v, [])
-                    vpdict[v].append(p)
+                vpdict.setdefault(vendor, [])
+                vpdict[vendor].append(product)
                 for dev in backend.enumerate_devices():
                     device = usb.core.Device(dev, backend)
                     vendor = device.idVendor
@@ -187,11 +193,11 @@ class UsbTools(object):
                         products = vpdict[vendor]
                         if products and (product not in products):
                             continue
-                        devlist.append(device)
-                cls.USBDEVICES = devlist
-            return cls.USBDEVICES
+                        devs.add(device)
+                cls.UsbDevices[vp] = devs
+            return cls.UsbDevices[vp]
         finally:
-            cls.LOCK.release()
+            cls.Lock.release()
 
     @staticmethod
     def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor):
@@ -346,15 +352,15 @@ class UsbTools(object):
     def get_string(cls, device, strname):
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
         """
-        if cls.USB_API is None:
+        if cls.UsbApi is None:
             import inspect
             args, varargs, varkw, defaults = \
                 inspect.getargspec(usb.util.get_string)
             if (len(args) >= 3) and args[1] == 'length':
-                cls.USB_API = 1
+                cls.UsbApi = 1
             else:
-                cls.USB_API = 2
-        if cls.USB_API == 2:
+                cls.UsbApi = 2
+        if cls.UsbApi == 2:
             return usb.util.get_string(device, strname)
         else:
             return usb.util.get_string(device, 64, strname)

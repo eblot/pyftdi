@@ -78,9 +78,6 @@ class SpiController(object):
                              be set but beware that SCLK line should be fitted
                              with a pull-down resistor, as SCLK is high-Z
                              during this short period of time.
-
-                             Note that in this mode, it is recommended to use
-                             an external pull-down on SCLK
         :param cs_count: is the number of /CS lines (one per device to drive on
                          the SPI bus)
     """

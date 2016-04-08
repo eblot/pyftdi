@@ -46,15 +46,15 @@ PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
 * libusb-1.0 (recommended), tested with 1.0.20
-* libusbx-1.0, tested with 1.0.17
 * libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
 
 PyFtdi does not depend on any other native library, and only uses standard
-Python modules.
+Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0b1 and PyUSB_ 1.0.0b2. PyFTDI deals
-with the API break introduced with PyUSB_ 1.0.0b2.
+PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1 and 
+automatically deals with the API break introduced with PyUSB_ 1.0.0b2 (using
+the latest PyUSB_ version is nevertheless recommended)
 
 To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
 installed. Previous versions of pyserial_ will NOT work.
@@ -71,18 +71,16 @@ Status
 This project is still in beta development stage.
 
 However, PyFtdi is being forked from a closed-source software implementation
-that has been successfully used for over a year - including serial, spi and
-jtag protocols, based on top of the libftdi_ open source library.
-
-libftdi_ is now being phased out from this closed-source project and replaced
-with PyFtdi, to ease maintenance and customization.
-
-Meanwhile, PyFtdi is developed as an open-source solution.
+that has been successfully used for over several years - including serial, spi
+and jtag protocols. PyFtdi is developed as an open-source solution.
 
 Supported features
 ------------------
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
+
+* Several FTDI adapters can be accessed simultaneously from the same Python
+  runtime instance.
 
 * Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
   offers transparent access to the FTDI serial ports through a pyserial_-
@@ -104,10 +102,7 @@ Supported features
 
 Installation
 ~~~~~~~~~~~~
-* Download & install pyusb-1.0.0b1: ``pip install [--pre] pyusb==1.0.0b2``
-
-  * ``--pre`` tag is required with latest release of pip, as pyusb is still
-    in beta status
+* Download & install pyusb-1.0.0r1: ``pip install pyusb``
 
 * Download & install pyserial: ``pip install pyserial``
 
@@ -147,6 +142,13 @@ Troubleshooting
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
   uninstalling the driver. On OS X, refer to this FTDI guide_:
+
+*Slow initialisation on OS X El Capitan*
+ It may take several seconds to open or enumerate FTDI devices.
+
+ If you run libusb <= v1.20.0, be sure to read the 
+ `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_ 
+ with OS X 10.11+:
 
 .. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 
