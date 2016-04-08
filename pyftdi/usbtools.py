@@ -61,6 +61,7 @@ class UsbTools(object):
         cls.Lock.acquire()
         cls.UsbDevices = {}
         cls.Lock.release()
+
     @classmethod
     def get_device(cls, vendor, product, index, serial, description):
         """Find a previously open device with the same vendor/product
