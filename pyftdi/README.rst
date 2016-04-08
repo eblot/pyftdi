@@ -42,12 +42,16 @@ to access USB-serial converters based on FTDI_ devices.
 Requirements
 ~~~~~~~~~~~~
 
+Python_ 2.6 or above is required. Python_ 3.3+ is also supported.
+
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
 * libusb-1.0 (recommended), tested with 1.0.20
 * libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
+  
+Since PyFtdi 0.13, Six_ compatibility library is also required.
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
@@ -57,12 +61,12 @@ automatically deals with the API break introduced with PyUSB_ 1.0.0b2 (using
 the latest PyUSB_ version is nevertheless recommended)
 
 To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
-installed. Previous versions of pyserial_ will NOT work.
-
-Python_ 2.6 or above is required. Python_ 3.x is not yet supported.
+installed. Previous versions of pyserial_ will NOT work. pyserial_ 3.0+ is also
+supported.
 
 .. _PyUSB: http://sourceforge.net/projects/pyusb/
 .. _Python: http://python.org/
+.. _Six: https://pythonhosted.org/six/
 
 
 Status
@@ -105,6 +109,8 @@ Installation
 * Download & install pyusb-1.0.0r1: ``pip install pyusb``
 
 * Download & install pyserial: ``pip install pyserial``
+
+* Download & install six: ``pip install six``
 
 * Install pyftdi
 
