@@ -117,7 +117,10 @@ class UsbTools(object):
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
                 if dev.get_active_configuration().bConfigurationValue != 1:
-                    dev.set_configuration()
+                    try:
+                        dev.set_configuration()
+                    except usb.core.USBError:
+                        pass
                 cls.Devices[devkey] = [dev, 1]
             else:
                 cls.Devices[devkey][1] += 1
