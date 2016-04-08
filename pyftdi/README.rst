@@ -46,14 +46,13 @@ PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
 * libusb-1.0 (recommended), tested with 1.0.20
-* libusbx-1.0, tested with 1.0.17
 * libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
 
 PyFtdi does not depend on any other native library, and only uses standard
-Python modules.
+Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0b1 and PyUSB_ 1.0.0b2. PyFTDI deals
+PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1. PyFTDI deals
 with the API break introduced with PyUSB_ 1.0.0b2.
 
 To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
@@ -71,18 +70,16 @@ Status
 This project is still in beta development stage.
 
 However, PyFtdi is being forked from a closed-source software implementation
-that has been successfully used for over a year - including serial, spi and
-jtag protocols, based on top of the libftdi_ open source library.
-
-libftdi_ is now being phased out from this closed-source project and replaced
-with PyFtdi, to ease maintenance and customization.
-
-Meanwhile, PyFtdi is developed as an open-source solution.
+that has been successfully used for over several years - including serial, spi
+and jtag protocols. PyFtdi is developed as an open-source solution.
 
 Supported features
 ------------------
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
+
+* Several FTDI adapters can be used simultaneously from the same Python
+  runtime.
 
 * Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
   offers transparent access to the FTDI serial ports through a pyserial_-
@@ -104,10 +101,7 @@ Supported features
 
 Installation
 ~~~~~~~~~~~~
-* Download & install pyusb-1.0.0b1: ``pip install [--pre] pyusb==1.0.0b2``
-
-  * ``--pre`` tag is required with latest release of pip, as pyusb is still
-    in beta status
+* Download & install pyusb-1.0.0r1: ``pip install pyusb``
 
 * Download & install pyserial: ``pip install pyserial``
 
