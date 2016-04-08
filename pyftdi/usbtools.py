@@ -339,21 +339,23 @@ class UsbTools(object):
         if interfaces:
             print_("Available interfaces:", file=out)
             for scheme, vendor, product, serial, j, d in interfaces:
-                if d:
-                    desc = '  (%s)' % d
-                report = '  %s://%s:%s:%s/%d%s' % \
-                    (scheme, vendor, product, serial, j, desc)
+                fmt = '  %s://%s/%d  '
+                parts = [vendor, product]
+                if serial:
+                    parts.append(serial)
+                desc = d and '  (%s)' % d
                 # the description may contain characters that cannot be
-                # emitted in the output stream encoding format, so replace
-                # them and explain
+                # emitted in the output stream encoding format
                 try:
-                    print_(report, file=out)
-                except Exception as e:
-                    report = '  %s://%s:%s:%s/%d\t\t%s' % \
-                        (scheme, vendor, product, '*', j,
-                         '*: cannot display string')
-                    print_(report, file=out)
-
+                    print_(fmt % (scheme, ':'.join(parts), j), end='',
+                           file=out)
+                except Exception:
+                    print_(fmt % (scheme, ':'.join([vendor, product, '???']),
+                                  j), end='', file=out)
+                try:
+                    print_(desc or '', file=out)
+                except Exception:
+                    print_('', file=out)
             print_('', file=out)
 
     @classmethod
