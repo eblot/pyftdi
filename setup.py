@@ -28,6 +28,7 @@ except ImportError:
     from distutils.core import setup
 from pyftdi import __version__ as VERSION
 
+
 def _read(fname):
     import os
     return open(os.path.join(os.path.dirname(__file__),
@@ -40,20 +41,20 @@ setup(
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
-    keywords = 'driver ftdi usb serial spi rs232',
+    keywords='driver ftdi usb serial spi rs232',
     url='http://github.com/eblot/pyftdi',
-    download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' % \
+    download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' %
                  VERSION,
-    packages=['pyftdi','pyftdi.serialext'],
-    extras_require={'spiflash' : []},
+    packages=['pyftdi', 'pyftdi.serialext'],
+    extras_require={'spiflash': []},
     package_data={'pyftdi': ['*.rst'],
-                  'pyftdi.serialext' : ['*.rst']},
+                  'pyftdi.serialext': ['*.rst']},
     requires=['pyusb (>= 1.0.0b1)',
-              'pyserial (>= 2.6)', 'six'],
+              'pyserial (>= 2.6)',
+              'six'],
     install_requires=['pyusb>=1.0.0b1',
                       'pyserial>=2.6',
-                      'six',
-                      'crcmod'],
+                      'six'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Other Environment',
@@ -71,4 +72,3 @@ setup(
     ],
     long_description=_read('README.rst'),
 )
-
