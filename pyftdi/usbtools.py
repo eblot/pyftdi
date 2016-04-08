@@ -71,7 +71,7 @@ class UsbTools(object):
             if index or serial or description:
                 dev = None
                 if not vendor:
-                    raise AssertionError('Vendor identifier is required')
+                    raise ValueError('Vendor identifier is required')
                 devs = cls._find_devices(vendor, product)
                 if description:
                     devs = [dev for dev in devs if
