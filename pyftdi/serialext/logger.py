@@ -55,10 +55,11 @@ class SerialLogger(object):
             try:
                 old_method = getattr(port.__class__, method_name)
             except AttributeError:
-                pass
-            new_method = getattr(self.__class__, method_name)
-            setattr(port, method_name, types.MethodType(new_method, self))
-            self._methods[method_name] = old_method
+                old_method = None
+            if old_method:
+                new_method = getattr(self.__class__, method_name)
+                setattr(port, method_name, types.MethodType(new_method, self))
+                self._methods[method_name] = old_method
 
     def _print(self, header, string):
         if self._logger:
