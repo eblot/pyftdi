@@ -345,9 +345,15 @@ class UsbTools(object):
                     (scheme, vendor, product, serial, j, desc)
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format, so replace
-                # them
-                enc_report = report.encode(out.encoding, 'replace')
-                print_(enc_report, file=out)
+                # them and explain
+                try:
+                    print_(report, file=out)
+                except Exception as e:
+                    report = '  %s://%s:%s:%s/%d\t\t%s' % \
+                        (scheme, vendor, product, '*', j,
+                         '*: cannot display string')
+                    print_(report, file=out)
+
             print_('', file=out)
 
     @classmethod
