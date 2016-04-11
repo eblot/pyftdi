@@ -101,13 +101,13 @@ class SpiController(object):
         if self._turbo:
             if silent_clock:
                 # Set SCLK as input to avoid emitting clock beats
-                self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                    self._direction & ~SpiController.SCK_BIT])
+                self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+                                      self._direction & ~SpiController.SCK_BIT))
             # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-            self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
+            self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
         # Restore idle state
-        self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                              self._direction])
+        self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+                              self._direction))
         if not self._turbo:
             self._cs_high.append(Ftdi.SEND_IMMEDIATE)
         self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
