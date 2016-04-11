@@ -306,7 +306,7 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(Array('B', Ftdi.LOOPBACK_END,))
+        self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Configure baudrate

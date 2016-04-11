@@ -37,22 +37,34 @@ class GpioException(IOError):
 class GpioController(object):
     """GPIO controller for an FTDI port"""
 
+    MASK = 0xff
+
     def __init__(self):
-        self._ftdi = Ftdi()
+        self._ftdi = None
         self._direction = 0
 
     def __del__(self):
-        if self._ftdi:
-            self.close()
+        self.close()
 
-    def configure(self, vendor, product, interface, direction, **kwargs):
-        """Configure the FTDI interface as a SPI master"""
+    @property
+    def direction(self):
+        return self._direction
+
+    @property
+    def is_connected(self):
+        return bool(self._ftdi)
+
+    def open(self, vendor, product, interface, direction, **kwargs):
+        """
+        """
         for k in ('direction',):
             if k in kwargs:
                 del kwargs[k]
         try:
-            self._ftdi.open_bitbang(vendor, product, interface,
-                                    direction=direction, **kwargs)
+            ftdi = Ftdi()
+            ftdi.open_bitbang(vendor, product, interface, direction=direction,
+                              **kwargs)
+            self._ftdi = ftdi
         except IOError as e:
             raise GpioException('Unable to open USB port: %s' % str(e))
         self._direction = direction
@@ -70,8 +82,8 @@ class GpioController(object):
                              pin, where '1' sets the pin as output and '0' sets
                              the pin as input/high-Z.
         """
-        if direction > 0xff:
-            raise "Invalid direction mask"
+        if direction > self.MASK:
+            raise GpioException("Invalid direction mask")
         self._direction = direction
         self._ftdi.set_bitmode(self.direction, Ftdi.BITMODE_BITBANG)
 
@@ -83,7 +95,9 @@ class GpioController(object):
                          sets the pin to low level. GPIO pins that are
                          configured as Input are left unaltered.
         """
-        return self.ftdi.read_pins()
+        if not self.is_connected:
+            raise GpioException('Not connected')
+        return self._ftdi.read_pins()
 
     def write_port(self, value):
         """Set the GPIO output pin electrical level.
@@ -93,6 +107,8 @@ class GpioController(object):
                          pin and '0' reports a low level. GPIO pins that are
                          configured as Output should be ignored.
         """
-        if value > 0xff:
+        if not self.is_connected:
+            raise GpioException('Not connected')
+        if value > self._direction or (value & ~self._direction):
             raise GpioException("Invalid value")
         self._ftdi.write_data(spack('<B', value))
