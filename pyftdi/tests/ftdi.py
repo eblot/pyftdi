@@ -37,7 +37,7 @@ class FtdiTestCase(unittest.TestCase):
 
     def test_multiple_interface(self):
         # the following calls used to create issues (several interfaces from
-        # the same device). The test expect an FTDI 2232H here
+        # the same device). The test expects an FTDI 2232H here
         ftdi1 = Ftdi()
         ftdi1.open(vendor=0x403, product=0x6010, interface=1)
         ftdi2 = Ftdi()

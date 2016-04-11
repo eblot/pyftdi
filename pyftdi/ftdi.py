@@ -1,5 +1,6 @@
 # pyftdi - A pure Python FTDI driver
 # Copyright (C) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
 #

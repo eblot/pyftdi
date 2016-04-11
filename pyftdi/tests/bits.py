@@ -43,11 +43,11 @@ class BitSequenceTestCase(unittest.TestCase):
         self.bs4 = BitSequence(0x04, msb=True, length=11)
         self.bs5 = BitSequence(299999999999998)
         self.bs6 = BitSequence(299999999999999)
-        self.bs7 = BitSequence(value="10010101011111")
+        self.bs7 = BitSequence(value='10010101011111')
         self.bzs1 = BitZSequence(0x01, msb=True, length=8)
         self.bzs2 = BitZSequence('0Z1')
         self.bzs3 = BitZSequence('0Z1', length=5)
-        self.bzs4 = BitZSequence("0010ZZ010Z1Z11")
+        self.bzs4 = BitZSequence('0010ZZ010Z1Z11')
         self.bzs5 = BitZSequence(value=[True, False, None, False, False, True])
         self.bzs6 = BitZSequence(value=[True, False, None, False, False, True],
                                  length=len(self.bzs4))

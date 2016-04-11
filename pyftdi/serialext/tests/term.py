@@ -61,7 +61,7 @@ def _init_term(fullterm):
 
 def getkey(fullterm=False):
     """Return a key from the current console, in a platform independent way"""
-    # there's probably a better way to initialize the module without going
+    # there's probably a better way to initialize the module without
     # relying onto a singleton pattern. To be fixed
     global _INIT
     if not _INIT:
