@@ -30,6 +30,7 @@ from array import array as Array
 import struct
 import usb.core
 import usb.util
+from six import PY3
 from six.moves import range
 from pyftdi.usbtools import UsbTools
 
@@ -678,7 +679,10 @@ class Ftdi(object):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
-        return self.read_data_bytes(size).tostring()
+        if PY3:
+            return self.read_data_bytes(size).tobytes()
+        else:
+            return self.read_data_bytes(size).tostring()
 
     def get_cts(self):
         """Read terminal status line: Clear To Send"""
@@ -729,9 +733,14 @@ class Ftdi(object):
 
     def _wrap_api(self):
         """Deal with PyUSB API breaks"""
+        from six import PY3
         import inspect
-        args, varargs, varkw, defaults = \
-            inspect.getargspec(usb.core.Device.read)
+
+        if PY3:
+            args = list(inspect.signature(usb.core.Device.read).parameters)
+        else:
+            args, _, _, _ = \
+                inspect.getargspec(usb.core.Device.read)
         if (len(args) > 2) and (args[3] == 'interface'):
             usb_api = 1  # Require "interface" parameter
         else:

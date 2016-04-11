@@ -27,6 +27,7 @@
 import struct
 from array import array as Array
 from pyftdi.ftdi import Ftdi
+from six import PY3
 
 __all__ = ['SpiPort', 'SpiController']
 
@@ -171,12 +172,23 @@ class SpiController(object):
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
+        cmd = Array('B', cs_cmd)
+        if PY3:
+            cmd.frombytes(write_cmd)
+        else:
+            cmd.fromstring(write_cmd)
+        cmd.extend(out)
         if readlen:
-            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
+            """
             cmd = Array('B', cs_cmd)
             cmd.fromstring(write_cmd)
             cmd.extend(out)
-            cmd.fromstring(read_cmd)
+            """
+            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
+            if PY3:
+                cmd.frombytes(read_cmd)
+            else:
+                cmd.fromstring(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 cmd.extend(self._cs_high)
@@ -189,9 +201,11 @@ class SpiController(object):
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         else:
+            """
             cmd = Array('B', cs_cmd)
             cmd.fromstring(write_cmd)
             cmd.extend(out)
+            """
             if self._turbo:
                 cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
