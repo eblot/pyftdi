@@ -173,7 +173,7 @@ not supported. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See pyftdi/examples directory for JTAG examples.
+See pyftdi/tests directory for GPIO examples.
 See pyspiflash_ module for SPI examples.
 
 .. include:: serialext/README.rst
