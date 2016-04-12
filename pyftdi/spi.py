@@ -179,11 +179,6 @@ class SpiController(object):
             cmd.fromstring(write_cmd)
         cmd.extend(out)
         if readlen:
-            """
-            cmd = Array('B', cs_cmd)
-            cmd.fromstring(write_cmd)
-            cmd.extend(out)
-            """
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
             if PY3:
                 cmd.frombytes(read_cmd)
@@ -201,11 +196,6 @@ class SpiController(object):
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         else:
-            """
-            cmd = Array('B', cs_cmd)
-            cmd.fromstring(write_cmd)
-            cmd.extend(out)
-            """
             if self._turbo:
                 cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
