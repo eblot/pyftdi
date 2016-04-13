@@ -59,7 +59,7 @@ def hexdump(data, full=False, abbreviate=False):
         else:
             # data may be a list/tuple
             src = bytearray(b''.join(data))
-    except Exception as e:
+    except Exception:
         raise TypeError("Unsupported data type '%s'" % type(data))
 
     length = 16
@@ -102,7 +102,7 @@ def hexline(data, sep=' '):
         else:
             # data may be a list/tuple
             src = bytearray(b''.join(data))
-    except Exception as e:
+    except Exception:
         raise TypeError("Unsupported data type '%s'" % type(data))
 
     hexa = sep.join(["%02x" % x for x in src])

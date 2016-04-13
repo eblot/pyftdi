@@ -1,4 +1,5 @@
 # Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # This library is free software; you can redistribute it and/or

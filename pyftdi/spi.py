@@ -1,4 +1,5 @@
 # Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
 import struct
 from array import array as Array
 from pyftdi.ftdi import Ftdi
+from six import PY3
 
 __all__ = ['SpiPort', 'SpiController']
 
@@ -101,13 +103,13 @@ class SpiController(object):
         if self._turbo:
             if silent_clock:
                 # Set SCLK as input to avoid emitting clock beats
-                self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                    self._direction & ~SpiController.SCK_BIT])
+                self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+                                      self._direction & ~SpiController.SCK_BIT))
             # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-            self._cs_high.extend([Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff])
+            self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
         # Restore idle state
-        self._cs_high.extend([Ftdi.SET_BITS_LOW, self._cs_bits,
-                              self._direction])
+        self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+                              self._direction))
         if not self._turbo:
             self._cs_high.append(Ftdi.SEND_IMMEDIATE)
         self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
@@ -170,12 +172,18 @@ class SpiController(object):
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
         write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
+        cmd = Array('B', cs_cmd)
+        if PY3:
+            cmd.frombytes(write_cmd)
+        else:
+            cmd.fromstring(write_cmd)
+        cmd.extend(out)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
-            cmd = Array('B', cs_cmd)
-            cmd.fromstring(write_cmd)
-            cmd.extend(out)
-            cmd.fromstring(read_cmd)
+            if PY3:
+                cmd.frombytes(read_cmd)
+            else:
+                cmd.fromstring(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 cmd.extend(self._cs_high)
@@ -188,9 +196,6 @@ class SpiController(object):
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         else:
-            cmd = Array('B', cs_cmd)
-            cmd.fromstring(write_cmd)
-            cmd.extend(out)
             if self._turbo:
                 cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)

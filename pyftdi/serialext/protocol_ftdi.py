@@ -94,7 +94,7 @@ class FtdiSerial(UsbSerial):
         cls.PRODUCT_IDS[vid][pidname] = pid
 
 
-# assemble Serial class with the platform specifc implementation and the base
+# assemble Serial class with the platform specific implementation and the base
 # for file-like behavior.
 class Serial(FtdiSerial, RawIOBase):
     pass

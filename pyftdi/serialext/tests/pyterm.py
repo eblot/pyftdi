@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
