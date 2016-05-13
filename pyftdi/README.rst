@@ -147,14 +147,14 @@ Troubleshooting
 
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On OS X, refer to this FTDI guide_:
+  uninstalling the driver. On OS X, refer to this FTDI guide_.
 
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
 
  If you run libusb <= v1.20.0, be sure to read the 
  `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_ 
- with OS X 10.11+:
+ with OS X 10.11+.
 
 .. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 
