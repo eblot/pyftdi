@@ -42,6 +42,20 @@ class SpiPort(object):
        An SPI port is never instanciated directly.
 
        Use SpiController.get_port() method to obtain an SPI port
+
+       :Example:
+
+            ctrl = SpiController(silent_clock=False)
+            ctrl.configure(0x1234, 0x5678, 1)
+            spi = ctrl.get_port(1)
+            spi.set_frequency(1000000)
+            # send 2 bytes
+            spi.exchange([0x12, 0x34])
+            # send 2 bytes, then receive 2 bytes
+            out = spi.exchange([0x12, 0x34], 2)
+            # send 2 bytes, then receive 4 bytes, manage the transaction
+            out = spi.exchange([0x12, 0x34], 2, True, False)
+            out.extend(spi.exchange([], 2, False, True))
     """
 
     def __init__(self, controller, cs_cmd):
@@ -49,10 +63,40 @@ class SpiPort(object):
         self._cs_cmd = cs_cmd
         self._frequency = self._controller.frequency
 
-    def exchange(self, out='', readlen=0):
-        """Perform a half-duplex transaction with the SPI slave"""
-        return self._controller._exchange(self._frequency, self._cs_cmd,
-                                          out, readlen)
+    def exchange(self, out='', readlen=0, start=True, stop=True):
+        """Perform an exchange or a transaction with the SPI slave
+
+           .. note:: Exchange is a dual half-duplex transmission: output bytes
+                     are sent to the slave, then bytes are received from the
+                     slave. It is not possible to perform a full duplex
+                     exchange for now, although this feature could be easily
+                     implemented.
+
+           :param out: an array of bytes to send to the SPI slave,
+                       may be empty to only read out data from the slave
+           :param readlen: count of bytes to read out from the slave,
+                       may be zero to only write to the slave
+           :param start: whether to start an SPI transaction, i.e. activate
+                         the /CS line for the slave. Use False to resume a
+                         previously started transaction
+           :param stop: whether to desactivete the /CS line for the slave. Use
+                       False if the transaction should complete with a further
+                       call to exchange()
+           :return: an array of bytes containing the data read out from the
+                    slave
+        """
+        return self._controller._exchange(self._frequency, out, readlen,
+                                          start and self._cs_cmd, stop)
+
+    def read(self, readlen=0, start=True, stop=True):
+        """Read out bytes from the slave"""
+        return self._controller._exchange(self._frequency, [], readlen,
+                                          start and self._cs_cmd, stop)
+
+    def write(self, out, start=True, stop=True):
+        """Write bytes to the slave"""
+        return self._controller._exchange(self._frequency, out, 0,
+                                          start and self._cs_cmd, stop)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -159,8 +203,23 @@ class SpiController(object):
         """Returns the current SPI clock"""
         return self._frequency
 
-    def _exchange(self, frequency, cs_cmd, out, readlen):
-        """Perform a half-duplex transaction with the SPI slave"""
+    def _exchange(self, frequency, out, readlen, cs_cmd=None, complete=True):
+        """Perform a half-duplex exchange or transaction with the SPI slave
+
+           :param frequency: SPI bus clock
+           :param out: an array of bytes to send to the SPI slave,
+                       may be empty to only read out data from the slave
+           :param readlen: count of bytes to read out from the slave,
+                       may be zero to only write to the slave
+           :param cs_cmd: the prolog sequence to activate the /CS line on the
+                       SPI bus. May be empty to resume a previously started
+                       transaction
+           :param complete: whether to send the epilog sequence to move the
+                       /CS line back to the idle state. May be force to False
+                       if another part of a transaction is expected
+           :return: an array of bytes containing the data read out from the
+                    slave
+        """
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -171,37 +230,45 @@ class SpiController(object):
             self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
-        write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB, len(out)-1)
-        cmd = Array('B', cs_cmd)
-        if PY3:
-            cmd.frombytes(write_cmd)
-        else:
-            cmd.fromstring(write_cmd)
-        cmd.extend(out)
+        cmd = cs_cmd and Array('B', cs_cmd) or Array('B')
+        writelen = len(out)
+        if writelen:
+            write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
+                                    writelen-1)
+            if PY3:
+                cmd.frombytes(write_cmd)
+            else:
+                cmd.fromstring(write_cmd)
+            cmd.extend(out)
         if readlen:
-            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB, readlen-1)
+            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB,
+                                   readlen-1)
             if PY3:
                 cmd.frombytes(read_cmd)
             else:
                 cmd.fromstring(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
-                cmd.extend(self._cs_high)
+                if complete:
+                    cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                self._ftdi.write_data(self._cs_high)
+                if complete:
+                    self._ftdi.write_data(self._cs_high)
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
-        else:
+        elif writelen:
             if self._turbo:
-                cmd.extend(self._cs_high)
+                if complete:
+                    cmd.extend(self._cs_high)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                self._ftdi.write_data(self._cs_high)
+                if complete:
+                    self._ftdi.write_data(self._cs_high)
             data = Array('B')
         return data
 
