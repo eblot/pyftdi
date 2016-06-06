@@ -368,7 +368,8 @@ class JtagController(object):
         self.sync()
         data = self._ftdi.read_data_bytes(1, 4)
         # need to shift bits as they are shifted in from the MSB in FTDI
-        byte = ord(data) >> 8-length
+        #byte = ord(data) >> 8-length
+        byte = data[0] >> 8-length
         bs = BitSequence(byte, length=length)
         #print_("READ BITS %s" % bs)
         return bs
