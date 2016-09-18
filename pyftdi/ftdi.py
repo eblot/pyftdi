@@ -239,20 +239,27 @@ class Ftdi(object):
            list."""
         return UsbTools.find_all(vps, nocache)
 
-    def open(self, vendor, product, interface, index=0, serial=None,
-             description=None):
-        """Open a new interface to the specified FTDI device"""
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
-                                           description)
+    def open(self, vendor=None, product=None, interface=None, index=0, serial=None,
+             description=None, usb_device=None):
+
+        if usb_device is None:
+            """Open a new interface to the specified FTDI device"""
+            self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
+                                               description)
+        else:
+            self.usb_dev = usb_device
+
         try:
             self.usb_dev.set_configuration()
         except usb.core.USBError:
             pass
+
         # detect invalid interface as early as possible
         config = self.usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
             raise FtdiError('No such FTDI port: %d' % interface)
         self._set_interface(config, interface)
+
         self.max_packet_size = self._get_max_packet_size()
         self._reset_device()
         self.set_latency_timer(self.LATENCY_MIN)
@@ -262,12 +269,12 @@ class Ftdi(object):
         self.set_latency_timer(self.LATENCY_MAX)
         UsbTools.release_device(self.usb_dev)
 
-    def open_mpsse(self, vendor, product, interface=1,
+    def open_mpsse(self, vendor=None, product=None, interface=1,
                    index=0, serial=None, description=None,
-                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
+                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16, usb_device=None):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial, description)
+        self.open(vendor, product, interface, index, serial, description, usb_device)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -289,12 +296,12 @@ class Ftdi(object):
         # Return the actual frequency
         return frequency
 
-    def open_bitbang(self, vendor, product, interface=1,
+    def open_bitbang(self, vendor=None, product=None, interface=1,
                      index=0, serial=None, description=None,
-                     direction=0x0, baudrate=115200, latency=16):
+                     direction=0x0, baudrate=115200, latency=16, usb_device=None):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial, description)
+        self.open(vendor, product, interface, index, serial, description, usb_device)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
