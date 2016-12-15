@@ -42,12 +42,11 @@ Quick step-by-step instruction guide
 
 Shell commands::
 
-  pip install virtualenv
-  virtualenv ~/.pyusb
+  pyvenv ~/.pyusb
   ~/.pyusb/bin/pip install pyserial
-  ~/.pyusb/bin/pip install [--pre] pyusb
+  ~/.pyusb/bin/pip install pyusb
   PYTHONPATH=. ~/.pyusb/bin/python pyftdi/serialext/tests/pyterm.py -p ftdi:///?
 
 Note that if there's only one FTDI device connected to the host, the FTDI URL
-should be as simple as ``ftdi:///n``, where n is the FTDI UART port (starting 
+should be as simple as ``ftdi:///n``, where n is the FTDI UART port (starting
 from 1).
