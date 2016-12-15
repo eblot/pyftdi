@@ -1,3 +1,4 @@
+# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -28,13 +29,8 @@
 """
 
 from array import array as Array
-from numbers import Integral
 from pyftdi.misc import is_iterable, xor
-from six.moves import range
-from six import PY3
 
-if PY3:
-    long = int
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
@@ -94,7 +90,7 @@ class BitSequence(object):
                 seq.extend(b)
         else:
             value = self._tomutable(value)
-        if isinstance(value, Integral):
+        if isinstance(value, int):
             self._init_from_integer(value, msb, length)
         elif isinstance(value, BitSequence):
             self._init_from_sibling(value, msb)
@@ -190,14 +186,14 @@ class BitSequence(object):
 
     def _init_from_integer(self, value, msb, length):
         """Initialize from any integer value"""
-        l = length or -1
+        bl = length or -1
         seq = self._seq
-        while l:
+        while bl:
             seq.append(bool(value & 1))
             value >>= 1
             if not value:
                 break
-            l -= 1
+            bl -= 1
         if msb:
             seq.reverse()
 
@@ -262,14 +258,25 @@ class BitSequence(object):
     def __len__(self):
         return len(self._seq)
 
-    # py3 does not use __cmp__ anymore so define __eq__ and __ne__ from __cmp__
     def __eq__(self, other):
-        return not bool(self.__cmp__(other))
+        return self._cmp(other) == 0
 
     def __ne__(self, other):
-        return bool(self.__cmp__(other))
+        return not self == other
 
-    def __cmp__(self, other):
+    def __le__(self, other):
+        return not self._cmp(other) <= 0
+
+    def __lt__(self, other):
+        return not self._cmp(other) < 0
+
+    def __ge__(self, other):
+        return not self._cmp(other) >= 0
+
+    def __gt__(self, other):
+        return not self._cmp(other) > 0
+
+    def _cmp(self, other):
         # the bit sequence should be of the same length
         ld = len(self) - len(other)
         if ld:
@@ -296,9 +303,6 @@ class BitSequence(object):
         return '%d: %s' % (len(self), ' '.join(reversed(chunks)))
 
     def __int__(self):
-        return int(self.__long__())
-
-    def __long__(self):
         value = 0
         for b in reversed(self._seq):
             value <<= 1
@@ -311,7 +315,7 @@ class BitSequence(object):
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
         return self.__class__(value=list(map(lambda x, y: x and y,
-                                         self._seq, other.sequence())))
+                                             self._seq, other.sequence())))
 
     def __or__(self, other):
         if not isinstance(other, self.__class__):
@@ -319,7 +323,7 @@ class BitSequence(object):
         if len(self) != len(other):
             raise BitSequenceError('Sequences must be the same size')
         return self.__class__(value=list(map(lambda x, y: x or y,
-                                         self._seq, other.sequence())))
+                                             self._seq, other.sequence())))
 
     def __add__(self, other):
         return self.__class__(value=self._seq + other.sequence())
@@ -434,14 +438,11 @@ class BitZSequence(BitSequence):
         smap = {False: '0', True: '1', BitZSequence.Z: 'Z'}
         return ''.join([smap[b] for b in reversed(self._seq)])
 
-    def __long__(self):
+    def __int__(self):
         if BitZSequence.Z in self._seq:
             raise BitSequenceError("High-Z BitSequence cannot be converted to "
                                    "an integral type")
-        return BitSequence.__long__(self)
-
-    def __int__(self):
-        return int(self.__long__())
+        return BitSequence.__int__(self)
 
     def __cmp__(self, other):
         # the bit sequence should be of the same length
@@ -482,7 +483,8 @@ class BitZSequence(BitSequence):
                 return BitZSequence.Z
             else:
                 return x or y
-        return self.__class__(value=list(map(orz, self._seq, other.sequence())))
+        return self.__class__(value=list(map(orz, self._seq,
+                                             other.sequence())))
 
     def __rand__(self, other):
         return self.__and__(other)
@@ -550,8 +552,8 @@ class BitField(object):
         else:
             if isinstance(value, bool):
                 value = int(value)
-            value = (value & long(1)) << index
-            mask = long(1) << index
+            value = (value & int(1)) << index
+            mask = int(1) << index
             self._val = (self._val & ~mask) | value
 
     def __int__(self):

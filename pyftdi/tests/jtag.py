@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
@@ -32,10 +32,10 @@ from pyftdi.bits import BitSequence
 from six import print_
 
 # Should match the tested device
-JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),
-              'PRELOAD' : BitSequence('0001', msb=True, length=4),
-              'IDCODE'  : BitSequence('0100', msb=True, length=4),
-              'BYPASS'  : BitSequence('1111', msb=True, length=4) }
+JTAG_INSTR = {'SAMPLE': BitSequence('0001', msb=True, length=4),
+              'PRELOAD': BitSequence('0001', msb=True, length=4),
+              'IDCODE': BitSequence('0100', msb=True, length=4),
+              'BYPASS': BitSequence('1111', msb=True, length=4)}
 
 
 class JtagTestCase(unittest.TestCase):

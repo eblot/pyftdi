@@ -28,45 +28,49 @@ It should support the following modes:
 
 * UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
   capability)
+* Bitbang/GPIO support
 * SPI master
 * JTAG master
-* Bitbang/GPIO support (not a primary goal)
 
 PyFtdi should provide a pyserial_ compliant API, to be used as a drop-in module
 to access USB-serial converters based on FTDI_ devices.
 
 .. _FTDI: http://www.ftdichip.com/
-.. _pyserial: http://pyserial.sourceforge.net/
 
 
 Requirements
 ~~~~~~~~~~~~
 
-Python_ 2.6 or above is required. Python_ 3.3+ is also supported.
+Python_ 3.5 or above is required.
 
 PyFtdi relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb-1.0 (recommended), tested with 1.0.20
-* libusb-0.1 (deprecated), tested with 0.1.4
-* openusb (not tested with pyftdi)
-  
-Since PyFtdi 0.13, Six_ compatibility library is also required.
+* libusb-1.0, tested with 1.0.20
+
+ may still
+work, but are fully untested there are nowaways obsolete.
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1 and 
-automatically deals with the API break introduced with PyUSB_ 1.0.0b2 (using
-the latest PyUSB_ version is nevertheless recommended)
-
-To use the serial port feature of PyFtdi, pyserial_ 2.6+ module should be
-installed. Previous versions of pyserial_ will NOT work. pyserial_ 3.0+ is also
+PyFTDI has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
 supported.
+
+Note about previous releases
+----------------------------
+
+If you have no choice but using previous releases of software, such as
+  * Python_ (2.6+, 3.3+),
+  * other PyUSB_ backends such as the deprecated libusb-0.1, or openusb,
+  * PyUSB_ 1.0.0b1 or below,
+  * pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
+please checkout the latest PyFTDI 0.1x series (0.13.3) which provides support
+for these deprecated environmement, but is no longer actively maintained.
 
 .. _PyUSB: http://sourceforge.net/projects/pyusb/
 .. _Python: http://python.org/
-.. _Six: https://pythonhosted.org/six/
+.. _pyserial: http://pyserial.sourceforge.net/
 
 
 Status
@@ -95,8 +99,8 @@ Supported features
 
 * SPI master. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
-  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to 
-  use the FTDI SPI master with a pure-Python serial flash device driver for 
+  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to
+  use the FTDI SPI master with a pure-Python serial flash device driver for
   several common devices.
 
 * JTAG is under development and is not fully supported yet.
@@ -106,13 +110,24 @@ Supported features
 
 Installation
 ~~~~~~~~~~~~
-* Download & install pyusb-1.0.0r1: ``pip install pyusb``
 
-* Download & install pyserial: ``pip install pyserial``
+* Install native dependency. The actual command to install depends on your OS
+  and/or your distribution. Examples:
 
-* Download & install six: ``pip install six``
+  * Debian Linux
 
-* Install pyftdi
+    apt-get install libusb-1.0
+
+  * Homebrew macOS
+
+    brew install libusb
+
+* Install Python dependencies
+
+  pip3 install pyusb
+  pip3 install pyserial
+  pip3 install pyftdi
+
 
 Troubleshooting
 ---------------
@@ -152,8 +167,8 @@ Troubleshooting
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
 
- If you run libusb <= v1.20.0, be sure to read the 
- `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_ 
+ If you run libusb <= v1.20.0, be sure to read the
+ `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
  with OS X 10.11+.
 
 .. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
@@ -161,8 +176,8 @@ Troubleshooting
 Development
 ~~~~~~~~~~~
 
-PyFtdi is developed on Mac OS X platforms (including 64-bit kernels), and is
-validated on a regular basis on Linux hosts.
+PyFtdi is developed on macOS platforms (64-bit kernel), and is validated on a
+regular basis on Linux hosts.
 
 As it contains no native code, it should work on any PyUSB_ and libusb_
 supported platforms. However, Ms Windows is a seamless source of issues and is

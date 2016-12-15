@@ -1,3 +1,4 @@
+# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -29,11 +30,7 @@
 
 import re
 from array import array as Array
-from six import PY3, integer_types, binary_type
-from six.moves import range
 
-if PY3:
-    long = int
 
 # String values evaluated as true boolean values
 TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
@@ -41,7 +38,7 @@ TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
 FALSE_BOOLEANS = ['off', 'false', 'disable', 'disabled', 'no', 'low', '0']
 # ASCII or '.' filter
 ASCIIFILTER = ''.join([((len(repr(chr(_x))) == 3) or (_x == 0x5c)) and chr(_x)
-                      or '.' for _x in range(128)]) + '.' * 128
+                       or '.' for _x in range(128)]) + '.' * 128
 ASCIIFILTER = bytearray(ASCIIFILTER.encode('ascii'))
 
 
@@ -54,9 +51,9 @@ def hexdump(data, full=False, abbreviate=False):
        :abbreviate: replace identical lines with '*'
     """
     try:
-        if isinstance(data, (binary_type, Array)):
+        if isinstance(data, (bytes, Array)):
             src = bytearray(data)
-        else:
+        elif not isinstance(data, bytearray):
             # data may be a list/tuple
             src = bytearray(b''.join(data))
     except Exception:
@@ -80,9 +77,9 @@ def hexdump(data, full=False, abbreviate=False):
         printable = s.translate(ASCIIFILTER).decode('ascii')
         if full:
             hx1, hx2 = hexa[:3*8], hexa[3*8:]
-            l = length//2
+            hl = length//2
             result.append("%08x  %-*s %-*s |%s|\n" %
-                          (i, l*3, hx1, l*3, hx2, printable))
+                          (i, hl*3, hx1, hl*3, hx2, printable))
         else:
             result.append("%06x   %-*s  %s\n" %
                           (i, length*3, hexa, printable))
@@ -97,9 +94,9 @@ def hexline(data, sep=' '):
        of the buffer data
     """
     try:
-        if isinstance(data, (binary_type, Array)):
+        if isinstance(data, (bytes, Array)):
             src = bytearray(data)
-        else:
+        elif not isinstance(data, bytearray):
             # data may be a list/tuple
             src = bytearray(b''.join(data))
     except Exception:
@@ -121,8 +118,8 @@ def to_int(value):
     """
     if not value:
         return 0
-    if isinstance(value, integer_types):
-        return int(value)
+    if isinstance(value, int):
+        return value
     mo = re.match('^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
     if mo:
         mult = {'K': (1000),

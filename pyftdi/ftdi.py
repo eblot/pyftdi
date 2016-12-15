@@ -22,17 +22,16 @@
 
 Author:  Emmanuel Blot <emmanuel.blot@free.fr>
 License: LGPL, originally based on libftdi C library
-Caveats: Only tested with FT2232 and FT4232 FTDI devices
 Require: pyusb
 """
 
 from array import array as Array
-import struct
+from errno import ENODEV
+from pyftdi.usbtools import UsbTools
+from struct import unpack as sunpack
+
 import usb.core
 import usb.util
-from six import PY3
-from six.moves import range
-from pyftdi.usbtools import UsbTools
 
 
 __all__ = ['Ftdi', 'FtdiError']
@@ -229,7 +228,6 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None  # disable dynamic latency
-        self._wrap_api()
 
     # --- Public API -------------------------------------------------------
 
@@ -463,7 +461,7 @@ class Ftdi(object):
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
-        status, = struct.unpack('<H', value)
+        status, = sunpack('<H', value)
         return status
 
     def modem_status(self):
@@ -672,10 +670,7 @@ class Ftdi(object):
         """Read data in chunks from the chip.
            Automatically strips the two modem status bytes transfered during
            every read."""
-        if PY3:
-            return self.read_data_bytes(size).tobytes()
-        else:
-            return self.read_data_bytes(size).tostring()
+        return self.read_data_bytes(size).tobytes()
 
     def get_cts(self):
         """Read terminal status line: Clear To Send"""
@@ -724,23 +719,6 @@ class Ftdi(object):
 
     # --- Private implementation -------------------------------------------
 
-    def _wrap_api(self):
-        """Deal with PyUSB API breaks"""
-        from six import PY3
-        import inspect
-
-        if PY3:
-            args = list(inspect.signature(usb.core.Device.read).parameters)
-        else:
-            args, _, _, _ = \
-                inspect.getargspec(usb.core.Device.read)
-        if (len(args) > 2) and (args[3] == 'interface'):
-            usb_api = 1  # Require "interface" parameter
-        else:
-            usb_api = 2
-        for m in ('write', 'read'):
-            setattr(self, '_%s' % m, getattr(self, '_%s_v%d' % (m, usb_api)))
-
     def _set_interface(self, config, ifnum):
         """Select the interface to use on the FTDI device"""
         if ifnum == 0:
@@ -778,21 +756,11 @@ class Ftdi(object):
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
-    def _write_v1(self, data):
-        """Write to FTDI, using the deprecated API"""
-        return self.usb_dev.write(self.in_ep, data,
-                                  self.interface, self.usb_write_timeout)
-
-    def _read_v1(self):
-        """Read from FTDI, using the deprecated API"""
-        return self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
-                                 self.interface, self.usb_read_timeout)
-
-    def _write_v2(self, data):
+    def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
-    def _read_v2(self):
+    def _read(self):
         """Read from FTDI, using the API introduced with pyusb 1.0.0b2"""
         return self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
                                  self.usb_read_timeout)
@@ -800,10 +768,8 @@ class Ftdi(object):
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
-            import errno
             raise IOError("Device is not yet known", errno.ENODEV)
         if not self.interface:
-            import errno
             raise IOError("Interface is not yet known", errno.ENODEV)
         if self.ic_name in self.HISPEED_DEVICES:
             packet_size = 512
