@@ -27,7 +27,7 @@
 import struct
 from array import array as Array
 from pyftdi.ftdi import Ftdi
-from six import PY3
+
 
 __all__ = ['SpiPort', 'SpiController']
 
@@ -235,18 +235,12 @@ class SpiController(object):
         if writelen:
             write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
                                     writelen-1)
-            if PY3:
-                cmd.frombytes(write_cmd)
-            else:
-                cmd.fromstring(write_cmd)
+            cmd.frombytes(write_cmd)
             cmd.extend(out)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB,
                                    readlen-1)
-            if PY3:
-                cmd.frombytes(read_cmd)
-            else:
-                cmd.fromstring(read_cmd)
+            cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 if complete:

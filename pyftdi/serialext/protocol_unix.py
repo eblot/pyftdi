@@ -30,9 +30,8 @@ import select
 import socket
 from io import RawIOBase
 from pyftdi.misc import hexdump
-from serial import SerialBase, SerialException, portNotOpenError, \
-                   writeTimeoutError, VERSION as pyserialver
-from six import print_
+from serial import (SerialBase, SerialException, portNotOpenError,
+                    writeTimeoutError, VERSION as pyserialver)
 
 
 __all__ = ['Serial']
@@ -40,6 +39,7 @@ __all__ = ['Serial']
 
 class SerialExceptionWithErrno(SerialException):
     """Serial exception with errno extension"""
+
     def __init__(self, message, errno=None):
         SerialException.__init__(self, message)
         self.errno = errno
@@ -145,7 +145,7 @@ class SocketSerial(SerialBase):
                         raise writeTimeoutError
                 n = self.sock.send(d)
                 if self._dump:
-                    print_(hexdump(d[:n]))
+                    print(hexdump(d[:n]))
                 if self._writeTimeout is not None and self._writeTimeout > 0:
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)

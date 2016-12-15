@@ -20,8 +20,7 @@ import threading
 import usb.core
 import usb.util
 from pyftdi.misc import to_int
-from six import print_
-from six.moves.urllib.parse import urlsplit
+from urllib.parse import urlsplit
 
 __all__ = ['UsbTools']
 
@@ -341,7 +340,7 @@ class UsbTools(object):
                 # high interfaces are dedicated to UARTs
                 interfaces.append((scheme, vendor, product, serial, j, d))
         if interfaces:
-            print_("Available interfaces:", file=out)
+            print("Available interfaces:", file=out)
             for scheme, vendor, product, serial, j, d in interfaces:
                 fmt = '  %s://%s/%d  '
                 parts = [vendor, product]
@@ -351,16 +350,16 @@ class UsbTools(object):
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format
                 try:
-                    print_(fmt % (scheme, ':'.join(parts), j), end='',
+                    print(fmt % (scheme, ':'.join(parts), j), end='',
                            file=out)
                 except Exception:
-                    print_(fmt % (scheme, ':'.join([vendor, product, '???']),
+                    print(fmt % (scheme, ':'.join([vendor, product, '???']),
                                   j), end='', file=out)
                 try:
-                    print_(desc or '', file=out)
+                    print(desc or '', file=out)
                 except Exception:
-                    print_('', file=out)
-            print_('', file=out)
+                    print('', file=out)
+            print('', file=out)
 
     @classmethod
     def get_string(cls, device, strname):

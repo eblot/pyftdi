@@ -28,8 +28,10 @@
 
 import sys
 import unittest
+
+from doctest import testmod
 from pyftdi.ftdi import Ftdi
-from six import print_
+from time import sleep
 
 
 class FtdiTestCase(unittest.TestCase):
@@ -42,11 +44,10 @@ class FtdiTestCase(unittest.TestCase):
         ftdi1.open(vendor=0x403, product=0x6010, interface=1)
         ftdi2 = Ftdi()
         ftdi2.open(vendor=0x403, product=0x6010, interface=2)
-        import time
         for x in range(5):
-            print_("If#1: ", hex(ftdi1.poll_modem_status()))
-            print_("If#2: ", ftdi2.modem_status())
-            time.sleep(0.500)
+            print("If#1: ", hex(ftdi1.poll_modem_status()))
+            print("If#2: ", ftdi2.modem_status())
+            sleep(0.500)
         ftdi1.close()
         ftdi2.close()
 
@@ -56,7 +57,7 @@ def suite():
     suite_.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
     return suite_
 
+
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(sys.modules[__name__])
+    testmod(sys.modules[__name__])
     unittest.main(defaultTest='suite')

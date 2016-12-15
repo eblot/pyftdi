@@ -27,7 +27,7 @@ import sys
 import types
 from pyftdi.misc import hexdump
 from time import time
-from six import print_
+
 
 __all__ = ['SerialLogger']
 
@@ -39,7 +39,7 @@ class SerialLogger(object):
         try:
             self._logger = open(logpath, "wt")
         except IOError as e:
-            print_("Cannot log data to %s: %s" % (logpath, str(e)),
+            print("Cannot log data to %s: %s" % (logpath, str(e)),
                    file=sys.stderr)
         self._port = None
         self._methods = {}
@@ -67,7 +67,7 @@ class SerialLogger(object):
             now = time()
             delta = (now-self._last)*1000
             self._last = now
-            print_("%s (%3.3f ms):\n%s" % (header, delta, string),
+            print("%s (%3.3f ms):\n%s" % (header, delta, string),
                    file=self._logger)
             self._logger.flush()
 
@@ -75,43 +75,43 @@ class SerialLogger(object):
         try:
             self._print('READ', hexdump(data))
         except Exception as e:
-            print_('Cannot log input data (%s)' % e, file=sys.stderr)
+            print('Cannot log input data (%s)' % e, file=sys.stderr)
 
     def _log_write(self, data):
         try:
             self._print('WRITE', hexdump(data))
         except Exception as e:
-            print_('Cannot log output data (%s)' % e, data, file=sys.stderr)
+            print('Cannot log output data (%s)' % e, data, file=sys.stderr)
 
     def _log_flush(self, type_):
         try:
             self._print('FLUSH', type_)
         except Exception as e:
-            print_('Cannot log flush action (%s)' % e, file=sys.stderr)
+            print('Cannot log flush action (%s)' % e, file=sys.stderr)
 
     def _log_waiting(self, count):
         try:
             self._print('INWAITING', '%d' % count)
         except Exception as e:
-            print_('Cannot log inwaiting (%s)' % e, file=sys.stderr)
+            print('Cannot log inwaiting (%s)' % e, file=sys.stderr)
 
     def _log_setBaudrate(self, baudrate):
         try:
             self._print('SETBAUDRATE', '%d' % baudrate)
         except Exception as e:
-            print_('Cannot log setBaudrate (%s)' % e, file=sys.stderr)
+            print('Cannot log setBaudrate (%s)' % e, file=sys.stderr)
 
     def _log_setDTR(self, hwreset):
         try:
             self._print('SETDTR', '%s' % hwreset)
         except Exception as e:
-            print_('Cannot log setDTR (%s)' % e, file=sys.stderr)
+            print('Cannot log setDTR (%s)' % e, file=sys.stderr)
 
     def _log_setRTS(self, startmode):
         try:
             self._print('SETRTS', '%d' % startmode)
         except Exception as e:
-            print_('Cannot log setRTS (%s)' % e, file=sys.stderr)
+            print('Cannot log setRTS (%s)' % e, file=sys.stderr)
 
     def close(self):
         self._logger.close()
