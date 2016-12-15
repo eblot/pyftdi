@@ -48,8 +48,7 @@ libraries:
 
 * libusb-1.0, tested with 1.0.20
 
- may still
-work, but are fully untested there are nowaways obsolete.
+may still work, but are fully untested there are nowaways obsolete.
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
@@ -61,6 +60,7 @@ Note about previous releases
 ----------------------------
 
 If you have no choice but using previous releases of software, such as
+
   * Python_ (2.6+, 3.3+),
   * other PyUSB_ backends such as the deprecated libusb-0.1, or openusb,
   * PyUSB_ 1.0.0b1 or below,
@@ -116,17 +116,17 @@ Installation
 
   * Debian Linux
 
-    apt-get install libusb-1.0
+      apt-get install libusb-1.0
 
   * Homebrew macOS
 
-    brew install libusb
+      brew install libusb
 
 * Install Python dependencies
 
-  pip3 install pyusb
-  pip3 install pyserial
-  pip3 install pyftdi
+    pip3 install pyusb
+    pip3 install pyserial
+    pip3 install pyftdi
 
 
 Troubleshooting
@@ -137,12 +137,13 @@ Troubleshooting
 
   * On Linux: ``export LD_LIBRARY_PATH=<path>``
 
-    where <path> is the directory containing the ``libusb-1.*.so`` library file
+    where ``<path>`` is the directory containing the ``libusb-1.*.so``
+    library file
 
-  * On OS X: ``export DYLD_LIBRARY_PATH=.../lib``
+  * On macOS: ``export DYLD_LIBRARY_PATH=.../lib``
 
-    where <path> is the directory containing the ``libusb-1.*.dylib`` library
-    file
+    where ``<path>`` is the directory containing the ``libusb-1.*.dylib``
+    library file
 
 *"Error: Access denied (insufficient permissions)"*
   The system may already be using the device.
@@ -154,6 +155,9 @@ Troubleshooting
 
       ``sudo kextunload [-v] -bundle com.apple.driver.AppleUSBFTDI``
 
+    You may want to use an alias or a tiny script such as
+    ``pyftdi/tools/uphy.sh``
+
     Please note that the system automatically reloads the driver, so it may be
     useful to move the kernel extension so that the system never loads it.
 
@@ -162,7 +166,7 @@ Troubleshooting
 
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On OS X, refer to this FTDI guide_.
+  uninstalling the driver. On macOS, refer to this FTDI guide_.
 
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
