@@ -96,7 +96,10 @@ class MiniTerm(object):
             while self._resume:
                 data = self._port.read(4096)
                 if data:
-                    stdout.write(data.decode('utf8'))
+                    try:
+                        stdout.write(data.decode('utf8'))
+                    except UnicodeDecodeError:
+                        pass
                     stdout.flush()
         except KeyboardInterrupt:
             return
@@ -128,7 +131,7 @@ class MiniTerm(object):
             # wait till the other thread completes
             time.sleep(0.5)
             try:
-                rem = self._port.inWaiting()
+                rem = self._port.in_waiting()
             except IOError:
                 # maybe a bug in underlying wrapper...
                 rem = 0
@@ -144,34 +147,32 @@ class MiniTerm(object):
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        try:
-            from serial.serialutil import SerialException
-        except ImportError:
-            raise ImportError("Python serial module not installed")
-        try:
-            from serial import serial_for_url, VERSION as serialver
-            version = tuple([int(x) for x in serialver.split('.')])
-            if version < (3, 0):
-                raise ValueError
-        except (ValueError, IndexError, ImportError):
-            raise ImportError("pyserial 3.0+ is required")
         # the following import enables serial protocol extensions
         import pyftdi.serialext
         try:
-            port = serial_for_url(device,
-                                  baudrate=baudrate,
-                                  timeout=0)
             if logfile:
-                port.set_logger(logfile)
-            if not port.isOpen():
-                port.open()
-            if not port.isOpen():
+                port = pyftdi.serialext.serial_for_url(device,
+                                                       do_not_open=True)
+                basecls = port.__class__
+                from pyftdi.serialext.logger import SerialLogger
+                cls = type('Spy%s' % basecls.__name__,
+                           (SerialLogger, basecls), {})
+                port = cls(device, baudrate=baudrate,
+                           timeout=0, logfile=logfile)
+            else:
+                port = pyftdi.serialext.serial_for_url(device,
+                                                       baudrate=baudrate,
+                                                       timeout=0,
+                                                       do_not_open=True)
+            port.open()
+            if not port.is_open:
                 raise IOError('Cannot open port "%s"' % device)
             if debug:
                 print("Using serial backend '%s'" % port.BACKEND)
             return port
-        except SerialException as e:
-            raise IOError(str(e))
+        except IOError as ex:
+            # SerialException derives from IOError
+            raise
 
 
 def main():

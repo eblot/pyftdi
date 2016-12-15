@@ -26,8 +26,8 @@
 
 import time
 from pyftdi.usbtools import UsbTools, UsbToolsError
-from serial import SerialBase, VERSION as pyserialver
-from six.moves import range
+from serial import SerialBase, SerialException, VERSION as pyserialver
+
 
 __all__ = ['UsbSerial']
 
@@ -48,7 +48,6 @@ class UsbSerial(SerialBase):
 
     def open(self, devclass, scheme, vdict, pdict, default_vendor):
         """Open the initialized serial port"""
-        from serial import SerialException
         if self._port is None:
             raise SerialException("Port must be configured before use.")
         try:
@@ -101,47 +100,57 @@ class UsbSerial(SerialBase):
            is written."""
         # do nothing
 
-    def flushInput(self):
+    def reset_input_buffer(self):
         """Clear input buffer, discarding all that is in the buffer."""
         self.udev.purge_rx_buffer()
 
-    def flushOutput(self):
+    def reset_output_buffer(self):
         """Clear output buffer, aborting the current output and
         discarding all that is in the buffer."""
         self.udev.purge_tx_buffer()
 
-    def sendBreak(self):
-        """Send break condition."""
-        # Not supported
+    def send_break(self, duration=0.25):
+        """Send break condition. Not supported"""
+
+    def _update_break_state(self):
+        """Send break condition. Not supported"""
         pass
 
-    def setRTS(self, level=True):
+    def _update_rts_state(self):
         """Set terminal status line: Request To Send"""
-        self.udev.set_rts(level)
+        self.udev.set_rts(self._rts_state)
 
-    def setDTR(self, level=True):
+    def _update_dtr_state(self):
         """Set terminal status line: Data Terminal Ready"""
-        self.udev.set_dtr(level)
+        self.udev.set_dtr(self._dtr_state)
 
-    def getCTS(self):
+    @property
+    def cts(self):
         """Read terminal status line: Clear To Send"""
         return self.udev.get_cts()
 
-    def getDSR(self):
+    @property
+    def dsr(self):
         """Read terminal status line: Data Set Ready"""
         return self.udev.get_dsr()
 
-    def getRI(self):
+    @property
+    def ri(self):
         """Read terminal status line: Ring Indicator"""
         return self.udev.get_ri()
 
-    def getCD(self):
+    @property
+    def cd(self):
         """Read terminal status line: Carrier Detect"""
         return self.udev.get_cd()
 
-    def inWaiting(self):
+    def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
         # not implemented
+        return 0
+
+    def out_waiting(self):
+        """Return the number of bytes currently in the output buffer."""
         return 0
 
     @property
@@ -167,14 +176,10 @@ class UsbSerial(SerialBase):
                 # backend does not support this feature
                 pass
         except IOError as e:
-            from serial import SerialException
             err = self.udev.get_error_string()
             raise SerialException("%s (%s)" % (str(e), err))
 
     _reconfigure_port = _reconfigurePort
 
     def _set_open_state(self, open_):
-        if self.PYSERIAL_VERSION < (3, 0):
-            self._isOpen = bool(open_)
-        else:
-            self.is_open = bool(open_)
+        self.is_open = bool(open_)

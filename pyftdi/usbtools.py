@@ -20,6 +20,8 @@ import threading
 import usb.core
 import usb.util
 from pyftdi.misc import to_int
+from string import printable as printablechars
+from sys import stdout
 from urllib.parse import urlsplit
 
 __all__ = ['UsbTools']
@@ -293,10 +295,8 @@ class UsbTools(object):
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
         """Show supported devices"""
-        from string import printable as printablechars
         if not out:
-            import sys
-            out = sys.stdout
+            out = stdout
         indices = {}
         interfaces = []
         for (v, p, s, i, d) in candidates:
@@ -351,10 +351,11 @@ class UsbTools(object):
                 # emitted in the output stream encoding format
                 try:
                     print(fmt % (scheme, ':'.join(parts), j), end='',
-                           file=out)
+                          file=out)
                 except Exception:
-                    print(fmt % (scheme, ':'.join([vendor, product, '???']),
-                                  j), end='', file=out)
+                    print(
+                        fmt % (scheme, ':'.join([vendor, product, '???']), j),
+                        end='', file=out)
                 try:
                     print(desc or '', file=out)
                 except Exception:

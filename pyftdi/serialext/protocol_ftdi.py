@@ -97,4 +97,7 @@ class FtdiSerial(UsbSerial):
 # assemble Serial class with the platform specific implementation and the base
 # for file-like behavior.
 class Serial(FtdiSerial, RawIOBase):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        RawIOBase.__init__(self)
+        FtdiSerial.__init__(self, *args, **kwargs)
