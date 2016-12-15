@@ -63,7 +63,7 @@ class UsbSerial(SerialBase):
         except IOError:
             raise SerialException('Unable to open USB port %s' % self.portstr)
         self._set_open_state(True)
-        self._reconfigurePort()
+        self._reconfigure_port()
         self._product = product
 
     def close(self):
@@ -98,7 +98,7 @@ class UsbSerial(SerialBase):
     def flush(self):
         """Flush of file like objects. In this case, wait until all data
            is written."""
-        # do nothing
+        pass
 
     def reset_input_buffer(self):
         """Clear input buffer, discarding all that is in the buffer."""
@@ -158,7 +158,7 @@ class UsbSerial(SerialBase):
         """Return the (TX, RX) tupple of hardware FIFO sizes"""
         return self.udev.fifo_sizes
 
-    def _reconfigurePort(self):
+    def _reconfigure_port(self):
         try:
             self.udev.set_baudrate(self._baudrate)
             self.udev.set_line_property(self._bytesize,
@@ -178,8 +178,6 @@ class UsbSerial(SerialBase):
         except IOError as e:
             err = self.udev.get_error_string()
             raise SerialException("%s (%s)" % (str(e), err))
-
-    _reconfigure_port = _reconfigurePort
 
     def _set_open_state(self, open_):
         self.is_open = bool(open_)
