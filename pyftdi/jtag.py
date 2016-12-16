@@ -197,9 +197,8 @@ class JtagController(object):
     # Public API
     def configure(self, url):
         """Configure the FTDI interface as a JTAG controller"""
-        self._ftdi.open_mpsse(url,
-                              direction=self.direction,
-                              frequency=self._frequency)
+        self._ftdi.open_mpsse_from_url(
+            url, direction=self.direction, frequency=self._frequency)
         # FTDI requires to initialize all GPIOs before MPSSE kicks in
         cmd = Array('B', (Ftdi.SET_BITS_LOW, 0x0, self.direction))
         self._ftdi.write_data(cmd)

@@ -335,12 +335,11 @@ class Ftdi(object):
         return self.open_mpsse(vendor, product, interface, index, serial,
                                direction, initial, frequency, latency)
 
-    def open_mpsse(self, vendor, product, interface=1,
-                   index=0, serial=None, description=None,
+    def open_mpsse(self, vendor, product, interface=1, index=0, serial=None,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, index, serial, interface)
+        self.open(vendor, product, interface, index, serial)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -366,12 +365,11 @@ class Ftdi(object):
         return self.open_bitbang(vendor, product, interface, index, serial,
                                  direction, latency)
 
-    def open_bitbang(self, vendor, product, interface=1,
-                     index=0, serial=None, description=None,
+    def open_bitbang(self, vendor, product, interface=1, index=0, serial=None,
                      direction=0x0, latency=16):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, index, serial, interface)
+        self.open(vendor, product, interface, index, serial)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size

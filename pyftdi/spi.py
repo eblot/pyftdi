@@ -165,10 +165,10 @@ class SpiController(object):
             if k in kwargs:
                 del kwargs[k]
         self._frequency = \
-            self._ftdi.open_mpsse(url,
-                                  direction=self._direction,
-                                  initial=self._cs_bits,  # /CS all high
-                                  **kwargs)
+            self._ftdi.open_mpsse_from_url(
+                # /CS all high
+                url, direction=self._direction, initial=self._cs_bits,
+                **kwargs)
 
     def terminate(self):
         """Close the FTDI interface"""
