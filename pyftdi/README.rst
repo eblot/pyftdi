@@ -61,10 +61,11 @@ Note about previous releases
 
 If you have no choice but using previous releases of software, such as
 
-  * Python_ (2.6+, 3.3+),
-  * other PyUSB_ backends such as the deprecated libusb-0.1, or openusb,
-  * PyUSB_ 1.0.0b1 or below,
-  * pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
+* Python_ (2.6+, 3.3+),
+* other PyUSB_ backends such as the deprecated libusb-0.1, or openusb,
+* PyUSB_ 1.0.0b1 or below,
+* pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
+
 please checkout the latest PyFTDI 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.
 

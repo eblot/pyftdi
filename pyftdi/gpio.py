@@ -55,7 +55,7 @@ class GpioController(object):
     def is_connected(self):
         return bool(self._ftdi)
 
-    def open(self, vendor, product, interface, direction, **kwargs):
+    def open(self, url, direction, **kwargs):
         """
         """
         for k in ('direction',):
@@ -63,7 +63,7 @@ class GpioController(object):
                 del kwargs[k]
         try:
             ftdi = Ftdi()
-            ftdi.open_bitbang(vendor, product, interface, direction=direction,
+            ftdi.open_bitbang(url, direction=direction,
                               **kwargs)
             self._ftdi = ftdi
         except IOError as e:

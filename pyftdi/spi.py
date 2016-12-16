@@ -159,13 +159,13 @@ class SpiController(object):
         self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
 
-    def configure(self, vendor, product, interface, **kwargs):
+    def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master"""
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
         self._frequency = \
-            self._ftdi.open_mpsse(vendor, product, interface,
+            self._ftdi.open_mpsse(url,
                                   direction=self._direction,
                                   initial=self._cs_bits,  # /CS all high
                                   **kwargs)

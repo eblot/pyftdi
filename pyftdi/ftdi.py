@@ -29,6 +29,7 @@ from array import array as Array
 from errno import ENODEV
 from pyftdi.usbtools import UsbTools
 from struct import unpack as sunpack
+from sys import platform
 
 import usb.core
 import usb.util
@@ -43,6 +44,27 @@ class FtdiError(IOError):
 
 class Ftdi(object):
     """FTDI device driver"""
+
+    SCHEME = 'ftdi'
+    FTDI_VENDOR = 0x403
+    VENDOR_IDS = {'ftdi': FTDI_VENDOR}
+    PRODUCT_IDS = {
+        FTDI_VENDOR:
+            {'232': 0x6001,
+             '232r': 0x6001,
+             '232h': 0x6014,
+             '2232': 0x6010,
+             '4232': 0x6011,
+             '230x': 0x6015,
+             'ft232': 0x6001,
+             'ft232r': 0x6001,
+             'ft232h': 0x6014,
+             'ft2232': 0x6010,
+             'ft4232': 0x6011,
+             'ft230x': 0x6015
+             }
+        }
+    DEFAULT_VENDOR = FTDI_VENDOR
 
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
@@ -231,17 +253,65 @@ class Ftdi(object):
 
     # --- Public API -------------------------------------------------------
 
+    @classmethod
+    def create_from_url(cls, url):
+        device = Ftdi()
+        device.open_from_url(url)
+        return device
+
+    @classmethod
+    def get_identifiers(cls, url):
+        """Extract the identifiers of a FTDI device from URL, if any
+
+            :param url: input URL to parse
+            :return: (vendor, product, index, sernum, interface)
+        """
+        ids = UsbTools.parse_url(
+            url, cls,
+            cls.SCHEME, cls.VENDOR_IDS, cls.PRODUCT_IDS, cls.DEFAULT_VENDOR)
+        return ids
+
+    @classmethod
+    def add_custom_vendor(cls, vid, vidname=''):
+        """Add a custom USB vendor identifier.
+           It can be useful to use a pretty URL for opening FTDI device
+        """
+        if vid in cls.VENDOR_IDS:
+            raise ValueError('Vendor ID 0x%04x already registered' % vid)
+        if not vidname:
+            vidname = '0x%04x' % vid
+        cls.VENDOR_IDS[vidname] = vid
+
+    @classmethod
+    def add_custom_product(cls, vid, pid, pidname=''):
+        """Add a custom USB product identifier.
+           It is required for opening FTDI device with non-standard VID/PID
+           USB identifiers.
+        """
+        if vid not in cls.PRODUCT_IDS:
+            cls.PRODUCT_IDS[vid] = {}
+        elif pid in cls.PRODUCT_IDS[vid]:
+            raise ValueError('Product ID 0x%04x already registered' % vid)
+        if not pidname:
+            pidname = '0x%04x' % pid
+        cls.PRODUCT_IDS[vid][pidname] = pid
+
     @staticmethod
     def find_all(vps, nocache=False):
         """Find all devices that match the vendor/product pairs of the vps
            list."""
         return UsbTools.find_all(vps, nocache)
 
-    def open(self, vendor, product, interface, index=0, serial=None,
-             description=None):
+    def open_from_url(self, url):
+        vendor, product, index, serial, interface = self.get_identifiers(url)
+        print("IDs", vendor, product, index, serial, interface,
+              type(vendor), type(product), type(index), type(serial), type(interface))
+        return self.open(vendor, product, interface, serial, index)
+
+    def open(self, vendor, product, interface=1, serial=None, index=0):
         """Open a new interface to the specified FTDI device"""
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial,
-                                           description)
+        print("IDs", vendor, product, index, serial, interface)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
         try:
             self.usb_dev.set_configuration()
         except usb.core.USBError:
@@ -252,6 +322,8 @@ class Ftdi(object):
             raise FtdiError('No such FTDI port: %d' % interface)
         self._set_interface(config, interface)
         self.max_packet_size = self._get_max_packet_size()
+        # Drain input buffer
+        self.purge_buffers()
         self._reset_device()
         self.set_latency_timer(self.LATENCY_MIN)
 
@@ -260,18 +332,24 @@ class Ftdi(object):
         self.set_latency_timer(self.LATENCY_MAX)
         UsbTools.release_device(self.usb_dev)
 
+    def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
+                            frequency=6.0E6, latency=16):
+        vendor, product, index, serial, interface = self.get_identifiers(url)
+        return self.open_mpsse(vendor, product, interface, index, serial,
+                               direction, initial, frequency, latency)
+
     def open_mpsse(self, vendor, product, interface=1,
                    index=0, serial=None, description=None,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial, description)
+        self.open(vendor, product, index, serial, interface)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
-        # Drain input buffer
+        # Drain buffers
         self.purge_buffers()
         # Enable MPSSE mode
         self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
@@ -282,17 +360,21 @@ class Ftdi(object):
         # Disable loopback
         self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
-        # Drain input buffer
-        self.purge_buffers()
         # Return the actual frequency
         return frequency
 
+    def open_bitband_from_url(self, url, direction=0x0, initial=0x0,
+                              latency=16):
+        vendor, product, index, serial, interface = self.get_identifiers(url)
+        return self.open_bitbang(vendor, product, interface, index, serial,
+                                 direction, latency)
+
     def open_bitbang(self, vendor, product, interface=1,
                      index=0, serial=None, description=None,
-                     direction=0x0, baudrate=115200, latency=16):
+                     direction=0x0, latency=16):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial, description)
+        self.open(vendor, product, index, serial, interface)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -302,9 +384,6 @@ class Ftdi(object):
         self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
-        # Configure baudrate
-        self.set_baudrate(baudrate)
-        self.validate_mpsse()
         # Drain input buffer
         self.purge_buffers()
 
@@ -409,8 +488,7 @@ class Ftdi(object):
         # Invalidate all remaining data
         self.readoffset = 0
         self.readbuffer = Array('B')
-        import sys
-        if sys.platform == 'linux':
+        if platform == 'linux':
             if chunksize > 16384:
                 chunksize = 16384
         self.readbuffer = []
@@ -768,9 +846,9 @@ class Ftdi(object):
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""
         if not self.usb_dev:
-            raise IOError("Device is not yet known", errno.ENODEV)
+            raise IOError("Device is not yet known", ENODEV)
         if not self.interface:
-            raise IOError("Interface is not yet known", errno.ENODEV)
+            raise IOError("Interface is not yet known", ENODEV)
         if self.ic_name in self.HISPEED_DEVICES:
             packet_size = 512
         else:

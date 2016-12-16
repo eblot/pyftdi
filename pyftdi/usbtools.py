@@ -66,7 +66,8 @@ class UsbTools(object):
         cls.Lock.release()
 
     @classmethod
-    def get_device(cls, vendor, product, index, serial, description):
+    def get_device(cls, vendor, product, index=0, serial=None,
+                   description=None):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it"""
         cls.Lock.acquire()
@@ -84,6 +85,10 @@ class UsbTools(object):
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iSerialNumber) ==
                             serial]
+                if isinstance(devs, set):
+                    # there is no guarantee the same index with lead to the
+                    # same device. Indexing should be reworked
+                    devs = list(devs)
                 try:
                     dev = devs[index]
                 except IndexError:
@@ -206,9 +211,20 @@ class UsbTools(object):
 
     @staticmethod
     def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor):
+        """
+            :return: (vendor, product, index, sernum, interface)
+
+            Vendor is the USB vendor identifier (integer)
+            Product is the USB product identifier (integer)
+            Index is an enumerated value to differenciate devices with same
+               characteristics on USB buses
+            Serial number is the serial number, if anay or may be None
+            Interface is the USB interface on the selected device (integer)
+        """
         urlparts = urlsplit(urlstr)
         if scheme != urlparts.scheme:
             raise UsbToolsError("Invalid URL: %s" % urlstr)
+        # general syntax: protocol://vendor:product[:index|:serial]/interface
         plcomps = urlparts.netloc.split(':') + [''] * 2
         try:
             plcomps[0] = vdict.get(plcomps[0], plcomps[0])
@@ -290,7 +306,7 @@ class UsbTools(object):
             raise UsbToolsError('Vendor ID 0x%04x not supported' % vendor)
         if product not in pdict[vendor].values():
             raise UsbToolsError('Product ID 0x%04x not supported' % product)
-        return vendor, product, interface, sernum, idx
+        return vendor, product, idx, sernum, interface
 
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
@@ -341,25 +357,29 @@ class UsbTools(object):
                 interfaces.append((scheme, vendor, product, serial, j, d))
         if interfaces:
             print("Available interfaces:", file=out)
+            serial_ifaces = []
+            max_url_len = 0
             for scheme, vendor, product, serial, j, d in interfaces:
-                fmt = '  %s://%s/%d  '
+                fmt = '%s://%s/%d'
                 parts = [vendor, product]
                 if serial:
                     parts.append(serial)
-                desc = d and '  (%s)' % d
+                desc = d and '(%s)' % d
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format
                 try:
-                    print(fmt % (scheme, ':'.join(parts), j), end='',
-                          file=out)
+                    serial_url = fmt % (scheme, ':'.join(parts), j)
                 except Exception:
-                    print(
-                        fmt % (scheme, ':'.join([vendor, product, '???']), j),
-                        end='', file=out)
+                    serial_url = fmt % (scheme,
+                                        ':'.join([vendor, product, '???']), j)
                 try:
-                    print(desc or '', file=out)
+                    serial_desc = desc or ''
                 except Exception:
-                    print('', file=out)
+                    serial_desc = ''
+                max_url_len = max(max_url_len, len(serial_url))
+                serial_ifaces.append((serial_url, serial_desc))
+            for iface in serial_ifaces:
+                print(('  %%-%ds   %%s' % max_url_len) % iface, file=out)
             print('', file=out)
 
     @classmethod
