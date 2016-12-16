@@ -304,13 +304,10 @@ class Ftdi(object):
 
     def open_from_url(self, url):
         vendor, product, index, serial, interface = self.get_identifiers(url)
-        print("IDs", vendor, product, index, serial, interface,
-              type(vendor), type(product), type(index), type(serial), type(interface))
         return self.open(vendor, product, interface, serial, index)
 
     def open(self, vendor, product, interface=1, serial=None, index=0):
         """Open a new interface to the specified FTDI device"""
-        print("IDs", vendor, product, index, serial, interface)
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
         try:
             self.usb_dev.set_configuration()
