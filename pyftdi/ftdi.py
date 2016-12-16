@@ -396,6 +396,8 @@ class Ftdi(object):
                  0x0800: 'ft4232h',
                  0x0900: 'ft232h',
                  0x1000: 'ft230x'}
+        if not self.usb_dev:
+            return 'unknown'
         return types[self.usb_dev.bcdDevice]
 
     @property
