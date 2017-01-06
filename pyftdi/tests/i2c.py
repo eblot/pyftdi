@@ -28,7 +28,6 @@
 
 import unittest
 import sys
-from array import array as Array
 from pyftdi.i2c import I2cController, I2cIOError
 from time import sleep
 
@@ -46,7 +45,7 @@ class I2cTest(object):
 
     def general_call(self):
         port = self._i2c.get_port(0)
-        port.write(Array('B', [0x16]))
+        port.write([0x16])
 
     def close(self):
         """Close the I2C connection"""

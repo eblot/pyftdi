@@ -26,6 +26,7 @@ Require: pyusb
 """
 
 from array import array as Array
+from binascii import hexlify
 from errno import ENODEV
 from pyftdi.usbtools import UsbTools
 from struct import unpack as sunpack
@@ -690,8 +691,8 @@ class Ftdi(object):
         if not self.is_mpsse:
             raise FtdiError('Setting adaptive clock mode is only available '
                             'from MPSSE mode')
-        self.write_data([enable and Ftdi.ENABLE_CLK_ADAPTIVE or
-                         Ftdi.DISABLE_CLK_ADAPTIVE])
+        self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_ADAPTIVE or
+                        Ftdi.DISABLE_CLK_ADAPTIVE]))
 
     def enable_3phase_clock(self, enable=True):
         if not self.is_mpsse:
@@ -699,8 +700,8 @@ class Ftdi(object):
                             'from MPSSE mode')
         if not self.is_H_series:
             raise FtdiError('This device does not support 3-phase clock')
-        self.write_data([enable and Ftdi.ENABLE_CLK_ADAPTIVE or
-                         Ftdi.DISABLE_CLK_ADAPTIVE])
+        self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_3PHASE or
+                        Ftdi.DISABLE_CLK_3PHASE]))
 
     def enable_drivezero_mode(self, lines):
         if not self.is_mpsse:
@@ -708,7 +709,8 @@ class Ftdi(object):
                             'from MPSSE mode')
         if not self.has_drivezero:
             raise FtdiError('This device does not support drive-zero mode')
-        self.write_data([Ftdi.DRIVE_ZERO, lines & 0xff, (lines >> 8) & 0xff])
+        self.write_data(Array('B',
+                        [Ftdi.DRIVE_ZERO, lines & 0xff, (lines >> 8) & 0xff]))
 
     def write_data(self, data):
         """Write data in chunks to the chip"""
@@ -907,12 +909,15 @@ class Ftdi(object):
 
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
+        print('> ', hexlify(data))
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
     def _read(self):
         """Read from FTDI, using the API introduced with pyusb 1.0.0b2"""
-        return self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
+        data = self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
                                  self.usb_read_timeout)
+        print('< ', hexlify(data))
+        return data
 
     def _get_max_packet_size(self):
         """Retrieve the maximum length of a data packet"""

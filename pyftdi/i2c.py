@@ -136,7 +136,11 @@ class I2cController(object):
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
                 frequency=frequency, **kwargs)
-        self._ftdi.write_data(Array('B', self._idle))
+        self._ftdi.enable_adaptive_clock(False)
+        self._ftdi.enable_3phase_clock(True)
+        self._ftdi.enable_drivezero_mode(self.SCL_BIT|
+                                         self.SDA_O_BIT|
+                                         self.SDA_I_BIT)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -193,6 +197,8 @@ class I2cController(object):
             cmd.extend(self._immediate)
             self._ftdi.write_data(cmd)
             ack = self._ftdi.read_data_bytes(1, 4)
+            if not ack:
+                raise I2cIOError('No answer from FTDI')
             if ack[0] & 0x01:
                 raise I2cIOError('NACK from slave')
 
