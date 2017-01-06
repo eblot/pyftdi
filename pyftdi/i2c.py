@@ -1,5 +1,4 @@
-# Copyright (c) 2010-2017, Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
+# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,42 +28,39 @@ from array import array as Array
 from pyftdi.ftdi import Ftdi
 
 
-__all__ = ['SpiPort', 'SpiController']
+__all__ = ['I2cPort', 'I2cController']
 
 
-class SpiIOError(IOError):
-    """SPI I/O error"""
+class I2cIOError(IOError):
+    """I2c I/O error"""
 
 
-class SpiPort(object):
-    """SPI port
+class I2cPort(object):
+    """I2C port
 
-       An SPI port is never instanciated directly.
+       An I2C port is never instanciated directly.
 
-       Use SpiController.get_port() method to obtain an SPI port
+       Use I2cController.get_port() method to obtain an I2C port
 
        :Example:
 
-            ctrl = SpiController(silent_clock=False)
+            ctrl = I2cController()
             ctrl.configure('ftdi://ftdi:232h/1')
-            spi = ctrl.get_port(1)
-            spi.set_frequency(1000000)
+            i2c = ctrl.get_port(1)
+            i2c.set_frequency(1000000)
             # send 2 bytes
-            spi.exchange([0x12, 0x34])
+            i2c.exchange([0x12, 0x34])
             # send 2 bytes, then receive 2 bytes
-            out = spi.exchange([0x12, 0x34], 2)
-            # send 2 bytes, then receive 4 bytes, manage the transaction
-            out = spi.exchange([0x12, 0x34], 2, True, False)
-            out.extend(spi.exchange([], 2, False, True))
+            out = i2c.exchange([0x12, 0x34], 2)
     """
 
-    def __init__(self, controller, cs_cmd):
+    def __init__(self, controller, address):
         self._controller = controller
-        self._cs_cmd = cs_cmd
+        self._address = address
         self._frequency = self._controller.frequency
 
-    def exchange(self, out='', readlen=0, start=True, stop=True):
-        """Perform an exchange or a transaction with the SPI slave
+    def exchange(self, out='', readlen=0):
+        """Perform an exchange or a transaction with the I2c slave
 
            .. note:: Exchange is a dual half-duplex transmission: output bytes
                      are sent to the slave, then bytes are received from the
@@ -72,11 +68,11 @@ class SpiPort(object):
                      exchange for now, although this feature could be easily
                      implemented.
 
-           :param out: an array of bytes to send to the SPI slave,
+           :param out: an array of bytes to send to the I2c slave,
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :param start: whether to start an SPI transaction, i.e. activate
+           :param start: whether to start an I2c transaction, i.e. activate
                          the /CS line for the slave. Use False to resume a
                          previously started transaction
            :param stop: whether to desactivete the /CS line for the slave. Use
@@ -86,89 +82,101 @@ class SpiPort(object):
                     slave
         """
         return self._controller._exchange(self._frequency, out, readlen,
-                                          start and self._cs_cmd, stop)
+                                          self._address)
 
-    def read(self, readlen=0, start=True, stop=True):
+    def read(self, readlen=0):
         """Read out bytes from the slave"""
         return self._controller._exchange(self._frequency, [], readlen,
-                                          start and self._cs_cmd, stop)
+                                          self._address)
 
-    def write(self, out, start=True, stop=True):
+    def write(self, out):
         """Write bytes to the slave"""
         return self._controller._exchange(self._frequency, out, 0,
-                                          start and self._cs_cmd, stop)
+                                          self._address)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
         self._controller._flush()
 
     def set_frequency(self, frequency):
-        """Change SPI bus frequency"""
+        """Change I2c bus frequency"""
         self._frequency = min(frequency, self._controller.frequency_max)
 
     @property
     def frequency(self):
-        """Return the current SPI bus block"""
+        """Return the current I2c bus block"""
         return self._frequency
 
 
-class SpiController(object):
-    """SPI master.
-
-        :param silent_clock: should be set to avoid clocking out SCLK when all
-                             /CS signals are released. This clock beat is used
-                             to enforce a delay between /CS signal activation.
-
-                             When weird SPI devices are used, SCLK beating may
-                             cause trouble. In this case, silent_clock should
-                             be set but beware that SCLK line should be fitted
-                             with a pull-down resistor, as SCLK is high-Z
-                             during this short period of time.
-        :param cs_count: is the number of /CS lines (one per device to drive on
-                         the SPI bus)
+class I2cController(object):
+    """I2c master.
     """
 
-    SCK_BIT = 0x01
-    DO_BIT = 0x02
-    DI_BIT = 0x04
-    CS_BIT = 0x08
+    IDLE = 0xff
+    SCL_BIT = 0x01
+    SDA_O_BIT = 0x02
+    SDA_I_BIT = 0x04
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=4, turbo=True):
+    def __init__(self):
         self._ftdi = Ftdi()
-        self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
-                         ~(SpiController.CS_BIT - 1))
-        self._ports = [None] * cs_count
-        self._direction = (self._cs_bits |
-                           SpiController.DO_BIT |
-                           SpiController.SCK_BIT)
-        self._turbo = turbo
-        self._cs_high = Array('B')
-        if self._turbo:
-            if silent_clock:
-                # Set SCLK as input to avoid emitting clock beats
-                self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-                                      self._direction & ~SpiController.SCK_BIT))
-            # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-            self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
-        # Restore idle state
-        self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-                              self._direction))
-        if not self._turbo:
-            self._cs_high.append(Ftdi.SEND_IMMEDIATE)
-        self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
+        self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
+        self._immediate = Array('B', 
+            (Ftdi.SEND_IMMEDIATE,))
+        idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
+        data_low = (Ftdi.SET_BITS_LOW,
+            self.IDLE & ~self.SDA_O_BIT, self._direction)
+        clock_data_low = (Ftdi.SET_BITS_LOW,
+            self.IDLE & ~(self.SDA_O_BIT|self.SCL_BIT), self._direction)
+        self._start = Array('B')
+        self._start.extend(data_low*4)
+        self._start.extend(clock_data_low*4)
+        self._stop = Array('B')
+        self._stop.extend(clock_data_low*4)
+        self._stop.extend(data_low*4)
+        self._stop.extend(idle*4)
+        self._idle = Array('B', idle)
+        # self._cs_bits = (((I2cController.CS_BIT << cs_count) - 1) &
+        #                  ~(I2cController.CS_BIT - 1))
+        # self._ports = [None] * cs_count
+        # self._direction = (self._cs_bits |
+        #                    I2cController.DO_BIT |
+        #                    I2cController.SCK_BIT)
+        # self._turbo = turbo
+        # self._cs_high = Array('B')
+        # if self._turbo:
+        #     if silent_clock:
+        #         # Set SCLK as input to avoid emitting clock beats
+        #         self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+        #                               self._direction & ~I2cController.SCK_BIT))
+        #     # /CS to SCLK delay, use 8 clock cycles as a HW tempo
+        #     self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
+        # # Restore idle state
+        # self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
+        #                       self._direction))
+        # if not self._turbo:
+        #     self._cs_high.append(Ftdi.SEND_IMMEDIATE)
+        # self._frequency = 0.0
+        self._ftdi.write_data(self._idle)
 
     def configure(self, url, **kwargs):
-        """Configure the FTDI interface as a SPI master"""
+        """Configure the FTDI interface as a I2c master"""
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
+        if 'frequency' in kwargs:
+            frequency = kwargs['frequency']
+            del kwargs['frequency']
+        else:
+            frequency = 100000.0
+        # Fix frequency for 3-phase clock
+        frequency = (3.0*frequency)/2.0
         self._frequency = \
             self._ftdi.open_mpsse_from_url(
                 # /CS all high
                 url, direction=self._direction, initial=self._cs_bits,
-                **kwargs)
+                frequency=frequency, **kwargs)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -176,56 +184,51 @@ class SpiController(object):
             self._ftdi.close()
             self._ftdi = None
 
-    def get_port(self, cs):
-        """Obtain a SPI port to drive a SPI device selected by cs"""
+    def get_port(self, address):
+        """Obtain a I2c port to drive a I2c device selected by cs"""
         if not self._ftdi:
-            raise SpiIOError("FTDI controller not initialized")
-        if cs >= len(self._ports):
-            raise SpiIOError("No such SPI port")
-        if not self._ports[cs]:
-            cs_state = 0xFF & ~((SpiController.CS_BIT << cs) |
-                                SpiController.SCK_BIT |
-                                SpiController.DO_BIT)
-            cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
-                                 cs_state,
-                                 self._direction))
-            self._ports[cs] = SpiPort(self, cs_cmd)
-            self._flush()
-        return self._ports[cs]
+            raise I2cIOError("FTDI controller not initialized")
+        if address > 0x7f:
+            raise I2cIOError("No such I2c slave")
+        # if not self._ports[cs]:
+        #     cs_state = 0xFF & ~((I2cController.CS_BIT << cs) |
+        #                         I2cController.SCK_BIT |
+        #                         I2cController.DO_BIT)
+        #     cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
+        #                          cs_state,
+        #                          self._direction))
+        #     self._ports[cs] = I2cPort(self, cs_cmd)
+        #     self._flush()
+        return self._ports[address]
 
     @property
     def frequency_max(self):
-        """Returns the maximum SPI clock"""
+        """Returns the maximum I2c clock"""
         return self._ftdi.frequency_max
 
     @property
     def frequency(self):
-        """Returns the current SPI clock"""
+        """Returns the current I2c clock"""
         return self._frequency
 
-    def _exchange(self, frequency, out, readlen, cs_cmd=None, complete=True):
-        """Perform a half-duplex exchange or transaction with the SPI slave
+    def _exchange(self, frequency, out, readlen, address):
+        """Perform a half-duplex exchange or transaction with the I2c slave
 
-           :param frequency: SPI bus clock
-           :param out: an array of bytes to send to the SPI slave,
+           :param frequency: I2c bus clock
+           :param out: an array of bytes to send to the I2c slave,
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :param cs_cmd: the prolog sequence to activate the /CS line on the
-                       SPI bus. May be empty to resume a previously started
-                       transaction
-           :param complete: whether to send the epilog sequence to move the
-                       /CS line back to the idle state. May be force to False
-                       if another part of a transaction is expected
+           :param address: the slave address
            :return: an array of bytes containing the data read out from the
                     slave
         """
         if not self._ftdi:
-            raise SpiIOError("FTDI controller not initialized")
-        if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
-            raise SpiIOError("Output payload is too large")
-        if readlen > SpiController.PAYLOAD_MAX_LENGTH:
-            raise SpiIOError("Input payload is too large")
+            raise I2cIOError("FTDI controller not initialized")
+        if len(out) > I2cController.PAYLOAD_MAX_LENGTH:
+            raise I2cIOError("Output payload is too large")
+        if readlen > I2cController.PAYLOAD_MAX_LENGTH:
+            raise I2cIOError("Input payload is too large")
         if self._frequency != frequency:
             self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
