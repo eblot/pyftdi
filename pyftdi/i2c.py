@@ -106,7 +106,7 @@ class I2cController(object):
         self._frequency = 0.0
         self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
-        idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
+        self._idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
         data_low = (Ftdi.SET_BITS_LOW,
             self.IDLE & ~self.SDA_O_BIT, self._direction)
         clock_low_data_low = (Ftdi.SET_BITS_LOW,
@@ -118,9 +118,8 @@ class I2cController(object):
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
-        self._start = data_low*4 + clock_low_data_low*4
-        self._stop = clock_low_data_low*4 + data_low*4 + idle*4
-        self._ftdi.write_data(Array('B', idle))
+        self._start_seq = data_low*4 + clock_low_data_low*4
+        self._stop_seq = clock_low_data_low*4 + data_low*4 + self._idle*4
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master"""
@@ -134,11 +133,10 @@ class I2cController(object):
             frequency = 100000.0
         # Fix frequency for 3-phase clock
         frequency = (3.0*frequency)/2.0
-        self._frequency = \
-            self._ftdi.open_mpsse_from_url(
-                # /CS all high
-                url, direction=self._direction, initial=self._cs_bits,
+        self._frequency = self._ftdi.open_mpsse_from_url(
+            url, direction=self._direction, initial=self.IDLE,
                 frequency=frequency, **kwargs)
+        self._ftdi.write_data(Array('B', self._idle))
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -153,7 +151,7 @@ class I2cController(object):
         if address > 0x7f:
             raise I2cIOError("No such I2c slave")
         if address not in self._slaves:
-            self._slaves[address] = I2cPort(self, cs_cmd)
+            self._slaves[address] = I2cPort(self, address)
         return self._slaves[address]
 
     @property
@@ -196,15 +194,27 @@ class I2cController(object):
             self._ftdi.write_data(cmd)
             ack = self._ftdi.read_data_bytes(1, 4)
             if ack[0] & 0x01:
-                raise FtdiError('NACK from slave')
+                raise I2cIOError('NACK from slave')
 
     def _send_address(self, address, write_req=True):
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         address <<= 1
         address &= 0xfe
-        address |= int(not bool(write))
+        address |= int(not bool(write_req))
         self._write_bytes([address])
+
+    def _set_idle(self):
+        cmd = Array('B', self._idle)
+        self._ftdi.write_data(cmd)
+
+    def _start(self):
+        cmd = Array('B', self._start_seq)
+        self._ftdi.write_data(cmd)
+
+    def _stop(self):
+        cmd = Array('B', self._stop_seq)
+        self._ftdi.write_data(cmd)
 
     def _exchange(self, address, out=None, readlen=0):
         if out:

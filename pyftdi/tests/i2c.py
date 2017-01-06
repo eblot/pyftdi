@@ -28,7 +28,8 @@
 
 import unittest
 import sys
-from pyftdi.i2c import I2cController, I2cError
+from array import array as Array
+from pyftdi.i2c import I2cController, I2cIOError
 from time import sleep
 
 
@@ -41,7 +42,7 @@ class I2cTest(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._i2c.configure('ftdi://ftdi:2232h/1')
+        self._i2c.configure('ftdi://ftdi:232h/1')
 
     def general_call(self):
         port = self._i2c.get_port(0)
@@ -69,6 +70,7 @@ class I2cTestCase(unittest.TestCase):
         """
         i2c = I2cTest()
         i2c.open()
+        i2c.general_call()
         i2c.close()
 
 

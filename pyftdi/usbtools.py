@@ -237,7 +237,10 @@ class UsbTools(object):
                 product_ids = pdict[default_vendor]
             plcomps[1] = product_ids.get(plcomps[1], plcomps[1])
             if plcomps[1]:
-                product = to_int(plcomps[1])
+                try:
+                    product = to_int(plcomps[1])
+                except ValueError:
+                    product = None
             else:
                 product = None
             if not urlparts.path:
@@ -389,7 +392,7 @@ class UsbTools(object):
         if cls.UsbApi is None:
             import inspect
             args, varargs, varkw, defaults = \
-                inspect.getargspec(usb.util.get_string)
+                inspect.signature(usb.core.Device.read).parameters
             if (len(args) >= 3) and args[1] == 'length':
                 cls.UsbApi = 1
             else:

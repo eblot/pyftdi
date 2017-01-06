@@ -54,13 +54,19 @@ class Ftdi(object):
              '232r': 0x6001,
              '232h': 0x6014,
              '2232': 0x6010,
+             '2232d': 0x6010,
+             '2232h': 0x6010,
              '4232': 0x6011,
+             '4232h': 0x6011,
              '230x': 0x6015,
              'ft232': 0x6001,
              'ft232r': 0x6001,
              'ft232h': 0x6014,
              'ft2232': 0x6010,
+             'ft2232d': 0x6010,
+             'ft2232h': 0x6010,
              'ft4232': 0x6011,
+             'ft4232h': 0x6011,
              'ft230x': 0x6015
              }
         }
@@ -238,11 +244,6 @@ class Ftdi(object):
     LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_THRESHOLD = 1000
-
-    # Special devices
-    LEGACY_DEVICES = ('ft232am', )
-    EXSPEED_DEVICES = ('ft2232d', )
-    HISPEED_DEVICES = ('ft232h', 'ft2232h', 'ft4232h')
 
     def __init__(self):
         self.usb_dev = None
@@ -428,6 +429,13 @@ class Ftdi(object):
         return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0800, 0x0900)
 
     @property
+    def is_legacy(self):
+        """Tell whether the device is a high-end FTDI"""
+        if not self.usb_dev:
+            raise FtdiError('Device characteristics not yet known')
+        return self.usb_dev.bcdDevice <= 0x0200
+
+    @property
     def is_H_series(self):
         """Tell whether the device is a high-end FTDI"""
         if not self.usb_dev:
@@ -457,9 +465,7 @@ class Ftdi(object):
     @property
     def frequency_max(self):
         """Tells the maximum frequency for MPSSE clock"""
-        if self.ic_name in self.HISPEED_DEVICES:
-            return Ftdi.BUS_CLOCK_HIGH
-        return Ftdi.BUS_CLOCK_BASE
+        return self.is_H_series and Ftdi.BUS_CLOCK_HIGH or Ftdi.BUS_CLOCK_BASE
 
     @property
     def fifo_sizes(self):
@@ -914,7 +920,7 @@ class Ftdi(object):
             raise IOError("Device is not yet known", ENODEV)
         if not self.interface:
             raise IOError("Interface is not yet known", ENODEV)
-        if self.ic_name in self.HISPEED_DEVICES:
+        if self.is_H_series:
             packet_size = 512
         else:
             packet_size = 64
@@ -928,7 +934,7 @@ class Ftdi(object):
         if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
             raise ValueError('Invalid baudrate (too low)')
         if baudrate > self.BAUDRATE_REF_BASE:
-            if self.ic_name not in self.HISPEED_DEVICES or \
+            if not self.is_H_series or \
                baudrate > self.BAUDRATE_REF_HIGH:
                     raise ValueError('Invalid baudrate (too high)')
             refclock = self.BAUDRATE_REF_HIGH
@@ -943,7 +949,7 @@ class Ftdi(object):
         # Sub-divider code are not ordered in the natural order
         frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
         divisor = (refclock*8) // baudrate
-        if self.ic_name in self.LEGACY_DEVICES:
+        if self.is_legacy:
             # Round down to supported fraction (AM only)
             divisor -= am_adjust_dn[divisor & 7]
         # Try this divisor and the one above it (because division rounds down)
@@ -957,7 +963,7 @@ class Ftdi(object):
                 if try_divisor <= 8:
                     # Round up to minimum supported divisor
                     try_divisor = 8
-                elif self.ic_name not in self.LEGACY_DEVICES and \
+                elif self.is_legacy and \
                         try_divisor < 12:
                     # BM doesn't support divisors 9 through 11 inclusive
                     try_divisor = 12
@@ -965,7 +971,7 @@ class Ftdi(object):
                     # AM doesn't support divisors 9 through 15 inclusive
                     try_divisor = 16
                 else:
-                    if self.ic_name in self.LEGACY_DEVICES:
+                    if self.is_legacy:
                         # Round up to supported fraction (AM only)
                         try_divisor += am_adjust_up[try_divisor & 7]
                         if try_divisor > 0x1FFF8:
@@ -999,7 +1005,7 @@ class Ftdi(object):
             encoded_divisor = 1  # 2000000 baud (BM only)
         # Split into "value" and "index" values
         value = encoded_divisor & 0xFFFF
-        if self.ic_name in self.EXSPEED_DEVICES + self.HISPEED_DEVICES:
+        if self.has_mpsse:
             index = (encoded_divisor >> 8) & 0xFFFF
             index &= 0xFF00
             index |= self.index
@@ -1026,7 +1032,7 @@ class Ftdi(object):
         else:
             raise FtdiError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
-        if self.ic_name in self.HISPEED_DEVICES:
+        if self.is_H_series:
             cmd = Array('B', (divcode,))
         else:
             cmd = Array('B')
