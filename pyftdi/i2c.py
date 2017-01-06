@@ -57,62 +57,44 @@ class I2cPort(object):
     def __init__(self, controller, address):
         self._controller = controller
         self._address = address
-        self._frequency = self._controller.frequency
 
     def exchange(self, out='', readlen=0):
         """Perform an exchange or a transaction with the I2c slave
-
-           .. note:: Exchange is a dual half-duplex transmission: output bytes
-                     are sent to the slave, then bytes are received from the
-                     slave. It is not possible to perform a full duplex
-                     exchange for now, although this feature could be easily
-                     implemented.
 
            :param out: an array of bytes to send to the I2c slave,
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :param start: whether to start an I2c transaction, i.e. activate
-                         the /CS line for the slave. Use False to resume a
-                         previously started transaction
-           :param stop: whether to desactivete the /CS line for the slave. Use
-                       False if the transaction should complete with a further
-                       call to exchange()
            :return: an array of bytes containing the data read out from the
                     slave
         """
-        return self._controller._exchange(self._frequency, out, readlen,
-                                          self._address)
+        return self._controller._exchange(self._address, out, readlen)
 
     def read(self, readlen=0):
         """Read out bytes from the slave"""
-        return self._controller._exchange(self._frequency, [], readlen,
-                                          self._address)
+        return self._controller._exchange(self._address, readlen=readlen)
 
     def write(self, out):
         """Write bytes to the slave"""
-        return self._controller._exchange(self._frequency, out, 0,
-                                          self._address)
+        return self._controller._exchange(self._address, out)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
         self._controller._flush()
 
-    def set_frequency(self, frequency):
-        """Change I2c bus frequency"""
-        self._frequency = min(frequency, self._controller.frequency_max)
-
     @property
     def frequency(self):
-        """Return the current I2c bus block"""
-        return self._frequency
+        """Return the current I2c bus"""
+        return self._controller.frequency
 
 
 class I2cController(object):
     """I2c master.
     """
 
-    IDLE = 0xff
+    LOW = 0x00
+    HIGH = 0xff
+    IDLE = HIGH
     SCL_BIT = 0x01
     SDA_O_BIT = 0x02
     SDA_I_BIT = 0x04
@@ -120,45 +102,25 @@ class I2cController(object):
 
     def __init__(self):
         self._ftdi = Ftdi()
+        self._slaves = {}
         self._frequency = 0.0
         self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
-        self._immediate = Array('B', 
-            (Ftdi.SEND_IMMEDIATE,))
+        self._immediate = (Ftdi.SEND_IMMEDIATE,)
         idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
         data_low = (Ftdi.SET_BITS_LOW,
             self.IDLE & ~self.SDA_O_BIT, self._direction)
-        clock_data_low = (Ftdi.SET_BITS_LOW,
+        clock_low_data_low = (Ftdi.SET_BITS_LOW,
             self.IDLE & ~(self.SDA_O_BIT|self.SCL_BIT), self._direction)
-        self._start = Array('B')
-        self._start.extend(data_low*4)
-        self._start.extend(clock_data_low*4)
-        self._stop = Array('B')
-        self._stop.extend(clock_data_low*4)
-        self._stop.extend(data_low*4)
-        self._stop.extend(idle*4)
-        self._idle = Array('B', idle)
-        # self._cs_bits = (((I2cController.CS_BIT << cs_count) - 1) &
-        #                  ~(I2cController.CS_BIT - 1))
-        # self._ports = [None] * cs_count
-        # self._direction = (self._cs_bits |
-        #                    I2cController.DO_BIT |
-        #                    I2cController.SCK_BIT)
-        # self._turbo = turbo
-        # self._cs_high = Array('B')
-        # if self._turbo:
-        #     if silent_clock:
-        #         # Set SCLK as input to avoid emitting clock beats
-        #         self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-        #                               self._direction & ~I2cController.SCK_BIT))
-        #     # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-        #     self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
-        # # Restore idle state
-        # self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-        #                       self._direction))
-        # if not self._turbo:
-        #     self._cs_high.append(Ftdi.SEND_IMMEDIATE)
-        # self._frequency = 0.0
-        self._ftdi.write_data(self._idle)
+        self._clock_low_data_high = (Ftdi.SET_BITS_LOW,
+            self.IDLE & ~self.SCL_BIT, self._direction)
+        self._read_bit = (Ftdi.READ_BITS_PVE_MSB, 0)
+        self._read_byte = (Ftdi.READ_BYTES_PVE_MSB, 0, 0)
+        self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
+        self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
+        self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
+        self._start = data_low*4 + clock_low_data_low*4
+        self._stop = clock_low_data_low*4 + data_low*4 + idle*4
+        self._ftdi.write_data(Array('B', idle))
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master"""
@@ -185,21 +147,14 @@ class I2cController(object):
             self._ftdi = None
 
     def get_port(self, address):
-        """Obtain a I2c port to drive a I2c device selected by cs"""
+        """Obtain a I2cPort to to drive a I2c slave"""
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         if address > 0x7f:
             raise I2cIOError("No such I2c slave")
-        # if not self._ports[cs]:
-        #     cs_state = 0xFF & ~((I2cController.CS_BIT << cs) |
-        #                         I2cController.SCK_BIT |
-        #                         I2cController.DO_BIT)
-        #     cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
-        #                          cs_state,
-        #                          self._direction))
-        #     self._ports[cs] = I2cPort(self, cs_cmd)
-        #     self._flush()
-        return self._ports[address]
+        if address not in self._slaves:
+            self._slaves[address] = I2cPort(self, cs_cmd)
+        return self._slaves[address]
 
     @property
     def frequency_max(self):
@@ -211,62 +166,59 @@ class I2cController(object):
         """Returns the current I2c clock"""
         return self._frequency
 
-    def _exchange(self, frequency, out, readlen, address):
-        """Perform a half-duplex exchange or transaction with the I2c slave
-
-           :param frequency: I2c bus clock
-           :param out: an array of bytes to send to the I2c slave,
-                       may be empty to only read out data from the slave
-           :param readlen: count of bytes to read out from the slave,
-                       may be zero to only write to the slave
-           :param address: the slave address
-           :return: an array of bytes containing the data read out from the
-                    slave
-        """
+    def _read_bytes(self, readlen=1):
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
-        if len(out) > I2cController.PAYLOAD_MAX_LENGTH:
-            raise I2cIOError("Output payload is too large")
-        if readlen > I2cController.PAYLOAD_MAX_LENGTH:
+        if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
-        if self._frequency != frequency:
-            self._ftdi.set_frequency(frequency)
-            # store the requested value, not the actual one (best effort)
-            self._frequency = frequency
-        cmd = cs_cmd and Array('B', cs_cmd) or Array('B')
-        writelen = len(out)
-        if writelen:
-            write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
-                                    writelen-1)
-            cmd.frombytes(write_cmd)
-            cmd.extend(out)
-        if readlen:
-            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB,
-                                   readlen-1)
-            cmd.frombytes(read_cmd)
+        cmd = Array('B')
+        count = readlen
+        while count:
+            count -= 1
+            cmd.extend(self._read_byte)
+            cmd.extend(count and self._ack or self._nack)
+            cmd.extend(self._clock_low_data_high)
+        cmd.extend(self._immediate)
+        self._ftdi.write_data(cmd)
+        data = self._ftdi.read_data_bytes(readlen, 4)
+        return data
+
+    def _write_bytes(self, out):
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        cmd = Array('B')
+        for byte in out:
+            cmd.extend(self._write_byte)
+            cmd.append(byte)
+            cmd.extend(self._clock_low_data_high) 
+            cmd.extend(self._read_bit)
             cmd.extend(self._immediate)
-            if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
-                self._ftdi.write_data(cmd)
-            else:
-                self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
-            # USB read cycle may occur before the FTDI device has actually
-            # sent the data, so try to read more than once if no data is
-            # actually received
-            data = self._ftdi.read_data_bytes(readlen, 4)
-        elif writelen:
-            if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
-                self._ftdi.write_data(cmd)
-            else:
-                self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
+            self._ftdi.write_data(cmd)
+            ack = self._ftdi.read_data_bytes(1, 4)
+            if ack[0] & 0x01:
+                raise FtdiError('NACK from slave')
+
+    def _send_address(self, address, write_req=True):
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        address <<= 1
+        address &= 0xfe
+        address |= int(not bool(write))
+        self._write_bytes([address])
+
+    def _exchange(self, address, out=None, readlen=0):
+        if out:
+            self._set_idle()
+            self._start()
+            self._send_address(address, True)
+            self._write_bytes(out)
+        if readlen:
+            self._set_idle()
+            self._start()
+            data = self._read_bytes(readlen)
+        else:
             data = Array('B')
+        self._stop()
         return data
 
     def _flush(self):
