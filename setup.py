@@ -76,8 +76,6 @@ def find_meta(meta):
     raise RuntimeError("Unable to find __{meta}__ string.".format(meta=meta))
 
 
-print ('PACKAGES', find_meta('license'))
-
 if __name__ == '__main__':
     setup(
         name=NAME,
@@ -95,7 +93,6 @@ if __name__ == '__main__':
         package_dir={'': '.'},
         package_data={'pyftdi': ['*.rst'],
                       'pyftdi.serialext': ['*.rst']},
-        zip_safe=False,
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
     )
