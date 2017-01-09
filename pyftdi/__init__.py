@@ -24,8 +24,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-version_info = (0, 21, 0)
-__version__ = '.'.join(['%d' % v for v in version_info])
+__version__ = '0.21.0'
+__title__ = 'pyftdi'
+__description__ = 'FTDI device driver (pure Python)'
+__uri__ = 'http://github.com/eblot/pyftdi'
+__doc__ = __description__ + ' <' + __uri__ + '>'
+__author__ = 'Emmanuel Blot'
+__email__ = 'emmanuel.blot@free.fr'
+__license__ = 'LGPL v2'
+__copyright__ = 'Copyright (c) 2011-2017 Emmanuel Blot'
+
 
 from logging import WARNING, getLogger
 
