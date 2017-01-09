@@ -1,6 +1,6 @@
 # pyftdi - A pure Python FTDI driver
 # Copyright (C) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
+# Copyright (c) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
 #
@@ -268,6 +268,7 @@ class Ftdi(object):
         self.latency_min = self.LATENCY_MIN
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None  # disable dynamic latency
+        self.lineprop = 0
 
     # --- Public API -------------------------------------------------------
 
@@ -638,6 +639,17 @@ class Ftdi(object):
         if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
+    def set_break(self, break_):
+        if break_:
+            value = self.lineprop | (0x01 << 14)
+            if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
+                raise FtdiError('Unable to start break sequence')
+        else:
+            value = self.lineprop & ~(0x01 << 14)
+            if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
+                raise FtdiError('Unable to stop break sequence')
+        self.lineprop = value
+
     def set_event_char(self, eventch, enable):
         """Set the special event character"""
         value = eventch
@@ -688,6 +700,7 @@ class Ftdi(object):
             raise ValueError('Invalid line property')
         if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
             raise FtdiError('Unable to set line property')
+        self.lineprop = value
 
     def enable_adaptive_clock(self, enable=True):
         if not self.is_mpsse:

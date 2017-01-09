@@ -138,11 +138,13 @@ class FtdiSerial(SerialBase):
         """Read terminal status line: Carrier Detect"""
         return self.udev.get_cd()
 
+    @property
     def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
         # not implemented
         return 0
 
+    @property
     def out_waiting(self):
         """Return the number of bytes currently in the output buffer."""
         return 0

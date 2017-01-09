@@ -33,7 +33,8 @@ __all__ = ['SerialLogger']
 
 
 class SerialLogger:
-    """Serial port wrapper to log input/output data to a log file"""
+    """Serial port wrapper to log input/output data to a log file.
+    """
 
     def __init__(self, *args, **kwargs):
         logpath = kwargs.pop('logfile', None)
