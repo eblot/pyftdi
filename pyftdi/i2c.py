@@ -23,9 +23,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import struct
 from array import array as Array
+from logging import getLogger
 from pyftdi.ftdi import Ftdi
+from struct import calcsize as scalc, pack as spack
 
 
 __all__ = ['I2cPort', 'I2cController']
@@ -45,18 +46,67 @@ class I2cPort(object):
        :Example:
 
             ctrl = I2cController()
-            ctrl.configure('ftdi://ftdi:232h/1')
-            i2c = ctrl.get_port(1)
-            i2c.set_frequency(1000000)
+            ctrl.configure('ftdi://ftdi:232h/1', frequency=100000)
+            i2c = ctrl.get_port(0x21)
             # send 2 bytes
             i2c.exchange([0x12, 0x34])
             # send 2 bytes, then receive 2 bytes
             out = i2c.exchange([0x12, 0x34], 2)
     """
+    FORMATS = {scalc(fmt) for fmt in 'BHI'}
 
     def __init__(self, controller, address):
         self._controller = controller
         self._address = address
+        self._endian = '<'
+        self._format = 'B'
+
+    def configure_register(self, bigendian=False, width=1):
+        """Reconfigure the format of the slave address register (if any)
+
+            :param bigendian: True for a big endian encoding, False otherwise
+            :param width: width, in bytes, of the register
+        """
+        try:
+            self._format =self.FORMATS[width]
+        except KeyError:
+            raise I2cIOError('Unsupported integer width')
+        self._endian = bigendian and '>' or '<'
+
+    def read(self, readlen=0):
+        """Read one or more bytes from a remote slave
+
+           :param readlen: count of bytes to read out.
+           :return: byte sequence of read out bytes
+        """
+        return self._controller.read(self._address, readlen=readlen)
+
+    def write(self, out):
+        """Write one or more bytes to a remote slave
+
+           :param out: the byte buffer to send
+        """
+        return self._controller.write(self._address, out)
+
+    def read_from(self, regaddr, readlen=0):
+        """Read one or more bytes from a remote slave
+
+           :param regaddr: slave register address to read from
+           :param readlen: count of bytes to read out.
+           :return: byte sequence of read out bytes
+        """
+        return self._controller.exchange(self._address,
+                                         out=self._make_buffer(regaddr),
+                                         readlen=readlen)
+
+    def write_to(self, regaddr, out):
+        """Read one or more bytes from a remote slave
+
+           :param regaddr: slave register address to write to
+           :param out: the byte buffer to send
+        """
+        return self._controller.write(self._address,
+                                      out=self._make_buffer(regaddr, out))
 
     def exchange(self, out='', readlen=0):
         """Perform an exchange or a transaction with the I2c slave
@@ -65,27 +115,26 @@ class I2cPort(object):
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :return: an array of bytes containing the data read out from the
+           :return: byte sequence containing the data read out from the
                     slave
         """
-        return self._controller._exchange(self._address, out, readlen)
-
-    def read(self, readlen=0):
-        """Read out bytes from the slave"""
-        return self._controller._exchange(self._address, readlen=readlen)
-
-    def write(self, out):
-        """Write bytes to the slave"""
-        return self._controller._exchange(self._address, out)
+        return self._controller.exchange(self._address, out, readlen)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
-        self._controller._flush()
+        self._controller.flush()
 
     @property
     def frequency(self):
         """Return the current I2c bus"""
         return self._controller.frequency
+
+    def _make_buffer(self, regaddr, out=None):
+        data = Array('B')
+        data.extend(spack('%s%s' % (self._endian, self._format), regaddr))
+        if out:
+            data.extend(out)
+        return data.tobytes()
 
 
 class I2cController(object):
@@ -94,6 +143,7 @@ class I2cController(object):
 
     LOW = 0x00
     HIGH = 0xff
+    BIT0 = 0x01
     IDLE = HIGH
     SCL_BIT = 0x01
     SDA_O_BIT = 0x02
@@ -102,6 +152,7 @@ class I2cController(object):
 
     def __init__(self):
         self._ftdi = Ftdi()
+        self.log = getLogger('pyftdi.i2c')
         self._slaves = {}
         self._frequency = 0.0
         self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
@@ -118,8 +169,8 @@ class I2cController(object):
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
-        self._start_seq = data_low*4 + clock_low_data_low*4
-        self._stop_seq = clock_low_data_low*4 + data_low*4 + self._idle*4
+        self._start = data_low*4 + clock_low_data_low*4
+        self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master"""
@@ -168,11 +219,108 @@ class I2cController(object):
         """Returns the current I2c clock"""
         return self._frequency
 
-    def _read_bytes(self, readlen=1):
+    def read(self, address, readlen=1):
+        """Read one or more bytes from a remote slave
+
+           :param address: the address on the I2C bus
+           :param readlen: count of bytes to read out.
+
+           Address is a logical address (0x7f max)
+
+           Most I2C devices require a register address to read out
+           check out the exchange() method.
+        """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
+        if address > 0x7f:
+            raise I2cIOError("No such I2c slave")
+        if readlen < 1:
+            raise I2cIOError('Nothing to read')
         if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
+        i2caddress = (address << 1) & self.HIGH
+        i2caddress |= self.BIT0
+        try:
+            self._do_prolog(i2caddress)
+            data = self._do_read(readlen)
+        finally:
+            self._do_epilog()
+        return bytes(data)
+
+    def write(self, address, out):
+        """Write one or more bytes to a remote slave
+
+           :param address: the address on the I2C bus
+           :param out: the byte buffer to send
+
+           Address is a logical address (0x7f max)
+
+           Most I2C devices require a register address to write
+           into. It should be added as the first (byte)s of the
+           output buffer.
+        """
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        if address > 0x7f:
+            raise I2cIOError("No such I2c slave")
+        if not out or len(out) < 1:
+            raise I2cIOError('Nothing to write')
+        i2caddress = (address << 1) & self.HIGH
+        try:
+            self._do_prolog(i2caddress)
+            self._do_write(out)
+        finally:
+            self._do_epilog()
+
+    def exchange(self, address, out, readlen=1):
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        if address > 0x7f:
+            raise I2cIOError("No such I2c slave")
+        if not out or not len(out):
+            raise I2cIOError('Nothing to write')
+        if readlen < 1:
+            raise I2cIOError('Nothing to read')
+        if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
+            raise I2cIOError("Input payload is too large")
+        i2caddress = (address << 1) & self.HIGH
+        try:
+            self._do_prolog(i2caddress)
+            self._do_write(out)
+            self._do_prolog(i2caddress | self.BIT0)
+            data = self._do_read(readlen)
+            return data
+        finally:
+            self._do_epilog()
+
+    def flush(self):
+        """Flush the HW FIFOs"""
+        self._ftdi.write_data(self._immediate)
+        self._ftdi.purge_buffers()
+
+    def _do_prolog(self, i2caddress):
+        self.log.debug('- prolog 0x%x', i2caddress >> 1)
+        cmd = Array('B', self._idle)
+        cmd.extend(self._start)
+        cmd.extend(self._write_byte)
+        cmd.append(i2caddress)
+        cmd.extend(self._clock_low_data_high)
+        cmd.extend(self._read_bit)
+        cmd.extend(self._immediate)
+        self._ftdi.write_data(cmd)
+        ack = self._ftdi.read_data_bytes(1, 4)
+        if not ack:
+            raise I2cIOError('No answer from FTDI')
+        if ack[0] & self.BIT0:
+            raise I2cIOError('NACK from slave')
+
+    def _do_epilog(self):
+        self.log.debug('- epilog')
+        cmd = Array('B', self._stop)
+        self._ftdi.write_data(cmd)
+
+    def _do_read(self, readlen):
+        self.log.debug('- read %d bytes', readlen)
         cmd = Array('B')
         count = readlen
         while count:
@@ -185,59 +333,18 @@ class I2cController(object):
         data = self._ftdi.read_data_bytes(readlen, 4)
         return data
 
-    def _write_bytes(self, out):
-        if not self._ftdi:
-            raise I2cIOError("FTDI controller not initialized")
-        cmd = Array('B')
+    def _do_write(self, out):
+        self.log.debug('- write %d bytes', len(out))
         for byte in out:
-            cmd.extend(self._write_byte)
+            cmd = Array('B', self._write_byte)
             cmd.append(byte)
-            cmd.extend(self._clock_low_data_high) 
+            cmd.extend(self._clock_low_data_high)
             cmd.extend(self._read_bit)
             cmd.extend(self._immediate)
             self._ftdi.write_data(cmd)
             ack = self._ftdi.read_data_bytes(1, 4)
             if not ack:
                 raise I2cIOError('No answer from FTDI')
-            if ack[0] & 0x01:
+            if ack[0] & self.BIT0:
                 raise I2cIOError('NACK from slave')
 
-    def _send_address(self, address, write_req=True):
-        if not self._ftdi:
-            raise I2cIOError("FTDI controller not initialized")
-        address <<= 1
-        address &= 0xfe
-        address |= int(not bool(write_req))
-        self._write_bytes([address])
-
-    def _set_idle(self):
-        cmd = Array('B', self._idle)
-        self._ftdi.write_data(cmd)
-
-    def _start(self):
-        cmd = Array('B', self._start_seq)
-        self._ftdi.write_data(cmd)
-
-    def _stop(self):
-        cmd = Array('B', self._stop_seq)
-        self._ftdi.write_data(cmd)
-
-    def _exchange(self, address, out=None, readlen=0):
-        if out:
-            self._set_idle()
-            self._start()
-            self._send_address(address, True)
-            self._write_bytes(out)
-        if readlen:
-            self._set_idle()
-            self._start()
-            data = self._read_bytes(readlen)
-        else:
-            data = Array('B')
-        self._stop()
-        return data
-
-    def _flush(self):
-        """Flush the HW FIFOs"""
-        self._ftdi.write_data(self._immediate)
-        self._ftdi.purge_buffers()

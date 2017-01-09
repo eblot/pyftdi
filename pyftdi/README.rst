@@ -30,6 +30,7 @@ It should support the following modes:
   capability)
 * Bitbang/GPIO support
 * SPI master
+* I2C master
 * JTAG master
 
 PyFtdi should provide a pyserial_ compliant API, to be used as a drop-in module
@@ -103,6 +104,8 @@ Supported features
   modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to
   use the FTDI SPI master with a pure-Python serial flash device driver for
   several common devices.
+
+* I2C master. For now, only 7-bit address are supported.
 
 * JTAG is under development and is not fully supported yet.
 

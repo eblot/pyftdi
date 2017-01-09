@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
@@ -24,5 +24,27 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-version_info = (0, 20, 0)
+version_info = (0, 21, 0)
 __version__ = '.'.join(['%d' % v for v in version_info])
+
+from logging import WARNING, getLogger
+
+
+class FtdiLogger(object):
+
+    log = getLogger("pyftdi")
+    log.setLevel(level=WARNING)
+
+    @classmethod
+    def set_formatter(cls, formatter):
+        handlers = list(cls.log.handlers)
+        for handler in handlers:
+            handler.setFormatter(formatter)
+
+    @classmethod
+    def get_level(cls):
+        return cls.log.getEffectiveLevel()
+
+    @classmethod
+    def set_level(cls, level):
+        cls.log.setLevel(level=level)

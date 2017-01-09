@@ -27,13 +27,16 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import sys
+from doctest import testmod
+from logging import StreamHandler, DEBUG
+from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
+from sys import modules, stdout
 from time import sleep
 
 
 class I2cTest(object):
-    """
+    """Simple test for a TCA9555 device on I2C bus @ address 0x21
     """
 
     def __init__(self):
@@ -43,9 +46,15 @@ class I2cTest(object):
         """Open an I2c connection to a slave"""
         self._i2c.configure('ftdi://ftdi:232h/1')
 
-    def general_call(self):
-        port = self._i2c.get_port(0)
-        port.write([0x16])
+    def read_it(self):
+        port = self._i2c.get_port(0x21)
+        port.exchange([0x04], 1)
+
+    def write_it(self):
+        port = self._i2c.get_port(0x21)
+        port.write_to(0x06, b'\x00')
+        port.write_to(0x02, b'\x55')
+        port.read_from(0x00, 1)
 
     def close(self):
         """Close the I2C connection"""
@@ -69,7 +78,8 @@ class I2cTestCase(unittest.TestCase):
         """
         i2c = I2cTest()
         i2c.open()
-        i2c.general_call()
+        i2c.read_it()
+        i2c.write_it()
         i2c.close()
 
 
@@ -80,6 +90,7 @@ def suite():
 
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(sys.modules[__name__])
+    testmod(modules[__name__])
+    FtdiLogger.log.addHandler(StreamHandler(stdout))
+    FtdiLogger.set_level(DEBUG)
     unittest.main(defaultTest='suite')

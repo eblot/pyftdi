@@ -28,6 +28,7 @@ Require: pyusb
 from array import array as Array
 from binascii import hexlify
 from errno import ENODEV
+from logging import getLogger
 from pyftdi.usbtools import UsbTools
 from struct import unpack as sunpack
 from sys import platform
@@ -247,6 +248,7 @@ class Ftdi(object):
     LATENCY_THRESHOLD = 1000
 
     def __init__(self):
+        self.log = getLogger('pyftdi.ftdi')
         self.usb_dev = None
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
@@ -909,14 +911,15 @@ class Ftdi(object):
 
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
-        print('> ', hexlify(data))
+        self.log.debug('> %s', hexlify(data).decode())
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
     def _read(self):
         """Read from FTDI, using the API introduced with pyusb 1.0.0b2"""
         data = self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
                                  self.usb_read_timeout)
-        print('< ', hexlify(data))
+        if data:
+            self.log.debug('< %s', hexlify(data).decode())
         return data
 
     def _get_max_packet_size(self):

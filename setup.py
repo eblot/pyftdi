@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 #
 # This library is free software; you can redistribute it and/or
@@ -41,7 +41,7 @@ setup(
     author='Emmanuel Blot',
     author_email='emmanuel.blot@free.fr',
     license='LGPL v2',
-    keywords='driver ftdi usb serial spi rs232 gpio bit-bang',
+    keywords='driver ftdi usb serial spi i2c twi rs232 gpio bit-bang',
     url='http://github.com/eblot/pyftdi',
     download_url='https://github.com/eblot/pyftdi/archive/v%s.tar.gz' %
                  VERSION,
