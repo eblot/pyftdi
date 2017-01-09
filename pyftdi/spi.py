@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -46,7 +46,7 @@ class SpiPort(object):
        :Example:
 
             ctrl = SpiController(silent_clock=False)
-            ctrl.configure(0x1234, 0x5678, 1)
+            ctrl.configure('ftdi://ftdi:232h/1')
             spi = ctrl.get_port(1)
             spi.set_frequency(1000000)
             # send 2 bytes
