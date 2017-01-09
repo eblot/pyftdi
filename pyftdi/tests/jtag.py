@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
@@ -29,13 +29,13 @@
 import unittest
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
-from six import print_
+
 
 # Should match the tested device
-JTAG_INSTR = {'SAMPLE'  : BitSequence('0001', msb=True, length=4),
-              'PRELOAD' : BitSequence('0001', msb=True, length=4),
-              'IDCODE'  : BitSequence('0100', msb=True, length=4),
-              'BYPASS'  : BitSequence('1111', msb=True, length=4) }
+JTAG_INSTR = {'SAMPLE': BitSequence('0001', msb=True, length=4),
+              'PRELOAD': BitSequence('0001', msb=True, length=4),
+              'IDCODE': BitSequence('0100', msb=True, length=4),
+              'BYPASS': BitSequence('1111', msb=True, length=4)}
 
 
 class JtagTestCase(unittest.TestCase):
@@ -54,7 +54,7 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.reset()
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print_("IDCODE (reset): 0x%x" % int(idcode))
+        print("IDCODE (reset): 0x%x" % int(idcode))
 
     def test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
@@ -62,7 +62,7 @@ class JtagTestCase(unittest.TestCase):
         self.jtag.write_ir(instruction)
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print_("IDCODE (idcode): 0x%08x" % int(idcode))
+        print("IDCODE (idcode): 0x%08x" % int(idcode))
 
     def _test_detect_ir_length(self):
         """Detect the instruction register length"""

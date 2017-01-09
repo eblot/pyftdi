@@ -20,7 +20,7 @@ import time
 from array import array as Array
 from pyftdi.ftdi import Ftdi
 from pyftdi.bits import BitSequence
-from six import print_
+
 
 __all__ = ['JtagEngine', 'JtagTool']
 
@@ -195,11 +195,10 @@ class JtagController(object):
         self.close()
 
     # Public API
-    def configure(self, vendor, product, interface):
+    def configure(self, url):
         """Configure the FTDI interface as a JTAG controller"""
-        self._ftdi.open_mpsse(vendor, product, interface,
-                              direction=self.direction,
-                              frequency=self._frequency)
+        self._ftdi.open_mpsse_from_url(
+            url, direction=self.direction, frequency=self._frequency)
         # FTDI requires to initialize all GPIOs before MPSSE kicks in
         cmd = Array('B', (Ftdi.SET_BITS_LOW, 0x0, self.direction))
         self._ftdi.write_data(cmd)
@@ -255,7 +254,7 @@ class JtagController(object):
         # apply the last TDO bit
         if self._last is not None:
             out[7] = self._last
-        # print_("TMS", tms, (self._last is not None) and 'w/ Last' or '')
+        # print("TMS", tms, (self._last is not None) and 'w/ Last' or '')
         # reset last bit
         self._last = None
         cmd = Array('B', (Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
@@ -309,18 +308,18 @@ class JtagController(object):
             raise JtagError("Nothing to shift")
         if byte_count:
             blen = byte_count-1
-            # print_("RW OUT %s" % out[:pos])
+            # print("RW OUT %s" % out[:pos])
             cmd = Array('B',
                         (Ftdi.RW_BYTES_PVE_NVE_LSB, blen, (blen >> 8) & 0xff))
             cmd.extend(out[:pos].tobytes(msby=True))
             self._stack_cmd(cmd)
-            # print_("push %d bytes" % byte_count)
+            # print("push %d bytes" % byte_count)
         if bit_count:
-            # print_("RW OUT %s" % out[pos:])
+            # print("RW OUT %s" % out[pos:])
             cmd = Array('B', (Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1))
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
-            # print_("push %d bits" % bit_count)
+            # print("push %d bits" % bit_count)
         self.sync()
         bs = BitSequence()
         byte_count = length//8
@@ -331,9 +330,9 @@ class JtagController(object):
             if not data:
                 raise JtagError('Unable to read data from FTDI')
             byteseq = BitSequence(bytes_=data, length=8*byte_count)
-            # print_("RW IN %s" % byteseq)
+            # print("RW IN %s" % byteseq)
             bs.append(byteseq)
-            # print_("pop %d bytes" % byte_count)
+            # print("pop %d bytes" % byte_count)
         if bit_count:
             data = self._ftdi.read_data_bytes(1, 4)
             if not data:
@@ -343,7 +342,7 @@ class JtagController(object):
             byte >>= 8-bit_count
             bitseq = BitSequence(byte, length=bit_count)
             bs.append(bitseq)
-            # print_("pop %d bits" % bit_count)
+            # print("pop %d bits" % bit_count)
         if len(bs) != length:
             raise ValueError("Internal error")
         return bs
@@ -369,14 +368,14 @@ class JtagController(object):
         # need to shift bits as they are shifted in from the MSB in FTDI
         byte = data[0] >> 8-length
         bs = BitSequence(byte, length=length)
-        # print_("READ BITS %s" % bs)
+        # print("READ BITS %s" % bs)
         return bs
 
     def _write_bits(self, out):
         """Output bits on TDI"""
         length = len(out)
         byte = out.tobyte()
-        # print_("WRITE BITS %s" % out)
+        # print("WRITE BITS %s" % out)
         cmd = Array('B', (Ftdi.WRITE_BITS_NVE_LSB, length-1, byte))
         self._stack_cmd(cmd)
 
@@ -391,14 +390,14 @@ class JtagController(object):
         self.sync()
         data = self._ftdi.read_data_bytes(length, 4)
         bs = BitSequence(bytes_=data, length=8*length)
-        # print_("READ BYTES %s" % bs)
+        # print("READ BYTES %s" % bs)
         return bs
 
     def _write_bytes(self, out):
         """Output bytes on TDI"""
         bytes_ = out.tobytes(msby=True)  # don't ask...
         olen = len(bytes_)-1
-        # print_("WRITE BYTES %s" % out)
+        # print("WRITE BYTES %s" % out)
         cmd = Array('B', (Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
                           (olen >> 8) & 0xff))
         cmd.extend(bytes_)
@@ -557,7 +556,7 @@ class JtagTool(object):
         PATTERN_LEN = 8
         stuck = None
         for length in range(1, MAX_REG_LEN):
-            print_("Testing for length %d" % length)
+            print("Testing for length %d" % length)
             if length > 5:
                 return
             zero = BitSequence(length=length)
@@ -583,7 +582,7 @@ class JtagTool(object):
                     break
                 inj.inc()
             if ok:
-                print_("Register detected length: %d" % length)
+                print("Register detected length: %d" % length)
                 return length
         if stuck is not None:
             raise JtagError('TDO seems to be stuck')

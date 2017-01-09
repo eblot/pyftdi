@@ -30,9 +30,8 @@ import select
 import socket
 from io import RawIOBase
 from pyftdi.misc import hexdump
-from serial import SerialBase, SerialException, portNotOpenError, \
-                   writeTimeoutError, VERSION as pyserialver
-from six import print_
+from serial import (SerialBase, SerialException, portNotOpenError,
+                    writeTimeoutError, VERSION as pyserialver)
 
 
 __all__ = ['Serial']
@@ -40,6 +39,7 @@ __all__ = ['Serial']
 
 class SerialExceptionWithErrno(SerialException):
     """Serial exception with errno extension"""
+
     def __init__(self, message, errno=None):
         SerialException.__init__(self, message)
         self.errno = errno
@@ -56,10 +56,8 @@ class SocketSerial(SerialBase):
 
     PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
 
-    def _reconfigurePort(self):
+    def _reconfigure_port(self):
         pass
-
-    _reconfigure_port = _reconfigurePort
 
     def makeDeviceName(self, port):
         return port
@@ -104,7 +102,7 @@ class SocketSerial(SerialBase):
             self.sock = None
         self._set_open_state(False)
 
-    def inWaiting(self):
+    def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
         return 0
 
@@ -145,7 +143,7 @@ class SocketSerial(SerialBase):
                         raise writeTimeoutError
                 n = self.sock.send(d)
                 if self._dump:
-                    print_(hexdump(d[:n]))
+                    print(hexdump(d[:n]))
                 if self._writeTimeout is not None and self._writeTimeout > 0:
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)
@@ -162,40 +160,51 @@ class SocketSerial(SerialBase):
            is written."""
         pass
 
-    def flushInput(self):
+    def reset_input_buffer(self):
         """Clear input buffer, discarding all that is in the buffer."""
         pass
 
-    def flushOutput(self):
+    def reset_output_buffer(self):
         """Clear output buffer, aborting the current output and
         discarding all that is in the buffer."""
         pass
 
-    def sendBreak(self):
-        """Send break condition."""
+    def send_break(self, duration=0.25):
+        """Send break condition. Not supported"""
+
+    def _update_break_state(self):
+        """Send break condition. Not supported"""
         pass
 
-    def setRTS(self, on=1):
+    def _update_rts_state(self):
         """Set terminal status line: Request To Send"""
+        pass
+
+    def _update_dtr_state(self):
+        """Set terminal status line: Data Terminal Ready"""
         pass
 
     def setDTR(self, on=1):
         """Set terminal status line: Data Terminal Ready"""
         pass
 
-    def getCTS(self):
+    @property
+    def cts(self):
         """Read terminal status line: Clear To Send"""
         return True
 
-    def getDSR(self):
+    @property
+    def dsr(self):
         """Read terminal status line: Data Set Ready"""
         return True
 
-    def getRI(self):
+    @property
+    def ri(self):
         """Read terminal status line: Ring Indicator"""
         return False
 
-    def getCD(self):
+    @property
+    def cd(self):
         """Read terminal status line: Carrier Detect"""
         return False
 

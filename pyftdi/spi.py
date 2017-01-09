@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -27,7 +27,7 @@
 import struct
 from array import array as Array
 from pyftdi.ftdi import Ftdi
-from six import PY3
+
 
 __all__ = ['SpiPort', 'SpiController']
 
@@ -46,7 +46,7 @@ class SpiPort(object):
        :Example:
 
             ctrl = SpiController(silent_clock=False)
-            ctrl.configure(0x1234, 0x5678, 1)
+            ctrl.configure('ftdi://ftdi:232h/1')
             spi = ctrl.get_port(1)
             spi.set_frequency(1000000)
             # send 2 bytes
@@ -159,16 +159,16 @@ class SpiController(object):
         self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
 
-    def configure(self, vendor, product, interface, **kwargs):
+    def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master"""
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
         self._frequency = \
-            self._ftdi.open_mpsse(vendor, product, interface,
-                                  direction=self._direction,
-                                  initial=self._cs_bits,  # /CS all high
-                                  **kwargs)
+            self._ftdi.open_mpsse_from_url(
+                # /CS all high
+                url, direction=self._direction, initial=self._cs_bits,
+                **kwargs)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -235,18 +235,12 @@ class SpiController(object):
         if writelen:
             write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
                                     writelen-1)
-            if PY3:
-                cmd.frombytes(write_cmd)
-            else:
-                cmd.fromstring(write_cmd)
+            cmd.frombytes(write_cmd)
             cmd.extend(out)
         if readlen:
             read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB,
                                    readlen-1)
-            if PY3:
-                cmd.frombytes(read_cmd)
-            else:
-                cmd.fromstring(read_cmd)
+            cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 if complete:

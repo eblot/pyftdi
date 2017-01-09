@@ -1,6 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
@@ -28,10 +29,6 @@
 
 import unittest
 from pyftdi.bits import BitSequence, BitZSequence, BitSequenceError
-from six import PY3
-
-if PY3:
-    long = int
 
 
 class BitSequenceTestCase(unittest.TestCase):
@@ -74,6 +71,10 @@ class BitSequenceTestCase(unittest.TestCase):
         self.assertEqual(repr(self.bs7 | self.bzs4), '11Z1Z010ZZ1101')
         self.assertEqual(repr(self.bs7.invert()), '00000101010110')
         self.assertEqual(repr(self.bzs4.invert()), '00Z0Z101ZZ1011')
+        self.assertLess(self.bs5, self.bs6)
+        self.assertLessEqual(self.bs5, self.bs6)
+        self.assertLess(self.bs6, self.bs5)
+        self.assertLessEqual(self.bs6, self.bs5)
 
     def test_cmp(self):
         self.assertTrue(self.bs1 == self.bs1)
@@ -116,7 +117,7 @@ class BitSequenceTestCase(unittest.TestCase):
         self.assertEqual(int(BitSequence([0, 0, 1, 0])), 4)
         self.assertEqual(int(BitSequence((0, 1, 0, 0), msb=True)), 4)
         self.assertEqual(int(BitSequence(4, length=8)), 4)
-        self.assertEqual(int(BitSequence(long(4), msb=True, length=8)), 32)
+        self.assertEqual(int(BitSequence(int(4), msb=True, length=8)), 32)
         self.assertEqual(int(BitSequence("0010")), 4)
         self.assertEqual(int(BitSequence("0100", msb=True)), 4)
         bs = BitSequence("0100", msb=True)
@@ -175,21 +176,23 @@ class BitSequenceTestCase(unittest.TestCase):
     def test_misc(self):
         ba = BitSequence(12, msb=True, length=16)
         bb = BitSequence(12, msb=True, length=14)
-        l = [ba, bb]
-        l.sort(key=int)
-        self.assertEqual(str(l), "[00110000000000, 0011000000000000]")
+        bl = [ba, bb]
+        bl.sort(key=int)
+        self.assertEqual(str(bl), "[00110000000000, 0011000000000000]")
         self.assertEqual(str(ba.tobytes()), "[48, 0]")
         self.assertEqual(str(ba.tobytes(True)), "[0, 12]")
         self.assertEqual(str(bb.tobytes(True)), "[0, 12]")
 
         b = BitSequence(length=254)
         b[0:4] = '1111'
-        self.assertEqual(str(b), '254: 000000 00000000 00000000 00000000 '
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
-         '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
-         '00000000 00000000 00000000 00000000 00000000 00000000 00001111')
-        self.assertEqual(str(b.tobytes()),
+        self.assertEqual(
+            str(b), '254: 000000 00000000 00000000 00000000 '
+            '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
+            '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
+            '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
+            '00000000 00000000 00000000 00000000 00000000 00000000 00001111')
+        self.assertEqual(
+            str(b.tobytes()),
             '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '
             '0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15]')
 
@@ -222,6 +225,7 @@ class BitSequenceTestCase(unittest.TestCase):
 
 def suite():
     return unittest.makeSuite(BitSequenceTestCase, 'test_')
+
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

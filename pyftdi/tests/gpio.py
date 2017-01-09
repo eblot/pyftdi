@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016-2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,7 @@ class GpioTest(object):
         """Open a GPIO connection, defining which pins are configured as 
            output and input"""
         out_pins &= 0xFF
-        self._gpio.open(vendor=0x403, product=0x6011, interface=1,
-                        direction=out_pins)
+        self._gpio.open_from_url('ftdi://ftdi:4232h/1', direction=out_pins)
 
     def close(self):
         """Close the GPIO connection"""

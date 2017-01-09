@@ -55,7 +55,7 @@ class GpioController(object):
     def is_connected(self):
         return bool(self._ftdi)
 
-    def open(self, vendor, product, interface, direction, **kwargs):
+    def open_from_url(self, url, direction, **kwargs):
         """
         """
         for k in ('direction',):
@@ -63,8 +63,7 @@ class GpioController(object):
                 del kwargs[k]
         try:
             ftdi = Ftdi()
-            ftdi.open_bitbang(vendor, product, interface, direction=direction,
-                              **kwargs)
+            ftdi.open_bitbang_from_url(url, direction=direction, **kwargs)
             self._ftdi = ftdi
         except IOError as e:
             raise GpioException('Unable to open USB port: %s' % str(e))

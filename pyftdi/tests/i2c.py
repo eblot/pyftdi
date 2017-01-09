@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,71 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import unittest
-
 from doctest import testmod
-from pyftdi.ftdi import Ftdi
+from logging import StreamHandler, DEBUG
+from pyftdi import FtdiLogger
+from pyftdi.i2c import I2cController, I2cIOError
+from sys import modules, stdout
 from time import sleep
 
 
-class FtdiTestCase(unittest.TestCase):
-    """FTDI driver test case"""
+class I2cTest(object):
+    """Simple test for a TCA9555 device on I2C bus @ address 0x21
+    """
 
-    def test_multiple_interface(self):
-        # the following calls used to create issues (several interfaces from
-        # the same device). The test expects an FTDI 2232H here
-        ftdi1 = Ftdi()
-        ftdi1.open(vendor=0x403, product=0x6010, interface=1)
-        ftdi2 = Ftdi()
-        ftdi2.open(vendor=0x403, product=0x6010, interface=2)
-        for x in range(5):
-            print("If#1: ", hex(ftdi1.poll_modem_status()))
-            print("If#2: ", ftdi2.modem_status())
-            sleep(0.500)
-        ftdi1.close()
-        ftdi2.close()
+    def __init__(self):
+        self._i2c = I2cController()
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        self._i2c.configure('ftdi://ftdi:232h/1')
+
+    def read_it(self):
+        port = self._i2c.get_port(0x21)
+        port.exchange([0x04], 1)
+
+    def write_it(self):
+        port = self._i2c.get_port(0x21)
+        port.write_to(0x06, b'\x00')
+        port.write_to(0x02, b'\x55')
+        port.read_from(0x00, 1)
+
+    def close(self):
+        """Close the I2C connection"""
+        self._i2c.terminate()
+
+
+
+class I2cTestCase(unittest.TestCase):
+    """FTDI I2C driver test case"""
+
+    def test_i2c(self):
+        """Simple test to demonstrate I2C.
+
+           Please ensure that the HW you connect to the FTDI port A does match
+           the encoded configuration. At least, b7..b5 can be driven high or
+           low, so check your HW setup before running this test as it might
+           damage your HW.
+
+           Do NOT run this test if you use FTDI port A as an UART or SPI
+           bridge -or any unsupported setup!! You've been warned.
+        """
+        i2c = I2cTest()
+        i2c.open()
+        i2c.read_it()
+        i2c.write_it()
+        i2c.close()
 
 
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(I2cTestCase, 'test'))
     return suite_
 
 
 if __name__ == '__main__':
-    testmod(sys.modules[__name__])
+    testmod(modules[__name__])
+    FtdiLogger.log.addHandler(StreamHandler(stdout))
+    FtdiLogger.set_level(DEBUG)
     unittest.main(defaultTest='suite')

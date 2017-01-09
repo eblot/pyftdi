@@ -1,3 +1,4 @@
+# Copyright (C) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -23,135 +24,169 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import types
 from pyftdi.misc import hexdump
+from sys import stderr
 from time import time
-from six import print_
+
 
 __all__ = ['SerialLogger']
 
 
-class SerialLogger(object):
+class SerialLogger:
     """Serial port wrapper to log input/output data to a log file"""
 
-    def __init__(self, logpath):
+    def __init__(self, *args, **kwargs):
+        logpath = kwargs.pop('logfile', None)
+        if not logpath:
+            raise ValueError('Missing logfile')
         try:
             self._logger = open(logpath, "wt")
         except IOError as e:
-            print_("Cannot log data to %s: %s" % (logpath, str(e)),
-                   file=sys.stderr)
-        self._port = None
-        self._methods = {}
+            print("Cannot log data to %s: %s" % (logpath, str(e)),
+                  file=stderr)
         self._last = time()
+        self._log_init(*args, **kwargs)
+        super(SerialLogger, self).__init__(*args, **kwargs)
 
-    def spy(self, port):
-        self._port = port
-        methods = [m for m in self.__class__.__dict__
-                   if not m.startswith('_') and
-                   hasattr(getattr(self.__class__, m), '__call__') and
-                   m != 'spy']
-        # replace the spied instance method with our own methods
-        for method_name in methods:
-            try:
-                old_method = getattr(port.__class__, method_name)
-            except AttributeError:
-                old_method = None
-            if old_method:
-                new_method = getattr(self.__class__, method_name)
-                setattr(port, method_name, types.MethodType(new_method, self))
-                self._methods[method_name] = old_method
+    def open(self,):
+        self._log_open()
+        super(SerialLogger, self).open()
 
-    def _print(self, header, string):
+    def close(self):
+        self._log_close()
+        self._logger.close()
+        super(SerialLogger, self).close()
+
+    def read(self, size=1):
+        data = super(SerialLogger, self).read(size)
+        self._log_read(data)
+        return data
+
+    def write(self, data):
+        if len(data):
+            self._log_write(data)
+        super(SerialLogger, self).write(data)
+
+    def flush(self):
+        self._log_flush()
+        super(SerialLogger, self).flush()
+
+    def reset_input_buffer(self):
+        self._log_reset('I')
+        super(SerialLogger, self).reset_input_buffer()
+
+    def reset_output_buffer(self):
+        self._log_reset('O')
+        super(SerialLogger, self).reset_output_buffer()
+
+    def send_break(self, duration=0.25):
+        self._log_signal('BREAK', 'for %.3f' % duration)
+        super(SerialLogger, self).send_break()
+
+    def _update_break_state(self):
+        self._log_signal('BREAK', self._break_state)
+        super(SerialLogger, self)._update_break_state()
+
+    def _update_rts_state(self):
+        self._log_signal('RTS', self._rts_state)
+        super(SerialLogger, self)._update_rts_state()
+
+    def _update_dtr_state(self):
+        self._log_signal('DTR', self._dtr_state)
+        super(SerialLogger, self)._update_dtr_state()
+
+    @property
+    def cts(self):
+        level = super(SerialLogger, self).cts
+        self._log_signal('CTS', level)
+        return level
+
+    @property
+    def dsr(self):
+        level = super(SerialLogger, self).dsr
+        self._log_signal('DSR', level)
+        return level
+
+    @property
+    def ri(self):
+        level = super(SerialLogger, self).ri
+        self._log_signal('RI', level)
+        return level
+
+    @property
+    def cd(self):
+        level = super(SerialLogger, self).cd
+        self._log_signal('CD', level)
+        return level
+
+    def in_waiting(self):
+        count = super(SerialLogger, self).in_waiting()
+        self._log_waiting(count)
+        return count
+
+    def _print(self, header, string=None):
         if self._logger:
             now = time()
             delta = (now-self._last)*1000
             self._last = now
-            print_("%s (%3.3f ms):\n%s" % (header, delta, string),
-                   file=self._logger)
+            print("%s (%3.3f ms):\n%s" % (header, delta, string or ''),
+                  file=self._logger)
             self._logger.flush()
+
+    def _log_init(self, *args, **kwargs):
+        try:
+            self._print(
+                'NEW', '  args: %s %s' %
+                (', '.join(args),
+                 ', '.join({'%s=%s' % it for it in kwargs.items()})))
+        except Exception as e:
+            print('Cannot log init (%s)' % e, file=stderr)
+
+    def _log_open(self):
+        try:
+            self._print('OPEN')
+        except Exception as e:
+            print('Cannot log open (%s)' % e, file=stderr)
+
+    def _log_close(self):
+        try:
+            self._print('CLOSE')
+        except Exception as e:
+            print('Cannot log close (%s)' % e, file=stderr)
 
     def _log_read(self, data):
         try:
             self._print('READ', hexdump(data))
         except Exception as e:
-            print_('Cannot log input data (%s)' % e, file=sys.stderr)
+            print('Cannot log input data (%s)' % e, file=stderr)
 
     def _log_write(self, data):
         try:
             self._print('WRITE', hexdump(data))
         except Exception as e:
-            print_('Cannot log output data (%s)' % e, data, file=sys.stderr)
+            print('Cannot log output data (%s)' % e, data, file=stderr)
 
-    def _log_flush(self, type_):
+    def _log_flush(self):
         try:
-            self._print('FLUSH', type_)
+            self._print('FLUSH')
         except Exception as e:
-            print_('Cannot log flush action (%s)' % e, file=sys.stderr)
+            print('Cannot log flush action (%s)' % e, file=stderr)
+
+    def _log_reset(self, type_):
+        try:
+            self._print('RESET BUFFER', type_)
+        except Exception as e:
+            print('Cannot log reset buffer (%s)' % e, file=stderr)
 
     def _log_waiting(self, count):
         try:
             self._print('INWAITING', '%d' % count)
         except Exception as e:
-            print_('Cannot log inwaiting (%s)' % e, file=sys.stderr)
+            print('Cannot log inwaiting (%s)' % e, file=stderr)
 
-    def _log_setBaudrate(self, baudrate):
+    def _log_signal(self, name, value):
         try:
-            self._print('SETBAUDRATE', '%d' % baudrate)
+            self._print(name.upper(), '%s' % value)
         except Exception as e:
-            print_('Cannot log setBaudrate (%s)' % e, file=sys.stderr)
+            print('Cannot log %s (%s)' % (name, e), file=stderr)
 
-    def _log_setDTR(self, hwreset):
-        try:
-            self._print('SETDTR', '%s' % hwreset)
-        except Exception as e:
-            print_('Cannot log setDTR (%s)' % e, file=sys.stderr)
-
-    def _log_setRTS(self, startmode):
-        try:
-            self._print('SETRTS', '%d' % startmode)
-        except Exception as e:
-            print_('Cannot log setRTS (%s)' % e, file=sys.stderr)
-
-    def close(self):
-        self._logger.close()
-        self._methods['close'](self._port)
-
-    def read(self, size=1):
-        data = self._methods['read'](self._port, size)
-        self._log_read(data)
-        return data
-
-    def write(self, data):
-        self._methods['write'](self._port, data)
-        if len(data):
-            self._log_write(data)
-
-    def inWaiting(self):
-        wait = self._methods['inWaiting'](self._port)
-        self._log_waiting(wait)
-        return wait
-
-    def flush(self):
-        self._log_flush('I+O')
-        self._methods['flush'](self._port)
-
-    def flushInput(self):
-        self._log_flush('I')
-        self._methods['flushInput'](self._port)
-
-    def flushOutput(self):
-        self._log_flush('O')
-        self._methods['flushOutput'](self._port)
-
-    def setBaudrate(self, baudrate):
-        self._log_setBaudrate(baudrate)
-        self._methods['setBaudrate'](self._port, baudrate)
-
-    def setDTR(self, hwreset):
-        self._log_setDTR(hwreset)
-        self._methods['setDTR'](self._port, hwreset)
-
-    def setRTS(self, startmode):
-        self._log_setRTS(startmode)
-        self._methods['setRTS'](self._port, startmode)
