@@ -53,7 +53,7 @@ class I2cPort(object):
             # send 2 bytes, then receive 2 bytes
             out = i2c.exchange([0x12, 0x34], 2)
     """
-    FORMATS = {scalc(fmt) for fmt in 'BHI'}
+    FORMATS = {scalc(fmt):fmt for fmt in 'BHI'}
 
     def __init__(self, controller, address):
         self._controller = controller
