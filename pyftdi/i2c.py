@@ -137,12 +137,14 @@ class I2cPort(object):
         return self._controller.poll(self._address+self._shift)
 
     def flush(self):
-        """Force the flush of the HW FIFOs"""
+        """Force the flush of the HW FIFOs.
+        """
         self._controller.flush()
 
     @property
     def frequency(self):
-        """Return the current I2c bus"""
+        """Return the current I2c bus.
+        """
         return self._controller.frequency
 
     def _make_buffer(self, regaddr, out=None):
@@ -189,7 +191,11 @@ class I2cController(object):
         self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
 
     def configure(self, url, **kwargs):
-        """Configure the FTDI interface as a I2c master"""
+        """Configure the FTDI interface as a I2c master.
+
+            :param url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+            :param frequency: frequency of the I2C bus.
+        """
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
@@ -210,13 +216,18 @@ class I2cController(object):
                                          self.SDA_I_BIT)
 
     def terminate(self):
-        """Close the FTDI interface"""
+        """Close the FTDI interface.
+        """
         if self._ftdi:
             self._ftdi.close()
             self._ftdi = None
 
     def get_port(self, address):
-        """Obtain a I2cPort to to drive a I2c slave"""
+        """Obtain a I2cPort to to drive an I2c slave.
+
+           :param address: the address on the I2C bus
+           :return a I2cPort instance
+        """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         if address > 0x7f:
@@ -227,12 +238,14 @@ class I2cController(object):
 
     @property
     def frequency_max(self):
-        """Returns the maximum I2c clock"""
+        """Returns the maximum I2c clock.
+        """
         return self._ftdi.frequency_max
 
     @property
     def frequency(self):
-        """Returns the current I2c clock"""
+        """Returns the current I2c clock.
+        """
         return self._frequency
 
     def read(self, address, readlen=1):
@@ -289,6 +302,18 @@ class I2cController(object):
             self._do_epilog()
 
     def exchange(self, address, out, readlen=1):
+        """Send a byte sequence to a remote slave followed with 
+           a read request of one or more bytes.
+
+           This command is useful to tell the slave what data
+           should be read out.
+
+           :param address: the address on the I2C bus
+           :param out: the byte buffer to send
+           :param readlen: count of bytes to read out.
+
+           Address is a logical address (0x7f max)
+        """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         if address > 0x7f:
