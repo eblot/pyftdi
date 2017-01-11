@@ -129,6 +129,13 @@ class I2cPort(object):
         return self._controller.exchange(self._address+self._shift, out,
                                          readlen)
 
+    def poll(self):
+        """Poll a remote slave, expect ACK or NACK.
+
+           :return: True if the slave acknowledged, False otherwise
+        """
+        return self._controller.poll(self._address+self._shift)
+
     def flush(self):
         """Force the flush of the HW FIFOs"""
         self._controller.flush()
@@ -293,12 +300,24 @@ class I2cController(object):
         if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
         i2caddress = (address << 1) & self.HIGH
+    def poll(self, address):
+        """Poll a remote slave, expect ACK or NACK.
+
+           :param address: the address on the I2C bus
+           :return: True if the slave acknowledged, False otherwise
+        """
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        self.validate_address(address)
+        i2caddress = (address << 1) & self.HIGH
+        i2caddress |= self.BIT0
+        self.log.debug('- poll 0x%x', i2caddress >> 1)
         try:
             self._do_prolog(i2caddress)
-            self._do_write(out)
-            self._do_prolog(i2caddress | self.BIT0)
-            data = self._do_read(readlen)
-            return data
+            return True
+        except I2cNackError:
+            self.log.info('Not ready')
+            return False
         finally:
             self._do_epilog()
 
