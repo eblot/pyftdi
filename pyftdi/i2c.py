@@ -51,7 +51,7 @@ class I2cPort(object):
        :Example:
 
             ctrl = I2cController()
-            ctrl.configure('ftdi://ftdi:232h/1', frequency=100000)
+            ctrl.configure('ftdi://ftdi:232h/1')
             i2c = ctrl.get_port(0x21)
             # send 2 bytes
             i2c.write([0x12, 0x34])
@@ -173,6 +173,8 @@ class I2cController(object):
     SDA_I_BIT = 0x04
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
     HIGHEST_I2C_ADDRESS = 0x7f
+    DEFAULT_BUS_FREQUENCY = 100000.0
+    HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
 
     def __init__(self):
@@ -212,7 +214,7 @@ class I2cController(object):
             frequency = kwargs['frequency']
             del kwargs['frequency']
         else:
-            frequency = 100000.0
+            frequency = self.DEFAULT_BUS_FREQUENCY
         # Fix frequency for 3-phase clock
         frequency = (3.0*frequency)/2.0
         self._frequency = self._ftdi.open_mpsse_from_url(
@@ -327,7 +329,7 @@ class I2cController(object):
                 self._do_epilog()
 
     def exchange(self, address, out, readlen=1):
-        """Send a byte sequence to a remote slave followed with 
+        """Send a byte sequence to a remote slave followed with
            a read request of one or more bytes.
 
            This command is useful to tell the slave what data
