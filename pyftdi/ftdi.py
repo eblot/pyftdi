@@ -384,7 +384,7 @@ class Ftdi(object):
         # Return the actual frequency
         return frequency
 
-    def open_bitband_from_url(self, url, direction=0x0, initial=0x0,
+    def open_bitbang_from_url(self, url, direction=0x0, initial=0x0,
                               latency=16):
         vendor, product, index, serial, interface = self.get_identifiers(url)
         return self.open_bitbang(vendor, product, interface, index, serial,
