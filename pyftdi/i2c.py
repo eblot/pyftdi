@@ -230,11 +230,15 @@ class I2cController(object):
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
-        if address > 0x7f:
-            raise I2cIOError("No such I2c slave")
+        self.validate_address(address)
         if address not in self._slaves:
             self._slaves[address] = I2cPort(self, address)
         return self._slaves[address]
+
+    @classmethod
+    def validate_address(cls, address):
+        if address > cls.HIGHEST_I2C_ADDRESS:
+            raise I2cIOError("No such I2c slave")
 
     @property
     def frequency_max(self):
@@ -261,8 +265,7 @@ class I2cController(object):
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
-        if address > 0x7f:
-            raise I2cIOError("No such I2c slave")
+        self.validate_address(address)
         if readlen < 1:
             raise I2cIOError('Nothing to read')
         if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
@@ -290,8 +293,7 @@ class I2cController(object):
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
-        if address > 0x7f:
-            raise I2cIOError("No such I2c slave")
+        self.validate_address(address)
         if not out or len(out) < 1:
             raise I2cIOError('Nothing to write')
         i2caddress = (address << 1) & self.HIGH
@@ -316,8 +318,7 @@ class I2cController(object):
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
-        if address > 0x7f:
-            raise I2cIOError("No such I2c slave")
+        self.validate_address(address)
         if not out or not len(out):
             raise I2cIOError('Nothing to write')
         if readlen < 1:
@@ -347,12 +348,13 @@ class I2cController(object):
             self._do_epilog()
 
     def flush(self):
-        """Flush the HW FIFOs"""
+        """Flush the HW FIFOs
+        """
         self._ftdi.write_data(self._immediate)
         self._ftdi.purge_buffers()
 
     def _do_prolog(self, i2caddress):
-        self.log.debug('- prolog 0x%x', i2caddress >> 1)
+        self.log.debug('   prolog 0x%x', i2caddress >> 1)
         cmd = Array('B', self._idle)
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
@@ -368,7 +370,7 @@ class I2cController(object):
             raise I2cIOError('NACK from slave')
 
     def _do_epilog(self):
-        self.log.debug('- epilog')
+        self.log.debug('   epilog')
         cmd = Array('B', self._stop)
         self._ftdi.write_data(cmd)
 
