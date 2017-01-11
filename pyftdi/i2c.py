@@ -24,6 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from array import array as Array
+from binascii import hexlify
 from logging import getLogger
 from pyftdi.ftdi import Ftdi
 from struct import calcsize as scalc, pack as spack
@@ -34,6 +35,10 @@ __all__ = ['I2cPort', 'I2cController']
 
 class I2cIOError(IOError):
     """I2c I/O error"""
+
+
+class I2cNackError(I2cIOError):
+    """I2c NACK receive from slave"""
 
 
 class I2cPort(object):
@@ -49,7 +54,7 @@ class I2cPort(object):
             ctrl.configure('ftdi://ftdi:232h/1', frequency=100000)
             i2c = ctrl.get_port(0x21)
             # send 2 bytes
-            i2c.exchange([0x12, 0x34])
+            i2c.write([0x12, 0x34])
             # send 2 bytes, then receive 2 bytes
             out = i2c.exchange([0x12, 0x34], 2)
     """
@@ -167,6 +172,8 @@ class I2cController(object):
     SDA_O_BIT = 0x02
     SDA_I_BIT = 0x04
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
+    HIGHEST_I2C_ADDRESS = 0x7f
+    RETRY_COUNT = 3
 
     def __init__(self):
         self._ftdi = Ftdi()
@@ -189,6 +196,8 @@ class I2cController(object):
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
         self._start = data_low*4 + clock_low_data_low*4
         self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
+        self._tx_size = 1
+        self._rx_size = 1
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
@@ -209,6 +218,7 @@ class I2cController(object):
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
                 frequency=frequency, **kwargs)
+        self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(False)
         self._ftdi.enable_3phase_clock(True)
         self._ftdi.enable_drivezero_mode(self.SCL_BIT|
@@ -268,16 +278,21 @@ class I2cController(object):
         self.validate_address(address)
         if readlen < 1:
             raise I2cIOError('Nothing to read')
-        if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
-            raise I2cIOError("Input payload is too large")
         i2caddress = (address << 1) & self.HIGH
         i2caddress |= self.BIT0
-        try:
-            self._do_prolog(i2caddress)
-            data = self._do_read(readlen)
-        finally:
-            self._do_epilog()
-        return bytes(data)
+        retries = self.RETRY_COUNT
+        while True:
+            try:
+                self._do_prolog(i2caddress)
+                data = self._do_read(readlen)
+                return bytes(data)
+            except I2cNackError:
+                retries -= 1
+                if not retries:
+                    raise
+                self.log.warning('Retry read')
+            finally:
+                self._do_epilog()
 
     def write(self, address, out):
         """Write one or more bytes to a remote slave
@@ -297,11 +312,19 @@ class I2cController(object):
         if not out or len(out) < 1:
             raise I2cIOError('Nothing to write')
         i2caddress = (address << 1) & self.HIGH
-        try:
-            self._do_prolog(i2caddress)
-            self._do_write(out)
-        finally:
-            self._do_epilog()
+        retries = self.RETRY_COUNT
+        while True:
+            try:
+                self._do_prolog(i2caddress)
+                self._do_write(out)
+                return
+            except I2cNackError:
+                retries -= 1
+                if not retries:
+                    raise
+                self.log.warning('Retry write')
+            finally:
+                self._do_epilog()
 
     def exchange(self, address, out, readlen=1):
         """Send a byte sequence to a remote slave followed with 
@@ -326,6 +349,22 @@ class I2cController(object):
         if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
         i2caddress = (address << 1) & self.HIGH
+        retries = self.RETRY_COUNT
+        while True:
+            try:
+                self._do_prolog(i2caddress)
+                self._do_write(out)
+                self._do_prolog(i2caddress | self.BIT0)
+                data = self._do_read(readlen)
+                return data
+            except I2cNackError:
+                retries -= 1
+                if not retries:
+                    raise
+                self.log.warning('Retry exchange')
+            finally:
+                self._do_epilog()
+
     def poll(self, address):
         """Poll a remote slave, expect ACK or NACK.
 
@@ -367,29 +406,50 @@ class I2cController(object):
         if not ack:
             raise I2cIOError('No answer from FTDI')
         if ack[0] & self.BIT0:
-            raise I2cIOError('NACK from slave')
+            self.log.warning('NACK')
+            raise I2cNackError('NACK from slave')
 
     def _do_epilog(self):
         self.log.debug('   epilog')
         cmd = Array('B', self._stop)
         self._ftdi.write_data(cmd)
+        # be sure to purge the MPSSE reply
+        self._ftdi.read_data_bytes(1, 1)
 
     def _do_read(self, readlen):
         self.log.debug('- read %d bytes', readlen)
-        cmd = Array('B')
+        read_not_last = self._read_byte + self._ack + self._clock_low_data_high
+        read_last = self._read_byte + self._nack + self._clock_low_data_high
+        chunk_size = self._rx_size-2
+        cmd_size = len(read_last)
+        # limit RX chunk size to the count of I2C packable ommands in the FTDI
+        # TX FIFO (minus one byte for the last 'send immediate' command)
+        tx_count = (self._tx_size-1) // cmd_size
+        chunk_size = min(tx_count, chunk_size)
+        chunks = []
+        last_count = 0
+        last_cmd = None
         count = readlen
         while count:
-            count -= 1
-            cmd.extend(self._read_byte)
-            cmd.extend(count and self._ack or self._nack)
-            cmd.extend(self._clock_low_data_high)
-        cmd.extend(self._immediate)
-        self._ftdi.write_data(cmd)
-        data = self._ftdi.read_data_bytes(readlen, 4)
-        return data
+            block_count = min(count, chunk_size)
+            count -= block_count
+            if last_count != block_count:
+                cmd = Array('B')
+                cmd.extend(read_not_last * (block_count-1))
+                cmd.extend(read_last)
+                last_cmd = cmd
+            else:
+                cmd = last_cmd
+            if count <= 0:
+                # only force immediate read out on last chunk
+                cmd.extend(self._immediate)
+            self._ftdi.write_data(cmd)
+            buf = self._ftdi.read_data_bytes(block_count, 4)
+            chunks.append(buf)
+        return b''.join(chunks)
 
     def _do_write(self, out):
-        self.log.debug('- write %d bytes', len(out))
+        self.log.debug('- write %d bytes: %s', len(out), hexlify(out).decode())
         for byte in out:
             cmd = Array('B', self._write_byte)
             cmd.append(byte)
@@ -399,7 +459,11 @@ class I2cController(object):
             self._ftdi.write_data(cmd)
             ack = self._ftdi.read_data_bytes(1, 4)
             if not ack:
-                raise I2cIOError('No answer from FTDI')
+                msg = 'No answer from FTDI'
+                self.log.critical(msg)
+                raise I2cIOError(msg)
             if ack[0] & self.BIT0:
-                raise I2cIOError('NACK from slave')
+                msg = 'NACK from slave'
+                self.log.warning(msg)
+                raise I2cNackError(msg)
 
