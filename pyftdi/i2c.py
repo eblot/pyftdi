@@ -58,6 +58,7 @@ class I2cPort(object):
     def __init__(self, controller, address):
         self._controller = controller
         self._address = address
+        self._shift = 0
         self._endian = '<'
         self._format = 'B'
 
@@ -73,20 +74,27 @@ class I2cPort(object):
             raise I2cIOError('Unsupported integer width')
         self._endian = bigendian and '>' or '<'
 
+    def shift_address(self, offset):
+        """Tweak the I2C slave address, as required with some devices
+        """
+        I2cController.validate_address(address+offset)
+        self._shift = offset
+
     def read(self, readlen=0):
         """Read one or more bytes from a remote slave
 
            :param readlen: count of bytes to read out.
            :return: byte sequence of read out bytes
         """
-        return self._controller.read(self._address, readlen=readlen)
+        return self._controller.read(self._address+self._shift,
+                                     readlen=readlen)
 
     def write(self, out):
         """Write one or more bytes to a remote slave
 
            :param out: the byte buffer to send
         """
-        return self._controller.write(self._address, out)
+        return self._controller.write(self._address+self._shift, out)
 
     def read_from(self, regaddr, readlen=0):
         """Read one or more bytes from a remote slave
@@ -95,7 +103,7 @@ class I2cPort(object):
            :param readlen: count of bytes to read out.
            :return: byte sequence of read out bytes
         """
-        return self._controller.exchange(self._address,
+        return self._controller.exchange(self._address+self._shift,
                                          out=self._make_buffer(regaddr),
                                          readlen=readlen)
 
@@ -105,7 +113,7 @@ class I2cPort(object):
            :param regaddr: slave register address to write to
            :param out: the byte buffer to send
         """
-        return self._controller.write(self._address,
+        return self._controller.write(self._address+self._shift,
                                       out=self._make_buffer(regaddr, out))
 
     def exchange(self, out='', readlen=0):
@@ -118,7 +126,8 @@ class I2cPort(object):
            :return: byte sequence containing the data read out from the
                     slave
         """
-        return self._controller.exchange(self._address, out, readlen)
+        return self._controller.exchange(self._address+self._shift, out,
+                                         readlen)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
