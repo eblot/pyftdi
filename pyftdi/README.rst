@@ -5,7 +5,7 @@
 Overview
 ~~~~~~~~
 
-PyFtdi aims at providing a user-space driver for modern FTDI_ devices,
+PyFtdi_ aims at providing a user-space driver for modern FTDI_ devices,
 implemented in pure Python language.
 
 Modern FTDI_ devices include:
@@ -18,13 +18,13 @@ Modern FTDI_ devices include:
 * FT230X (single port, clock up to 48 Mhz, 3Mbps)
 
 Other FTDI_ devices could also be supported (including FT232* devices),
-although these devices are not a primary goal for PyFtdi, and therefore have
-not been tested with PyFtdi.
+although these devices are not a primary goal for PyFtdi_, and therefore have
+not been tested with PyFtdi_.
 
 Primary goals
 ~~~~~~~~~~~~~
 
-It should support the following modes:
+PyFtdi_ currently supports the following features:
 
 * UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
   capability)
@@ -33,28 +33,25 @@ It should support the following modes:
 * I2C master
 * JTAG master
 
-PyFtdi should provide a pyserial_ compliant API, to be used as a drop-in module
-to access USB-serial converters based on FTDI_ devices.
-
-.. _FTDI: http://www.ftdichip.com/
-
+PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in 
+module to access USB-serial converters based on FTDI_ devices.
 
 Requirements
 ~~~~~~~~~~~~
 
 Python_ 3.5 or above is required.
 
-PyFtdi relies on PyUSB_, which itself depends on one of the following native
+PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb-1.0, tested with 1.0.20
+* libusb_, tested with 1.0.20
 
 may still work, but are fully untested there are nowaways obsolete.
 
-PyFtdi does not depend on any other native library, and only uses standard
+PyFtdi_ does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
+PyFTDI_ has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
 supported.
 
 Note about previous releases
@@ -67,22 +64,18 @@ If you have no choice but using previous releases of software, such as
 * PyUSB_ 1.0.0b1 or below,
 * pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
 
-please checkout the latest PyFTDI 0.1x series (0.13.3) which provides support
+please checkout the latest PyFTDI_ 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.
-
-.. _PyUSB: http://sourceforge.net/projects/pyusb/
-.. _Python: http://python.org/
-.. _pyserial: http://pyserial.sourceforge.net/
-
 
 Status
 ~~~~~~
 
 This project is still in beta development stage.
 
-However, PyFtdi is being forked from a closed-source software implementation
-that has been successfully used for over several years - including serial, spi
-and jtag protocols. PyFtdi is developed as an open-source solution.
+However, PyFtdi_ is being forked from a closed-source software implementation
+that has been successfully used for over several years - including serial 
+@ 3Mbps, spi and jtag protocols. PyFtdi_ is developed as an open-source 
+solution.
 
 Supported features
 ------------------
@@ -92,25 +85,22 @@ Supported features
 * Several FTDI adapters can be accessed simultaneously from the same Python
   runtime instance.
 
-* Serial port, up to 12 Mbps. PyFtdi includes a pyserial_ emulation layer that
+* Serial port, up to 12 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
   offers transparent access to the FTDI serial ports through a pyserial_-
   compliant API. The ``serialext`` directory contains a minimal serial terminal
   demonstrating the use of this extension, and a dispatcher automatically
-  selecting the serial backend (pyserial_, PyFtdi), based on the serial port
+  selecting the serial backend (pyserial_, PyFtdi_), based on the serial port
   name.
 
 * SPI master. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
-  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to
+  modes. PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
   use the FTDI SPI master with a pure-Python serial flash device driver for
   several common devices.
 
 * I2C master. For now, only 7-bit address are supported.
 
 * JTAG is under development and is not fully supported yet.
-
-.. _libftdi: http://www.intra2net.com/en/developer/libftdi/
-.. _pyspiflash: https://github.com/eblot/pyspiflash
 
 Installation
 ~~~~~~~~~~~~
@@ -130,7 +120,7 @@ Installation
 
     pip3 install pyusb
     pip3 install pyserial
-    pip3 install pyftdi
+    pip3 install pyftdi_
 
 
 Troubleshooting
@@ -170,7 +160,8 @@ Troubleshooting
 
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On macOS, refer to this FTDI guide_.
+  uninstalling the driver. On macOS, refer to this FTDI macOs 
+  `guide <http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf>`_.
 
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
@@ -179,24 +170,30 @@ Troubleshooting
  `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
  with OS X 10.11+.
 
-.. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
-
 Development
 ~~~~~~~~~~~
 
-PyFtdi is developed on macOS platforms (64-bit kernel), and is validated on a
+PyFtdi_ is developed on macOS platforms (64-bit kernel), and is validated on a
 regular basis on Linux hosts.
 
 As it contains no native code, it should work on any PyUSB_ and libusb_
 supported platforms. However, Ms Windows is a seamless source of issues and is
 not supported. Your mileage may vary.
 
-.. _libusb: http://www.libusb.org/
-
 Examples
 ~~~~~~~~
 
-See pyftdi/tests directory for GPIO examples.
+See pyftdi_/tests directory for GPIO examples.
 See pyspiflash_ module for SPI examples.
 
 .. include:: serialext/README.rst
+
+.. _PyFtdi: https://www.github.com/eblot/
+.. _FTDI: http://www.ftdichip.com/
+.. _PyUSB: https://walac.github.io/pyusb/
+.. _Python: https://www.python.org/
+.. _pyserial: https://pythonhosted.org/pyserial/
+.. _libftdi: https://www.intra2net.com/en/developer/libftdi/
+.. _pyspiflash: https://github.com/eblot/pyspiflash/
+.. _libusb: http://www.libusb.info/
+.. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
