@@ -1,4 +1,5 @@
-# Copyright (c) 2010-2014, Neotion
+# Copyright (c) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,5 +24,35 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-version_info = (0, 10, 0)
-__version__ = '.'.join(['%d' % v for v in version_info])
+__version__ = '0.21.2'
+__title__ = 'pyftdi'
+__description__ = 'FTDI device driver (pure Python)'
+__uri__ = 'http://github.com/eblot/pyftdi'
+__doc__ = __description__ + ' <' + __uri__ + '>'
+__author__ = 'Emmanuel Blot'
+__email__ = 'emmanuel.blot@free.fr'
+__license__ = 'LGPL v2'
+__copyright__ = 'Copyright (c) 2011-2017 Emmanuel Blot'
+
+
+from logging import WARNING, getLogger
+
+
+class FtdiLogger(object):
+
+    log = getLogger("pyftdi")
+    log.setLevel(level=WARNING)
+
+    @classmethod
+    def set_formatter(cls, formatter):
+        handlers = list(cls.log.handlers)
+        for handler in handlers:
+            handler.setFormatter(formatter)
+
+    @classmethod
+    def get_level(cls):
+        return cls.log.getEffectiveLevel()
+
+    @classmethod
+    def set_level(cls, level):
+        cls.log.setLevel(level=level)

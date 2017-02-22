@@ -1,4 +1,5 @@
-# Copyright (c) 2008-2012, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,12 +28,21 @@ import errno
 import os
 import select
 import socket
-import stat
 from io import RawIOBase
-from pyftdi.pyftdi.misc import hexdump
-from serial import SerialBase
+from pyftdi.misc import hexdump
+from serial import (SerialBase, SerialException, portNotOpenError,
+                    writeTimeoutError, VERSION as pyserialver)
+
 
 __all__ = ['Serial']
+
+
+class SerialExceptionWithErrno(SerialException):
+    """Serial exception with errno extension"""
+
+    def __init__(self, message, errno=None):
+        SerialException.__init__(self, message)
+        self.errno = errno
 
 
 class SocketSerial(SerialBase):
@@ -41,7 +51,12 @@ class SocketSerial(SerialBase):
        This is basically a copy of the serialposix serial port implementation
        with redefined IO for a Unix socket"""
 
-    def _reconfigurePort(self):
+    BACKEND = 'socket'
+    VIRTUAL_DEVICE = True
+
+    PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
+
+    def _reconfigure_port(self):
         pass
 
     def makeDeviceName(self, port):
@@ -50,8 +65,9 @@ class SocketSerial(SerialBase):
     def open(self):
         """Open the initialized serial port"""
         if self._port is None:
-            import serial
-            raise serial.SerialException("Port must be configured before use.")
+            raise SerialException("Port must be configured before use.")
+        if self.isOpen():
+            raise SerialException("Port is already open.")
         self._dump = False
         self.sock = None
         try:
@@ -63,18 +79,30 @@ class SocketSerial(SerialBase):
                     filename = os.path.join(home, filename[2:])
             self._filename = filename
             self.sock.connect(self._filename)
-        except Exception, msg:
-            self.sock = None
-            import serial
-            raise serial.SerialException("Could not open port: %s" % msg)
-        self._isOpen = True
+        except Exception as e:
+            self.close()
+            msg = "Could not open port: %s" % (str(e),)
+            if isinstance(e, socket.error):
+                raise SerialExceptionWithErrno(msg, e.errno)
+            else:
+                raise SerialException(msg)
+        self._set_open_state(True)
         self._lastdtr = None
 
     def close(self):
         if self.sock:
-            self.sock.close()
+            try:
+                self.sock.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            try:
+                self.sock.close()
+            except Exception:
+                pass
+            self.sock = None
+        self._set_open_state(False)
 
-    def inWaiting(self):
+    def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
         return 0
 
@@ -83,9 +111,8 @@ class SocketSerial(SerialBase):
            return less characters as requested. With no timeout it will block
            until the requested number of bytes is read."""
         if self.sock is None:
-            import serial
-            raise serial.portNotOpenError()
-        read = ''
+            raise portNotOpenError
+        read = bytearray()
         if size > 0:
             while len(read) < size:
                 ready, _, _ = select.select([self.sock], [], [], self._timeout)
@@ -94,11 +121,9 @@ class SocketSerial(SerialBase):
                 buf = self.sock.recv(size-len(read))
                 if not len(buf):
                     # Some character is ready, but none can be read
-                    # it seems that this is a marker for a dead peer
-                    # Exception does not work, for some reason (missing ioctl?)
-                    import serial
-                    raise serial.SerialException('Peer disconnected')
-                read = read + buf
+                    # it is a marker for a disconnected peer
+                    raise portNotOpenError
+                read += buf
                 if self._timeout >= 0 and not buf:
                     break  # early abort on timeout
         return read
@@ -106,8 +131,7 @@ class SocketSerial(SerialBase):
     def write(self, data):
         """Output the given string over the serial port."""
         if self.sock is None:
-            import serial
-            raise serial.portNotOpenError()
+            raise portNotOpenError
         t = len(data)
         d = data
         while t > 0:
@@ -116,19 +140,19 @@ class SocketSerial(SerialBase):
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)
                     if not ready:
-                        raise serial.writeTimeoutError
+                        raise writeTimeoutError
                 n = self.sock.send(d)
                 if self._dump:
-                    print hexdump(d[:n])
+                    print(hexdump(d[:n]))
                 if self._writeTimeout is not None and self._writeTimeout > 0:
                     _, ready, _ = select.select([], [self.sock], [],
                                                 self._writeTimeout)
                     if not ready:
-                        raise serial.writeTimeoutError
+                        raise writeTimeoutError
                 d = d[n:]
                 t = t - n
-            except OSError, v:
-                if v.errno != errno.EAGAIN:
+            except OSError as e:
+                if e.errno != errno.EAGAIN:
                     raise
 
     def flush(self):
@@ -136,40 +160,51 @@ class SocketSerial(SerialBase):
            is written."""
         pass
 
-    def flushInput(self):
+    def reset_input_buffer(self):
         """Clear input buffer, discarding all that is in the buffer."""
         pass
 
-    def flushOutput(self):
+    def reset_output_buffer(self):
         """Clear output buffer, aborting the current output and
         discarding all that is in the buffer."""
         pass
 
-    def sendBreak(self):
-        """Send break condition."""
+    def send_break(self, duration=0.25):
+        """Send break condition. Not supported"""
+
+    def _update_break_state(self):
+        """Send break condition. Not supported"""
         pass
 
-    def setRTS(self,on=1):
+    def _update_rts_state(self):
         """Set terminal status line: Request To Send"""
         pass
 
-    def setDTR(self,on=1):
+    def _update_dtr_state(self):
         """Set terminal status line: Data Terminal Ready"""
         pass
 
-    def getCTS(self):
+    def setDTR(self, on=1):
+        """Set terminal status line: Data Terminal Ready"""
+        pass
+
+    @property
+    def cts(self):
         """Read terminal status line: Clear To Send"""
         return True
 
-    def getDSR(self):
+    @property
+    def dsr(self):
         """Read terminal status line: Data Set Ready"""
         return True
 
-    def getRI(self):
+    @property
+    def ri(self):
         """Read terminal status line: Ring Indicator"""
         return False
 
-    def getCD(self):
+    @property
+    def cd(self):
         """Read terminal status line: Carrier Detect"""
         return False
 
@@ -178,12 +213,19 @@ class SocketSerial(SerialBase):
     def nonblocking(self):
         """internal - not portable!"""
         if self.sock is None:
-            import serial
-            raise serial.portNotOpenError
+            raise portNotOpenError
         self.sock.setblocking(0)
 
     def dump(self, enable):
         self._dump = enable
+
+    # - - Helpers - -
+
+    def _set_open_state(self, open_):
+        if self.PYSERIAL_VERSION < (3, 0):
+            self._isOpen = bool(open_)
+        else:
+            self.is_open = bool(open_)
 
 
 # assemble Serial class with the platform specifc implementation and the base

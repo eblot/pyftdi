@@ -1,4 +1,5 @@
-# Copyright (c) 2008-2014, Neotion
+# Copyright (c) 2008-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,80 +24,167 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
-import time
 from io import RawIOBase
-
-from pyftdi.pyftdi.ftdi import Ftdi, FtdiError
-from pyftdi.pyftdi.misc import to_int
-from serialusb import UsbSerial
+from pyftdi.ftdi import Ftdi
+from pyftdi.usbtools import UsbToolsError
+from serial import SerialBase, SerialException, VERSION as pyserialver
+from time import sleep, time as now
 
 __all__ = ['Serial']
 
 
-class FtdiSerial(UsbSerial):
-    """Serial port implementation for FTDI compatible with pyserial API"""
+class FtdiSerial(SerialBase):
+    """Base class for Serial port implementation compatible with pyserial API
+       using a USB device.
+    """
 
-    BACKEND = 'pyftdi'
-    SCHEME = 'ftdi'
-    FTDI_VENDOR = 0x403
-    VENDOR_IDS = { 'ftdi': FTDI_VENDOR }
-    PRODUCT_IDS = { FTDI_VENDOR: { 
-                        '232': 0x6001,
-                        '232r': 0x6001,
-                        '232h': 0x6014,
-                        '2232': 0x6010,
-                        '4232': 0x6011,
-                        '230x': 0x6015,
-                        'ft232': 0x6001,
-                        'ft232r': 0x6001,
-                        'ft232h': 0x6014,
-                        'ft2232': 0x6010,
-                        'ft4232': 0x6011,
-                        'ft230x': 0x6015
-                        }
-                  }
-    DEFAULT_VENDOR = FTDI_VENDOR
+    BAUDRATES = sorted([9600 * (x+1) for x in range(6)] +
+                       list(range(115200, 1000000, 115200)) +
+                       list(range(1000000, 13000000, 100000)))
+
+    PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
+
+    def makeDeviceName(self, port):
+        return port
 
     def open(self):
         """Open the initialized serial port"""
-        from serial.serialutil import SerialException
+        if self.port is None:
+            raise SerialException("Port must be configured before use.")
         try:
-            UsbSerial.open(self, Ftdi,
-                           FtdiSerial.SCHEME,
-                           FtdiSerial.VENDOR_IDS,
-                           FtdiSerial.PRODUCT_IDS,
-                           FtdiSerial.DEFAULT_VENDOR)
-        except FtdiError, e:
-            raise SerialException(str(e))
+            device = Ftdi.create_from_url(self.port)
+        except (UsbToolsError, IOError) as ex:
+            raise SerialException('Unable to open USB port %s: %s' %
+                                  (self.portstr, str(ex)))
+        self.udev = device
+        self._set_open_state(True)
+        self._reconfigure_port()
 
-    @classmethod
-    def add_custom_vendor(cls, vid, vidname=''):
-        """Add a custom USB vendor identifier.
-           It can be useful to use a pretty URL for opening FTDI device
-        """
-        if vid in cls.VENDOR_IDS:
-            raise ValueError('Vendor ID 0x%04x already registered' % vid)
-        if not vidname:
-            vidname = '0x%04x' % vid
-        cls.VENDOR_IDS[vidname] = vid
+    def close(self):
+        """Close the open port"""
+        self._set_open_state(False)
+        self.udev.close()
+        self.udev = None
 
-    @classmethod
-    def add_custom_product(cls, vid, pid, pidname=''):
-        """Add a custom USB product identifier.
-           It is required for opening FTDI device with non-standard VID/PID
-           USB identifiers.
-        """
-        if vid not in cls.PRODUCT_IDS:
-            cls.PRODUCT_IDS[vid] = {}
-        elif pid in cls.PRODUCT_IDS[vid]:
-            raise ValueError('Product ID 0x%04x already registered' % vid)
-        if not pidname:
-            pidname = '0x%04x' % pid
-        cls.PRODUCT_IDS[vid][pidname] = pid
+    def read(self, size=1):
+        """Read size bytes from the serial port. If a timeout is set it may
+           return less characters as requested. With no timeout it will block
+           until the requested number of bytes is read."""
+        data = bytearray()
+        start = now()
+        while size > 0:
+            buf = self.udev.read_data(size)
+            data += buf
+            size -= len(buf)
+            if self._timeout > 0:
+                if buf:
+                    break
+                ms = now()-start
+                if ms > self._timeout:
+                    break
+            sleep(0.01)
+        return data
+
+    def write(self, data):
+        """Output the given string over the serial port."""
+        self.udev.write_data(data)
+
+    def flush(self):
+        """Flush of file like objects. In this case, wait until all data
+           is written."""
+        pass
+
+    def reset_input_buffer(self):
+        """Clear input buffer, discarding all that is in the buffer."""
+        self.udev.purge_rx_buffer()
+
+    def reset_output_buffer(self):
+        """Clear output buffer, aborting the current output and
+        discarding all that is in the buffer."""
+        self.udev.purge_tx_buffer()
+
+    def send_break(self, duration=0.25):
+        """Send break condition. Not supported"""
+
+    def _update_break_state(self):
+        """Send break condition. Not supported"""
+        pass
+
+    def _update_rts_state(self):
+        """Set terminal status line: Request To Send"""
+        self.udev.set_rts(self._rts_state)
+
+    def _update_dtr_state(self):
+        """Set terminal status line: Data Terminal Ready"""
+        self.udev.set_dtr(self._dtr_state)
+
+    @property
+    def cts(self):
+        """Read terminal status line: Clear To Send"""
+        return self.udev.get_cts()
+
+    @property
+    def dsr(self):
+        """Read terminal status line: Data Set Ready"""
+        return self.udev.get_dsr()
+
+    @property
+    def ri(self):
+        """Read terminal status line: Ring Indicator"""
+        return self.udev.get_ri()
+
+    @property
+    def cd(self):
+        """Read terminal status line: Carrier Detect"""
+        return self.udev.get_cd()
+
+    @property
+    def in_waiting(self):
+        """Return the number of characters currently in the input buffer."""
+        # not implemented
+        return 0
+
+    @property
+    def out_waiting(self):
+        """Return the number of bytes currently in the output buffer."""
+        return 0
+
+    @property
+    def fifoSizes(self):
+        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        return self.udev.fifo_sizes
+
+    def _reconfigure_port(self):
+        try:
+            self.udev.set_baudrate(self._baudrate)
+            self.udev.set_line_property(self._bytesize,
+                                        self._stopbits,
+                                        self._parity)
+            if self._rtscts:
+                self.udev.set_flowctrl('hw')
+            elif self._xonxoff:
+                self.udev.set_flowctrl('sw')
+            else:
+                self.udev.set_flowctrl('')
+            try:
+                self.udev.set_dynamic_latency(2, 200, 400)
+            except AttributeError:
+                # backend does not support this feature
+                pass
+        except IOError as e:
+            err = self.udev.get_error_string()
+            raise SerialException("%s (%s)" % (str(e), err))
+
+    def _set_open_state(self, open_):
+        self.is_open = bool(open_)
 
 
-# assemble Serial class with the platform specifc implementation and the base
+# assemble Serial class with the platform specific implementation and the base
 # for file-like behavior.
 class Serial(FtdiSerial, RawIOBase):
-    pass
+
+    BACKEND = 'pyftdi'
+
+    def __init__(self, *args, **kwargs):
+        RawIOBase.__init__(self)
+        FtdiSerial.__init__(self, *args, **kwargs)

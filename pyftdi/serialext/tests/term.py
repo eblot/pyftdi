@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2011, Neotion
+# Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,7 @@ import sys
 
 _INIT = False
 
+
 def _init_term(fullterm):
     """Internal terminal initialization function"""
     if os.name == 'nt':
@@ -57,9 +58,10 @@ def _init_term(fullterm):
     else:
         return True
 
+
 def getkey(fullterm=False):
     """Return a key from the current console, in a platform independent way"""
-    # there's probably a better way to initialize the module without going
+    # there's probably a better way to initialize the module without
     # relying onto a singleton pattern. To be fixed
     global _INIT
     if not _INIT:
@@ -86,10 +88,12 @@ def getkey(fullterm=False):
         time.sleep(1)
         return None
 
+
 def is_term():
     """Tells whether the current stdout/stderr stream are connected to a
     terminal (vs. a regular file or pipe)"""
     return sys.stdout.isatty()
+
 
 def is_colorterm():
     """Tells whether the current terminal (if any) support colors escape

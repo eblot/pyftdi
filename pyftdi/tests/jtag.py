@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2011, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,35 +26,53 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import unittest
-from pyftdi.pyftdi.ftdi import Ftdi
+from pyftdi.jtag import JtagEngine, JtagTool
+from pyftdi.bits import BitSequence
 
 
-class FtdiTestCase(unittest.TestCase):
-    """FTDI driver test case"""
+# Should match the tested device
+JTAG_INSTR = {'SAMPLE': BitSequence('0001', msb=True, length=4),
+              'PRELOAD': BitSequence('0001', msb=True, length=4),
+              'IDCODE': BitSequence('0100', msb=True, length=4),
+              'BYPASS': BitSequence('1111', msb=True, length=4)}
 
-    def test_multiple_interface(self):
-        # the following calls used to create issues (several interfaces from
-        # the same device)
-        ftdi1 = Ftdi()
-        ftdi1.open(interface=1)
-        ftdi2 = Ftdi()
-        ftdi2.open(interface=2)
-        import time
-        for x in range(5):
-            print "If#1: ", hex(ftdi1.poll_modem_status())
-            print "If#2: ", ftdi2.modem_status()
-            time.sleep(0.500)
-        ftdi1.close()
-        ftdi2.close()
+
+class JtagTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.jtag = JtagEngine(trst=True, frequency=3E6)
+        self.jtag.configure(vendor=0x403, product=0x6011, interface=1)
+        self.jtag.reset()
+        self.tool = JtagTool(self.jtag)
+
+    def tearDown(self):
+        del self.jtag
+
+    def test_idcode_reset(self):
+        """Read the IDCODE right after a JTAG reset"""
+        self.jtag.reset()
+        idcode = self.jtag.read_dr(32)
+        self.jtag.go_idle()
+        print("IDCODE (reset): 0x%x" % int(idcode))
+
+    def test_idcode_sequence(self):
+        """Read the IDCODE using the dedicated instruction"""
+        instruction = JTAG_INSTR['IDCODE']
+        self.jtag.write_ir(instruction)
+        idcode = self.jtag.read_dr(32)
+        self.jtag.go_idle()
+        print("IDCODE (idcode): 0x%08x" % int(idcode))
+
+    def _test_detect_ir_length(self):
+        """Detect the instruction register length"""
+        self.jtag.go_idle()
+        self.jtag.capture_ir()
+        self.tool.detect_register_size()
+
 
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
-    return suite
+    return unittest.makeSuite(JtagTestCase, '_test')
 
 if __name__ == '__main__':
-    import doctest
-    doctest.testmod(sys.modules[__name__])
     unittest.main(defaultTest='suite')

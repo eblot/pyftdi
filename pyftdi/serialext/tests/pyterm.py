@@ -1,6 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# Copyright (c) 2010-2012, Emmanuel Blot <emmanuel.blot@free.fr>
+"""Pure python simple serial terminal
+"""
+
+# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,35 +29,28 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Simple Python serial terminal
-"""
-
 import os
-import sys
+import termios
 import time
 import threading
-from pyftdi.pyftdi.misc import to_bool, to_int
+from _thread import interrupt_main
+from argparse import ArgumentParser
+from pyftdi.misc import to_bool, to_int
+from sys import modules, stdin, stdout, stderr
 from term import getkey
+from traceback import format_exc
+
 
 class MiniTerm(object):
     """A mini serial terminal to demonstrate pyserial extensions"""
 
-    def __init__(self, device=None, baudrate=115200, logfile=None,
-                 debug=False):
+    def __init__(self, device, baudrate=115200, logfile=None, debug=False):
+        self._termstates = [(fd, termios.tcgetattr(fd)) for fd in
+                            (stdin.fileno(), stdout.fileno(),
+                             stderr.fileno())]
         self._device = device
         self._baudrate = baudrate
         self._logfile = logfile
-        if not self._device:
-            if os.name == 'nt':
-                self._device = 'COM1'
-            elif os.name == 'posix':
-                (system, _, _, _, _) = os.uname()
-                if system.lower() == 'darwin':
-                    self._device = '/dev/cu.usbserial'
-                else:
-                    self._device = '/dev/ttyS0'
-            else:
-                raise AssertionError('Serial port unknown')
         self._port = self._open_port(self._device, self._baudrate,
                                      self._logfile, debug)
         self._resume = False
@@ -79,8 +76,8 @@ class MiniTerm(object):
         # wait forever, although Windows is stupid and does not signal Ctrl+C,
         # so wait use a 1/2-second timeout that gives some time to check for a
         # Ctrl+C break then polls again...
-        print 'Entering minicom mode'
-        sys.stdout.flush()
+        print('Entering minicom mode')
+        stdout.flush()
         self._port.timeout = 0.5
         self._resume = True
         # start the reader (target to host direction) within a dedicated thread
@@ -99,30 +96,31 @@ class MiniTerm(object):
             while self._resume:
                 data = self._port.read(4096)
                 if data:
-                    sys.stdout.write(data)
-                    sys.stdout.flush()
+                    try:
+                        stdout.write(data.decode('utf8'))
+                    except UnicodeDecodeError:
+                        pass
+                    stdout.flush()
         except KeyboardInterrupt:
             return
-        except Exception, e:
-            print "Exception: %s" % e
+        except Exception as e:
+            print("Exception: %s" % e)
             if self._debug:
-                import traceback
-                print >> sys.stderr, traceback.format_exc()
-            import thread
-            thread.interrupt_main()
+                print(format_exc(), file=stderr)
+            interrupt_main()
 
     def _writer(self, fullmode=False):
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
                 c = getkey(fullmode)
-                if fullmode and ord(c) == 0x1: # Ctrl+A
+                if fullmode and ord(c) == 0x1:  # Ctrl+A
                     self._cleanup()
                     return
                 else:
                     self._port.write(c)
             except KeyboardInterrupt:
-                print '%sAborting...' % os.linesep
+                print('%sAborting...' % os.linesep)
                 self._cleanup()
                 return
 
@@ -133,7 +131,7 @@ class MiniTerm(object):
             # wait till the other thread completes
             time.sleep(0.5)
             try:
-                rem = self._port.inWaiting()
+                rem = self._port.in_waiting()
             except IOError:
                 # maybe a bug in underlying wrapper...
                 rem = 0
@@ -142,85 +140,85 @@ class MiniTerm(object):
                 self._port.read()
             self._port.close()
             self._port = None
-            print 'Bye.'
+            print('Bye.')
+        for fd, att in self._termstates:
+            termios.tcsetattr(fd, termios.TCSANOW, att)
 
     @staticmethod
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
-        try:
-            from serial.serialutil import SerialException
-        except ImportError:
-            raise ImportError("Python serial module not installed")
-        try:
-            from serial import serial_for_url, VERSION as serialver
-            versions = [int(x) for x in serialver.split('.', 1)]
-            if (versions[0] < 2) or (versions[1] < 6):
-                raise ValueError
-        except (ValueError, IndexError, ImportError):
-            raise ImportError("pyserial 2.6+ is required")
+        # the following import enables serial protocol extensions
         import pyftdi.serialext
         try:
-            port = serial_for_url(device,
-                                  baudrate=baudrate,
-                                  timeout=0)
             if logfile:
-                port.set_logger(logfile)
-            if not port.isOpen():
-                port.open()
-            if not port.isOpen():
-                raise AssertionError('Cannot open port "%s"' % device)
+                port = pyftdi.serialext.serial_for_url(device,
+                                                       do_not_open=True)
+                basecls = port.__class__
+                from pyftdi.serialext.logger import SerialLogger
+                cls = type('Spy%s' % basecls.__name__,
+                           (SerialLogger, basecls), {})
+                port = cls(device, baudrate=baudrate,
+                           timeout=0, logfile=logfile)
+            else:
+                port = pyftdi.serialext.serial_for_url(device,
+                                                       baudrate=baudrate,
+                                                       timeout=0,
+                                                       do_not_open=True)
+            port.open()
+            if not port.is_open:
+                raise IOError('Cannot open port "%s"' % device)
             if debug:
-                print "Using serial backend '%s'" % port.BACKEND
+                print("Using serial backend '%s'" % port.BACKEND)
             return port
-        except SerialException, e:
-            raise AssertionError(str(e))
+        except IOError as ex:
+            # SerialException derives from IOError
+            raise
 
-
-def get_options():
-    """Parse and execute the command line and optionnally a config file"""
-    from optparse import OptionParser
-    usage = '%prog [options]\n' \
-            'Pure python simple serial terminal\n'
-    optparser = OptionParser(usage=usage)
-    optparser.add_option('-d', '--debug', dest='debug',
-                         action='store_true',
-                         help='enable debug mode')
-    if os.name in ('posix', ):
-        optparser.add_option('-f', '--fullmode', dest='fullmode',
-                             action='store_true',
-                             help='use full terminal mode, exit with [Ctrl]+A')
-    optparser.add_option('-p', '--port', dest='device',
-                         help='serial port device name (list available ports '
-                              'with \'ftdi:///?\') ')
-    optparser.add_option('-b', '--baudrate', dest='baudrate',
-                         help='serial port baudrate', default='115200')
-    optparser.add_option('-r', '--reset', dest='reset',
-                         help='HW reset on DTR line', default=None)
-    optparser.add_option('-s', '--select', dest='select',
-                         help='Mode selection on RTS line', default=None)
-    optparser.add_option('-o', '--logfile', dest='logfile',
-                         help='path to the log file')
-    options, _ = optparser.parse_args(sys.argv[1:])
-    return optparser, options
 
 def main():
     """Main routine"""
-    optparser, options = get_options()
+    debug = False
     try:
-        miniterm = MiniTerm(device=options.device,
-                            baudrate=to_int(options.baudrate),
-                            logfile=options.logfile,
-                            debug=options.debug)
-        miniterm.run(os.name in ('posix', ) and options.fullmode or False,
-                     options.reset, options.select)
-    except (AssertionError, IOError, ValueError), e:
-        print >> sys.stderr, '\nError: %s' % e
-        if options.debug:
-            import traceback
-            print >> sys.stderr, traceback.format_exc()
-        sys.exit(1)
+        argparser = ArgumentParser(description=modules[__name__].__doc__)
+        argparser.add_argument('-p', '--device', required=True,
+                               help="serial port device name "
+                                    "(list available ports with 'ftdi:///?')")
+        argparser.add_argument(
+            '-b', '--baudrate', dest='baudrate',
+            help='serial port baudrate', default='115200')
+        argparser.add_argument(
+            '-r', '--reset', dest='reset',
+            help='HW reset on DTR line', default=None)
+        argparser.add_argument(
+            '-s', '--select', dest='select',
+            help='Mode selection on RTS line', default=None)
+        argparser.add_argument(
+            '-o', '--logfile', dest='logfile',
+            help='path to the log file')
+        if os.name in ('posix', ):
+            argparser.add_argument(
+                '-f', '--fullmode', dest='fullmode', action='store_true',
+                help='use full terminal mode, exit with [Ctrl]+A')
+        argparser.add_argument(
+            '-d', '--debug', dest='debug', action='store_true',
+            help='enable debug mode')
+        args = argparser.parse_args()
+        debug = args.debug
+
+        miniterm = MiniTerm(device=args.device,
+                            baudrate=to_int(args.baudrate),
+                            logfile=args.logfile,
+                            debug=args.debug)
+        miniterm.run(os.name in ('posix', ) and args.fullmode or False,
+                     args.reset, args.select)
+    except Exception as e:
+        print('\nError: %s' % e, file=stderr)
+        if debug:
+            print(format_exc(), file=stderr)
+        exit(1)
     except KeyboardInterrupt:
-        sys.exit(2)
+        exit(2)
+
 
 if __name__ == '__main__':
     main()
