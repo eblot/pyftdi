@@ -323,9 +323,9 @@ class Ftdi(object):
 
     def open_from_url(self, url):
         vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open(vendor, product, interface, serial, index)
+        return self.open(vendor, product, index, serial, interface)
 
-    def open(self, vendor, product, interface=1, serial=None, index=0):
+    def open(self, vendor, product, index=0, serial=None, interface=1):
         """Open a new interface to the specified FTDI device"""
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
         try:
@@ -351,14 +351,14 @@ class Ftdi(object):
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
                             frequency=6.0E6, latency=16):
         vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open_mpsse(vendor, product, interface, index, serial,
+        return self.open_mpsse(vendor, product, index, serial, interface,
                                direction, initial, frequency, latency)
 
-    def open_mpsse(self, vendor, product, interface=1, index=0, serial=None,
+    def open_mpsse(self, vendor, product, index=0, serial=None, interface=1,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
         """Configure the interface for MPSSE mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial)
+        self.open(vendor, product, index, serial, interface)
         if not self.has_mpsse:
             self.close()
             raise FtdiError('This device does not support MPSSE')
@@ -387,14 +387,14 @@ class Ftdi(object):
     def open_bitbang_from_url(self, url, direction=0x0, initial=0x0,
                               latency=16):
         vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open_bitbang(vendor, product, interface, index, serial,
+        return self.open_bitbang(vendor, product, index, serial, interface,
                                  direction, latency)
 
-    def open_bitbang(self, vendor, product, interface=1, index=0, serial=None,
+    def open_bitbang(self, vendor, product, index=0, serial=None, interface=1,
                      direction=0x0, latency=16):
         """Configure the interface for BITBANG mode"""
         # Open an FTDI interface
-        self.open(vendor, product, interface, index, serial)
+        self.open(vendor, product, index, serial, interface)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
