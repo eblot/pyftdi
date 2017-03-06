@@ -33,7 +33,7 @@ PyFtdi_ currently supports the following features:
 * I2C master
 * JTAG master
 
-PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in 
+PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI_ devices.
 
 Requirements
@@ -57,6 +57,10 @@ supported.
 Note about previous releases
 ----------------------------
 
+``open()``, ``open_mpsse()`` and ``open_bitbang`` arguments have changed in
+v0.22.0, be sure to update your code or even better use the URL variants
+(``open_from_url``, ``open_mpsse_from_url`` or ``open_bitbang_from_url``).
+
 If you have no choice but using previous releases of software, such as
 
 * Python_ (2.6+, 3.3+),
@@ -73,8 +77,8 @@ Status
 This project is still in beta development stage.
 
 However, PyFtdi_ is being forked from a closed-source software implementation
-that has been successfully used for over several years - including serial 
-@ 3Mbps, spi and jtag protocols. PyFtdi_ is developed as an open-source 
+that has been successfully used for over several years - including serial
+@ 3Mbps, spi and jtag protocols. PyFtdi_ is developed as an open-source
 solution.
 
 Supported features
@@ -160,7 +164,7 @@ Troubleshooting
 
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On macOS, refer to this FTDI macOs 
+  uninstalling the driver. On macOS, refer to this FTDI macOs
   `guide <http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf>`_.
 
 *Slow initialisation on OS X El Capitan*
