@@ -169,7 +169,7 @@ Troubleshooting
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
 
- If you run libusb <= v1.20.0, be sure to read the
+ If you run libusb <= v1.0.20, be sure to read the
  `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
  with OS X 10.11+.
 
@@ -204,7 +204,7 @@ parameters (among others). These methods are:
 The second way to open a connection is to specify connection details using a
 URL. The URL scheme is defined as:
 
-``protocol://vendor:product[:index|:serial]/interface``
+``protocol://[vendor[:product[:index|:serial]]]/interface``
 
 Where:
 
@@ -216,6 +216,11 @@ Where:
 * product: the USB product ID of the device
 
   * ex: ``232h`` or ``0x6014``
+  * Supported product IDs: ``0x6001``, ``0x6010``, ``0x6011``, ``0x6014``, ``0x6015``
+  * Supported product aliases:
+
+    * ``232``, ``232r``, ``232h``, ``2232d``, ``2232h``, ``4232h``, ``230x``
+    * ``ft`` prefix for all aliases is also accepted, as for example ``ft232h``
 
 * serial: the serial number as a string
 * index: an integer (not particularly useful, as it depends on the enumeration

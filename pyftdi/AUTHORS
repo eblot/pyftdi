@@ -28,3 +28,5 @@ Contributors:
   * Fix SPI implementation so that any SPI /CS can be addressed
  * Darren Garnier
   * Fix open() arguments (issue #40)
+ * Michael Leonard
+  * Document FTDI URL schemes
