@@ -126,7 +126,6 @@ Installation
     pip3 install pyserial
     pip3 install pyftdi_
 
-
 Troubleshooting
 ---------------
 
@@ -188,7 +187,56 @@ Examples
 ~~~~~~~~
 
 See pyftdi_/tests directory for GPIO examples.
+
 See pyspiflash_ module for SPI examples.
+
+URL Scheme
+----------
+
+There are generally two ways to open a connection to an Ftdi() object. The
+first method is to use the ``open()`` methods which accept VID, PID, and serial
+parameters (among others). These methods are:
+
+* ``open()``
+* ``open_mpsse()``
+* ``open_bitbang()``
+
+The second way to open a connection is to specify connection details using a
+URL. The URL scheme is defined as:
+
+``protocol://vendor:product[:index|:serial]/interface``
+
+Where:
+
+* protocol: always ``ftdi``
+* vendor: the USB vendor ID of the manufacturer
+
+  * ex: ``ftdi`` or ``0x403``
+
+* product: the USB product ID of the device
+
+  * ex: ``232h`` or ``0x6014``
+
+* serial: the serial number as a string
+* index: an integer (not particularly useful, as it depends on the enumeration
+  order on the USB buses)
+* interface: the interface of FTDI device, starting from 1
+
+  * ex: 1 for 232\*, 1 or 2 for 2232\*, 1-4 for 4232\* devices
+
+All parameters but the interface are optional, PyFtdi tries to find the best
+match. Therefore, if you have a single FTDI device connected to your system,
+``ftdi:///1`` should be enough.
+
+You can also ask PyFtdi to enumerate all the compatible devices with the
+special ``ftdi:///?`` syntax.
+
+URLs can be used with the same methods as above by appending ``_from_url`` to
+the method name such as:
+
+* ``open_from_url()``
+* ``open_mpsse_from_url()``
+* ``open_bitbang_from_url()``
 
 .. include:: serialext/README.rst
 
