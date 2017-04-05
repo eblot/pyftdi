@@ -173,25 +173,8 @@ Troubleshooting
  `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
  with OS X 10.11+.
 
-Development
-~~~~~~~~~~~
-
-PyFtdi_ is developed on macOS platforms (64-bit kernel), and is validated on a
-regular basis on Linux hosts.
-
-As it contains no native code, it should work on any PyUSB_ and libusb_
-supported platforms. However, Ms Windows is a seamless source of issues and is
-not supported. Your mileage may vary.
-
-Examples
-~~~~~~~~
-
-See pyftdi_/tests directory for GPIO examples.
-
-See pyspiflash_ module for SPI examples.
-
 URL Scheme
-----------
+~~~~~~~~~~
 
 There are generally two ways to open a connection to an Ftdi() object. The
 first method is to use the ``open()`` methods which accept VID, PID, and serial
@@ -227,7 +210,7 @@ Where:
   order on the USB buses)
 * interface: the interface of FTDI device, starting from 1
 
-  * ex: 1 for 232\*, 1 or 2 for 2232\*, 1-4 for 4232\* devices
+  * ex: ``1`` for 232\*, ``1`` or ``2`` for 2232\*, ``1``-``4`` for 4232\* devices
 
 All parameters but the interface are optional, PyFtdi tries to find the best
 match. Therefore, if you have a single FTDI device connected to your system,
@@ -242,6 +225,23 @@ the method name such as:
 * ``open_from_url()``
 * ``open_mpsse_from_url()``
 * ``open_bitbang_from_url()``
+
+Development
+~~~~~~~~~~~
+
+PyFtdi_ is developed on macOS platforms (64-bit kernel), and is validated on a
+regular basis on Linux hosts.
+
+As it contains no native code, it should work on any PyUSB_ and libusb_
+supported platforms. However, Ms Windows is a seamless source of issues and is
+not supported. Your mileage may vary.
+
+Examples
+~~~~~~~~
+
+See pyftdi_/tests directory for GPIO examples.
+
+See pyspiflash_ module for SPI examples.
 
 .. include:: serialext/README.rst
 
