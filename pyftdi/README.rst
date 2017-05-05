@@ -50,13 +50,16 @@ libraries:
 * libusb-1.0 (recommended), tested with 1.0.20
 * libusb-0.1 (deprecated), tested with 0.1.4
 * openusb (not tested with pyftdi)
-  
+
 Since PyFtdi 0.13, Six_ compatibility library is also required.
+
+Please note that versions >= 0.20 require Python_ 3.5, 0.1x series keep
+supporting Python_ 2.6+
 
 PyFtdi does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
 
-PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1 and 
+PyFTDI has been tested with PyUSB_ 1.0.0b1, 1.0.0b2 and 1.0.0rc1 and
 automatically deals with the API break introduced with PyUSB_ 1.0.0b2 (using
 the latest PyUSB_ version is nevertheless recommended)
 
@@ -95,8 +98,8 @@ Supported features
 
 * SPI master. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
   mode. It should be easy to extend the SPI master to deal with less common
-  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to 
-  use the FTDI SPI master with a pure-Python serial flash device driver for 
+  modes. PyFtdi can be used with pyspiflash_ module that demonstrates how to
+  use the FTDI SPI master with a pure-Python serial flash device driver for
   several common devices.
 
 * JTAG is under development and is not fully supported yet.
@@ -152,8 +155,8 @@ Troubleshooting
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
 
- If you run libusb <= v1.20.0, be sure to read the 
- `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_ 
+ If you run libusb <= v1.20.0, be sure to read the
+ `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
  with OS X 10.11+.
 
 .. _guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
