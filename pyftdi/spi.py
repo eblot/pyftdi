@@ -58,9 +58,10 @@ class SpiPort(object):
             out.extend(spi.exchange([], 2, False, True))
     """
 
-    def __init__(self, controller, cs_cmd):
+    def __init__(self, controller, cs_cmd, cs_hold=3):
         self._controller = controller
         self._cs_cmd = cs_cmd
+        self._cs_release = Array('B', cs_cmd * int(cs_hold))
         self._frequency = self._controller.frequency
 
     def exchange(self, out='', readlen=0, start=True, stop=True):
@@ -86,17 +87,20 @@ class SpiPort(object):
                     slave
         """
         return self._controller._exchange(self._frequency, out, readlen,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release)
 
     def read(self, readlen=0, start=True, stop=True):
         """Read out bytes from the slave"""
         return self._controller._exchange(self._frequency, [], readlen,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release)
 
     def write(self, out, start=True, stop=True):
         """Write bytes to the slave"""
         return self._controller._exchange(self._frequency, out, 0,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -115,17 +119,10 @@ class SpiPort(object):
 class SpiController(object):
     """SPI master.
 
-        :param silent_clock: should be set to avoid clocking out SCLK when all
-                             /CS signals are released. This clock beat is used
-                             to enforce a delay between /CS signal activation.
-
-                             When weird SPI devices are used, SCLK beating may
-                             cause trouble. In this case, silent_clock should
-                             be set but beware that SCLK line should be fitted
-                             with a pull-down resistor, as SCLK is high-Z
-                             during this short period of time.
-        :param cs_count: is the number of /CS lines (one per device to drive on
-                         the SPI bus)
+        :param silent_clock: deprecated.
+        :param int cs_count: is the number of /CS lines (one per device to
+            drive on the SPI bus)
+        :param boolean turbo: to be documented
     """
 
     SCK_BIT = 0x01
@@ -144,13 +141,6 @@ class SpiController(object):
                            SpiController.SCK_BIT)
         self._turbo = turbo
         self._cs_high = Array('B')
-        if self._turbo:
-            if silent_clock:
-                # Set SCLK as input to avoid emitting clock beats
-                self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-                                      self._direction & ~SpiController.SCK_BIT))
-            # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-            self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
         # Restore idle state
         self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
                               self._direction))
@@ -164,11 +154,9 @@ class SpiController(object):
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
-        self._frequency = \
-            self._ftdi.open_mpsse_from_url(
-                # /CS all high
-                url, direction=self._direction, initial=self._cs_bits,
-                **kwargs)
+        self._frequency = self._ftdi.open_mpsse_from_url(
+            # /CS all high
+            url, direction=self._direction, initial=self._cs_bits, **kwargs)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -176,8 +164,13 @@ class SpiController(object):
             self._ftdi.close()
             self._ftdi = None
 
-    def get_port(self, cs):
-        """Obtain a SPI port to drive a SPI device selected by cs"""
+    def get_port(self, cs, freq=None):
+        """Obtain a SPI port to drive a SPI device selected by cs
+
+           :param int cs: chip select slot, starting from 0
+           :param int freq: SPI bus frequency for this slave
+           :rtype: SpiPort
+        """
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if cs >= len(self._ports):
@@ -189,8 +182,11 @@ class SpiController(object):
             cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
                                  cs_state,
                                  self._direction))
-            self._ports[cs] = SpiPort(self, cs_cmd)
-            self._flush()
+        freq = min(freq or self.frequency_max, self.frequency_max)
+        hold = freq and (1+int(1E6/freq))
+        self._ports[cs] = SpiPort(self, cs_cmd, hold)
+        self._ports[cs].set_frequency(freq)
+        self._flush()
         return self._ports[cs]
 
     @property
@@ -203,7 +199,7 @@ class SpiController(object):
         """Returns the current SPI clock"""
         return self._frequency
 
-    def _exchange(self, frequency, out, readlen, cs_cmd=None, complete=True):
+    def _exchange(self, frequency, out, readlen, cs_cmd=None, cs_release=None):
         """Perform a half-duplex exchange or transaction with the SPI slave
 
            :param frequency: SPI bus clock
@@ -214,9 +210,9 @@ class SpiController(object):
            :param cs_cmd: the prolog sequence to activate the /CS line on the
                        SPI bus. May be empty to resume a previously started
                        transaction
-           :param complete: whether to send the epilog sequence to move the
-                       /CS line back to the idle state. May be force to False
-                       if another part of a transaction is expected
+           :param cs_release: the epilog sequence to send to move the
+                       /CS line back to the idle state. May be empty to if
+                       another part of a transaction is expected
            :return: an array of bytes containing the data read out from the
                     slave
         """
@@ -231,6 +227,11 @@ class SpiController(object):
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
         cmd = cs_cmd and Array('B', cs_cmd) or Array('B')
+        if cs_release:
+            epilog = Array('B', cs_release)
+            epilog.extend(self._cs_high)
+        else:
+            epilog = None
         writelen = len(out)
         if writelen:
             write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
@@ -243,26 +244,26 @@ class SpiController(object):
             cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
+                if epilog:
+                    cmd.extend(epilog)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
+                if epilog:
+                    self._ftdi.write_data(epilog)
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         elif writelen:
             if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
+                if epilog:
+                    cmd.extend(epilog)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
+                if epilog:
+                    self._ftdi.write_data(epilog)
             data = Array('B')
         return data
 
