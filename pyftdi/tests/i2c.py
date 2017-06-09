@@ -44,7 +44,7 @@ class I2cTest(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._i2c.configure('ftdi://ftdi:232h/1')
+        self._i2c.configure('ftdi://ftdi:2232h/1')
 
     def read_it(self):
         port = self._i2c.get_port(0x21)
@@ -59,7 +59,6 @@ class I2cTest(object):
     def close(self):
         """Close the I2C connection"""
         self._i2c.terminate()
-
 
 
 class I2cTestCase(unittest.TestCase):
