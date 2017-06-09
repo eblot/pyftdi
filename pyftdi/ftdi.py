@@ -41,7 +41,15 @@ __all__ = ['Ftdi', 'FtdiError']
 
 
 class FtdiError(IOError):
-    """Communication error with the FTDI device"""
+    """Base class error for all FTDI device"""
+
+
+class FtdiMpsseError(FtdiError):
+    """MPSSE mode not supported on FTDI device"""
+
+
+class FtdiFeatureError(FtdiError):
+    """Requested feature is not available on FTDI device"""
 
 
 class Ftdi(object):
@@ -139,18 +147,18 @@ class Ftdi(object):
     LOOPBACK_END = 0x85     # Disable loopback
     TCK_DIVISOR = 0x86
     # -H series only
-    ENABLE_CLK_3PHASE = 0x8c      # Enable 3-phase data clocking (I2C)
-    DISABLE_CLK_3PHASE = 0x8d     # Disable 3-phase data clocking
-    CLK_BITS_NO_DATA = 0x8e       # Allows JTAG clock to be output w/o data
-    CLK_BYTES_NO_DATA = 0x8f      # Allows JTAG clock to be output w/o data
-    CLK_WAIT_ON_HIGH = 0x94       # Clock until GPIOL1 is high
-    CLK_WAIT_ON_LOW = 0x95        # Clock until GPIOL1 is low
-    ENABLE_CLK_ADAPTIVE = 0x96    # Enable JTAG adaptive clock for ARM
-    DISABLE_CLK_ADAPTIVE = 0x97   # Disable JTAG adaptive clock
-    CLK_COUNT_WAIT_ON_HIGH = 0x9c # Clock byte cycles until GPIOL1 is high
-    CLK_COUNT_WAIT_ON_LOW = 0x9d  # Clock byte cycles until GPIOL1 is low
+    ENABLE_CLK_3PHASE = 0x8c       # Enable 3-phase data clocking (I2C)
+    DISABLE_CLK_3PHASE = 0x8d      # Disable 3-phase data clocking
+    CLK_BITS_NO_DATA = 0x8e        # Allows JTAG clock to be output w/o data
+    CLK_BYTES_NO_DATA = 0x8f       # Allows JTAG clock to be output w/o data
+    CLK_WAIT_ON_HIGH = 0x94        # Clock until GPIOL1 is high
+    CLK_WAIT_ON_LOW = 0x95         # Clock until GPIOL1 is low
+    ENABLE_CLK_ADAPTIVE = 0x96     # Enable JTAG adaptive clock for ARM
+    DISABLE_CLK_ADAPTIVE = 0x97    # Disable JTAG adaptive clock
+    CLK_COUNT_WAIT_ON_HIGH = 0x9c  # Clock byte cycles until GPIOL1 is high
+    CLK_COUNT_WAIT_ON_LOW = 0x9d   # Clock byte cycles until GPIOL1 is low
     # FT232H only
-    DRIVE_ZERO = 0x9e # Drive-zero mode
+    DRIVE_ZERO = 0x9e       # Drive-zero mode
 
     BITMODE_RESET = 0x00    # switch off bitbang mode
     BITMODE_BITBANG = 0x01  # classical asynchronous bitbang mode
@@ -361,7 +369,7 @@ class Ftdi(object):
         self.open(vendor, product, index, serial, interface)
         if not self.has_mpsse:
             self.close()
-            raise FtdiError('This device does not support MPSSE')
+            raise FtdiMpsseError('This device does not support MPSSE')
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -498,9 +506,9 @@ class Ftdi(object):
                              '(wanted %d, achievable %d)' %
                              (delta, baudrate, actual))
         try:
-            if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
-                                          Ftdi.SIO_SET_BAUDRATE, value,
-                                          index, '', self.usb_write_timeout):
+            if self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index, Array('B'),
+                    self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
         except usb.core.USBError as e:
@@ -612,9 +620,9 @@ class Ftdi(object):
                 '': Ftdi.SIO_DISABLE_FLOW_CTRL}
         value = ctrl[flowctrl] | self.index
         try:
-            if self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
-                                          Ftdi.SIO_SET_FLOW_CTRL, 0,
-                                          value, '', self.usb_write_timeout):
+            if self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, Array('B'),
+                    self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
@@ -679,11 +687,11 @@ class Ftdi(object):
                     1.5: Ftdi.STOP_BIT_15,
                     2: Ftdi.STOP_BIT_2}
         if parity not in parities:
-            raise FtdiError("Unsupported parity")
+            raise FtdiFeatureError("Unsupported parity")
         if bits not in bytelength:
-            raise FtdiError("Unsupported byte length")
+            raise FtdiFeatureError("Unsupported byte length")
         if stopbit not in stopbits:
-            raise FtdiError("Unsupported stop bits")
+            raise FtdiFeatureError("Unsupported stop bits")
         value = bits & 0x0F
         try:
             value |= {Ftdi.PARITY_NONE: 0x00 << 8,
@@ -704,28 +712,30 @@ class Ftdi(object):
 
     def enable_adaptive_clock(self, enable=True):
         if not self.is_mpsse:
-            raise FtdiError('Setting adaptive clock mode is only available '
-                            'from MPSSE mode')
+            raise FtdiMpsseError('Setting adaptive clock mode is only '
+                                 'available from MPSSE mode')
         self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_ADAPTIVE or
-                        Ftdi.DISABLE_CLK_ADAPTIVE]))
+                                    Ftdi.DISABLE_CLK_ADAPTIVE]))
 
     def enable_3phase_clock(self, enable=True):
         if not self.is_mpsse:
-            raise FtdiError('Setting adaptive clock mode is only available '
-                            'from MPSSE mode')
+            raise FtdiMpsseError('Setting adaptive clock mode is only '
+                                 'available from MPSSE mode')
         if not self.is_H_series:
-            raise FtdiError('This device does not support 3-phase clock')
+            raise FtdiFeatureError('This device does not support 3-phase '
+                                   'clock')
         self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_3PHASE or
-                        Ftdi.DISABLE_CLK_3PHASE]))
+                                    Ftdi.DISABLE_CLK_3PHASE]))
 
     def enable_drivezero_mode(self, lines):
         if not self.is_mpsse:
-            raise FtdiError('Setting adaptive clock mode is only available '
-                            'from MPSSE mode')
+            raise FtdiMpsseError('Setting adaptive clock mode is only '
+                                 'available from MPSSE mode')
         if not self.has_drivezero:
-            raise FtdiError('This device does not support drive-zero mode')
-        self.write_data(Array('B',
-                        [Ftdi.DRIVE_ZERO, lines & 0xff, (lines >> 8) & 0xff]))
+            raise FtdiFeatureError('This device does not support drive-zero '
+                                   'mode')
+        self.write_data(Array('B', [Ftdi.DRIVE_ZERO, lines & 0xff,
+                                    (lines >> 8) & 0xff]))
 
     def write_data(self, data):
         """Write data in chunks to the chip"""
@@ -904,21 +914,21 @@ class Ftdi(object):
         self.readoffset = 0
         self.readbuffer = Array('B')
 
-    def _ctrl_transfer_out(self, reqtype, value, data=''):
+    def _ctrl_transfer_out(self, reqtype, value, data=b''):
         """Send a control message to the device"""
         try:
-            return self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT, reqtype, value,
-                                              self.index, data,
-                                              self.usb_write_timeout)
+            return self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_OUT, reqtype, value, self.index,
+                    Array('B').frombytes(data), self.usb_write_timeout)
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def _ctrl_transfer_in(self, reqtype, length):
         """Request for a control message from the device"""
         try:
-            return self.usb_dev.ctrl_transfer(Ftdi.REQ_IN, reqtype, 0,
-                                              self.index, length,
-                                              self.usb_read_timeout)
+            return self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_IN, reqtype, 0, self.index, length,
+                self.usb_read_timeout)
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
@@ -1039,7 +1049,7 @@ class Ftdi(object):
     def _set_frequency(self, frequency):
         """Convert a frequency value into a TCK divisor setting"""
         if frequency > self.frequency_max:
-            raise FtdiError("Unsupported frequency: %f" % frequency)
+            raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5
             divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
@@ -1051,7 +1061,7 @@ class Ftdi(object):
             divisor = int(Ftdi.BUS_CLOCK_HIGH/frequency)-1
             actual_freq = Ftdi.BUS_CLOCK_HIGH/(divisor+1)
         else:
-            raise FtdiError("Unsupported frequency: %f" % frequency)
+            raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
         if self.is_H_series:
             cmd = Array('B', (divcode,))
