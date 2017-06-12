@@ -165,7 +165,7 @@ API Overview
 UART
 ----
 
-..code-block:: python
+.. code-block:: python
 
     # Enable pyserial extensions
     import pyftdi.serialext
@@ -185,7 +185,7 @@ SPI
 
 Example: communication with a SPI data flash
 
-..code-block:: python
+.. code-block:: python
 
     # Instanciate a SPI controller
     spi = SpiController()
@@ -205,7 +205,7 @@ I2C
 
 Example: communication with an I2C GPIO expander
 
-..code-block:: python
+.. code-block:: python
 
     # Instanciate an I2C controller
     i2c = I2cController()
