@@ -2,6 +2,7 @@
  PyFtdi
 ========
 
+
 Overview
 ~~~~~~~~
 
@@ -10,16 +11,22 @@ implemented in pure Python language.
 
 Modern FTDI_ devices include:
 
-* FT232R (single port, clock up to 6 MHz, 3Mbps)
-* FT2232D (dual port, clock up to 6 MHz)
-* FT232H (single port, clock up to 30 MHz)
-* FT2232H (dual port, clock up to 30 MHz)
-* FT4232H (quad port, clock up to 30 MHz)
-* FT230X (single port, clock up to 48 Mhz, 3Mbps)
+* UART-only bridges
+
+  * FT232R (single port, clock up to 6 MHz, 3Mbps)
+  * FT230X (single port, clock up to 48 Mhz, 3Mbps)
+
+* UART and multi-serial protocols (SPI, I2C, JTAG) bridges
+
+  * FT2232D (dual port, clock up to 6 MHz)
+  * FT232H (single port, clock up to 30 MHz)
+  * FT2232H (dual port, clock up to 30 MHz)
+  * FT4232H (quad port, clock up to 30 MHz)
 
 Other FTDI_ devices could also be supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi_, and therefore have
 not been tested with PyFtdi_.
+
 
 Primary goals
 ~~~~~~~~~~~~~
@@ -35,6 +42,7 @@ PyFtdi_ currently supports the following features:
 
 PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI_ devices.
+
 
 Requirements
 ~~~~~~~~~~~~
@@ -54,6 +62,7 @@ Python modules along with PyUSB_
 PyFTDI_ has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
 supported.
 
+
 Note about previous releases
 ----------------------------
 
@@ -71,6 +80,7 @@ If you have no choice but using previous releases of software, such as
 please checkout the latest PyFTDI_ 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.
 
+
 Status
 ~~~~~~
 
@@ -81,10 +91,14 @@ that has been successfully used for over several years - including serial
 @ 3Mbps, spi and jtag protocols. PyFtdi_ is developed as an open-source
 solution.
 
+
 Supported features
 ------------------
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
+
+   * However, it is not yet possible to use both GPIO and MPSSE mode on the
+     same port at once
 
 * Several FTDI adapters can be accessed simultaneously from the same Python
   runtime instance.
@@ -96,15 +110,33 @@ Supported features
   selecting the serial backend (pyserial_, PyFtdi_), based on the serial port
   name.
 
-* SPI master. For now, SPI Mode 0 (CPOL=0, CPHA=0) is the only supported
-  mode. It should be easy to extend the SPI master to deal with less common
-  modes. PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
+* SPI master.
+
+  Supported devices:
+
+  =====  ===== ====== ====================================================
+  Mode   CPol   CPha  Status
+  =====  ===== ====== ====================================================
+    0      0      0   Supported on all MPSEE devices
+    1      0      1   Supported on -H series (FT232H/FT2232H/FT4232H)
+    2      1      0   Not supported (FTDI HW limitation)
+    3      1      1   Supported on -H series (FT232H/FT2232H/FT4232H)
+  =====  ===== ====== ====================================================
+
+  PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
   use the FTDI SPI master with a pure-Python serial flash device driver for
   several common devices.
 
+  Only half-duplex communication is supported for now.
+
 * I2C master. For now, only 7-bit address are supported.
 
+  Supported devices:
+
+  * For now, only FT232H is supported (support for other -H series is planned)
+
 * JTAG is under development and is not fully supported yet.
+
 
 Installation
 ~~~~~~~~~~~~
@@ -126,52 +158,73 @@ Installation
     pip3 install pyserial
     pip3 install pyftdi_
 
-Troubleshooting
----------------
 
-*"Error: No backend available"*
-  libusb native library cannot be loaded. Try helping the dynamic loader:
+API Overview
+~~~~~~~~~~~~
 
-  * On Linux: ``export LD_LIBRARY_PATH=<path>``
+UART
+----
 
-    where ``<path>`` is the directory containing the ``libusb-1.*.so``
-    library file
+..code-block:: python
 
-  * On macOS: ``export DYLD_LIBRARY_PATH=.../lib``
+    # Enable pyserial extensions
+    import pyftdi.serialext
 
-    where ``<path>`` is the directory containing the ``libusb-1.*.dylib``
-    library file
+    # Open a serial port on the second FTDI device port @ 3Mbaud
+    port = pyftdi.serialext.serial_for_url('ftdi://ftdi:2232h/2',
+                                           baudrate=3000000)
 
-*"Error: Access denied (insufficient permissions)"*
-  The system may already be using the device.
+    # Send bytes
+    port.write(b'Hello World')
 
-  * On OS X 10.9+: starting with Mavericks, OS X ships with a native FTDI
-    driver that preempts access to the FTDI device.
+    # Receive bytes
+    data = port.read(1024)
 
-    The driver can be unloaded this way:
+SPI
+---
 
-      ``sudo kextunload [-v] -bundle com.apple.driver.AppleUSBFTDI``
+Example: communication with a SPI data flash
 
-    You may want to use an alias or a tiny script such as
-    ``pyftdi/tools/uphy.sh``
+..code-block:: python
 
-    Please note that the system automatically reloads the driver, so it may be
-    useful to move the kernel extension so that the system never loads it.
+    # Instanciate a SPI controller
+    spi = SpiController()
 
-  * This error message may also be triggered whenever the communication port is
-    already in use.
+    # Configure the first port of the FTDI device as a SPI master
+    spi.configure('ftdi://ftdi:2232h/1')
 
-*"serial.serialutil.SerialException: Unable to open USB port"*
-  May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On macOS, refer to this FTDI macOs
-  `guide <http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf>`_.
+    # Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
+    slave = spi.get_port(cs=0, freq=12E6, mode=0)
 
-*Slow initialisation on OS X El Capitan*
- It may take several seconds to open or enumerate FTDI devices.
+    # Request the JEDEC ID from the SPI slave
+    jedec_id = slave.exchange([0x9f], 3).tobytes()
 
- If you run libusb <= v1.0.20, be sure to read the
- `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
- with OS X 10.11+.
+
+I2C
+---
+
+Example: communication with an I2C GPIO expander
+
+..code-block:: python
+
+    # Instanciate an I2C controller
+    i2c = I2cController()
+
+    # Configure the first port of the FTDI device as an I2C master
+    i2c.configure('ftdi://ftdi:2232h/1')
+
+    # Get a port to an I2C slave device
+    slave = i2c.get_port(0x21)
+
+    # Send one byte, then receive one byte
+    slave.exchange([0x04], 1)
+
+    # Write a register to the I2C slave
+    slave.write_to(0x06, b'\x00')
+
+    # Read a register from the I2C slave
+    slave.read_from(0x00, 1)
+
 
 URL Scheme
 ~~~~~~~~~~
@@ -226,6 +279,55 @@ the method name such as:
 * ``open_mpsse_from_url()``
 * ``open_bitbang_from_url()``
 
+
+Troubleshooting
+---------------
+
+*"Error: No backend available"*
+  libusb native library cannot be loaded. Try helping the dynamic loader:
+
+  * On Linux: ``export LD_LIBRARY_PATH=<path>``
+
+    where ``<path>`` is the directory containing the ``libusb-1.*.so``
+    library file
+
+  * On macOS: ``export DYLD_LIBRARY_PATH=.../lib``
+
+    where ``<path>`` is the directory containing the ``libusb-1.*.dylib``
+    library file
+
+*"Error: Access denied (insufficient permissions)"*
+  The system may already be using the device.
+
+  * On OS X 10.9+: starting with Mavericks, OS X ships with a native FTDI
+    driver that preempts access to the FTDI device.
+
+    The driver can be unloaded this way:
+
+      ``sudo kextunload [-v] -bundle com.apple.driver.AppleUSBFTDI``
+
+    You may want to use an alias or a tiny script such as
+    ``pyftdi/tools/uphy.sh``
+
+    Please note that the system automatically reloads the driver, so it may be
+    useful to move the kernel extension so that the system never loads it.
+
+  * This error message may also be triggered whenever the communication port is
+    already in use.
+
+*"serial.serialutil.SerialException: Unable to open USB port"*
+  May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
+  uninstalling the driver. On macOS, refer to this FTDI macOs
+  `guide <http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf>`_.
+
+*Slow initialisation on OS X El Capitan*
+ It may take several seconds to open or enumerate FTDI devices.
+
+ If you run libusb <= v1.0.20, be sure to read the
+ `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
+ with OS X 10.11+.
+
+
 Development
 ~~~~~~~~~~~
 
@@ -235,6 +337,7 @@ regular basis on Linux hosts.
 As it contains no native code, it should work on any PyUSB_ and libusb_
 supported platforms. However, Ms Windows is a seamless source of issues and is
 not supported. Your mileage may vary.
+
 
 Examples
 ~~~~~~~~
