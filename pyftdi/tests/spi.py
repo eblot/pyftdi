@@ -36,7 +36,8 @@ from sys import modules, stdout
 
 
 class SpiTest(object):
-    """Simple test for a TCA9555 device on I2C bus @ address 0x21
+    """Basic test for a MX25L1606E data flash device selected as CS0,
+       and an ADXL345 device selected as CS1
     """
 
     def __init__(self):
@@ -47,9 +48,18 @@ class SpiTest(object):
         self._spi.configure('ftdi://ftdi:2232h/1')
 
     def read_jedec_id(self):
-        port = self._spi.get_port(0, freq=6E6, mode=0)
+        port = self._spi.get_port(0, freq=3E6, mode=3)
         jedec_id = port.exchange([0x9f], 3).tobytes()
-        print('JEDEC ID:', hexlify(jedec_id).decode())
+        hex_jedec_id = hexlify(jedec_id).decode()
+        print('JEDEC ID:', hex_jedec_id)
+        return hex_jedec_id
+
+    def read_device_id(self):
+        port = self._spi.get_port(1, freq=6E6, mode=3)
+        device_id = port.exchange([0x00], 1).tobytes()
+        hex_device_id = hexlify(device_id).decode()
+        print('DEVICE ID:', hex_device_id)
+        return hex_device_id
 
     def close(self):
         """Close the I2C connection"""
@@ -63,16 +73,18 @@ class SpiTestCase(unittest.TestCase):
         """Simple test to demonstrate SPI.
 
            Please ensure that the HW you connect to the FTDI port A does match
-           the encoded configuration. At least, b7..b5 can be driven high or
-           low, so check your HW setup before running this test as it might
-           damage your HW.
+           the encoded configuration. GPIOs can be driven high or low, so check
+           your HW setup before running this test as it might damage your HW.
 
            Do NOT run this test if you use FTDI port A as an UART or I2C
            bridge -or any unsupported setup!! You've been warned.
         """
         spi = SpiTest()
         spi.open()
-        spi.read_jedec_id()
+        jedec_id = spi.read_jedec_id()
+        self.assertEqual(jedec_id, 'c22016')
+        device_id = spi.read_device_id()
+        self.assertEqual(device_id, 'e5')
         spi.close()
 
 

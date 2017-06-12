@@ -97,8 +97,8 @@ Supported features
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
 
-   * However, it is not yet possible to use both GPIO and MPSSE mode on the
-     same port at once
+  * However, it is not yet possible to use both GPIO and MPSSE mode on the
+    same port at once
 
 * Several FTDI adapters can be accessed simultaneously from the same Python
   runtime instance.

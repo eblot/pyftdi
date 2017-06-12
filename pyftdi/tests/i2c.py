@@ -68,9 +68,8 @@ class I2cTestCase(unittest.TestCase):
         """Simple test to demonstrate I2C.
 
            Please ensure that the HW you connect to the FTDI port A does match
-           the encoded configuration. At least, b7..b5 can be driven high or
-           low, so check your HW setup before running this test as it might
-           damage your HW.
+           the encoded configuration. GPIOs can be driven high or low, so check
+           your HW setup before running this test as it might damage your HW.
 
            Do NOT run this test if you use FTDI port A as an UART or SPI
            bridge -or any unsupported setup!! You've been warned.
