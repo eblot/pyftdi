@@ -27,63 +27,70 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+from binascii import hexlify
 from doctest import testmod
 from logging import StreamHandler, DEBUG
 from pyftdi import FtdiLogger
-from pyftdi.i2c import I2cController, I2cIOError
+from pyftdi.spi import SpiController
 from sys import modules, stdout
-from time import sleep
 
 
-class I2cTest(object):
-    """Simple test for a TCA9555 device on I2C bus @ address 0x21
+class SpiTest(object):
+    """Basic test for a MX25L1606E data flash device selected as CS0,
+       and an ADXL345 device selected as CS1
     """
 
     def __init__(self):
-        self._i2c = I2cController()
+        self._spi = SpiController()
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._i2c.configure('ftdi://ftdi:2232h/1')
+        self._spi.configure('ftdi://ftdi:2232h/1')
 
-    def read_it(self):
-        port = self._i2c.get_port(0x21)
-        port.exchange([0x04], 1)
+    def read_jedec_id(self):
+        port = self._spi.get_port(0, freq=3E6, mode=3)
+        jedec_id = port.exchange([0x9f], 3).tobytes()
+        hex_jedec_id = hexlify(jedec_id).decode()
+        print('JEDEC ID:', hex_jedec_id)
+        return hex_jedec_id
 
-    def write_it(self):
-        port = self._i2c.get_port(0x21)
-        port.write_to(0x06, b'\x00')
-        port.write_to(0x02, b'\x55')
-        port.read_from(0x00, 1)
+    def read_device_id(self):
+        port = self._spi.get_port(1, freq=6E6, mode=3)
+        device_id = port.exchange([0x00], 1).tobytes()
+        hex_device_id = hexlify(device_id).decode()
+        print('DEVICE ID:', hex_device_id)
+        return hex_device_id
 
     def close(self):
         """Close the I2C connection"""
-        self._i2c.terminate()
+        self._spi.terminate()
 
 
-class I2cTestCase(unittest.TestCase):
-    """FTDI I2C driver test case"""
+class SpiTestCase(unittest.TestCase):
+    """FTDI SPI driver test case"""
 
-    def test_i2c(self):
-        """Simple test to demonstrate I2C.
+    def test_spi(self):
+        """Simple test to demonstrate SPI.
 
            Please ensure that the HW you connect to the FTDI port A does match
            the encoded configuration. GPIOs can be driven high or low, so check
            your HW setup before running this test as it might damage your HW.
 
-           Do NOT run this test if you use FTDI port A as an UART or SPI
+           Do NOT run this test if you use FTDI port A as an UART or I2C
            bridge -or any unsupported setup!! You've been warned.
         """
-        i2c = I2cTest()
-        i2c.open()
-        i2c.read_it()
-        i2c.write_it()
-        i2c.close()
+        spi = SpiTest()
+        spi.open()
+        jedec_id = spi.read_jedec_id()
+        self.assertEqual(jedec_id, 'c22016')
+        device_id = spi.read_device_id()
+        self.assertEqual(device_id, 'e5')
+        spi.close()
 
 
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(I2cTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
     return suite_
 
 

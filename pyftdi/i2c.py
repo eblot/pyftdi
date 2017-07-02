@@ -26,7 +26,7 @@
 from array import array as Array
 from binascii import hexlify
 from logging import getLogger
-from pyftdi.ftdi import Ftdi
+from pyftdi.ftdi import Ftdi, FtdiFeatureError
 from struct import calcsize as scalc, pack as spack
 
 
@@ -58,7 +58,7 @@ class I2cPort(object):
             # send 2 bytes, then receive 2 bytes
             out = i2c.exchange([0x12, 0x34], 2)
     """
-    FORMATS = {scalc(fmt):fmt for fmt in 'BHI'}
+    FORMATS = {scalc(fmt): fmt for fmt in 'BHI'}
 
     def __init__(self, controller, address):
         self._controller = controller
@@ -74,7 +74,7 @@ class I2cPort(object):
             :param width: width, in bytes, of the register
         """
         try:
-            self._format =self.FORMATS[width]
+            self._format = self.FORMATS[width]
         except KeyError:
             raise I2cIOError('Unsupported integer width')
         self._endian = bigendian and '>' or '<'
@@ -82,7 +82,7 @@ class I2cPort(object):
     def shift_address(self, offset):
         """Tweak the I2C slave address, as required with some devices
         """
-        I2cController.validate_address(address+offset)
+        I2cController.validate_address(self._address+offset)
         self._shift = offset
 
     def read(self, readlen=0):
@@ -186,11 +186,13 @@ class I2cController(object):
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
         self._idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
         data_low = (Ftdi.SET_BITS_LOW,
-            self.IDLE & ~self.SDA_O_BIT, self._direction)
+                    self.IDLE & ~self.SDA_O_BIT, self._direction)
         clock_low_data_low = (Ftdi.SET_BITS_LOW,
-            self.IDLE & ~(self.SDA_O_BIT|self.SCL_BIT), self._direction)
+                              self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
+                              self._direction)
         self._clock_low_data_high = (Ftdi.SET_BITS_LOW,
-            self.IDLE & ~self.SCL_BIT, self._direction)
+                                     self.IDLE & ~self.SCL_BIT,
+                                     self._direction)
         self._read_bit = (Ftdi.READ_BITS_PVE_MSB, 0)
         self._read_byte = (Ftdi.READ_BYTES_PVE_MSB, 0, 0)
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
@@ -204,8 +206,14 @@ class I2cController(object):
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
 
-            :param url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
-            :param frequency: frequency of the I2C bus.
+           :param url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+           :param kwargs: options to configure the I2C bus
+
+           Accepted options:
+
+           * ``frequency`` the I2C bus frequency in Hz
+           * ``notristate`` drives the I2C SDA line actively high with FTDI
+             devices that do not support drive-zero only mode.
         """
         for k in ('direction', 'initial'):
             if k in kwargs:
@@ -223,9 +231,13 @@ class I2cController(object):
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(False)
         self._ftdi.enable_3phase_clock(True)
-        self._ftdi.enable_drivezero_mode(self.SCL_BIT|
-                                         self.SDA_O_BIT|
-                                         self.SDA_I_BIT)
+        try:
+            self._ftdi.enable_drivezero_mode(self.SCL_BIT |
+                                             self.SDA_O_BIT |
+                                             self.SDA_I_BIT)
+        except FtdiFeatureError:
+            if not bool(kwargs.get('notristate', True)):
+                raise
 
     def terminate(self):
         """Close the FTDI interface.
@@ -468,4 +480,3 @@ class I2cController(object):
                 msg = 'NACK from slave'
                 self.log.warning(msg)
                 raise I2cNackError(msg)
-

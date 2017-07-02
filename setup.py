@@ -95,4 +95,5 @@ if __name__ == '__main__':
                       'pyftdi.serialext': ['*.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
+        python_requires='>=3.5',
     )

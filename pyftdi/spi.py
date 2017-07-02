@@ -58,9 +58,23 @@ class SpiPort(object):
             out.extend(spi.exchange([], 2, False, True))
     """
 
-    def __init__(self, controller, cs_cmd):
+    def __init__(self, controller, cs, cs_hold=3, spi_mode=0):
         self._controller = controller
+        self._cpol = spi_mode & 0x1
+        self._cpha = spi_mode & 0x2
+        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
+                            SpiController.DO_BIT)
+        cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
+                             (int(not self._cpol) and SpiController.SCK_BIT) |
+                             SpiController.DO_BIT)
+        cs_cmd = Array('B',
+                       (Ftdi.SET_BITS_LOW, cs_clock, controller.direction,
+                        Ftdi.SET_BITS_LOW, cs_select, controller.direction))
         self._cs_cmd = cs_cmd
+        self._cs_release = \
+            Array('B', [Ftdi.SET_BITS_LOW, cs_select, controller.direction] +
+                       [Ftdi.SET_BITS_LOW, cs_clock, controller.direction] *
+                  int(cs_hold))
         self._frequency = self._controller.frequency
 
     def exchange(self, out='', readlen=0, start=True, stop=True):
@@ -86,17 +100,23 @@ class SpiPort(object):
                     slave
         """
         return self._controller._exchange(self._frequency, out, readlen,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release,
+                                          self._cpol, self._cpha)
 
     def read(self, readlen=0, start=True, stop=True):
         """Read out bytes from the slave"""
         return self._controller._exchange(self._frequency, [], readlen,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release,
+                                          self._cpol, self._cpha)
 
     def write(self, out, start=True, stop=True):
         """Write bytes to the slave"""
         return self._controller._exchange(self._frequency, out, 0,
-                                          start and self._cs_cmd, stop)
+                                          start and self._cs_cmd,
+                                          stop and self._cs_release,
+                                          self._cpol, self._cpha)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -115,17 +135,10 @@ class SpiPort(object):
 class SpiController(object):
     """SPI master.
 
-        :param silent_clock: should be set to avoid clocking out SCLK when all
-                             /CS signals are released. This clock beat is used
-                             to enforce a delay between /CS signal activation.
-
-                             When weird SPI devices are used, SCLK beating may
-                             cause trouble. In this case, silent_clock should
-                             be set but beware that SCLK line should be fitted
-                             with a pull-down resistor, as SCLK is high-Z
-                             during this short period of time.
-        :param cs_count: is the number of /CS lines (one per device to drive on
-                         the SPI bus)
+        :param silent_clock: deprecated.
+        :param int cs_count: is the number of /CS lines (one per device to
+            drive on the SPI bus)
+        :param boolean turbo: to be documented
     """
 
     SCK_BIT = 0x01
@@ -144,13 +157,6 @@ class SpiController(object):
                            SpiController.SCK_BIT)
         self._turbo = turbo
         self._cs_high = Array('B')
-        if self._turbo:
-            if silent_clock:
-                # Set SCLK as input to avoid emitting clock beats
-                self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-                                      self._direction & ~SpiController.SCK_BIT))
-            # /CS to SCLK delay, use 8 clock cycles as a HW tempo
-            self._cs_high.extend((Ftdi.WRITE_BITS_TMS_NVE, 8-1, 0xff))
         # Restore idle state
         self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
                               self._direction))
@@ -158,17 +164,21 @@ class SpiController(object):
             self._cs_high.append(Ftdi.SEND_IMMEDIATE)
         self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
+        self._clock_phase = False
+
+    @property
+    def direction(self):
+        return self._direction
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master"""
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
-        self._frequency = \
-            self._ftdi.open_mpsse_from_url(
-                # /CS all high
-                url, direction=self._direction, initial=self._cs_bits,
-                **kwargs)
+        self._frequency = self._ftdi.open_mpsse_from_url(
+            # /CS all high
+            url, direction=self._direction, initial=self._cs_bits, **kwargs)
+        self._ftdi.enable_adaptive_clock(False)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -176,20 +186,31 @@ class SpiController(object):
             self._ftdi.close()
             self._ftdi = None
 
-    def get_port(self, cs):
-        """Obtain a SPI port to drive a SPI device selected by cs"""
+    def get_port(self, cs, freq=None, mode=0):
+        """Obtain a SPI port to drive a SPI device selected by cs
+
+           :param int cs: chip select slot, starting from 0
+           :param int freq: SPI bus frequency for this slave
+           :param int mode: SPI mode [0,1,3]
+           :rtype: SpiPort
+        """
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if cs >= len(self._ports):
             raise SpiIOError("No such SPI port")
+        if not (0 <= mode <= 3):
+            raise SpiIOError("Invalid SPI mode")
+        if (mode & 0x2) and not self._ftdi.is_H_series:
+            raise SpiIOError("SPI with CPHA high is not supported by "
+                             "this FTDI device")
+        if mode == 2:
+            raise SpiIOError("SPI mode 2 has no known workaround with FTDI "
+                             "devices")
         if not self._ports[cs]:
-            cs_state = 0xFF & ~((SpiController.CS_BIT << cs) |
-                                SpiController.SCK_BIT |
-                                SpiController.DO_BIT)
-            cs_cmd = Array('B', (Ftdi.SET_BITS_LOW,
-                                 cs_state,
-                                 self._direction))
-            self._ports[cs] = SpiPort(self, cs_cmd)
+            freq = min(freq or self.frequency_max, self.frequency_max)
+            hold = freq and (1+int(1E6/freq))
+            self._ports[cs] = SpiPort(self, cs, cs_hold=hold, spi_mode=mode)
+            self._ports[cs].set_frequency(freq)
             self._flush()
         return self._ports[cs]
 
@@ -203,7 +224,8 @@ class SpiController(object):
         """Returns the current SPI clock"""
         return self._frequency
 
-    def _exchange(self, frequency, out, readlen, cs_cmd=None, complete=True):
+    def _exchange(self, frequency, out, readlen, cs_cmd=None, cs_release=None,
+                  cpol=False, cpha=False):
         """Perform a half-duplex exchange or transaction with the SPI slave
 
            :param frequency: SPI bus clock
@@ -214,9 +236,9 @@ class SpiController(object):
            :param cs_cmd: the prolog sequence to activate the /CS line on the
                        SPI bus. May be empty to resume a previously started
                        transaction
-           :param complete: whether to send the epilog sequence to move the
-                       /CS line back to the idle state. May be force to False
-                       if another part of a transaction is expected
+           :param cs_release: the epilog sequence to send to move the
+                       /CS line back to the idle state. May be empty to if
+                       another part of a transaction is expected
            :return: an array of bytes containing the data read out from the
                     slave
         """
@@ -226,43 +248,60 @@ class SpiController(object):
             raise SpiIOError("Output payload is too large")
         if readlen > SpiController.PAYLOAD_MAX_LENGTH:
             raise SpiIOError("Input payload is too large")
+        if cpha:
+            # to enable CPHA, we need to use a workaround with FTDI device,
+            # that is enable 3-phase clocking (which is usually dedicated to
+            # I2C support). This mode use use 3 clock period instead of 2,
+            # which implies the FTDI frequency should be fixed to match the
+            # requested one.
+            frequency = (3*frequency)//2
         if self._frequency != frequency:
             self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
         cmd = cs_cmd and Array('B', cs_cmd) or Array('B')
+        if cs_release:
+            epilog = Array('B', cs_release)
+            epilog.extend(self._cs_high)
+        else:
+            epilog = None
         writelen = len(out)
+        if self._clock_phase != cpha:
+            self._ftdi.enable_3phase_clock(cpha)
+            self._clock_phase = cpha
         if writelen:
-            write_cmd = struct.pack('<BH', Ftdi.WRITE_BYTES_NVE_MSB,
-                                    writelen-1)
+            wcmd = (cpol ^ cpha) and \
+                Ftdi.WRITE_BYTES_PVE_MSB or Ftdi.WRITE_BYTES_NVE_MSB
+            write_cmd = struct.pack('<BH', wcmd, writelen-1)
             cmd.frombytes(write_cmd)
             cmd.extend(out)
         if readlen:
-            read_cmd = struct.pack('<BH', Ftdi.READ_BYTES_NVE_MSB,
-                                   readlen-1)
+            rcmd = (cpol ^ cpha) and \
+                Ftdi.READ_BYTES_PVE_MSB or Ftdi.READ_BYTES_NVE_MSB
+            read_cmd = struct.pack('<BH', rcmd, readlen-1)
             cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
+                if epilog:
+                    cmd.extend(epilog)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
+                if epilog:
+                    self._ftdi.write_data(epilog)
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
         elif writelen:
             if self._turbo:
-                if complete:
-                    cmd.extend(self._cs_high)
+                if epilog:
+                    cmd.extend(epilog)
                 self._ftdi.write_data(cmd)
             else:
                 self._ftdi.write_data(cmd)
-                if complete:
-                    self._ftdi.write_data(self._cs_high)
+                if epilog:
+                    self._ftdi.write_data(epilog)
             data = Array('B')
         return data
 
