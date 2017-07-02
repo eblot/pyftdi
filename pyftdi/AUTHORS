@@ -30,5 +30,5 @@ Contributors:
   * Fix open() arguments (issue #40)
  * Michael Leonard
   * Document FTDI URL schemes
- * nopeppermint (Stephan)
+ * nopeppermint (Stefan)
   * Clean up README.txt / fix links
