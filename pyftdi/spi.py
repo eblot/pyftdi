@@ -293,15 +293,16 @@ class SpiController(object):
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
-        elif writelen:
-            if self._turbo:
-                if epilog:
-                    cmd.extend(epilog)
-                self._ftdi.write_data(cmd)
-            else:
-                self._ftdi.write_data(cmd)
-                if epilog:
-                    self._ftdi.write_data(epilog)
+        else:
+            if writelen:
+                if self._turbo:
+                    if epilog:
+                        cmd.extend(epilog)
+                    self._ftdi.write_data(cmd)
+                else:
+                    self._ftdi.write_data(cmd)
+                    if epilog:
+                        self._ftdi.write_data(epilog)
             data = Array('B')
         return data
 
