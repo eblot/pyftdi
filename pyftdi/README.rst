@@ -59,7 +59,7 @@ may still work, but are fully untested there are nowaways obsolete.
 PyFtdi_ does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_
 
-PyFTDI_ has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
+PyFtdi_ has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
 supported.
 
 
@@ -77,7 +77,7 @@ If you have no choice but using previous releases of software, such as
 * PyUSB_ 1.0.0b1 or below,
 * pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
 
-please checkout the latest PyFTDI_ 0.1x series (0.13.3) which provides support
+please checkout the latest PyFtdi_ 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.
 
 
@@ -342,13 +342,14 @@ not supported. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See pyftdi_/tests directory for GPIO examples.
+See PyFtdi_tests_ directory for GPIO examples.
 
 See pyspiflash_ module for SPI examples.
 
 .. include:: serialext/README.rst
 
-.. _PyFtdi: https://www.github.com/eblot/
+.. _PyFtdi_tests: https://www.github.com/eblot/pyftdi/tree/master/pyftdi/tests
+.. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
 .. _PyUSB: https://walac.github.io/pyusb/
 .. _Python: https://www.python.org/
