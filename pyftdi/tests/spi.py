@@ -32,10 +32,11 @@ from doctest import testmod
 from logging import StreamHandler, DEBUG
 from pyftdi import FtdiLogger
 from pyftdi.spi import SpiController
-from sys import modules, stdout
+from sys import modules, stderr, stdout
+from time import sleep
 
 
-class SpiTest(object):
+class SpiDataFlashTest(object):
     """Basic test for a MX25L1606E data flash device selected as CS0,
        and an ADXL345 device selected as CS1
     """
@@ -48,7 +49,7 @@ class SpiTest(object):
         self._spi.configure('ftdi://ftdi:2232h/1')
 
     def read_jedec_id(self):
-        port = self._spi.get_port(0, freq=3E6, mode=3)
+        port = self._spi.get_port(0, freq=3E6, mode=0)
         jedec_id = port.exchange([0x9f], 3).tobytes()
         hex_jedec_id = hexlify(jedec_id).decode()
         print('JEDEC ID:', hex_jedec_id)
@@ -66,10 +67,34 @@ class SpiTest(object):
         self._spi.terminate()
 
 
+class SpiRfda2125Test(object):
+    """Basic test for a RFDA2125 Digital Controlled Variable Gain Amplifier
+       selected as CS2
+    """
+
+    def __init__(self):
+        self._spi = SpiController()
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        self._spi.configure('ftdi://ftdi:2232h/1')
+        self._port = self._spi.get_port(2, freq=1E6, mode=0)
+
+    def change_attenuation(self, value):
+        if not (0.0 <= value <= 31.5):
+            print('Out-of-bound attenuation', file=stderr)
+        intval = 63-int(value*2)
+        self._port.write(bytes([intval]), 1)
+
+    def close(self):
+        """Close the I2C connection"""
+        self._spi.terminate()
+
+
 class SpiTestCase(unittest.TestCase):
     """FTDI SPI driver test case"""
 
-    def test_spi(self):
+    def test_spi1(self):
         """Simple test to demonstrate SPI.
 
            Please ensure that the HW you connect to the FTDI port A does match
@@ -79,7 +104,7 @@ class SpiTestCase(unittest.TestCase):
            Do NOT run this test if you use FTDI port A as an UART or I2C
            bridge -or any unsupported setup!! You've been warned.
         """
-        spi = SpiTest()
+        spi = SpiDataFlashTest()
         spi.open()
         jedec_id = spi.read_jedec_id()
         self.assertEqual(jedec_id, 'c22016')
@@ -87,10 +112,24 @@ class SpiTestCase(unittest.TestCase):
         self.assertEqual(device_id, 'e5')
         spi.close()
 
+    def _test_spi2(self):
+        spi = SpiRfda2125Test()
+        spi.open()
+        slope = 1
+        attenuation = 0.0
+        for cycle in range(10):
+            for step in range(63):
+                attenuation += float(slope)
+                print(attenuation/2.0)
+                spi.change_attenuation(attenuation/2.0)
+                sleep(0.05)  # 50 ms
+            slope = -slope
+        spi.close()
+
 
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiTestCase, '_test'))
     return suite_
 
 
