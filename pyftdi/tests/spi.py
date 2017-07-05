@@ -112,7 +112,7 @@ class SpiTestCase(unittest.TestCase):
         self.assertEqual(device_id, 'e5')
         spi.close()
 
-    def _test_spi2(self):
+    def test_spi2(self):
         spi = SpiRfda2125Test()
         spi.open()
         slope = 1
@@ -129,7 +129,7 @@ class SpiTestCase(unittest.TestCase):
 
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(SpiTestCase, '_test'))
+    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
     return suite_
 
 
