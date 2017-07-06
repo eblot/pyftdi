@@ -191,9 +191,6 @@ class JtagController(object):
         self._last = None  # Last deferred TDO bit
         self._write_buff = Array('B')
 
-    def __del__(self):
-        self.close()
-
     # Public API
     def configure(self, url):
         """Configure the FTDI interface as a JTAG controller"""

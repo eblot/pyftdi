@@ -480,3 +480,4 @@ class I2cController(object):
                 msg = 'NACK from slave'
                 self.log.warning(msg)
                 raise I2cNackError(msg)
+

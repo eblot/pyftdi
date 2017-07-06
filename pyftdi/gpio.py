@@ -44,9 +44,6 @@ class GpioController(object):
         self._ftdi = None
         self._direction = 0
 
-    def __del__(self):
-        self.close()
-
     @property
     def direction(self):
         return self._direction
