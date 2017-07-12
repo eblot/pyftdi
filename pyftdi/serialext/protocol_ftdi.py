@@ -86,7 +86,7 @@ class FtdiSerial(SerialBase):
 
     def write(self, data):
         """Output the given string over the serial port."""
-        self.udev.write_data(data)
+        return self.udev.write_data(data)
 
     def flush(self):
         """Flush of file like objects. In this case, wait until all data
