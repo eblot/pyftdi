@@ -252,7 +252,7 @@ Example: communication with a SPI data flash
 
 
 |I2C|
----
+-----
 
 Example: communication with an |I2C| GPIO expander
 
