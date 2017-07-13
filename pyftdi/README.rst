@@ -179,7 +179,7 @@ Installation
 
   * Windows
 
-      see libusb_windows_
+      see `Libusb on Windows <libusb_windows>`_
 
 * Install Python dependencies
 
@@ -394,9 +394,11 @@ with Windows 7 for example. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See PyFtdi_tests_ directory for GPIO examples.
+See `PyFTDI unit tests <PyFtdi_tests>`_ directory for GPIO examples.
 
 See pyspiflash_ module for SPI examples.
+
+See pyi2cflash_ module for |I2C| examples.
 
 .. include:: serialext/README.rst
 
@@ -408,6 +410,7 @@ See pyspiflash_ module for SPI examples.
 .. _pyserial: https://pythonhosted.org/pyserial/
 .. _libftdi: https://www.intra2net.com/en/developer/libftdi/
 .. _pyspiflash: https://github.com/eblot/pyspiflash/
+.. _pyi2cflash: https://github.com/eblot/pyspiflash/
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _libusb_windows: http://libusb.org/wiki/windows_backend
