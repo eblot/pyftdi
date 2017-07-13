@@ -258,7 +258,7 @@ Example: communication with an |I2C| GPIO expander
 
 .. code-block:: python
 
-    # Instanciate an |I2C| controller
+    # Instanciate an I2C controller
     i2c = I2cController()
 
     # Configure the first interface (IF/1) of the FTDI device as an I2C master
