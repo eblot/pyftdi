@@ -6,6 +6,8 @@
 Overview
 ~~~~~~~~
 
+.. |I2C| replace:: I\ :sup:`2`\ C
+
 PyFtdi_ aims at providing a user-space driver for modern FTDI_ devices,
 implemented in pure Python language.
 
@@ -16,7 +18,7 @@ Modern FTDI_ devices include:
   * FT232R (single port, clock up to 6 MHz, 3Mbps)
   * FT230X (single port, clock up to 48 Mhz, 3Mbps)
 
-* UART and multi-serial protocols (SPI, I2C, JTAG) bridges
+* UART and multi-serial protocols (SPI, |I2C|, JTAG) bridges
 
   * FT2232D (dual port, clock up to 6 MHz)
   * FT232H (single port, clock up to 30 MHz)
@@ -27,7 +29,6 @@ Other FTDI_ devices could also be supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi_, and therefore have
 not been tested with PyFtdi_.
 
-
 Primary goals
 ~~~~~~~~~~~~~
 
@@ -37,7 +38,7 @@ PyFtdi_ currently supports the following features:
   capability)
 * Bitbang/GPIO support
 * SPI master
-* I2C master
+* |I2C| master
 * JTAG master
 
 PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
@@ -52,7 +53,7 @@ Python_ 3.5 or above is required.
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb_, tested with 1.0.20
+* libusb_, tested with 1.0.21
 
 may still work, but are fully untested there are nowaways obsolete.
 
@@ -129,7 +130,7 @@ Supported features
 
   Only half-duplex communication is supported for now.
 
-* I2C master. For now, only 7-bit address are supported.
+* |I2C| master. For now, only 7-bit address are supported.
 
   Supported devices:
 
@@ -144,13 +145,41 @@ Installation
 * Install native dependency. The actual command to install depends on your OS
   and/or your distribution. Examples:
 
-  * Debian Linux
+  * Debian/Ubuntu Linux
 
       apt-get install libusb-1.0
+
+    You need to create a `udev` configuration file to allow user-space access
+    to the FTDI devices. There are many ways to configure `udev`, here is a
+    typical setup:
+
+    ::
+
+        # /etc/udev/rules.d/11-ftdi.rules
+        SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="plugdev", MODE="0666"
+        SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6011", GROUP="plugdev", MODE="0666"
+        SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", GROUP="plugdev", MODE="0666"
+        SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", GROUP="plugdev", MODE="0666"
+        SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0666"
+
+    You need to unplug / plug back the FTDI device once this file has been
+    created so that `udev` loads the rules for the matching device.
+
+    With this setup, be sure to add users that want to run PyFtdi_ to the
+    `plugdev` group, *e.g.*
+
+      sudo adduser $USER plugdev
+
+    Remember that you need to log out / log in to get the above command
+    effective.
 
   * Homebrew macOS
 
       brew install libusb
+
+  * Windows
+
+      see libusb_windows_
 
 * Install Python dependencies
 
@@ -158,6 +187,29 @@ Installation
     pip3 install pyserial
     pip3 install pyftdi_
 
+
+FTDI device pinout
+~~~~~~~~~~~~~~~~~~
+
+ ======== ============= ====== ============== ======= ======
+  IF/1     IF/2 [#if2]_  UART   |I2C|          SPI     JTAG
+ ======== ============= ====== ============== ======= ======
+  ADBUS0   BDBUS0        TxD    SCK            SCLK    TCK
+  ADBUS1   BDBUS1        RxD    SDA/O [#i2c]_  MOSI    TDI
+  ADBUS2   BDBUS2        RTS    SDA/I [#i2c]_  MISO    TDO
+  ADBUS3   BDBUS3        CTS                   CS0     TMS
+  ADBUS4   BDBUS4                              CS1
+  ADBUS5   BDBUS5                              CS2
+  ADBUS6   BDBUS6                              CS3
+ ======== ============= ====== ============== ======= ======
+
+.. [#i2c] FTDI pins are either configured as input or output. As |I2C| SDA line
+          is bi-directional, two FTDI pins are required to provide the SDA
+          feature, and they should be connected together and to the SDA |I2C|
+          bus line.
+.. [#if2] FTDI232H does not support a secondary MPSSE port, only FT2232H and
+          FT4232H do. Note that FTDI4232H has 4 serial ports, but the first
+          two interfaces are MPSSE-capable.
 
 API Overview
 ~~~~~~~~~~~~
@@ -170,9 +222,8 @@ UART
     # Enable pyserial extensions
     import pyftdi.serialext
 
-    # Open a serial port on the second FTDI device port @ 3Mbaud
-    port = pyftdi.serialext.serial_for_url('ftdi://ftdi:2232h/2',
-                                           baudrate=3000000)
+    # Open a serial port on the second FTDI device interface (IF/2) @ 3Mbaud
+    port = pyftdi.serialext.serial_for_url('ftdi://ftdi:2232h/2', baudrate=3000000)
 
     # Send bytes
     port.write(b'Hello World')
@@ -190,7 +241,7 @@ Example: communication with a SPI data flash
     # Instanciate a SPI controller
     spi = SpiController()
 
-    # Configure the first port of the FTDI device as a SPI master
+    # Configure the first interface (IF/1) of the FTDI device as a SPI master
     spi.configure('ftdi://ftdi:2232h/1')
 
     # Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
@@ -200,17 +251,17 @@ Example: communication with a SPI data flash
     jedec_id = slave.exchange([0x9f], 3).tobytes()
 
 
-I2C
+|I2C|
 ---
 
-Example: communication with an I2C GPIO expander
+Example: communication with an |I2C| GPIO expander
 
 .. code-block:: python
 
-    # Instanciate an I2C controller
+    # Instanciate an |I2C| controller
     i2c = I2cController()
 
-    # Configure the first port of the FTDI device as an I2C master
+    # Configure the first interface (IF/1) of the FTDI device as an I2C master
     i2c.configure('ftdi://ftdi:2232h/1')
 
     # Get a port to an I2C slave device
@@ -335,8 +386,9 @@ PyFtdi_ is developed on macOS platforms (64-bit kernel), and is validated on a
 regular basis on Linux hosts.
 
 As it contains no native code, it should work on any PyUSB_ and libusb_
-supported platforms. However, Ms Windows is a seamless source of issues and is
-not supported. Your mileage may vary.
+supported platforms. However, M$ Windows is a seamless source of issues and is
+not officially supported, although users have reported successful installation
+with Windows 7 for example. Your mileage may vary.
 
 
 Examples
@@ -358,3 +410,4 @@ See pyspiflash_ module for SPI examples.
 .. _pyspiflash: https://github.com/eblot/pyspiflash/
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
+.. _libusb_windows: http://libusb.org/wiki/windows_backend
