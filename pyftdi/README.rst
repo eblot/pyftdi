@@ -48,7 +48,7 @@ module to access USB-serial converters based on FTDI_ devices.
 Requirements
 ~~~~~~~~~~~~
 
-Python_ 3.5 or above is required.
+Python_ 3.5 or above is required. (see next section for Python 2.x support)
 
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
@@ -63,13 +63,8 @@ Python modules along with PyUSB_
 PyFtdi_ has been tested with PyUSB_ 1.0.0. PyUSB_ 1.0.0b1 or below is no longer
 supported.
 
-
 Note about previous releases
 ----------------------------
-
-``open()``, ``open_mpsse()`` and ``open_bitbang`` arguments have changed in
-v0.22.0, be sure to update your code or even better use the URL variants
-(``open_from_url``, ``open_mpsse_from_url`` or ``open_bitbang_from_url``).
 
 If you have no choice but using previous releases of software, such as
 
@@ -80,7 +75,6 @@ If you have no choice but using previous releases of software, such as
 
 please checkout the latest PyFtdi_ 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.
-
 
 Status
 ~~~~~~
@@ -288,7 +282,10 @@ parameters (among others). These methods are:
 * ``open_mpsse()``
 * ``open_bitbang()``
 
-The second way to open a connection is to specify connection details using a
+``open()``, ``open_mpsse()`` and ``open_bitbang`` arguments have changed in
+v0.22.0, be sure to update your code.
+
+The second, better way to open a connection is to specify connection details using a
 URL. The URL scheme is defined as:
 
 ``protocol://[vendor[:product[:index|:serial]]]/interface``
