@@ -202,7 +202,7 @@ FTDI device pinout
           feature, and they should be connected together and to the SDA |I2C|
           bus line.
 .. [#if2] FTDI232H does not support a secondary MPSSE port, only FT2232H and
-          FT4232H do. Note that FTDI4232H has 4 serial ports, but the first
+          FT4232H do. Note that FTDI4232H has 4 serial ports, but only the first
           two interfaces are MPSSE-capable.
 
 API Overview
