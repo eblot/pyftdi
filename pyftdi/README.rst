@@ -113,9 +113,9 @@ Supported features
   Mode   CPol   CPha  Status
   =====  ===== ====== ====================================================
     0      0      0   Supported on all MPSEE devices
-    1      0      1   Supported on -H series (FT232H/FT2232H/FT4232H)
+    1      0      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
     2      1      0   Not supported (FTDI HW limitation)
-    3      1      1   Supported on -H series (FT232H/FT2232H/FT4232H)
+    3      1      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
   =====  ===== ====== ====================================================
 
   PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
@@ -126,7 +126,7 @@ Supported features
 
 * |I2C| master. For now, only 7-bit address are supported.
 
-  Supported devices: FT232H, FT2232H, FT4232H
+  Supported devices: FT232H_, FT2232H_, FT4232H_
 
 * JTAG is under development and is not fully supported yet.
 
@@ -199,8 +199,8 @@ FTDI device pinout
           is bi-directional, two FTDI pins are required to provide the SDA
           feature, and they should be connected together and to the SDA |I2C|
           bus line. Pull-up resistors on SCK and SDA lines should be used.
-.. [#if2] FTDI232H does not support a secondary MPSSE port, only FT2232H and
-          FT4232H do. Note that FTDI4232H has 4 serial ports, but only the first
+.. [#if2] FTDI232H_ does not support a secondary MPSSE port, only FT2232H_ and
+          FT4232H_ do. Note that FTDI4232H_ has 4 serial ports, but only the first
           two interfaces are MPSSE-capable.
 
 API Overview
