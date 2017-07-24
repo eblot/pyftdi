@@ -15,7 +15,7 @@ Modern FTDI_ devices include:
 
 * UART-only bridges
 
-  * FT232R (single port, clock up to 6 MHz, 3Mbps)
+  * FT232R_ (single port, clock up to 6 MHz, 3Mbps) 
   * FT230X (single port, clock up to 48 Mhz, 3Mbps)
 
 * UART and multi-serial protocols (SPI, |I2C|, JTAG) bridges
@@ -397,6 +397,7 @@ See pyi2cflash_ module for |I2C| examples.
 
 .. include:: serialext/README.rst
 
+.. _FT232R http://www.ftdichip.com/Products/ICs/FT232R.htm
 .. _gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
