@@ -131,6 +131,8 @@ Supported features
 * JTAG is under development and is not fully supported yet.
 
 
+.. _installation:
+
 Installation
 ~~~~~~~~~~~~
 
@@ -171,7 +173,7 @@ Installation
 
   * Windows
 
-      see `Libusb on Windows`_
+    see `Libusb on Windows`_
 
 * Install Python dependencies
 
@@ -345,7 +347,7 @@ Troubleshooting
 *"Error: Access denied (insufficient permissions)"*
   The system may already be using the device.
 
-  * On OS X 10.9+: starting with Mavericks, OS X ships with a native FTDI
+  * On macOS: starting with Mavericks (10.9+), OS X ships with a native FTDI
     driver that preempts access to the FTDI device.
 
     The driver can be unloaded this way:
@@ -358,19 +360,20 @@ Troubleshooting
     Please note that the system automatically reloads the driver, so it may be
     useful to move the kernel extension so that the system never loads it.
 
+  * On Linux: it may indicate a missing or invalid udev configuration. See
+    the installation section.
+
   * This error message may also be triggered whenever the communication port is
     already in use.
 
 *"serial.serialutil.SerialException: Unable to open USB port"*
   May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
-  uninstalling the driver. On macOS, refer to this FTDI macOs
-  `guide <http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf>`_.
+  uninstalling the driver. On macOS, refer to this `FTDI macOS guide`_.
 
 *Slow initialisation on OS X El Capitan*
  It may take several seconds to open or enumerate FTDI devices.
 
- If you run libusb <= v1.0.20, be sure to read the
- `issue <https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152>`_
+ If you run libusb <= v1.0.20, be sure to read the `Libusb issue on macOS`_
  with OS X 10.11+.
 
 
@@ -414,5 +417,7 @@ Examples
 .. _pyspiflash: https://github.com/eblot/pyspiflash/
 .. _pyi2cflash: https://github.com/eblot/pyi2cflash/
 .. _libusb: http://www.libusb.info/
-.. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _Libusb on Windows: https://github.com/libusb/libusb/wiki/Windows
+.. _FTDI macOS guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
+.. _Libusb issue on macOs: https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152
+
