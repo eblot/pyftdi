@@ -415,4 +415,4 @@ Examples
 .. _pyi2cflash: https://github.com/eblot/pyi2cflash/
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
-.. _Libusb on Windows: http://libusb.org/wiki/windows_backend
+.. _Libusb on Windows: https://github.com/libusb/libusb/wiki/Windows
