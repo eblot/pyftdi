@@ -15,7 +15,7 @@ Modern FTDI_ devices include:
 
 * UART-only bridges
 
-  * FT232R_ (single port, clock up to 6 MHz, 3Mbps) 
+  * FT232R_ (single port, clock up to 6 MHz, 3Mbps)
   * FT230X_ (single port, clock up to 48 Mhz, 3Mbps)
 
 * UART and multi-serial protocols (SPI, |I2C|, JTAG) bridges
@@ -389,13 +389,11 @@ with Windows 7 for example. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See gpio.py_ for GPIO examples.
+ * UART example: `Mini serial terminal <miniterm>`_
+ * GPIO examples: `tests/gpio.py <gpio_ut>`_
+ * SPI examples: pyspiflash_ module and `tests/spi.py <spi_ut>`_
+ * |I2C| examples: pyi2cflash_ module and `tests/i2c.py <i2c_ut>`_
 
-See pyspiflash_ module for SPI examples.
-
-See pyi2cflash_ module for |I2C| examples.
-
-.. include:: serialext/README.rst
 
 .. _FT232R: http://www.ftdichip.com/Products/ICs/FT232R.htm
 .. _FT230X: http://www.ftdichip.com/Products/ICs/FT230X.html
@@ -403,7 +401,10 @@ See pyi2cflash_ module for |I2C| examples.
 .. _FT232H: http://www.ftdichip.com/Products/ICs/FT232H.htm
 .. _FT2232H: http://www.ftdichip.com/Products/ICs/FT2232H.html
 .. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
-.. _gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
+.. _miniterm: https://github.com/eblot/pyftdi/blob/master/pyftdi/serialext/README.rst
+.. _gpio_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
+.. _spi_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py
+.. _i2c_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
 .. _PyUSB: https://walac.github.io/pyusb/
@@ -411,7 +412,7 @@ See pyi2cflash_ module for |I2C| examples.
 .. _pyserial: https://pythonhosted.org/pyserial/
 .. _libftdi: https://www.intra2net.com/en/developer/libftdi/
 .. _pyspiflash: https://github.com/eblot/pyspiflash/
-.. _pyi2cflash: https://github.com/eblot/pyi2cflash
+.. _pyi2cflash: https://github.com/eblot/pyi2cflash/
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _libusb_windows: http://libusb.org/wiki/windows_backend
