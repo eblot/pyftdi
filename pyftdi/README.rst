@@ -171,7 +171,7 @@ Installation
 
   * Windows
 
-      see `Libusb on Windows <libusb_windows>`_
+      see `Libusb on Windows`_
 
 * Install Python dependencies
 
@@ -389,10 +389,10 @@ with Windows 7 for example. Your mileage may vary.
 Examples
 ~~~~~~~~
 
- * UART example: `Mini serial terminal <miniterm>`_
- * GPIO examples: `tests/gpio.py <gpio_ut>`_
- * SPI examples: pyspiflash_ module and `tests/spi.py <spi_ut>`_
- * |I2C| examples: pyi2cflash_ module and `tests/i2c.py <i2c_ut>`_
+* UART example: `Mini serial terminal`_
+* GPIO examples: `tests/gpio.py`_
+* SPI examples: pyspiflash_ module and `tests/spi.py`_
+* |I2C| examples: pyi2cflash_ module and `tests/i2c.py`_
 
 
 .. _FT232R: http://www.ftdichip.com/Products/ICs/FT232R.htm
@@ -401,10 +401,10 @@ Examples
 .. _FT232H: http://www.ftdichip.com/Products/ICs/FT232H.htm
 .. _FT2232H: http://www.ftdichip.com/Products/ICs/FT2232H.html
 .. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
-.. _miniterm: https://github.com/eblot/pyftdi/blob/master/pyftdi/serialext/README.rst
-.. _gpio_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
-.. _spi_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py
-.. _i2c_ut: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py
+.. _Mini serial terminal: https://github.com/eblot/pyftdi/blob/master/pyftdi/serialext/README.rst
+.. _tests/gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
+.. _tests/spi.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py
+.. _tests/i2c.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
 .. _PyUSB: https://walac.github.io/pyusb/
@@ -415,4 +415,4 @@ Examples
 .. _pyi2cflash: https://github.com/eblot/pyi2cflash/
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
-.. _libusb_windows: http://libusb.org/wiki/windows_backend
+.. _Libusb on Windows: http://libusb.org/wiki/windows_backend
