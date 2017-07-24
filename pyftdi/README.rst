@@ -389,7 +389,7 @@ with Windows 7 for example. Your mileage may vary.
 Examples
 ~~~~~~~~
 
-See `PyFTDI unit tests <PyFtdi_tests>`_ directory for GPIO examples.
+See gpio.py_ for GPIO examples.
 
 See pyspiflash_ module for SPI examples.
 
@@ -397,7 +397,7 @@ See pyi2cflash_ module for |I2C| examples.
 
 .. include:: serialext/README.rst
 
-.. _PyFtdi_tests: https://www.github.com/eblot/pyftdi/tree/master/pyftdi/tests
+.. _gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
 .. _PyUSB: https://walac.github.io/pyusb/
