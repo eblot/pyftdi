@@ -26,19 +26,20 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
 from binascii import hexlify
 from doctest import testmod
-from logging import StreamHandler, DEBUG
+from os import environ
 from pyftdi import FtdiLogger
 from pyftdi.spi import SpiController
 from sys import modules, stderr, stdout
 from time import sleep
+import logging
+import unittest
 
 
 class SpiDataFlashTest(object):
     """Basic test for a MX25L1606E data flash device selected as CS0,
-       and an ADXL345 device selected as CS1
+       SPI mode 0
     """
 
     def __init__(self):
@@ -55,6 +56,23 @@ class SpiDataFlashTest(object):
         print('JEDEC ID:', hex_jedec_id)
         return hex_jedec_id
 
+    def close(self):
+        """Close the I2C connection"""
+        self._spi.terminate()
+
+
+class SpiAccelTest(object):
+    """Basic test for an ADXL345 device selected as CS1,
+       SPI mode 3
+    """
+
+    def __init__(self):
+        self._spi = SpiController()
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        self._spi.configure('ftdi://ftdi:2232h/1')
+
     def read_device_id(self):
         port = self._spi.get_port(1, freq=6E6, mode=3)
         device_id = port.exchange([0x00], 1).tobytes()
@@ -69,7 +87,8 @@ class SpiDataFlashTest(object):
 
 class SpiRfda2125Test(object):
     """Basic test for a RFDA2125 Digital Controlled Variable Gain Amplifier
-       selected as CS2
+       selected as CS2,
+       SPI mode 0
     """
 
     def __init__(self):
@@ -92,27 +111,33 @@ class SpiRfda2125Test(object):
 
 
 class SpiTestCase(unittest.TestCase):
-    """FTDI SPI driver test case"""
+    """FTDI SPI driver test case
+
+       Simple test to demonstrate SPI feature.
+
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. GPIOs can be driven high or low, so check
+       your HW setup before running this test as it might damage your HW.
+
+       Do NOT run this test if you use FTDI port A as an UART or I2C
+       bridge -or any unsupported setup!! You've been warned.
+    """
 
     def test_spi1(self):
-        """Simple test to demonstrate SPI.
-
-           Please ensure that the HW you connect to the FTDI port A does match
-           the encoded configuration. GPIOs can be driven high or low, so check
-           your HW setup before running this test as it might damage your HW.
-
-           Do NOT run this test if you use FTDI port A as an UART or I2C
-           bridge -or any unsupported setup!! You've been warned.
-        """
         spi = SpiDataFlashTest()
         spi.open()
         jedec_id = spi.read_jedec_id()
         self.assertEqual(jedec_id, 'c22016')
+        spi.close()
+
+    def test_spi2(self):
+        spi = SpiAccelTest()
+        spi.open()
         device_id = spi.read_device_id()
         self.assertEqual(device_id, 'e5')
         spi.close()
 
-    def test_spi2(self):
+    def _test_spi3(self):
         spi = SpiRfda2125Test()
         spi.open()
         slope = 1
@@ -135,6 +160,11 @@ def suite():
 
 if __name__ == '__main__':
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(StreamHandler(stdout))
-    FtdiLogger.set_level(DEBUG)
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError('Invalid log level: %s', level)
+    FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')

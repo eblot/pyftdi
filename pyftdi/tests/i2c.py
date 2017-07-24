@@ -26,16 +26,17 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
+from binascii import hexlify
 from doctest import testmod
-from logging import StreamHandler, DEBUG
+from os import environ
 from pyftdi import FtdiLogger
-from pyftdi.i2c import I2cController, I2cIOError
+from pyftdi.i2c import I2cController
 from sys import modules, stdout
-from time import sleep
+import logging
+import unittest
 
 
-class I2cTest(object):
+class I2cTca9555Test(object):
     """Simple test for a TCA9555 device on I2C bus @ address 0x21
     """
 
@@ -44,7 +45,8 @@ class I2cTest(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._i2c.configure('ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._i2c.configure(url)
 
     def read_it(self):
         port = self._i2c.get_port(0x21)
@@ -61,23 +63,54 @@ class I2cTest(object):
         self._i2c.terminate()
 
 
+class I2cAccelTest(object):
+    """Basic test for an ADXL345 device on I2C bus @ address 0x53
+    """
+
+    def __init__(self):
+        self._i2c = I2cController()
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._i2c.configure(url)
+
+    def read_device_id(self):
+        port = self._i2c.get_port(0x53)
+        device_id = port.exchange([0x00], 1).tobytes()
+        hex_device_id = hexlify(device_id).decode()
+        print('DEVICE ID:', hex_device_id)
+        return hex_device_id
+
+    def close(self):
+        """Close the I2C connection"""
+        self._i2c.terminate()
+
+
 class I2cTestCase(unittest.TestCase):
-    """FTDI I2C driver test case"""
+    """FTDI I2C driver test case
 
-    def test_i2c(self):
-        """Simple test to demonstrate I2C.
+       Simple test to demonstrate I2C.
 
-           Please ensure that the HW you connect to the FTDI port A does match
-           the encoded configuration. GPIOs can be driven high or low, so check
-           your HW setup before running this test as it might damage your HW.
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. GPIOs can be driven high or low, so check
+       your HW setup before running this test as it might damage your HW.
 
-           Do NOT run this test if you use FTDI port A as an UART or SPI
-           bridge -or any unsupported setup!! You've been warned.
-        """
-        i2c = I2cTest()
+       Do NOT run this test if you use FTDI port A as an UART or SPI
+       bridge -or any unsupported setup!! You've been warned.
+    """
+
+    def test_i2c1(self):
+        i2c = I2cTca9555Test()
         i2c.open()
         i2c.read_it()
         i2c.write_it()
+        i2c.close()
+
+    def test_i2c2(self):
+        i2c = I2cAccelTest()
+        i2c.open()
+        i2c.read_device_id()
         i2c.close()
 
 
@@ -89,6 +122,11 @@ def suite():
 
 if __name__ == '__main__':
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(StreamHandler(stdout))
-    FtdiLogger.set_level(DEBUG)
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError('Invalid log level: %s', level)
+    FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
