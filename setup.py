@@ -91,7 +91,7 @@ if __name__ == '__main__':
         long_description=read('README.rst'),
         packages=PACKAGES,
         package_dir={'': '.'},
-        package_data={'pyftdi': ['*.rst'],
+        package_data={'pyftdi': ['*.rst', 'AUTHORS', 'INSTALL', 'LICENSE'],
                       'pyftdi.serialext': ['*.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
