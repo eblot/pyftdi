@@ -201,7 +201,7 @@ class I2cController(object):
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
         self._start = data_low*4 + clock_low_data_low*4
         self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
-        self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
+        self._tristate = None
         self._tx_size = 1
         self._rx_size = 1
 
@@ -214,8 +214,6 @@ class I2cController(object):
            Accepted options:
 
            * ``frequency`` the I2C bus frequency in Hz
-           * ``notristate`` drives the I2C SDA line actively high with FTDI
-             devices that do not support drive-zero only mode.
         """
         for k in ('direction', 'initial'):
             if k in kwargs:
@@ -238,10 +236,7 @@ class I2cController(object):
                                              self.SDA_O_BIT |
                                              self.SDA_I_BIT)
         except FtdiFeatureError:
-            if bool(kwargs.get('softtristate', True)):
-                self._soft_tristate = True
-            elif not bool(kwargs.get('notristate', True)):
-                raise
+            self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
 
     def terminate(self):
         """Close the FTDI interface.
@@ -418,7 +413,7 @@ class I2cController(object):
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
-        if self._soft_tristate:
+        if self._tristate:
             cmd.extend(self._tristate)
             cmd.extend(self._read_bit)
             cmd.extend(self._clock_low_data_high)
@@ -443,13 +438,16 @@ class I2cController(object):
 
     def _do_read(self, readlen):
         self.log.debug('- read %d bytes', readlen)
-        if self._soft_tristate:
-            read_byte = self._tristate + self._read_byte + self._clock_low_data_high
+        if self._tristate:
+            read_byte = self._tristate + self._read_byte + \
+                        self._clock_low_data_high
             read_not_last = read_byte + self._ack
             read_last = read_byte + self._nack
         else:
-            read_not_last = self._read_byte + self._ack + self._clock_low_data_high
-            read_last = self._read_byte + self._nack + self._clock_low_data_high
+            read_not_last = self._read_byte + self._ack + \
+                self._clock_low_data_high
+            read_last = self._read_byte + self._nack + \
+                self._clock_low_data_high
         chunk_size = self._rx_size-2
         cmd_size = len(read_last)
         # limit RX chunk size to the count of I2C packable ommands in the FTDI
@@ -483,7 +481,7 @@ class I2cController(object):
         for byte in out:
             cmd = Array('B', self._write_byte)
             cmd.append(byte)
-            if self._soft_tristate:
+            if self._tristate:
                 cmd.extend(self._tristate)
                 cmd.extend(self._read_bit)
                 cmd.extend(self._clock_low_data_high)

@@ -34,3 +34,4 @@ Contributors:
   * Clean up README.txt / fix links
  * hannesweisbach
   * I2C poll mode (read/write)
+  * I2C soft tristate for FT2232H/FT4232H devices

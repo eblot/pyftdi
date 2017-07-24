@@ -719,7 +719,7 @@ class Ftdi(object):
 
     def enable_3phase_clock(self, enable=True):
         if not self.is_mpsse:
-            raise FtdiMpsseError('Setting adaptive clock mode is only '
+            raise FtdiMpsseError('Setting 3-phase clock mode is only '
                                  'available from MPSSE mode')
         if not self.is_H_series:
             raise FtdiFeatureError('This device does not support 3-phase '
@@ -729,7 +729,7 @@ class Ftdi(object):
 
     def enable_drivezero_mode(self, lines):
         if not self.is_mpsse:
-            raise FtdiMpsseError('Setting adaptive clock mode is only '
+            raise FtdiMpsseError('Setting drive-zero mode is only '
                                  'available from MPSSE mode')
         if not self.has_drivezero:
             raise FtdiFeatureError('This device does not support drive-zero '
