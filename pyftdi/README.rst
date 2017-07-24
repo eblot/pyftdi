@@ -16,14 +16,14 @@ Modern FTDI_ devices include:
 * UART-only bridges
 
   * FT232R_ (single port, clock up to 6 MHz, 3Mbps) 
-  * FT230X (single port, clock up to 48 Mhz, 3Mbps)
+  * FT230X_ (single port, clock up to 48 Mhz, 3Mbps)
 
 * UART and multi-serial protocols (SPI, |I2C|, JTAG) bridges
 
-  * FT2232D (dual port, clock up to 6 MHz)
-  * FT232H (single port, clock up to 30 MHz)
-  * FT2232H (dual port, clock up to 30 MHz)
-  * FT4232H (quad port, clock up to 30 MHz)
+  * FT2232D_ (dual port, clock up to 6 MHz)
+  * FT232H_ (single port, clock up to 30 MHz)
+  * FT2232H_ (dual port, clock up to 30 MHz)
+  * FT4232H_ (quad port, clock up to 30 MHz)
 
 Other FTDI_ devices could also be supported (including FT232* devices),
 although these devices are not a primary goal for PyFtdi_, and therefore have
@@ -397,7 +397,12 @@ See pyi2cflash_ module for |I2C| examples.
 
 .. include:: serialext/README.rst
 
-.. _FT232R http://www.ftdichip.com/Products/ICs/FT232R.htm
+.. _FT232R: http://www.ftdichip.com/Products/ICs/FT232R.htm
+.. _FT230X: http://www.ftdichip.com/Products/ICs/FT230X.html
+.. _FT2232D: http://www.ftdichip.com/Products/ICs/FT2232D.htm
+.. _FT232H: http://www.ftdichip.com/Products/ICs/FT232H.htm
+.. _FT2232H: http://www.ftdichip.com/Products/ICs/FT2232H.html
+.. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
 .. _gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
