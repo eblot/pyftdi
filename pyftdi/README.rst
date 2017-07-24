@@ -126,9 +126,7 @@ Supported features
 
 * |I2C| master. For now, only 7-bit address are supported.
 
-  Supported devices:
-
-  * For now, only FT232H is supported (support for other -H series is planned)
+  Supported devices: FT232H, FT2232H, FT4232H
 
 * JTAG is under development and is not fully supported yet.
 
@@ -200,7 +198,7 @@ FTDI device pinout
 .. [#i2c] FTDI pins are either configured as input or output. As |I2C| SDA line
           is bi-directional, two FTDI pins are required to provide the SDA
           feature, and they should be connected together and to the SDA |I2C|
-          bus line.
+          bus line. Pull-up resistors on SCK and SDA lines should be used.
 .. [#if2] FTDI232H does not support a secondary MPSSE port, only FT2232H and
           FT4232H do. Note that FTDI4232H has 4 serial ports, but only the first
           two interfaces are MPSSE-capable.
