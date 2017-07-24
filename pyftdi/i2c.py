@@ -474,9 +474,11 @@ class I2cController(object):
             self._ftdi.write_data(cmd)
             buf = self._ftdi.read_data_bytes(block_count, 4)
             chunks.append(buf)
-        return b''.join(chunks)
+        return Array('B', b''.join(chunks))
 
     def _do_write(self, out):
+        if not isinstance(out, Array):
+            out = Array('B', out)
         self.log.debug('- write %d bytes: %s', len(out), hexlify(out).decode())
         for byte in out:
             cmd = Array('B', self._write_byte)
