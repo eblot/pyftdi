@@ -134,12 +134,13 @@ class I2cPort(object):
         return self._controller.exchange(self._address+self._shift, out,
                                          readlen)
 
-    def poll(self, read=True):
+    def poll(self, write=False):
         """Poll a remote slave, expect ACK or NACK.
 
+           :param write: poll in write mode (vs. read)
            :return: True if the slave acknowledged, False otherwise
         """
-        return self._controller.poll(self._address+self._shift, read)
+        return self._controller.poll(self._address+self._shift, write)
 
     def flush(self):
         """Force the flush of the HW FIFOs.
@@ -227,7 +228,7 @@ class I2cController(object):
         frequency = (3.0*frequency)/2.0
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
-                frequency=frequency, **kwargs)
+            frequency=frequency, **kwargs)
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(False)
         self._ftdi.enable_3phase_clock(True)
@@ -379,17 +380,18 @@ class I2cController(object):
             finally:
                 self._do_epilog()
 
-    def poll(self, address, read=True):
+    def poll(self, address, write=False):
         """Poll a remote slave, expect ACK or NACK.
 
            :param address: the address on the I2C bus
+           :param write: poll in write mode (vs. read)
            :return: True if the slave acknowledged, False otherwise
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         i2caddress = (address << 1) & self.HIGH
-        if read:
+        if not write:
             i2caddress |= self.BIT0
         self.log.debug('- poll 0x%x', i2caddress >> 1)
         try:
@@ -481,4 +483,3 @@ class I2cController(object):
                 msg = 'NACK from slave'
                 self.log.warning(msg)
                 raise I2cNackError(msg)
-

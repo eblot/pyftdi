@@ -32,3 +32,5 @@ Contributors:
   * Document FTDI URL schemes
  * nopeppermint (Stefan)
   * Clean up README.txt / fix links
+ * hannesweisbach
+  * I2C poll mode (read/write)
