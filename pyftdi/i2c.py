@@ -369,7 +369,7 @@ class I2cController(object):
                 self._do_write(out)
                 self._do_prolog(i2caddress | self.BIT0)
                 data = self._do_read(readlen)
-                return data
+                return bytes(data)
             except I2cNackError:
                 retries -= 1
                 if not retries:
