@@ -202,7 +202,7 @@ FTDI device pinout
           feature, and they should be connected together and to the SDA |I2C|
           bus line.
 .. [#if2] FTDI232H does not support a secondary MPSSE port, only FT2232H and
-          FT4232H do. Note that FTDI4232H has 4 serial ports, but the first
+          FT4232H do. Note that FTDI4232H has 4 serial ports, but only the first
           two interfaces are MPSSE-capable.
 
 API Overview
@@ -407,7 +407,7 @@ See pyi2cflash_ module for |I2C| examples.
 .. _pyserial: https://pythonhosted.org/pyserial/
 .. _libftdi: https://www.intra2net.com/en/developer/libftdi/
 .. _pyspiflash: https://github.com/eblot/pyspiflash/
-.. _pyi2cflash: https://github.com/eblot/pyspiflash/
+.. _pyi2cflash: https://github.com/eblot/pyi2cflash
 .. _libusb: http://www.libusb.info/
 .. _macos_guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _libusb_windows: http://libusb.org/wiki/windows_backend
