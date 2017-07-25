@@ -23,7 +23,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from array import array as Array
+from array import array
 from binascii import hexlify
 from logging import getLogger
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
@@ -42,11 +42,10 @@ class I2cNackError(I2cIOError):
 
 
 class I2cPort(object):
-    """I2C port
+    """I2C port.
 
-       An I2C port is never instanciated directly.
-
-       Use I2cController.get_port() method to obtain an I2C port
+       An I2C port is never instanciated directly: use I2cController.get_port()
+       method to obtain an I2C port.
 
        :Example:
 
@@ -70,8 +69,9 @@ class I2cPort(object):
     def configure_register(self, bigendian=False, width=1):
         """Reconfigure the format of the slave address register (if any)
 
-            :param bigendian: True for a big endian encoding, False otherwise
-            :param width: width, in bytes, of the register
+            :param bool bigendian: True for a big endian encoding,
+                                   False otherwise
+            :param int width: width, in bytes, of the register
         """
         try:
             self._format = self.FORMATS[width]
@@ -88,8 +88,11 @@ class I2cPort(object):
     def read(self, readlen=0):
         """Read one or more bytes from a remote slave
 
-           :param readlen: count of bytes to read out.
+           :param int readlen: count of bytes to read out.
            :return: byte sequence of read out bytes
+           :rtype: array
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
         """
         return self._controller.read(self._address+self._shift,
                                      readlen=readlen)
@@ -98,15 +101,21 @@ class I2cPort(object):
         """Write one or more bytes to a remote slave
 
            :param out: the byte buffer to send
+           :type out: array or bytes or list(int)
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
         """
         return self._controller.write(self._address+self._shift, out)
 
     def read_from(self, regaddr, readlen=0):
         """Read one or more bytes from a remote slave
 
-           :param regaddr: slave register address to read from
-           :param readlen: count of bytes to read out.
-           :return: byte sequence of read out bytes
+           :param int regaddr: slave register address to read from
+           :param int readlen: count of bytes to read out.
+           :return: data read out from the slave
+           :rtype: array
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
         """
         return self._controller.exchange(self._address+self._shift,
                                          out=self._make_buffer(regaddr),
@@ -115,8 +124,11 @@ class I2cPort(object):
     def write_to(self, regaddr, out):
         """Read one or more bytes from a remote slave
 
-           :param regaddr: slave register address to write to
+           :param int regaddr: slave register address to write to
            :param out: the byte buffer to send
+           :type out: array or bytes or list(int)
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
         """
         return self._controller.write(self._address+self._shift,
                                       out=self._make_buffer(regaddr, out))
@@ -128,8 +140,8 @@ class I2cPort(object):
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :return: byte sequence containing the data read out from the
-                    slave
+           :return: data read out from the slave
+           :rtype: array
         """
         return self._controller.exchange(self._address+self._shift, out,
                                          readlen)
@@ -137,8 +149,9 @@ class I2cPort(object):
     def poll(self, write=False):
         """Poll a remote slave, expect ACK or NACK.
 
-           :param write: poll in write mode (vs. read)
+           :param bool write: poll in write mode (vs. read)
            :return: True if the slave acknowledged, False otherwise
+           :rtype: bool
         """
         return self._controller.poll(self._address+self._shift, write)
 
@@ -154,7 +167,7 @@ class I2cPort(object):
         return self._controller.frequency
 
     def _make_buffer(self, regaddr, out=None):
-        data = Array('B')
+        data = array('B')
         data.extend(spack('%s%s' % (self._endian, self._format), regaddr))
         if out:
             data.extend(out)
@@ -163,6 +176,16 @@ class I2cPort(object):
 
 class I2cController(object):
     """I2c master.
+
+       An I2c master should be instanciated only once for each FTDI port that
+       supports MPSSE (one or two ports, depending on the FTDI device).
+
+       Once configured, :py:func:`get_port` should be invoked to obtain an I2c
+       port for each I2c slave to drive. I2cport should handle all I/O requests
+       for its associated HW slave.
+
+       It is not recommended to use I2cController :py:func:`read`,
+       :py:func:`write` or :py:func:`exchange` directly.
     """
 
     LOW = 0x00
@@ -208,7 +231,7 @@ class I2cController(object):
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
 
-           :param url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+           :param str url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
            :param kwargs: options to configure the I2C bus
 
            Accepted options:
@@ -246,10 +269,11 @@ class I2cController(object):
             self._ftdi = None
 
     def get_port(self, address):
-        """Obtain a I2cPort to to drive an I2c slave.
+        """Obtain an I2cPort to drive an I2c slave.
 
-           :param address: the address on the I2C bus
-           :return a I2cPort instance
+           :param int address: the address on the I2C bus
+           :return: an I2cPort instance
+           :rtype: :py:class:`I2cPort`
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
@@ -260,6 +284,11 @@ class I2cController(object):
 
     @classmethod
     def validate_address(cls, address):
+        """Assert an I2C slave address is in the supported range
+
+           :param int address: I2C slave address
+           :raise I2cIOError: if the I2C slave address is not supported
+        """
         if address > cls.HIGHEST_I2C_ADDRESS:
             raise I2cIOError("No such I2c slave")
 
@@ -272,16 +301,23 @@ class I2cController(object):
     @property
     def frequency(self):
         """Returns the current I2c clock.
+
+           :return: the I2C bus clock
+           :rtype: float
         """
         return self._frequency
 
     def read(self, address, readlen=1):
         """Read one or more bytes from a remote slave
 
-           :param address: the address on the I2C bus
-           :param readlen: count of bytes to read out.
+           :param int address: the address on the I2C bus
+           :param int readlen: count of bytes to read out.
+           :return: read bytes
+           :rtype: array
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
 
-           Address is a logical address (0x7f max)
+           Address is a logical slave address (0x7f max)
 
            Most I2C devices require a register address to read out
            check out the exchange() method.
@@ -310,14 +346,16 @@ class I2cController(object):
     def write(self, address, out):
         """Write one or more bytes to a remote slave
 
-           :param address: the address on the I2C bus
+           :param int address: the address on the I2C bus
            :param out: the byte buffer to send
+           :type out: array or bytes or list(int)
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
 
-           Address is a logical address (0x7f max)
+           Address is a logical slave address (0x7f max)
 
-           Most I2C devices require a register address to write
-           into. It should be added as the first (byte)s of the
-           output buffer.
+           Most I2C devices require a register address to write into. It should
+           be added as the first (byte)s of the output buffer.
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
@@ -346,11 +384,16 @@ class I2cController(object):
            This command is useful to tell the slave what data
            should be read out.
 
-           :param address: the address on the I2C bus
+           :param int address: the address on the I2C bus
            :param out: the byte buffer to send
-           :param readlen: count of bytes to read out.
+           :type out: array or bytes or list(int)
+           :param int readlen: count of bytes to read out.
+           :return: read bytes
+           :rtype: array
+           :raise I2cIOError: if device is not configured or input parameters
+                              are invalid
 
-           Address is a logical address (0x7f max)
+           Address is a logical slave address (0x7f max)
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
@@ -381,9 +424,10 @@ class I2cController(object):
     def poll(self, address, write=False):
         """Poll a remote slave, expect ACK or NACK.
 
-           :param address: the address on the I2C bus
-           :param write: poll in write mode (vs. read)
+           :param int address: the address on the I2C bus
+           :param bool write: poll in write mode (vs. read)
            :return: True if the slave acknowledged, False otherwise
+           :rtype: bool
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
@@ -409,7 +453,7 @@ class I2cController(object):
 
     def _do_prolog(self, i2caddress):
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
-        cmd = Array('B', self._idle)
+        cmd = array('B', self._idle)
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
@@ -431,7 +475,7 @@ class I2cController(object):
 
     def _do_epilog(self):
         self.log.debug('   epilog')
-        cmd = Array('B', self._stop)
+        cmd = array('B', self._stop)
         self._ftdi.write_data(cmd)
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
@@ -462,7 +506,7 @@ class I2cController(object):
             block_count = min(count, chunk_size)
             count -= block_count
             if last_count != block_count:
-                cmd = Array('B')
+                cmd = array('B')
                 cmd.extend(read_not_last * (block_count-1))
                 cmd.extend(read_last)
                 last_cmd = cmd
@@ -474,14 +518,14 @@ class I2cController(object):
             self._ftdi.write_data(cmd)
             buf = self._ftdi.read_data_bytes(block_count, 4)
             chunks.append(buf)
-        return Array('B', b''.join(chunks))
+        return array('B', b''.join(chunks))
 
     def _do_write(self, out):
-        if not isinstance(out, Array):
-            out = Array('B', out)
+        if not isinstance(out, array):
+            out = array('B', out)
         self.log.debug('- write %d bytes: %s', len(out), hexlify(out).decode())
         for byte in out:
-            cmd = Array('B', self._write_byte)
+            cmd = array('B', self._write_byte)
             cmd.append(byte)
             if self._tristate:
                 cmd.extend(self._tristate)

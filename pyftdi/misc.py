@@ -29,7 +29,7 @@
 """
 
 import re
-from array import array as Array
+from array import array
 
 
 # String values evaluated as true boolean values
@@ -51,7 +51,7 @@ def hexdump(data, full=False, abbreviate=False):
        :abbreviate: replace identical lines with '*'
     """
     try:
-        if isinstance(data, (bytes, Array)):
+        if isinstance(data, (bytes, array)):
             src = bytearray(data)
         elif not isinstance(data, bytearray):
             # data may be a list/tuple
@@ -96,7 +96,7 @@ def hexline(data, sep=' '):
        of the buffer data
     """
     try:
-        if isinstance(data, (bytes, Array)):
+        if isinstance(data, (bytes, array)):
             src = bytearray(data)
         elif not isinstance(data, bytearray):
             # data may be a list/tuple

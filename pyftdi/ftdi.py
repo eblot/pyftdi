@@ -25,7 +25,7 @@ License: LGPL, originally based on libftdi C library
 Require: pyusb
 """
 
-from array import array as Array
+from array import array
 from binascii import hexlify
 from errno import ENODEV
 from logging import getLogger
@@ -261,7 +261,7 @@ class Ftdi(object):
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
-        self.readbuffer = Array('B')
+        self.readbuffer = array('B')
         self.readoffset = 0
         self.readbuffer_chunksize = 4 << 10  # 4KiB
         self.writebuffer_chunksize = 4 << 10  # 4KiB
@@ -282,16 +282,23 @@ class Ftdi(object):
 
     @classmethod
     def create_from_url(cls, url):
+        """Create an Ftdi instance from an URL
+
+           URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface
+
+           :param str url: FTDI device selector
+        """
         device = Ftdi()
         device.open_from_url(url)
         return device
 
     @classmethod
     def get_identifiers(cls, url):
-        """Extract the identifiers of a FTDI device from URL, if any
+        """Extract the identifiers of an FTDI device from URL, if any
 
-            :param url: input URL to parse
-            :return: (vendor, product, index, sernum, interface)
+           :param str url: input URL to parse
+           :return: (vendor, product, index, sernum, interface)
+           :rtype: tuple
         """
         ids = UsbTools.parse_url(
             url, cls,
@@ -301,7 +308,12 @@ class Ftdi(object):
     @classmethod
     def add_custom_vendor(cls, vid, vidname=''):
         """Add a custom USB vendor identifier.
+
            It can be useful to use a pretty URL for opening FTDI device
+
+           :param int vid: Vendor ID (USB 16-bit identifier)
+           :param str vidname: Vendor name (arbitrary string)
+           :raise ValueError: if the vendor id is already referenced
         """
         if vid in cls.VENDOR_IDS:
             raise ValueError('Vendor ID 0x%04x already registered' % vid)
@@ -312,8 +324,14 @@ class Ftdi(object):
     @classmethod
     def add_custom_product(cls, vid, pid, pidname=''):
         """Add a custom USB product identifier.
+
            It is required for opening FTDI device with non-standard VID/PID
            USB identifiers.
+
+           :param int vid: Vendor ID (USB 16-bit identifier)
+           :param int pid: Product ID (USB 16-bit identifier)
+           :param str pidname: Product name (arbitrary string)
+           :raise ValueError: if the product id is already referenced
         """
         if vid not in cls.PRODUCT_IDS:
             cls.PRODUCT_IDS[vid] = {}
@@ -326,15 +344,49 @@ class Ftdi(object):
     @staticmethod
     def find_all(vps, nocache=False):
         """Find all devices that match the vendor/product pairs of the vps
-           list."""
+           list.
+
+           :param vps: a sequence of 2-tuple (vid, pid) pairs
+           :type vps: tuple(int, int)
+           :param bool nocache: bypass cache to re-enumerate USB devices on
+                                the host
+           :return: a list of 5-tuple (vid, pid, sernum, iface, description)
+                    device descriptors
+           :rtype: list(tuple(int,int,str,int,str))
+        """
         return UsbTools.find_all(vps, nocache)
 
     def open_from_url(self, url):
+        """Open a new interface to the specified FTDI device.
+
+           :param str url: a FTDI URL selector
+        """
         vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open(vendor, product, index, serial, interface)
+        self.open(vendor, product, index, serial, interface)
 
     def open(self, vendor, product, index=0, serial=None, interface=1):
-        """Open a new interface to the specified FTDI device"""
+        """Open a new interface to the specified FTDI device.
+
+           If several FTDI devices of the same kind (vid, pid) are connected
+           to the host, either index or serial argument should be used to
+           discriminate the FTDI device.
+
+           index argument is not a reliable solution as the host may enumerate
+           the USB device in random order. serial argument is more reliable
+           selector and should always be prefered.
+
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H). The interface argument selects the FTDI port to use,
+           starting from 1 (not 0).
+
+           :param int vendor: USB vendor id
+           :param int product: USB product id
+           :param int index: optional selector, specified the n-th matching
+                             FTDI enumerated USB device on the host
+           :param str serial: optional selector, specified the FTDI device
+                              by its serial number
+           :param str interface: FTDI interface/port
+        """
         self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
         try:
             self.usb_dev.set_configuration()
@@ -352,19 +404,65 @@ class Ftdi(object):
         self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self):
-        """Close the FTDI interface"""
+        """Close the FTDI interface/port."""
         self.set_latency_timer(self.LATENCY_MAX)
         UsbTools.release_device(self.usb_dev)
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
                             frequency=6.0E6, latency=16):
+        """Open a new interface to the specified FTDI device in MPSSE mode.
+
+           MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+           modes (vs. UART mode).
+
+           :param str url: a FTDI URL selector
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
+           :param int initial: a bitfield specifying the initial output value
+           :param float frequency: serial interface clock in Hz
+           :param int latency: low-level latency to select the USB FTDI poll
+                delay. The shorter the delay, the higher the host CPU load.
+        """
         vendor, product, index, serial, interface = self.get_identifiers(url)
         return self.open_mpsse(vendor, product, index, serial, interface,
                                direction, initial, frequency, latency)
 
     def open_mpsse(self, vendor, product, index=0, serial=None, interface=1,
                    direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
-        """Configure the interface for MPSSE mode"""
+        """Open a new interface to the specified FTDI device in MPSSE mode.
+
+           MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+           modes (vs. UART mode).
+
+           If several FTDI devices of the same kind (vid, pid) are connected
+           to the host, either index or serial argument should be used to
+           discriminate the FTDI device.
+
+           index argument is not a reliable solution as the host may enumerate
+           the USB device in random order. serial argument is more reliable
+           selector and should always be prefered.
+
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H). The interface argument selects the FTDI port to use,
+           starting from 1 (not 0). Note that not all FTDI ports are MPSSE
+           capable.
+
+           :param int vendor: USB vendor id
+           :param int product: USB product id
+           :param int index: optional selector, specified the n-th matching
+                             FTDI enumerated USB device on the host
+           :param str serial: optional selector, specified the FTDI device
+                              by its serial number
+           :param str interface: FTDI interface/port
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
+           :param int initial: a bitfield specifying the initial output value
+           :param float frequency: serial interface clock in Hz
+           :param int latency: low-level latency to select the USB FTDI poll
+                delay. The shorter the delay, the higher the host CPU load.
+        """
         # Open an FTDI interface
         self.open(vendor, product, index, serial, interface)
         if not self.has_mpsse:
@@ -385,22 +483,50 @@ class Ftdi(object):
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
-        self.write_data(Array('B', (Ftdi.SET_BITS_LOW, initial, direction)))
+        self.write_data(array('B', (Ftdi.SET_BITS_LOW, initial, direction)))
         # Disable loopback
-        self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
+        self.write_data(array('B', (Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
         # Return the actual frequency
         return frequency
 
     def open_bitbang_from_url(self, url, direction=0x0, initial=0x0,
                               latency=16):
+        """Open a new interface to the specified FTDI device in bitbang mode.
+
+           Bitbang enables direct read or write to FTDI GPIOs.
+
+           :param str url: a FTDI URL selector
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
+           :param int initial: ignored
+           :param int latency: low-level latency to select the USB FTDI poll
+                delay. The shorter the delay, the higher the host CPU load.
+        """
         vendor, product, index, serial, interface = self.get_identifiers(url)
         return self.open_bitbang(vendor, product, index, serial, interface,
                                  direction, latency)
 
     def open_bitbang(self, vendor, product, index=0, serial=None, interface=1,
                      direction=0x0, latency=16):
-        """Configure the interface for BITBANG mode"""
+        """Open a new interface to the specified FTDI device in bitbang mode.
+
+           Bitbang enables direct read or write to FTDI GPIOs.
+
+           :param int vendor: USB vendor id
+           :param int product: USB product id
+           :param int index: optional selector, specified the n-th matching
+                             FTDI enumerated USB device on the host
+           :param str serial: optional selector, specified the FTDI device
+                              by its serial number
+           :param str interface: FTDI interface/port
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
+           :param int latency: low-level latency to select the USB FTDI poll
+                delay. The shorter the delay, the higher the host CPU load.
+        """
         # Open an FTDI interface
         self.open(vendor, product, index, serial, interface)
         # Set latency timer
@@ -409,7 +535,7 @@ class Ftdi(object):
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(Array('B', (Ftdi.LOOPBACK_END,)))
+        self.write_data(array('B', (Ftdi.LOOPBACK_END,)))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Drain input buffer
@@ -418,8 +544,12 @@ class Ftdi(object):
     @property
     def ic_name(self):
         """Return the current type of the FTDI device as a string
+
            see also http://www.ftdichip.com/Support/
            Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf
+
+           :return: the identified FTDI device as a string
+           :rtype: str
         """
         types = {0x0200: 'ft232am',
                  0x0400: 'ft232bm',
@@ -435,40 +565,72 @@ class Ftdi(object):
 
     @property
     def has_mpsse(self):
-        """Tell whether the device supports MPSSE (I2C, SPI, JTAG, ...)"""
+        """Tell whether the device supports MPSSE (I2C, SPI, JTAG, ...)
+
+           :return: True if the FTDI device supports MPSSE
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
         return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0800, 0x0900)
 
     @property
     def is_legacy(self):
-        """Tell whether the device is a high-end FTDI"""
+        """Tell whether the device is a low-end FTDI
+
+           :return: True if the FTDI device can only be used as a slow USB-UART
+                    bridge
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
         return self.usb_dev.bcdDevice <= 0x0200
 
     @property
     def is_H_series(self):
-        """Tell whether the device is a high-end FTDI"""
+        """Tell whether the device is a high-end FTDI
+
+           :return: True if the FTDI device is a high-end USB-UART bridge
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
         return self.usb_dev.bcdDevice in (0x0700, 0x0800, 0x0900)
 
     @property
     def has_drivezero(self):
-        """Tell whether the device supports 3-phase clock mode"""
+        """Tell whether the device supports drive-zero mode, i.e. if the
+           device supports the open-collector drive mode, useful for I2C
+           communication for example.
+
+           :return: True if the FTDI device features drive-zero mode
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
         return self.usb_dev.bcdDevice in (0x0900, )
 
     @property
     def is_mpsse(self):
-        """Tell whether the device is configured in MPSSE mode"""
+        """Tell whether the device is configured in MPSSE mode
+
+           :return: True if the FTDI interface is configured in MPSSE mode
+           :rtype: bool
+        """
         return self.bitmode == Ftdi.BITMODE_MPSSE
 
     @property
     def bitbang_enabled(self):
-        """Tell whether some bitbang mode is activated"""
+        """Tell whether some bitbang mode is activated
+
+           :return: True if the FTDI interface is configured to support
+                    bitbanging
+           :rtype: bool
+        """
         return self.bitmode not in (
                 Ftdi.BITMODE_RESET,
                 Ftdi.BITMODE_CBUS  # CBUS mode does not change base frequency
@@ -476,12 +638,20 @@ class Ftdi(object):
 
     @property
     def frequency_max(self):
-        """Tells the maximum frequency for MPSSE clock"""
+        """Tells the maximum frequency for MPSSE clock.
+
+           :return: the maximum supported frequency in Hz
+           :rtype: float
+        """
         return self.is_H_series and Ftdi.BUS_CLOCK_HIGH or Ftdi.BUS_CLOCK_BASE
 
     @property
     def fifo_sizes(self):
-        """Return the (TX, RX) tupple of hardware FIFO sizes"""
+        """Return the (TX, RX) tupple of hardware FIFO sizes
+
+           :return: 2-tuple of TX, RX FIFO size in bytes
+           :rtype: tuple(int, int)
+        """
         # Note that the FTDI datasheets contradict themselves, so
         # the following values may not be the right ones...
         # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
@@ -496,7 +666,24 @@ class Ftdi(object):
         return sizes.get(self.usb_dev.bcdDevice, (128, 128))  # default sizes
 
     def set_baudrate(self, baudrate):
-        """Change the current interface baudrate"""
+        """Change the current UART baudrate.
+
+           The FTDI device is not able to use an arbitrary baudrate. Its
+           internal dividors are only able to achieve some baudrates.
+
+           PyFtdi attemps to find the closest configurable baudrate and if
+           the deviation from the requested baudrate is too high, it rejects
+           the configuration.
+
+           see :py:attr:`baudrate` for the exact selected baudrate.
+
+           :py:const:`BAUDRATE_TOLERANCE` defines the maximum deviation, which
+                matches standard UART clock drift (3%)
+
+           :param int baudrate: the new baudrate for the UART.
+           :raise ValueError: if deviation from selected baudrate is too large
+           :rause FtdiError: on IO Error
+        """
         if self.bitbang_enabled:
             baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
@@ -507,7 +694,7 @@ class Ftdi(object):
                              (delta, baudrate, actual))
         try:
             if self.usb_dev.ctrl_transfer(
-                Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index, Array('B'),
+                Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index, array('B'),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
@@ -515,6 +702,19 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def set_frequency(self, frequency):
+        """Change the current MPSSE bus frequency
+
+           The FTDI device is not able to use an arbitrary frequency. Its
+           internal dividors are only able to achieve some frequencies.
+
+           PyFtdi finds and selects the closest configurable frequency.
+
+           :param float frequency: the new frequency for the serial interface,
+                in Hz.
+           :return: the selected frequency, which may differ from the requested
+                one, in Hz
+           :rtype: float
+        """
         return self._set_frequency(frequency)
 
     def purge_rx_buffer(self):
@@ -523,7 +723,7 @@ class Ftdi(object):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = array('B')
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
@@ -536,18 +736,34 @@ class Ftdi(object):
         self.purge_tx_buffer()
 
     def write_data_set_chunksize(self, chunksize):
-        """Configure write buffer chunk size."""
+        """Configure write buffer chunk size.
+
+           This is a low-level configuration option, which is not intended to
+           be use for a regular usage.
+
+           :param int chunksize: the size of the write buffer in bytes
+        """
         self.writebuffer_chunksize = chunksize
 
     def write_data_get_chunksize(self):
-        """Get write buffer chunk size."""
+        """Get write buffer chunk size.
+
+           :return: the size of the write buffer in bytes
+           :rtype: int
+        """
         return self.writebuffer_chunksize
 
     def read_data_set_chunksize(self, chunksize):
-        """Configure read buffer chunk size."""
+        """Configure read buffer chunk size.
+
+           This is a low-level configuration option, which is not intended to
+           be use for a regular usage.
+
+           :param int chunksize: the size of the read buffer in bytes
+        """
         # Invalidate all remaining data
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = array('B')
         if platform == 'linux':
             if chunksize > 16384:
                 chunksize = 16384
@@ -555,11 +771,18 @@ class Ftdi(object):
         self.readbuffer_chunksize = chunksize
 
     def read_data_get_chunksize(self):
-        """Get read buffer chunk size."""
+        """Get read buffer chunk size.
+
+           :return: the size of the write buffer in bytes
+           :rtype: int
+        """
         return self.readbuffer_chunksize
 
     def set_bitmode(self, bitmask, mode):
-        """Enable/disable bitbang modes."""
+        """Enable/disable bitbang modes.
+
+           Switch the FTDI interface to bitbang mode.
+        """
         value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
@@ -567,17 +790,28 @@ class Ftdi(object):
 
     def read_pins(self):
         """Directly read pin state, circumventing the read buffer.
-           Useful for bitbang mode."""
+           Useful for bitbang mode.
+
+           :return: bitfield of FTDI interface input GPIO
+           :rtype: int
+        """
         pins = self._ctrl_transfer_in(Ftdi.SIO_READ_PINS, 1)
         if not pins:
             raise FtdiError('Unable to read pins')
         return pins[0]
 
     def set_latency_timer(self, latency):
-        """Set latency timer
+        """Set latency timer.
+
            The FTDI chip keeps data in the internal buffer for a specific
            amount of time if the buffer is not full yet to decrease
-           load on the usb bus."""
+           load on the usb bus.
+
+           The shorted the latency, the shorted the delay to obtain data and
+           the higher the host CPU load. Be careful with this option.
+
+           :param int latency: latency (unspecified unit)
+        """
         if not (Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX):
             raise ValueError("Latency out of range")
         if self._ctrl_transfer_out(Ftdi.SIO_SET_LATENCY_TIMER, latency):
@@ -591,9 +825,19 @@ class Ftdi(object):
         return latency[0]
 
     def poll_modem_status(self):
-        """Poll modem status information
+        """Poll modem status information.
+
            This function allows the retrieve the two status bytes of the
-           device.
+           device, useful in UART mode.
+
+           FTDI device does not have a so-called USB "interrupt" end-point,
+           event polling on the UART interface is done through the regular
+           control endpoint.
+
+           see :py:func:`modem_status` to obtain decoded status strings
+
+           :return: modem status, as a proprietary bitfield
+           :rtype: integer
         """
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
@@ -602,7 +846,11 @@ class Ftdi(object):
         return status
 
     def modem_status(self):
-        """Provide the current modem status as a tuple of set signals"""
+        """Provide the current modem status as a tuple of set signals
+
+           :return: decodede modem status as short strings
+           :rtype: tuple(str)
+        """
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
@@ -614,33 +862,53 @@ class Ftdi(object):
         return tuple(status)
 
     def set_flowctrl(self, flowctrl):
-        """Set flowcontrol for ftdi chip"""
+        """Select flowcontrol in UART mode.
+
+           Either hardware flow control through RTS/CTS UART lines,
+           software or no flow control.
+
+           :param str flowctrl: one of 'hw', 'sw', ''
+           :raise ValueError: if the flow control argument is invalid
+        """
         ctrl = {'hw': Ftdi.SIO_RTS_CTS_HS,
                 'sw': Ftdi.SIO_XON_XOFF_HS,
                 '': Ftdi.SIO_DISABLE_FLOW_CTRL}
-        value = ctrl[flowctrl] | self.index
+        try:
+            value = ctrl[flowctrl] | self.index
+        except KeyError:
+            raise ValueError('Unknown flow control: %s' % flowctrl)
         try:
             if self.usb_dev.ctrl_transfer(
-                Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, Array('B'),
+                Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, array('B'),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
     def set_dtr(self, state):
-        """Set dtr line"""
+        """Set dtr line
+
+           :param bool state: new DTR logical level
+        """
         value = state and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set DTR line')
 
     def set_rts(self, state):
-        """Set rts line"""
+        """Set rts line
+
+           :param bool state: new RTS logical level
+        """
         value = state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set RTS line')
 
     def set_dtr_rts(self, dtr, rts):
-        """Set dtr and rts lines"""
+        """Set dtr and rts lines at once
+
+           :param bool dtr: new DTR logical level
+           :param bool rts: new RTS logical level
+        """
         value = 0
         value |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
         value |= rts and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
@@ -648,6 +916,10 @@ class Ftdi(object):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_break(self, break_):
+        """Start or stop a break exception event on the serial line
+
+           :param bool break_: either start or stop break event
+        """
         if break_:
             value = self.lineprop | (0x01 << 14)
             if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
@@ -664,7 +936,7 @@ class Ftdi(object):
         if enable:
             value |= 1 << 8
         if self._ctrl_transfer_out(Ftdi.SIO_SET_EVENT_CHAR, value):
-            raise FtdiError('Unable to set DTR/RTS lines')
+            raise FtdiError('Unable to set event char')
 
     def set_error_char(self, errorch, enable):
         """Set error character"""
@@ -672,10 +944,23 @@ class Ftdi(object):
         if enable:
             value |= 1 << 8
         if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
-            raise FtdiError('Unable to set DTR/RTS lines')
+            raise FtdiError('Unable to set error char')
 
     def set_line_property(self, bits, stopbit, parity, break_=0):
-        """Set (RS232) line characteristics"""
+        """Configure the (RS232) UART characteristics.
+
+           Parity accepts one of the following strings:
+           * ``N`` for no parity bit
+           * ``O`` for odd parity bit
+           * ``E`` for even parity bit
+           * ``M`` for parity bit always set
+           * ``S`` for parity bit always reset
+
+           :param int bits: data bit count
+           :param float stopbit: stop bit count
+           :param str parity: parity mode as a single uppercase character
+           :param bool break_: force break event
+        """
         bytelength = {7: Ftdi.BITS_7,
                       8: Ftdi.BITS_8}
         parities = {'N': Ftdi.PARITY_NONE,
@@ -711,34 +996,73 @@ class Ftdi(object):
         self.lineprop = value
 
     def enable_adaptive_clock(self, enable=True):
+        """Enable adaptative clock mode, useful in MPSEE mode.
+
+           Adaptive clock is a unique feature designed for a feedback clock
+           for JTAG with ARM core.
+
+           :param bool enable: whether to enable or disable this mode.
+           :raise FtdiMpsseError: if MPSSE mode is not enabled
+        """
         if not self.is_mpsse:
             raise FtdiMpsseError('Setting adaptive clock mode is only '
                                  'available from MPSSE mode')
-        self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_ADAPTIVE or
+        self.write_data(array('B', [enable and Ftdi.ENABLE_CLK_ADAPTIVE or
                                     Ftdi.DISABLE_CLK_ADAPTIVE]))
 
     def enable_3phase_clock(self, enable=True):
+        """Enable 3-phase clocking mode, useful in MPSSE mode.
+
+           3-phase clock is mostly useful with I2C mode. It is also be used
+           as a workaround to support SPI mode 3.
+
+           :param bool enable: whether to enable or disable this mode.
+           :raise FtdiMpsseError: if MPSSE mode is not enabled or device is
+                not capable of 3-phase clocking
+        """
         if not self.is_mpsse:
             raise FtdiMpsseError('Setting 3-phase clock mode is only '
                                  'available from MPSSE mode')
         if not self.is_H_series:
             raise FtdiFeatureError('This device does not support 3-phase '
                                    'clock')
-        self.write_data(Array('B', [enable and Ftdi.ENABLE_CLK_3PHASE or
+        self.write_data(array('B', [enable and Ftdi.ENABLE_CLK_3PHASE or
                                     Ftdi.DISABLE_CLK_3PHASE]))
 
     def enable_drivezero_mode(self, lines):
+        """Enable drive-zero mode, useful in MPSSE mode.
+
+           drive-zero mode is mostly useful with I2C mode, to support the open
+           collector driving mode.
+
+           :param bool enable: whether to enable or disable this mode.
+           :raise FtdiMpsseError: if MPSSE mode is not enabled or device is
+                not capable of drive-zero mode
+        """
         if not self.is_mpsse:
             raise FtdiMpsseError('Setting drive-zero mode is only '
                                  'available from MPSSE mode')
         if not self.has_drivezero:
             raise FtdiFeatureError('This device does not support drive-zero '
                                    'mode')
-        self.write_data(Array('B', [Ftdi.DRIVE_ZERO, lines & 0xff,
+        self.write_data(array('B', [Ftdi.DRIVE_ZERO, lines & 0xff,
                                     (lines >> 8) & 0xff]))
 
     def write_data(self, data):
-        """Write data in chunks to the chip"""
+        """Write data to the FTDI port.
+
+           In UART mode, data contains the serial stream to write to the UART
+           interface.
+
+           In MPSSE mode, data contains the sequence of MPSSE commands and
+           data.
+
+           Data buffer is split into chunk-sized blocks before being sent over
+           the USB bus.
+
+           :param data: the byte stream to send to the FTDI interface
+           :type data: array or bytes
+        """
         offset = 0
         size = len(data)
         try:
@@ -755,15 +1079,38 @@ class Ftdi(object):
             raise FtdiError('UsbError: %s' % str(e))
 
     def read_data_bytes(self, size, attempt=1):
-        """Read data in chunks from the chip.
-           Automatically strips the two modem status bytes transfered during
-           every read."""
+        """Read data from the FTDI interface
+
+           In UART mode, data contains the serial stream read from the UART
+           interface.
+
+           In MPSSE mode, data contains the sequence of data received and
+           processed with the MPSEE engine.
+
+           Data buffer is rebuilt from chunk-sized blocks received over the USB
+           bus.
+
+           FTDI device always sends internal status bytes, which are stripped
+           out as not part of the data payload.
+
+           Because of the multiple buses, buffers, FIFOs, and MPSSE command
+           processing, data might not be immediately available on the host
+           side. The attempt argument can be used to increase the attempt count
+           to retrieve the expected amount of data, before giving up and
+           returning all the received data, which may be shorted than the
+           requested amount.
+
+           :param int size: the number of bytes to received from the device
+           :param int attempt: attempt cycle count
+           :return: payload bytes, as an array of bytes
+           :rtype: array
+        """
         # Packet size sanity check
         if not self.max_packet_size:
             raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1  # initial condition to enter the usb_read loop
-        data = Array('B')
+        data = array('B')
         # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
@@ -793,7 +1140,7 @@ class Ftdi(object):
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
-                        self.readbuffer = Array('B')
+                        self.readbuffer = array('B')
                         self.readoffset = 0
                         srcoff = 2
                         for i in range(chunks):
@@ -807,7 +1154,7 @@ class Ftdi(object):
                         if attempt > 0:
                             continue
                         # no actual data
-                        self.readbuffer = Array('B')
+                        self.readbuffer = array('B')
                         self.readoffset = 0
                         if self.latency_threshold:
                             self.latency_count += 1
@@ -843,33 +1190,69 @@ class Ftdi(object):
         raise FtdiError("Internal error")
 
     def read_data(self, size):
-        """Read data in chunks from the chip.
-           Automatically strips the two modem status bytes transfered during
-           every read."""
+        """Shortcut to received a bytes buffer instead of the array of bytes.
+
+           Note that output byte buffer may be shorted than the requested
+           size.
+
+           :param int size: the number of bytes to received from the device
+           :return: payload bytes
+           :rtype: bytes
+        """
         return self.read_data_bytes(size).tobytes()
 
     def get_cts(self):
-        """Read terminal status line: Clear To Send"""
+        """Read terminal status line: Clear To Send
+
+           :return: CTS line logical level
+           :rtype: bool
+        """
         status = self.poll_modem_status()
-        return (status & self.MODEM_CTS) and True or False
+        return bool(status & self.MODEM_CTS)
 
     def get_dsr(self):
-        """Read terminal status line: Data Set Ready"""
+        """Read terminal status line: Data Set Ready
+
+           :return: DSR line logical level
+           :rtype: bool
+        """
         status = self.poll_modem_status()
-        return (status & self.MODEM_DSR) and True or False
+        return bool(status & self.MODEM_DSR)
 
     def get_ri(self):
-        """Read terminal status line: Ring Indicator"""
+        """Read terminal status line: Ring Indicator
+
+           :return: RI line logical level
+           :rtype: bool
+        """
         status = self.poll_modem_status()
-        return (status & self.MODEM_RI) and True or False
+        return bool(status & self.MODEM_RI)
 
     def get_cd(self):
-        """Read terminal status line: Carrier Detect"""
+        """Read terminal status line: Carrier Detect
+
+           :return: CD line logical level
+           :rtype: bool
+        """
         status = self.poll_modem_status()
-        return (status & self.MODEM_RLSD) and True or False
+        return bool(status & self.MODEM_RLSD)
 
     def set_dynamic_latency(self, lmin, lmax, threshold):
-        """Set up or disable latency values"""
+        """Set up or disable latency values.
+
+           Dynamic latency management is a load balancer to adapt the
+           responsiveness of FTDI read request vs. the host CPU load.
+
+           It is mostly useful in UART mode, so that read bandwidth can be
+           increased to the maximum achievable throughput, while maintaining
+           very low host CPU load when no data is received from the UART.
+
+           There should be no need to tweak the default values. Use with care.
+
+           :param int lmin: minimum latency level
+           :param int lmax: maximum latenty level
+           :param int threshold: latency to reset latency to maximum level
+        """
         if not threshold:
             self.latency_count = 0
             self.latency_threshold = None
@@ -884,13 +1267,22 @@ class Ftdi(object):
             self.set_latency_timer(self.latency)
 
     def validate_mpsse(self):
+        """Check that the previous MPSSE request has been accepted by the FTDI
+           device.
+
+           :raise FtdiError: if the FTDI device rejected the command.
+        """
         # only useful in MPSSE mode
         bytes_ = self.read_data(2)
         if (len(bytes_) >= 2) and (bytes_[0] == '\xfa'):
             raise FtdiError("Invalid command @ %d" % ord(bytes_[1]))
 
     def get_error_string(self):
-        """Wrapper for libftdi compatibility"""
+        """Wrapper for libftdi compatibility.
+
+           :return: a constant, meaningless string
+           :rtype: str
+        """
         return "Unknown error"
 
     # --- Private implementation -------------------------------------------
@@ -912,14 +1304,14 @@ class Ftdi(object):
             raise FtdiError('Unable to reset FTDI device')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = Array('B')
+        self.readbuffer = array('B')
 
     def _ctrl_transfer_out(self, reqtype, value, data=b''):
         """Send a control message to the device"""
         try:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_OUT, reqtype, value, self.index,
-                    Array('B').frombytes(data), self.usb_write_timeout)
+                array('B').frombytes(data), self.usb_write_timeout)
         except usb.core.USBError as e:
             raise FtdiError('UsbError: %s' % str(e))
 
@@ -1064,9 +1456,9 @@ class Ftdi(object):
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
         if self.is_H_series:
-            cmd = Array('B', (divcode,))
+            cmd = array('B', (divcode,))
         else:
-            cmd = Array('B')
+            cmd = array('B')
         cmd.extend((Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()

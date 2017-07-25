@@ -25,7 +25,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import struct
-from array import array as Array
+from array import array
 from pyftdi.ftdi import Ftdi
 
 
@@ -39,9 +39,8 @@ class SpiIOError(IOError):
 class SpiPort(object):
     """SPI port
 
-       An SPI port is never instanciated directly.
-
-       Use SpiController.get_port() method to obtain an SPI port
+       An SPI port is never instanciated directly: use SpiController.get_port()
+       method to obtain an SPI port.
 
        :Example:
 
@@ -67,17 +66,17 @@ class SpiPort(object):
         cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
-        cs_cmd = Array('B',
+        cs_cmd = array('B',
                        (Ftdi.SET_BITS_LOW, cs_clock, controller.direction,
                         Ftdi.SET_BITS_LOW, cs_select, controller.direction))
         self._cs_cmd = cs_cmd
         self._cs_release = \
-            Array('B', [Ftdi.SET_BITS_LOW, cs_select, controller.direction] +
+            array('B', [Ftdi.SET_BITS_LOW, cs_select, controller.direction] +
                        [Ftdi.SET_BITS_LOW, cs_clock, controller.direction] *
                   int(cs_hold))
         self._frequency = self._controller.frequency
 
-    def exchange(self, out='', readlen=0, start=True, stop=True):
+    def exchange(self, out=b'', readlen=0, start=True, stop=True):
         """Perform an exchange or a transaction with the SPI slave
 
            .. note:: Exchange is a dual half-duplex transmission: output bytes
@@ -86,18 +85,20 @@ class SpiPort(object):
                      exchange for now, although this feature could be easily
                      implemented.
 
-           :param out: an array of bytes to send to the SPI slave,
-                       may be empty to only read out data from the slave
-           :param readlen: count of bytes to read out from the slave,
+           :param out: data to send to the SPI slave, may be empty to read out
+                       data from the slave with no write.
+           :type out: array or bytes or list(int)
+           :param int readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :param start: whether to start an SPI transaction, i.e. activate
-                         the /CS line for the slave. Use False to resume a
-                         previously started transaction
-           :param stop: whether to desactivete the /CS line for the slave. Use
-                       False if the transaction should complete with a further
-                       call to exchange()
+           :param bool start: whether to start an SPI transaction, i.e.
+                        activate the /CS line for the slave. Use False to
+                        resume a previously started transaction
+           :param bool stop: whether to desactivete the /CS line for the slave.
+                       Use False if the transaction should complete with a
+                       further call to exchange()
            :return: an array of bytes containing the data read out from the
                     slave
+           :rtype: array
         """
         return self._controller._exchange(self._frequency, out, readlen,
                                           start and self._cs_cmd,
@@ -105,14 +106,38 @@ class SpiPort(object):
                                           self._cpol, self._cpha)
 
     def read(self, readlen=0, start=True, stop=True):
-        """Read out bytes from the slave"""
+        """Read out bytes from the slave
+
+           :param int readlen: count of bytes to read out from the slave,
+                       may be zero to only write to the slave
+           :param bool start: whether to start an SPI transaction, i.e.
+                        activate the /CS line for the slave. Use False to
+                        resume a previously started transaction
+           :param bool stop: whether to desactivete the /CS line for the slave.
+                       Use False if the transaction should complete with a
+                       further call to exchange()
+           :return: an array of bytes containing the data read out from the
+                    slave
+           :rtype: array
+        """
         return self._controller._exchange(self._frequency, [], readlen,
                                           start and self._cs_cmd,
                                           stop and self._cs_release,
                                           self._cpol, self._cpha)
 
     def write(self, out, start=True, stop=True):
-        """Write bytes to the slave"""
+        """Write bytes to the slave
+
+           :param out: data to send to the SPI slave, may be empty to read out
+                       data from the slave with no write.
+           :type out: array or bytes or list(int)
+           :param bool start: whether to start an SPI transaction, i.e.
+                        activate the /CS line for the slave. Use False to
+                        resume a previously started transaction
+           :param bool stop: whether to desactivete the /CS line for the slave.
+                       Use False if the transaction should complete with a
+                       further call to exchange()
+        """
         return self._controller._exchange(self._frequency, out, 0,
                                           start and self._cs_cmd,
                                           stop and self._cs_release,
@@ -123,7 +148,10 @@ class SpiPort(object):
         self._controller._flush()
 
     def set_frequency(self, frequency):
-        """Change SPI bus frequency"""
+        """Change SPI bus frequency
+
+           :param float frequency: the new frequency in Hz
+        """
         self._frequency = min(frequency, self._controller.frequency_max)
 
     @property
@@ -156,22 +184,31 @@ class SpiController(object):
                            SpiController.DO_BIT |
                            SpiController.SCK_BIT)
         self._turbo = turbo
-        self._cs_high = Array('B')
+        self._cs_high = array('B')
         # Restore idle state
         self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
                               self._direction))
         if not self._turbo:
             self._cs_high.append(Ftdi.SEND_IMMEDIATE)
-        self._immediate = Array('B', (Ftdi.SEND_IMMEDIATE,))
+        self._immediate = array('B', (Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
 
     @property
     def direction(self):
+        """Provide the FTDI GPIO direction"""
         return self._direction
 
     def configure(self, url, **kwargs):
-        """Configure the FTDI interface as a SPI master"""
+        """Configure the FTDI interface as a SPI master
+
+           :param str url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+           :param kwargs: options to configure the SPI bus
+
+           Accepted options:
+
+           * ``frequency`` the SPI bus frequency in Hz
+        """
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
@@ -187,10 +224,12 @@ class SpiController(object):
             self._ftdi = None
 
     def get_port(self, cs, freq=None, mode=0):
-        """Obtain a SPI port to drive a SPI device selected by cs
+        """Obtain a SPI port to drive a SPI device selected by Chip Select.
+
+           :note: SPI mode 2 is not supported.
 
            :param int cs: chip select slot, starting from 0
-           :param int freq: SPI bus frequency for this slave
+           :param float freq: SPI bus frequency for this slave in Hz
            :param int mode: SPI mode [0,1,3]
            :rtype: SpiPort
         """
@@ -226,22 +265,7 @@ class SpiController(object):
 
     def _exchange(self, frequency, out, readlen, cs_cmd=None, cs_release=None,
                   cpol=False, cpha=False):
-        """Perform a half-duplex exchange or transaction with the SPI slave
-
-           :param frequency: SPI bus clock
-           :param out: an array of bytes to send to the SPI slave,
-                       may be empty to only read out data from the slave
-           :param readlen: count of bytes to read out from the slave,
-                       may be zero to only write to the slave
-           :param cs_cmd: the prolog sequence to activate the /CS line on the
-                       SPI bus. May be empty to resume a previously started
-                       transaction
-           :param cs_release: the epilog sequence to send to move the
-                       /CS line back to the idle state. May be empty to if
-                       another part of a transaction is expected
-           :return: an array of bytes containing the data read out from the
-                    slave
-        """
+        """Perform a half-duplex exchange or transaction with the SPI slave"""
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -259,9 +283,9 @@ class SpiController(object):
             self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
-        cmd = cs_cmd and Array('B', cs_cmd) or Array('B')
+        cmd = cs_cmd and array('B', cs_cmd) or array('B')
         if cs_release:
-            epilog = Array('B', cs_release)
+            epilog = array('B', cs_release)
             epilog.extend(self._cs_high)
         else:
             epilog = None
@@ -303,7 +327,7 @@ class SpiController(object):
                     self._ftdi.write_data(cmd)
                     if epilog:
                         self._ftdi.write_data(epilog)
-            data = Array('B')
+            data = array('B')
         return data
 
     def _flush(self):

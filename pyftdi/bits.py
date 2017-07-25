@@ -28,16 +28,11 @@
 
 """
 
-from array import array as Array
+from array import array
 from pyftdi.misc import is_iterable, xor
 
 
 __all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
-
-# Hints for PyLint:
-#   use map(), use short variable names
-#pylint: disable-msg=W0141
-#pylint: disable-msg=C0103
 
 
 class BitSequenceError(Exception):
@@ -69,7 +64,7 @@ class BitSequence(object):
                  msby=True):
         """Instanciate a new bit sequence.
         """
-        self._seq = Array('B')
+        self._seq = array('B')
         seq = self._seq
         if value and bytes_:
             raise BitSequenceError("Cannot inialize with both a value and "
@@ -104,7 +99,7 @@ class BitSequence(object):
 
     def sequence(self):
         """Return the internal representation as a new mutable sequence"""
-        return Array('B', self._seq)
+        return array('B', self._seq)
 
     def reverse(self):
         """In-place reverse"""
@@ -113,7 +108,7 @@ class BitSequence(object):
 
     def invert(self):
         """In-place invert sequence values"""
-        self._seq = Array('B', [x ^ 1 for x in self._seq])
+        self._seq = array('B', [x ^ 1 for x in self._seq])
         return self
 
     def append(self, seq):
@@ -158,7 +153,7 @@ class BitSequence(object):
         sequence = list(self._seq)
         if not msb:
             sequence.reverse()
-        bytes_ = Array('B')
+        bytes_ = array('B')
         for pos in range(0, blength, 8):
             seq = sequence[pos:pos+8]
             byte = 0
@@ -219,7 +214,7 @@ class BitSequence(object):
         """If a specific length is specified, extend the sequence as
            expected"""
         if length and (len(self) < length):
-            extra = Array('B', [False] * (length-len(self)))
+            extra = array('B', [False] * (length-len(self)))
             if msb:
                 extra.extend(self._seq)
                 self._seq = extra
@@ -330,7 +325,7 @@ class BitSequence(object):
 
     def __ilshift__(self, count):
         count %= len(self)
-        seq = Array('B', [0]*count)
+        seq = array('B', [0]*count)
         seq.extend(self._seq[:-count])
         self._seq = seq
         return self
@@ -510,7 +505,7 @@ class BitField(object):
 
     def to_seq(self, msb=0, lsb=0):
         """Return the BitFiled as a sequence of boolean value"""
-        seq = Array('B')
+        seq = array('B')
         count = 0
         value = self._val
         while value:
