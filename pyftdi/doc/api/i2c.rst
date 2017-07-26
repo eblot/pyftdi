@@ -1,7 +1,9 @@
 .. -*- coding: utf-8 -*-
 
-:mod:`i2c` - I2C API
---------------------
+.. include:: ../defs.rst
+
+:mod:`i2c` - |I2C| API
+----------------------
 
 .. module :: pyftdi.i2c
 
