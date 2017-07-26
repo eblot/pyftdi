@@ -44,7 +44,8 @@ templates_path = ['templates']
 source_suffix = '.rst'
 master_doc = 'index'
 project = find_meta('title')
-copyright = '2017, %s <%s>' % (find_meta('author'), find_meta('email'))
+contact = '%s <%s>' % (find_meta('author'), find_meta('email'))
+copyright = '2017, %s' % contact
 show_authors = True
 
 html_theme = 'sphinx_rtd_theme'
@@ -71,9 +72,9 @@ latex_elements = {
 }
 
 latex_documents = [
-  ('index', 'pyftdi.tex',
-   'PyFtdi Documentation',
-   'Emmanuel Blot <emmanuel.blot@free.fr>', u'manual'),
+  ('index', '%s.tex' % project.lower(),
+   '%s Documentation' % project,
+   contact, u'manual'),
 ]
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
@@ -81,16 +82,16 @@ latex_documents = [
 latex_toplevel_sectioning = "chapter"
 
 man_pages = [
-  ('index', 'pyftdi',
-   'PyFtdi Documentation',
-   ['Emmanuel Blot <emmanuel.blot@free.fr>'], 1)
+  ('index', project,
+   '%s Documentation' % project,
+   [contact], 1)
 ]
 
 texinfo_documents = [
-  ('index', 'PyFtdi',
-   'PyFtdi Documentation',
-   'Emmanuel Blot <emmanuel.blot@free.fr>', '',
-   'PyFtdi Documentation.',
+  ('index', project,
+   '%s Documentation' % project,
+   contact, '',
+   '%s Documentation' % project,
    'Miscellaneous'),
 ]
 
