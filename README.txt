@@ -1,1 +1,0 @@
-pyftdi/doc/index.rst
