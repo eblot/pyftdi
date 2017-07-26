@@ -2,6 +2,10 @@ import os
 import re
 import sys
 
+# pip3 install sphinx-pypi-upload
+# python3 setup.py build_sphinx
+# sphinx-build -b html ../pyftdi/pyftdi/doc .
+
 topdir = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                       os.pardir, os.pardir))
 sys.path.append(topdir)
