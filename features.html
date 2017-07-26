@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Supported features &mdash; PyFtdi  documentation</title>
+  <title>Features &mdash; PyFtdi  documentation</title>
   
 
   
@@ -87,7 +87,15 @@
             
             
                 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Supported features</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#devices">Devices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-features">Supported features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#uart">UART</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#spi-master">SPI master</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#i2c-master">I<sup>2</sup>C master</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#jtag">JTAG</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#status">Status</a></li>
 </ul>
 </li>
@@ -127,7 +135,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Supported features</li>
+    <li>Features</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -141,26 +149,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="supported-features">
-<h1>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h1>
-<ul>
-<li><p class="first">All FTDI device ports (UART, MPSSE) can be used simultaneously.</p>
+  <div class="section" id="features">
+<h1>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="devices">
+<h2>Devices<a class="headerlink" href="#devices" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
+<li>All FTDI device ports (UART, MPSSE) can be used simultaneously.<ul>
 <li>However, it is not yet possible to use both GPIO and MPSSE modes on the
 same port at once</li>
 </ul>
 </li>
-<li><p class="first">Several FTDI adapters can be accessed simultaneously from the same Python
-runtime instance.</p>
-</li>
-<li><p class="first">Serial port, up to 12 Mbps. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> includes a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> emulation layer that
+<li>Several FTDI adapters can be accessed simultaneously from the same Python
+runtime instance.</li>
+</ul>
+</div>
+<div class="section" id="supported-features">
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="uart">
+<h3>UART<a class="headerlink" href="#uart" title="Permalink to this headline">¶</a></h3>
+<p>Serial port, up to 12 Mbps. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> includes a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> emulation layer that
 offers transparent access to the FTDI serial ports through a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>-
 compliant API. The <code class="docutils literal"><span class="pre">serialext</span></code> directory contains a minimal serial terminal
 demonstrating the use of this extension, and a dispatcher automatically
 selecting the serial backend (<a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>), based on the serial port
 name.</p>
-</li>
-<li><p class="first">SPI master.</p>
+</div>
+<div class="section" id="spi-master">
+<h3>SPI master<a class="headerlink" href="#spi-master" title="Permalink to this headline">¶</a></h3>
 <p>Supported devices:</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -203,13 +218,17 @@ name.</p>
 use the FTDI SPI master with a pure-Python serial flash device driver for
 several common devices.</p>
 <p>Only half-duplex communication is supported for now.</p>
-</li>
-<li><p class="first">I<sup>2</sup>C master. For now, only 7-bit address are supported.</p>
+</div>
+<div class="section" id="i2c-master">
+<h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Permalink to this headline">¶</a></h3>
 <p>Supported devices: <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a></p>
-</li>
-<li><p class="first">JTAG is under development and is not fully supported yet.</p>
-</li>
-</ul>
+<p>For now, only 7-bit address are supported.</p>
+</div>
+<div class="section" id="jtag">
+<h3>JTAG<a class="headerlink" href="#jtag" title="Permalink to this headline">¶</a></h3>
+<p>JTAG is under development and is not fully supported yet.</p>
+</div>
+</div>
 <div class="section" id="status">
 <h2>Status<a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
 <p>This project is still in beta development stage.</p>

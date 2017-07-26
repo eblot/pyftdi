@@ -1,7 +1,10 @@
 .. include:: defs.rst
 
-Supported features
-------------------
+Features
+--------
+
+Devices
+~~~~~~~
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
 
@@ -11,37 +14,53 @@ Supported features
 * Several FTDI adapters can be accessed simultaneously from the same Python
   runtime instance.
 
-* Serial port, up to 12 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
-  offers transparent access to the FTDI serial ports through a pyserial_-
-  compliant API. The ``serialext`` directory contains a minimal serial terminal
-  demonstrating the use of this extension, and a dispatcher automatically
-  selecting the serial backend (pyserial_, PyFtdi_), based on the serial port
-  name.
+Supported features
+~~~~~~~~~~~~~~~~~~
 
-* SPI master.
+UART
+....
 
-  Supported devices:
+Serial port, up to 12 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
+offers transparent access to the FTDI serial ports through a pyserial_-
+compliant API. The ``serialext`` directory contains a minimal serial terminal
+demonstrating the use of this extension, and a dispatcher automatically
+selecting the serial backend (pyserial_, PyFtdi_), based on the serial port
+name.
 
-  =====  ===== ====== ====================================================
-  Mode   CPol   CPha  Status
-  =====  ===== ====== ====================================================
-    0      0      0   Supported on all MPSEE devices
-    1      0      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
-    2      1      0   Not supported (FTDI HW limitation)
-    3      1      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
-  =====  ===== ====== ====================================================
 
-  PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
-  use the FTDI SPI master with a pure-Python serial flash device driver for
-  several common devices.
+SPI master
+..........
 
-  Only half-duplex communication is supported for now.
+Supported devices:
 
-* |I2C| master. For now, only 7-bit address are supported.
+=====  ===== ====== ====================================================
+Mode   CPol   CPha  Status
+=====  ===== ====== ====================================================
+  0      0      0   Supported on all MPSEE devices
+  1      0      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
+  2      1      0   Not supported (FTDI HW limitation)
+  3      1      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
+=====  ===== ====== ====================================================
 
-  Supported devices: FT232H_, FT2232H_, FT4232H_
+PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
+use the FTDI SPI master with a pure-Python serial flash device driver for
+several common devices.
 
-* JTAG is under development and is not fully supported yet.
+Only half-duplex communication is supported for now.
+
+
+|I2C| master
+............
+
+Supported devices: FT232H_, FT2232H_, FT4232H_
+
+For now, only 7-bit address are supported.
+
+
+JTAG
+....
+
+JTAG is under development and is not fully supported yet.
 
 Status
 ~~~~~~
