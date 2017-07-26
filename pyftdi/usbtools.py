@@ -45,8 +45,16 @@ class UsbTools(object):
 
     @staticmethod
     def find_all(vps, nocache=False):
-        """Find all devices that match the vendor/product pairs of the vps
-           list."""
+        """Find all devices that match the specified vendor/product pairs.
+
+           :param vps: a sequence of 2-tuple (vid, pid) pairs
+           :type vps: tuple(int, int)
+           :param bool nocache: bypass cache to re-enumerate USB devices on
+                                the host
+           :return: a list of 5-tuple (vid, pid, sernum, iface, description)
+                    device descriptors
+           :rtype: list(tuple(int,int,str,int,str))
+        """
         devs = set()
         for v, p in vps:
             devs.update(UsbTools._find_devices(v, p, nocache))
@@ -61,6 +69,7 @@ class UsbTools(object):
 
     @classmethod
     def flush_cache(cls):
+        """Flush the FTDI device cache."""
         cls.Lock.acquire()
         cls.UsbDevices = {}
         cls.Lock.release()
@@ -69,7 +78,30 @@ class UsbTools(object):
     def get_device(cls, vendor, product, index=0, serial=None,
                    description=None):
         """Find a previously open device with the same vendor/product
-           or initialize a new one, and return it"""
+           or initialize a new one, and return it.
+
+           If several FTDI devices of the same kind (vid, pid) are connected
+           to the host, either index or serial argument should be used to
+           discriminate the FTDI device.
+
+           index argument is not a reliable solution as the host may enumerate
+           the USB device in random order. serial argument is more reliable
+           selector and should always be prefered.
+
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H). The interface argument selects the FTDI port to use,
+           starting from 1 (not 0).
+
+           :param int vendor: USB vendor id
+           :param int product: USB product id
+           :param int index: optional selector, specified the n-th matching
+                             FTDI enumerated USB device on the host
+           :param str serial: optional selector, specified the FTDI device
+                              by its serial number
+           :param str interface: FTDI interface/port
+           :return: PyUSB device instance
+           :rtype: usb.core.Device
+        """
         cls.Lock.acquire()
         try:
             if index or serial or description:
@@ -137,7 +169,11 @@ class UsbTools(object):
 
     @classmethod
     def release_device(cls, usb_dev):
-        """Release a previously open device, if it not used anymore"""
+        """Release a previously open device, if it not used anymore.
+
+           :param usb_dev: a previously instanciated Usb device instance
+           :type usb_deb: usb.core.Device
+        """
         # Lookup for ourselves in the class dictionary
         cls.Lock.acquire()
         try:
@@ -158,7 +194,8 @@ class UsbTools(object):
 
     @classmethod
     def _find_devices(cls, vendor, product, nocache=False):
-        """Find an USB device and return it.
+        """Find a USB device and return it.
+
            This code re-implements the usb.core.find() method using a local
            cache to avoid calling several times the underlying LibUSB and the
            system USB calls to enumerate the available USB devices. As these
@@ -167,6 +204,15 @@ class UsbTools(object):
            start-up time.
            Hopefully, this kludge is temporary and replaced with a better
            implementation from PyUSB at some point.
+
+           :param int vendor: USB vendor id
+           :param int product: USB product id
+           :param bool nocache: bypass cache to re-enumerate USB devices on
+                                the host
+           :return: a set of USB device matching the vendor/product identifier
+                    pair
+           :rtype: set(usb.core.Device)
+
         """
         cls.Lock.acquire()
         try:
@@ -211,15 +257,17 @@ class UsbTools(object):
 
     @staticmethod
     def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor):
-        """
-            :return: (vendor, product, index, sernum, interface)
+        """Parse a device specifier URL.
 
-            Vendor is the USB vendor identifier (integer)
-            Product is the USB product identifier (integer)
-            Index is an enumerated value to differenciate devices with same
-               characteristics on USB buses
-            Serial number is the serial number, if anay or may be None
-            Interface is the USB interface on the selected device (integer)
+           :param str url: the URL to parse
+           :param devclass: class that implements the scheme
+           :param scheme: scheme to match in the URL string (scheme://...)
+           :param dict vdict: vendor name map of USB vendor ids
+           :param dict pdict: vendor id map of product name map of product ids
+           :param int default_vendor: default vendor id
+           :return: a list of 5-tuple (vid, pid, sernum, iface, description)
+                    device descriptors
+           :rtype: list(tuple(int,int,str,int,str))
         """
         urlparts = urlsplit(urlstr)
         if scheme != urlparts.scheme:
@@ -313,7 +361,18 @@ class UsbTools(object):
 
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
-        """Show supported devices"""
+        """Show supported devices. When the joker url ``scheme://*/?`` is
+           specified as an URL, it generates a list of connected USB devices
+           that match the supported USB devices. It can be used to provide the
+           end-user with a list of valid URL schemes.
+
+           :param dict vdict: vendor name map of USB vendor ids
+           :param dict pdict: vendor id map of product name map of product ids
+           :param candidates: candidate devices
+           :type candidates: list(tuple(int,int,str,int,str))
+           :param out: output stream, none for stdout
+           :type out: file object or None
+        """
         if not out:
             out = stdout
         indices = {}
@@ -388,6 +447,12 @@ class UsbTools(object):
     @classmethod
     def get_string(cls, device, strname):
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
+
+           :param device: USB device instance
+           :type device: usb.core.Device
+           :param str strname: the string identifier
+           :return: the string read from the USB device
+           :rtype: str
         """
         if cls.UsbApi is None:
             import inspect

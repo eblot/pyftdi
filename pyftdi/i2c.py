@@ -47,15 +47,15 @@ class I2cPort(object):
        An I2C port is never instanciated directly: use I2cController.get_port()
        method to obtain an I2C port.
 
-       :Example:
+       Example:
 
-            ctrl = I2cController()
-            ctrl.configure('ftdi://ftdi:232h/1')
-            i2c = ctrl.get_port(0x21)
-            # send 2 bytes
-            i2c.write([0x12, 0x34])
-            # send 2 bytes, then receive 2 bytes
-            out = i2c.exchange([0x12, 0x34], 2)
+       >>> ctrl = I2cController()
+       >>> ctrl.configure('ftdi://ftdi:232h/1')
+       >>> i2c = ctrl.get_port(0x21)
+       >>> # send 2 bytes
+       >>> i2c.write([0x12, 0x34])
+       >>> # send 2 bytes, then receive 2 bytes
+       >>> out = i2c.exchange([0x12, 0x34], 2)
     """
     FORMATS = {scalc(fmt): fmt for fmt in 'BHI'}
 
@@ -162,7 +162,7 @@ class I2cPort(object):
 
     @property
     def frequency(self):
-        """Return the current I2c bus.
+        """Provide the current I2c bus frequency.
         """
         return self._controller.frequency
 
@@ -294,13 +294,13 @@ class I2cController(object):
 
     @property
     def frequency_max(self):
-        """Returns the maximum I2c clock.
+        """Provides the maximum I2c clock frequency.
         """
         return self._ftdi.frequency_max
 
     @property
     def frequency(self):
-        """Returns the current I2c clock.
+        """Provides the current I2c clock frequency.
 
            :return: the I2C bus clock
            :rtype: float

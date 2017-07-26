@@ -42,19 +42,19 @@ class SpiPort(object):
        An SPI port is never instanciated directly: use SpiController.get_port()
        method to obtain an SPI port.
 
-       :Example:
+       Example:
 
-            ctrl = SpiController(silent_clock=False)
-            ctrl.configure('ftdi://ftdi:232h/1')
-            spi = ctrl.get_port(1)
-            spi.set_frequency(1000000)
-            # send 2 bytes
-            spi.exchange([0x12, 0x34])
-            # send 2 bytes, then receive 2 bytes
-            out = spi.exchange([0x12, 0x34], 2)
-            # send 2 bytes, then receive 4 bytes, manage the transaction
-            out = spi.exchange([0x12, 0x34], 2, True, False)
-            out.extend(spi.exchange([], 2, False, True))
+       >>> ctrl = SpiController(silent_clock=False)
+       >>> ctrl.configure('ftdi://ftdi:232h/1')
+       >>> spi = ctrl.get_port(1)
+       >>> spi.set_frequency(1000000)
+       >>> # send 2 bytes
+       >>> spi.exchange([0x12, 0x34])
+       >>> # send 2 bytes, then receive 2 bytes
+       >>> out = spi.exchange([0x12, 0x34], 2)
+       >>> # send 2 bytes, then receive 4 bytes, manage the transaction
+       >>> out = spi.exchange([0x12, 0x34], 2, True, False)
+       >>> out.extend(spi.exchange([], 2, False, True))
     """
 
     def __init__(self, controller, cs, cs_hold=3, spi_mode=0):

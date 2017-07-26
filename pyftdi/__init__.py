@@ -25,7 +25,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 __version__ = '0.25.1'
-__title__ = 'pyftdi'
+__title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
 __doc__ = __description__ + ' <' + __uri__ + '>'

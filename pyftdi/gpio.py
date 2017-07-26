@@ -46,14 +46,26 @@ class GpioController(object):
 
     @property
     def direction(self):
+        """Reports the GPIO direction.
+
+          :return: a bitfield specifying the FTDI GPIO direction, where high
+                level reports an output pin, and low level reports an input pin
+          :rtype: int
+        """
         return self._direction
 
     @property
     def is_connected(self):
+        """Reports whether a connection exists with the FTDI interface."""
         return bool(self._ftdi)
 
     def open_from_url(self, url, direction, **kwargs):
-        """
+        """Open a new interface to the specified FTDI device in bitbang mode.
+
+           :param str url: a FTDI URL selector
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
         """
         for k in ('direction',):
             if k in kwargs:
@@ -67,7 +79,7 @@ class GpioController(object):
         self._direction = direction
 
     def close(self):
-        """Close the FTDI interface"""
+        """Close the FTDI interface."""
         if self._ftdi:
             self._ftdi.close()
             self._ftdi = None
@@ -75,9 +87,9 @@ class GpioController(object):
     def set_direction(self, direction):
         """Update the GPIO pin direction.
 
-           :param direction: a bitfield of GPIO pins. Each bit represent a GPIO
-                             pin, where '1' sets the pin as output and '0' sets
-                             the pin as input/high-Z.
+           :param int direction: a bitfield of GPIO pins. Each bit represent a
+                GPIO pin, where a high level sets the pin as output and a low
+                level sets the pin as input/high-Z.
         """
         if direction > self.MASK:
             raise GpioException("Invalid direction mask")
@@ -87,10 +99,8 @@ class GpioController(object):
     def read_port(self):
         """Read the GPIO input pin electrical level.
 
-           :param value: a bitfield of GPIO pins. Each bit represent a GPIO
-                         pin, where '1' sets the pin to high level and '0'
-                         sets the pin to low level. GPIO pins that are
-                         configured as Input are left unaltered.
+           :param int value: a bitfield of GPIO pins. Each bit represent a GPIO
+                pin, matching the logical input level of the pin.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
@@ -99,10 +109,7 @@ class GpioController(object):
     def write_port(self, value):
         """Set the GPIO output pin electrical level.
 
-           :param value: a bitfield of GPIO pins. Each bit represent a GPIO
-                         pin, where '1' reports a high level on the matching
-                         pin and '0' reports a low level. GPIO pins that are
-                         configured as Output should be ignored.
+           :param int value: a bitfield of GPIO pins.
         """
         if not self.is_connected:
             raise GpioException('Not connected')

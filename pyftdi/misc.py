@@ -24,9 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Miscelleanous helpers
-
-"""
+"""Miscelleanous helpers"""
 
 import re
 from array import array
@@ -47,8 +45,11 @@ def hexdump(data, full=False, abbreviate=False):
 
        Return a multi-line strings with hexadecimal values and ASCII
        representation of the buffer data.
-       :full: use `hexdump -Cv` format
-       :abbreviate: replace identical lines with '*'
+
+       :param data: binary buffer to dump
+       :type data: bytes or array or bytearray or list(int)
+       :param bool full: use `hexdump -Cv` format
+       :param bool abbreviate: replace identical lines with '*'
     """
     try:
         if isinstance(data, (bytes, array)):
@@ -90,10 +91,13 @@ def hexdump(data, full=False, abbreviate=False):
 
 
 def hexline(data, sep=' '):
-    """Convert a binary buffer into a hexadecimal representation
+    """Convert a binary buffer into a hexadecimal representation.
 
        Return a string with hexadecimal values and ASCII representation
-       of the buffer data
+       of the buffer data.
+
+       :param data: binary buffer to dump
+       :type data: bytes or array or bytearray or list(int)
     """
     try:
         if isinstance(data, (bytes, array)):
@@ -119,6 +123,12 @@ def to_int(value):
        - a string with an integer coded as a hexadecimal value
        - a integral value
        - a integral value with a unit specifier (kilo or mega)
+
+       :param value: input value to convert to an integer
+       :type value: str or int
+       :return: the value as an integer
+       :rtype: int
+       :raise ValueError: if the input value cannot be converted into an int
     """
     if not value:
         return 0
@@ -140,14 +150,17 @@ def to_int(value):
 def to_bool(value, permissive=True, allow_int=False):
     """Parse a string and convert it into a boolean value if possible.
 
-       :param value: the value to parse and convert
-       :param permissive: default to the False value if parsing fails
-       :param allow_int: allow an integral type as the input value
-
        Input value may be:
        - a string with an integer value, if `allow_int` is enabled
        - a boolean value
        - a string with a common boolean definition
+
+       :param value: the value to parse and convert
+       :type value: str or int or bool
+       :param bool permissive: default to the False value if parsing fails
+       :param bool allow_int: allow an integral type as the input value
+       :rtype: bool
+       :raise ValueError: if the input value cannot be converted into an bool
     """
     if value is None:
         return False
@@ -172,18 +185,20 @@ def xor(_a_, _b_):
 
        :param _a_: first argument
        :param _b_: second argument
+       :return: xor-ed value
+       :rtype: bool
     """
     return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
 
 
-def crc32(data):
-    """Compute the MPEG2 CRC-32 checksum"""
-    crc = next(_crccomp32())
-    return crc(data)
-
-
 def is_iterable(obj):
-    """Tells whether an instance is iterable or not"""
+    """Tells whether an instance is iterable or not.
+
+       :param obj: the instance to test
+       :type obj: object
+       :return: True if the object is iterable
+       :rtype: bool
+    """
     try:
         iter(obj)
         return True
@@ -195,18 +210,19 @@ def pretty_size(size, sep=' ', lim_k=1 << 10, lim_m=10 << 20, plural=True,
                 floor=True):
     """Convert a size into a more readable unit-indexed size (KiB, MiB)
 
-       :param size:   integral value to convert
-       :param sep:    the separator character between the integral value and
-                      the unit specifier
-       :param lim_k:  any value above this limit is a candidate for KiB
-                      conversion.
-       :param lim_m:  any value above this limit is a candidate for MiB
-                      conversion.
-       :param plural: whether to append a final 's' to byte(s)
-       :param floor:  how to behave when exact conversion cannot be achieved:
-                      take the closest, smaller value or fallback to the next
-                      unit that allows the exact representation of the input
-                      value
+       :param int size: integral value to convert
+       :param str sep: the separator character between the integral value and
+            the unit specifier
+       :param int lim_k: any value above this limit is a candidate for KiB
+            conversion.
+       :param int lim_m: any value above this limit is a candidate for MiB
+            conversion.
+       :param bool plural: whether to append a final 's' to byte(s)
+       :param bool floor: how to behave when exact conversion cannot be
+            achieved: take the closest, smaller value or fallback to the next
+            unit that allows the exact representation of the input value
+       :return: the prettyfied size
+       :rtype: str
     """
     size = int(size)
     if size > lim_m:

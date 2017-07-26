@@ -5,3 +5,4 @@ MANIFEST
 pyusb*
 dist/
 build/
+sphinx/
