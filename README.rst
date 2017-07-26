@@ -41,3 +41,9 @@ PyFtdi currently supports the following features:
 
 PyFtdi provides a pyserial compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI devices.
+
+
+Documentation
+-------------
+
+PyFtdi documentation is available from http://eblot.github.io/pyftdi/
