@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>i2c - I2C API &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="next" title="spi - SPI API" href="spi.html"/>
+        <link rel="prev" title="gpio - GPIO API" href="gpio.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/i2c.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyftdi.i2c">
+<span id="i2c-i2c-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API<a class="headerlink" href="#module-pyftdi.i2c" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyftdi.i2c.I2cController">
+<em class="property">class </em><code class="descclassname">pyftdi.i2c.</code><code class="descname">I2cController</code><a class="headerlink" href="#pyftdi.i2c.I2cController" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2c master.</p>
+<p>An I2c master should be instanciated only once for each FTDI port that
+supports MPSSE (one or two ports, depending on the FTDI device).</p>
+<p>Once configured, <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-func docutils literal"><span class="pre">get_port()</span></code></a> should be invoked to obtain an I2c
+port for each I2c slave to drive. I2cport should handle all I/O requests
+for its associated HW slave.</p>
+<p>It is not recommended to use I2cController <a class="reference internal" href="#pyftdi.i2c.I2cController.read" title="pyftdi.i2c.I2cController.read"><code class="xref py py-func docutils literal"><span class="pre">read()</span></code></a>,
+<a class="reference internal" href="#pyftdi.i2c.I2cController.write" title="pyftdi.i2c.I2cController.write"><code class="xref py py-func docutils literal"><span class="pre">write()</span></code></a> or <a class="reference internal" href="#pyftdi.i2c.I2cController.exchange" title="pyftdi.i2c.I2cController.exchange"><code class="xref py py-func docutils literal"><span class="pre">exchange()</span></code></a> directly.</p>
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.configure">
+<code class="descname">configure</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the FTDI interface as a I2c master.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – FTDI URL string, such as ‘ftdi://ftdi:232h/1’</li>
+<li><strong>kwargs</strong> – options to configure the I2C bus</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Accepted options:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">frequency</span></code> the I2C bus frequency in Hz</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.exchange">
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>address</em>, <em>out</em>, <em>readlen=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a byte sequence to a remote slave followed with
+a read request of one or more bytes.</p>
+<p>This command is useful to tell the slave what data
+should be read out.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">read bytes</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Address is a logical slave address (0x7f max)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush the HW FIFOs</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.i2c.I2cController.frequency">
+<code class="descname">frequency</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the current I2c clock frequency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the I2C bus clock</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.i2c.I2cController.frequency_max">
+<code class="descname">frequency_max</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the maximum I2c clock frequency.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.get_port">
+<code class="descname">get_port</code><span class="sig-paren">(</span><em>address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain an I2cPort to drive an I2c slave.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>address</strong> (<em>int</em>) – the address on the I2C bus</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">an I2cPort instance</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cPort" title="pyftdi.i2c.I2cPort"><code class="xref py py-class docutils literal"><span class="pre">I2cPort</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.poll">
+<code class="descname">poll</code><span class="sig-paren">(</span><em>address</em>, <em>write=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remote slave, expect ACK or NACK.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
+<li><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if the slave acknowledged, False otherwise</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>address</em>, <em>readlen=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one or more bytes from a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">read bytes</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Address is a logical slave address (0x7f max)</p>
+<p>Most I2C devices require a register address to read out
+check out the exchange() method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.terminate">
+<code class="descname">terminate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.terminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the FTDI interface.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.i2c.I2cController.validate_address">
+<em class="property">classmethod </em><code class="descname">validate_address</code><span class="sig-paren">(</span><em>address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.validate_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assert an I2C slave address is in the supported range</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>address</strong> (<em>int</em>) – I2C slave address</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if the I2C slave address is not supported</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>address</em>, <em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write one or more bytes to a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Address is a logical slave address (0x7f max)</p>
+<p>Most I2C devices require a register address to write into. It should
+be added as the first (byte)s of the output buffer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.i2c.I2cPort">
+<em class="property">class </em><code class="descclassname">pyftdi.i2c.</code><code class="descname">I2cPort</code><span class="sig-paren">(</span><em>controller</em>, <em>address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2C port.</p>
+<p>An I2C port is never instanciated directly: use I2cController.get_port()
+method to obtain an I2C port.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i2c</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i2c</span><span class="o">.</span><span class="n">write</span><span class="p">([</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes, then receive 2 bytes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">i2c</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.configure_register">
+<code class="descname">configure_register</code><span class="sig-paren">(</span><em>bigendian=False</em>, <em>width=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.configure_register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconfigure the format of the slave address register (if any)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bigendian</strong> (<em>bool</em>) – True for a big endian encoding,
+False otherwise</li>
+<li><strong>width</strong> (<em>int</em>) – width, in bytes, of the register</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.exchange">
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=”</em>, <em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an exchange or a transaction with the I2c slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>out</strong> – an array of bytes to send to the I2c slave,
+may be empty to only read out data from the slave</li>
+<li><strong>readlen</strong> – count of bytes to read out from the slave,
+may be zero to only write to the slave</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">data read out from the slave</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force the flush of the HW FIFOs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.i2c.I2cPort.frequency">
+<code class="descname">frequency</code><a class="headerlink" href="#pyftdi.i2c.I2cPort.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the current I2c bus frequency.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.poll">
+<code class="descname">poll</code><span class="sig-paren">(</span><em>write=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.poll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remote slave, expect ACK or NACK.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the slave acknowledged, False otherwise</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one or more bytes from a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">byte sequence of read out bytes</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.read_from">
+<code class="descname">read_from</code><span class="sig-paren">(</span><em>regaddr</em>, <em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read_from" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one or more bytes from a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>regaddr</strong> (<em>int</em>) – slave register address to read from</li>
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">data read out from the slave</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.shift_address">
+<code class="descname">shift_address</code><span class="sig-paren">(</span><em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.shift_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tweak the I2C slave address, as required with some devices</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write one or more bytes to a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.write_to">
+<code class="descname">write_to</code><span class="sig-paren">(</span><em>regaddr</em>, <em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one or more bytes from a remote slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>regaddr</strong> (<em>int</em>) – slave register address to write to</li>
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pyftdi.i2c.I2cIOError">
+<em class="property">exception </em><code class="descclassname">pyftdi.i2c.</code><code class="descname">I2cIOError</code><a class="headerlink" href="#pyftdi.i2c.I2cIOError" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2c I/O error</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pyftdi.i2c.I2cNackError">
+<em class="property">exception </em><code class="descclassname">pyftdi.i2c.</code><code class="descname">I2cNackError</code><a class="headerlink" href="#pyftdi.i2c.I2cNackError" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2c NACK receive from slave</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="spi.html" class="btn btn-neutral float-right" title="spi - SPI API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gpio.html" class="btn btn-neutral" title="gpio - GPIO API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,300 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FTDI device pinout &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="index.html"/>
+        <link rel="next" title="Troubleshooting" href="troubleshooting.html"/>
+        <link rel="prev" title="misc - Miscellaneous helpers" href="api/misc.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>FTDI device pinout</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/pinout.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="ftdi-device-pinout">
+<h1>FTDI device pinout<a class="headerlink" href="#ftdi-device-pinout" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="22%" />
+<col width="10%" />
+<col width="24%" />
+<col width="12%" />
+<col width="10%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">IF/1</th>
+<th class="head">IF/2 <a class="footnote-reference" href="#if2" id="id1">[2]</a></th>
+<th class="head">UART</th>
+<th class="head">I<sup>2</sup>C</th>
+<th class="head">SPI</th>
+<th class="head">JTAG</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS0</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS0</span></code></td>
+<td>TxD</td>
+<td>SCK</td>
+<td>SCLK</td>
+<td>TCK</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS1</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS1</span></code></td>
+<td>RxD</td>
+<td>SDA/O <a class="footnote-reference" href="#i2c" id="id2">[1]</a></td>
+<td>MOSI</td>
+<td>TDI</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS2</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS2</span></code></td>
+<td>RTS</td>
+<td>SDA/I <a class="footnote-reference" href="#i2c" id="id3">[1]</a></td>
+<td>MISO</td>
+<td>TDO</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS3</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS3</span></code></td>
+<td>CTS</td>
+<td>&#160;</td>
+<td>CS0</td>
+<td>TMS</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS4</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS4</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>CS1</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS5</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS5</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>CS2</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS6</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS6</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>CS3</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="i2c" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> FTDI pins are either configured as input or output. As I<sup>2</sup>C SDA line
+is bi-directional, two FTDI pins are required to provide the SDA
+feature, and they should be connected together and to the SDA I<sup>2</sup>C
+bus line. Pull-up resistors on SCK and SDA lines should be used.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="if2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[2]</a></td><td><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> does not support a secondary MPSSE port, only <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> and
+<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> do. Note that <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> has 4 serial ports, but only the
+first two interfaces are MPSSE-capable.</td></tr>
+</tbody>
+</table>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="api/misc.html" class="btn btn-neutral" title="misc - Miscellaneous helpers" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

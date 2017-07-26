@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>gpio - GPIO API &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="next" title="i2c - I2C API" href="i2c.html"/>
+        <link rel="prev" title="ftdi - FTDI driver" href="ftdi.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/gpio.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyftdi.gpio">
+<span id="gpio-gpio-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">gpio</span></code> - GPIO API<a class="headerlink" href="#module-pyftdi.gpio" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyftdi.gpio.GpioController">
+<em class="property">class </em><code class="descclassname">pyftdi.gpio.</code><code class="descname">GpioController</code><a class="headerlink" href="#pyftdi.gpio.GpioController" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO controller for an FTDI port</p>
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the FTDI interface.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.gpio.GpioController.direction">
+<code class="descname">direction</code><a class="headerlink" href="#pyftdi.gpio.GpioController.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports the GPIO direction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a bitfield specifying the FTDI GPIO direction, where high
+level reports an output pin, and low level reports an input pin</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.gpio.GpioController.is_connected">
+<code class="descname">is_connected</code><a class="headerlink" href="#pyftdi.gpio.GpioController.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reports whether a connection exists with the FTDI interface.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.open_from_url">
+<code class="descname">open_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.open_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – a FTDI URL selector</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.read_port">
+<code class="descname">read_port</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.read_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the GPIO input pin electrical level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a GPIO
+pin, matching the logical input level of the pin.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.set_direction">
+<code class="descname">set_direction</code><span class="sig-paren">(</span><em>direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.set_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the GPIO pin direction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>direction</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a
+GPIO pin, where a high level sets the pin as output and a low
+level sets the pin as input/high-Z.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.write_port">
+<code class="descname">write_port</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.write_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pyftdi.gpio.GpioException">
+<em class="property">exception </em><code class="descclassname">pyftdi.gpio.</code><code class="descname">GpioException</code><a class="headerlink" href="#pyftdi.gpio.GpioException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for GPIO errors</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="i2c.html" class="btn btn-neutral float-right" title="i2c - I2C API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ftdi.html" class="btn btn-neutral" title="ftdi - FTDI driver" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

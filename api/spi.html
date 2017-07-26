@@ -1,0 +1,479 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>spi - SPI API &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="next" title="usbtools - USB tools" href="usbtools.html"/>
+        <link rel="prev" title="i2c - I2C API" href="i2c.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/spi.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyftdi.spi">
+<span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyftdi.spi.SpiController">
+<em class="property">class </em><code class="descclassname">pyftdi.spi.</code><code class="descname">SpiController</code><span class="sig-paren">(</span><em>silent_clock=False</em>, <em>cs_count=4</em>, <em>turbo=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPI master.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>silent_clock</strong> – deprecated.</li>
+<li><strong>cs_count</strong> (<em>int</em>) – is the number of /CS lines (one per device to
+drive on the SPI bus)</li>
+<li><strong>turbo</strong> (<em>boolean</em>) – to be documented</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.configure">
+<code class="descname">configure</code><span class="sig-paren">(</span><em>url</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the FTDI interface as a SPI master</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – FTDI URL string, such as ‘ftdi://ftdi:232h/1’</li>
+<li><strong>kwargs</strong> – options to configure the SPI bus</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Accepted options:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">frequency</span></code> the SPI bus frequency in Hz</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiController.direction">
+<code class="descname">direction</code><a class="headerlink" href="#pyftdi.spi.SpiController.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the FTDI GPIO direction</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiController.frequency">
+<code class="descname">frequency</code><a class="headerlink" href="#pyftdi.spi.SpiController.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current SPI clock</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiController.frequency_max">
+<code class="descname">frequency_max</code><a class="headerlink" href="#pyftdi.spi.SpiController.frequency_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the maximum SPI clock</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.get_port">
+<code class="descname">get_port</code><span class="sig-paren">(</span><em>cs</em>, <em>freq=None</em>, <em>mode=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.get_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain a SPI port to drive a SPI device selected by Chip Select.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Note:</th><td class="field-body"><p class="first">SPI mode 2 is not supported.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>cs</strong> (<em>int</em>) – chip select slot, starting from 0</li>
+<li><strong>freq</strong> (<em>float</em>) – SPI bus frequency for this slave in Hz</li>
+<li><strong>mode</strong> (<em>int</em>) – SPI mode [0,1,3]</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.spi.SpiPort" title="pyftdi.spi.SpiPort">SpiPort</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.terminate">
+<code class="descname">terminate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.terminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the FTDI interface</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.spi.SpiPort">
+<em class="property">class </em><code class="descclassname">pyftdi.spi.</code><code class="descname">SpiPort</code><span class="sig-paren">(</span><em>controller</em>, <em>cs</em>, <em>cs_hold=3</em>, <em>spi_mode=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPI port</p>
+<p>An SPI port is never instanciated directly: use SpiController.get_port()
+method to obtain an SPI port.</p>
+<p>Example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">(</span><span class="n">silent_clock</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span><span class="o">.</span><span class="n">set_frequency</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes, then receive 2 bytes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes, then receive 4 bytes, manage the transaction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x12</span><span class="p">,</span> <span class="mh">0x34</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">spi</span><span class="o">.</span><span class="n">exchange</span><span class="p">([],</span> <span class="mi">2</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.exchange">
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=b”</em>, <em>readlen=0</em>, <em>start=True</em>, <em>stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform an exchange or a transaction with the SPI slave</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Exchange is a dual half-duplex transmission: output bytes
+are sent to the slave, then bytes are received from the
+slave. It is not possible to perform a full duplex
+exchange for now, although this feature could be easily
+implemented.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – data to send to the SPI slave, may be empty to read out
+data from the slave with no write.</li>
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out from the slave,
+may be zero to only write to the slave</li>
+<li><strong>start</strong> (<em>bool</em>) – whether to start an SPI transaction, i.e.
+activate the /CS line for the slave. Use False to
+resume a previously started transaction</li>
+<li><strong>stop</strong> (<em>bool</em>) – whether to desactivete the /CS line for the slave.
+Use False if the transaction should complete with a
+further call to exchange()</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">an array of bytes containing the data read out from the
+slave</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.flush">
+<code class="descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force the flush of the HW FIFOs</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiPort.frequency">
+<code class="descname">frequency</code><a class="headerlink" href="#pyftdi.spi.SpiPort.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current SPI bus block</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>readlen=0</em>, <em>start=True</em>, <em>stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read out bytes from the slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out from the slave,
+may be zero to only write to the slave</li>
+<li><strong>start</strong> (<em>bool</em>) – whether to start an SPI transaction, i.e.
+activate the /CS line for the slave. Use False to
+resume a previously started transaction</li>
+<li><strong>stop</strong> (<em>bool</em>) – whether to desactivete the /CS line for the slave.
+Use False if the transaction should complete with a
+further call to exchange()</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">an array of bytes containing the data read out from the
+slave</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.set_frequency">
+<code class="descname">set_frequency</code><span class="sig-paren">(</span><em>frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.set_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change SPI bus frequency</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frequency</strong> (<em>float</em>) – the new frequency in Hz</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>out</em>, <em>start=True</em>, <em>stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write bytes to the slave</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – data to send to the SPI slave, may be empty to read out
+data from the slave with no write.</li>
+<li><strong>start</strong> (<em>bool</em>) – whether to start an SPI transaction, i.e.
+activate the /CS line for the slave. Use False to
+resume a previously started transaction</li>
+<li><strong>stop</strong> (<em>bool</em>) – whether to desactivete the /CS line for the slave.
+Use False if the transaction should complete with a
+further call to exchange()</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pyftdi.spi.SpiIOError">
+<em class="property">exception </em><code class="descclassname">pyftdi.spi.</code><code class="descname">SpiIOError</code><a class="headerlink" href="#pyftdi.spi.SpiIOError" title="Permalink to this definition">¶</a></dt>
+<dd><p>SPI I/O error</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usbtools.html" class="btn btn-neutral float-right" title="usbtools - USB tools" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="i2c.html" class="btn btn-neutral" title="i2c - I2C API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

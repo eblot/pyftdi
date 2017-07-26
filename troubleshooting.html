@@ -1,0 +1,264 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Troubleshooting &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="index.html"/>
+        <link rel="prev" title="FTDI device pinout" href="pinout.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#error-no-backend-available">“Error: No backend available”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-access-denied-insufficient-permissions">“Error: Access denied (insufficient permissions)”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#serial-serialutil-serialexception-unable-to-open-usb-port">“serial.serialutil.SerialException: Unable to open USB port”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#slow-initialisation-on-os-x-el-capitan">Slow initialisation on OS X El Capitan</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="error-no-backend-available">
+<h2>“Error: No backend available”<a class="headerlink" href="#error-no-backend-available" title="Permalink to this headline">¶</a></h2>
+<p>libusb native library cannot be loaded. Try helping the dynamic loader:</p>
+<ul>
+<li><p class="first">On Linux: <code class="docutils literal"><span class="pre">export</span> <span class="pre">LD_LIBRARY_PATH=&lt;path&gt;</span></code></p>
+<p>where <code class="docutils literal"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal"><span class="pre">libusb-1.*.so</span></code>
+library file</p>
+</li>
+<li><p class="first">On macOS: <code class="docutils literal"><span class="pre">export</span> <span class="pre">DYLD_LIBRARY_PATH=.../lib</span></code></p>
+<p>where <code class="docutils literal"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal"><span class="pre">libusb-1.*.dylib</span></code>
+library file</p>
+</li>
+</ul>
+</div>
+<div class="section" id="error-access-denied-insufficient-permissions">
+<h2>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Permalink to this headline">¶</a></h2>
+<p>The system may already be using the device.</p>
+<ul>
+<li><p class="first">On macOS: starting with Mavericks (10.9+), OS X ships with a native FTDI
+driver that preempts access to the FTDI device.</p>
+<p>The driver can be unloaded this way:</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span>sudo kextunload <span class="o">[</span>-v<span class="o">]</span> -bundle com.apple.driver.AppleUSBFTDI
+</pre></div>
+</div>
+<p>You may want to use an alias or a tiny script such as
+<code class="docutils literal"><span class="pre">pyftdi/tools/uphy.sh</span></code></p>
+<p>Please note that the system automatically reloads the driver, so it may be
+useful to move the kernel extension so that the system never loads it.</p>
+</li>
+<li><p class="first">On Linux: it may indicate a missing or invalid udev configuration. See
+the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p>
+</li>
+<li><p class="first">This error message may also be triggered whenever the communication port is
+already in use.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="serial-serialutil-serialexception-unable-to-open-usb-port">
+<h2>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Permalink to this headline">¶</a></h2>
+<p>May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
+uninstalling the driver. On macOS, refer to this <a class="reference external" href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf">FTDI macOS guide</a>.</p>
+</div>
+<div class="section" id="slow-initialisation-on-os-x-el-capitan">
+<h2>Slow initialisation on OS X El Capitan<a class="headerlink" href="#slow-initialisation-on-os-x-el-capitan" title="Permalink to this headline">¶</a></h2>
+<p>It may take several seconds to open or enumerate FTDI devices.</p>
+<p>If you run libusb &lt;= v1.0.20, be sure to read the <a class="reference external" href="https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152">Libusb issue on macOS</a>
+with OS X 10.11+.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="pinout.html" class="btn btn-neutral" title="FTDI device pinout" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

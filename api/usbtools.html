@@ -1,0 +1,411 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>usbtools - USB tools &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="next" title="misc - Miscellaneous helpers" href="misc.html"/>
+        <link rel="prev" title="spi - SPI API" href="spi.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/usbtools.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyftdi.usbtools">
+<span id="usbtools-usb-tools"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">usbtools</span></code> - USB tools<a class="headerlink" href="#module-pyftdi.usbtools" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyftdi.usbtools.UsbTools">
+<em class="property">class </em><code class="descclassname">pyftdi.usbtools.</code><code class="descname">UsbTools</code><a class="headerlink" href="#pyftdi.usbtools.UsbTools" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helpers to obtain information about connected USB devices.</p>
+<dl class="staticmethod">
+<dt id="pyftdi.usbtools.UsbTools.find_all">
+<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>vps</em>, <em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all devices that match the specified vendor/product pairs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vps</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) – a sequence of 2-tuple (vid, pid) pairs</li>
+<li><strong>nocache</strong> (<em>bool</em>) – bypass cache to re-enumerate USB devices on
+the host</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of 5-tuple (vid, pid, sernum, iface, description)
+device descriptors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(tuple(int,int,str,int,str))</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.usbtools.UsbTools.flush_cache">
+<em class="property">classmethod </em><code class="descname">flush_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.flush_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush the FTDI device cache.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.usbtools.UsbTools.get_device">
+<em class="property">classmethod </em><code class="descname">get_device</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>description=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a previously open device with the same vendor/product
+or initialize a new one, and return it.</p>
+<p>If several FTDI devices of the same kind (vid, pid) are connected
+to the host, either index or serial argument should be used to
+discriminate the FTDI device.</p>
+<p>index argument is not a reliable solution as the host may enumerate
+the USB device in random order. serial argument is more reliable
+selector and should always be prefered.</p>
+<p>Some FTDI devices support several interfaces/ports (such as FT2232H
+and FT4232H). The interface argument selects the FTDI port to use,
+starting from 1 (not 0).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vendor</strong> (<em>int</em>) – USB vendor id</li>
+<li><strong>product</strong> (<em>int</em>) – USB product id</li>
+<li><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+FTDI enumerated USB device on the host</li>
+<li><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+by its serial number</li>
+<li><strong>interface</strong> (<em>str</em>) – FTDI interface/port</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">PyUSB device instance</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">usb.core.Device</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.usbtools.UsbTools.get_string">
+<em class="property">classmethod </em><code class="descname">get_string</code><span class="sig-paren">(</span><em>device</em>, <em>strname</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a string from the USB device, dealing with PyUSB API breaks</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>device</strong> (<em>usb.core.Device</em>) – USB device instance</li>
+<li><strong>strname</strong> (<em>str</em>) – the string identifier</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the string read from the USB device</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyftdi.usbtools.UsbTools.parse_url">
+<em class="property">static </em><code class="descname">parse_url</code><span class="sig-paren">(</span><em>urlstr</em>, <em>devclass</em>, <em>scheme</em>, <em>vdict</em>, <em>pdict</em>, <em>default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a device specifier URL.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> (<em>str</em>) – the URL to parse</li>
+<li><strong>devclass</strong> – class that implements the scheme</li>
+<li><strong>scheme</strong> – scheme to match in the URL string (scheme://…)</li>
+<li><strong>vdict</strong> (<em>dict</em>) – vendor name map of USB vendor ids</li>
+<li><strong>pdict</strong> (<em>dict</em>) – vendor id map of product name map of product ids</li>
+<li><strong>default_vendor</strong> (<em>int</em>) – default vendor id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of 5-tuple (vid, pid, sernum, iface, description)
+device descriptors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(tuple(int,int,str,int,str))</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.usbtools.UsbTools.release_device">
+<em class="property">classmethod </em><code class="descname">release_device</code><span class="sig-paren">(</span><em>usb_dev</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release a previously open device, if it not used anymore.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>usb_dev</strong> – a previously instanciated Usb device instance</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyftdi.usbtools.UsbTools.show_devices">
+<em class="property">static </em><code class="descname">show_devices</code><span class="sig-paren">(</span><em>scheme</em>, <em>vdict</em>, <em>pdict</em>, <em>candidates</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show supported devices. When the joker url <code class="docutils literal"><span class="pre">scheme://*/?</span></code> is
+specified as an URL, it generates a list of connected USB devices
+that match the supported USB devices. It can be used to provide the
+end-user with a list of valid URL schemes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vdict</strong> (<em>dict</em>) – vendor name map of USB vendor ids</li>
+<li><strong>pdict</strong> (<em>dict</em>) – vendor id map of product name map of product ids</li>
+<li><strong>candidates</strong> (<em>list</em><em>(</em><em>tuple</em><em>(</em><em>int</em><em>,</em><em>int</em><em>,</em><em>str</em><em>,</em><em>int</em><em>,</em><em>str</em><em>)</em><em>)</em>) – candidate devices</li>
+<li><strong>out</strong> (<em>file object</em><em> or </em><em>None</em>) – output stream, none for stdout</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pyftdi.usbtools.UsbToolsError">
+<em class="property">exception </em><code class="descclassname">pyftdi.usbtools.</code><code class="descname">UsbToolsError</code><a class="headerlink" href="#pyftdi.usbtools.UsbToolsError" title="Permalink to this definition">¶</a></dt>
+<dd><p>UsbTools error</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="misc.html" class="btn btn-neutral float-right" title="misc - Miscellaneous helpers" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="spi.html" class="btn btn-neutral" title="spi - SPI API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

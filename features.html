@@ -1,0 +1,291 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Supported features &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="index.html"/>
+        <link rel="next" title="Requirements" href="requirements.html"/>
+        <link rel="prev" title="PyFtdi" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Supported features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#status">Status</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Supported features</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="supported-features">
+<h1>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h1>
+<ul>
+<li><p class="first">All FTDI device ports (UART, MPSSE) can be used simultaneously.</p>
+<ul class="simple">
+<li>However, it is not yet possible to use both GPIO and MPSSE modes on the
+same port at once</li>
+</ul>
+</li>
+<li><p class="first">Several FTDI adapters can be accessed simultaneously from the same Python
+runtime instance.</p>
+</li>
+<li><p class="first">Serial port, up to 12 Mbps. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> includes a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> emulation layer that
+offers transparent access to the FTDI serial ports through a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>-
+compliant API. The <code class="docutils literal"><span class="pre">serialext</span></code> directory contains a minimal serial terminal
+demonstrating the use of this extension, and a dispatcher automatically
+selecting the serial backend (<a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>), based on the serial port
+name.</p>
+</li>
+<li><p class="first">SPI master.</p>
+<p>Supported devices:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="7%" />
+<col width="9%" />
+<col width="76%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Mode</th>
+<th class="head">CPol</th>
+<th class="head">CPha</th>
+<th class="head">Status</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>0</td>
+<td>0</td>
+<td>0</td>
+<td>Supported on all MPSEE devices</td>
+</tr>
+<tr class="row-odd"><td>1</td>
+<td>0</td>
+<td>1</td>
+<td>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>1</td>
+<td>0</td>
+<td>Not supported (FTDI HW limitation)</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>1</td>
+<td>1</td>
+<td>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> can be used with <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module that demonstrates how to
+use the FTDI SPI master with a pure-Python serial flash device driver for
+several common devices.</p>
+<p>Only half-duplex communication is supported for now.</p>
+</li>
+<li><p class="first">I<sup>2</sup>C master. For now, only 7-bit address are supported.</p>
+<p>Supported devices: <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a></p>
+</li>
+<li><p class="first">JTAG is under development and is not fully supported yet.</p>
+</li>
+</ul>
+<div class="section" id="status">
+<h2>Status<a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
+<p>This project is still in beta development stage.</p>
+<p>However, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is being forked from a closed-source software implementation
+that has been successfully used for over several years - including serial
+&#64; 3Mbps, spi and jtag protocols. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed as an open-source
+solution.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="requirements.html" class="btn btn-neutral float-right" title="Requirements" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="PyFtdi" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

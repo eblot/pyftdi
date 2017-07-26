@@ -1,0 +1,1290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ftdi - FTDI driver &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="next" title="gpio - GPIO API" href="gpio.html"/>
+        <link rel="prev" title="PyFtdi API documentation" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Supported features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/ftdi.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pyftdi.ftdi">
+<span id="ftdi-ftdi-driver"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">ftdi</span></code> - FTDI driver<a class="headerlink" href="#module-pyftdi.ftdi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyftdi.ftdi.Ftdi">
+<em class="property">class </em><code class="descclassname">pyftdi.ftdi.</code><code class="descname">Ftdi</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi" title="Permalink to this definition">¶</a></dt>
+<dd><p>FTDI device driver</p>
+<dl class="classmethod">
+<dt id="pyftdi.ftdi.Ftdi.add_custom_product">
+<em class="property">classmethod </em><code class="descname">add_custom_product</code><span class="sig-paren">(</span><em>vid</em>, <em>pid</em>, <em>pidname=”</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a custom USB product identifier.</p>
+<p>It is required for opening FTDI device with non-standard VID/PID
+USB identifiers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vid</strong> (<em>int</em>) – Vendor ID (USB 16-bit identifier)</li>
+<li><strong>pid</strong> (<em>int</em>) – Product ID (USB 16-bit identifier)</li>
+<li><strong>pidname</strong> (<em>str</em>) – Product name (arbitrary string)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – if the product id is already referenced</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.ftdi.Ftdi.add_custom_vendor">
+<em class="property">classmethod </em><code class="descname">add_custom_vendor</code><span class="sig-paren">(</span><em>vid</em>, <em>vidname=”</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a custom USB vendor identifier.</p>
+<p>It can be useful to use a pretty URL for opening FTDI device</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vid</strong> (<em>int</em>) – Vendor ID (USB 16-bit identifier)</li>
+<li><strong>vidname</strong> (<em>str</em>) – Vendor name (arbitrary string)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – if the vendor id is already referenced</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.bitbang_enabled">
+<code class="descname">bitbang_enabled</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.bitbang_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether some bitbang mode is activated</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI interface is configured to support
+bitbanging</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the FTDI interface/port.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.ftdi.Ftdi.create_from_url">
+<em class="property">classmethod </em><code class="descname">create_from_url</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.create_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an Ftdi instance from an URL</p>
+<p>URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> (<em>str</em>) – FTDI device selector</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.enable_3phase_clock">
+<code class="descname">enable_3phase_clock</code><span class="sig-paren">(</span><em>enable=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.enable_3phase_clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable 3-phase clocking mode, useful in MPSSE mode.</p>
+<p>3-phase clock is mostly useful with I2C mode. It is also be used
+as a workaround to support SPI mode 3.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled or device is
+not capable of 3-phase clocking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.enable_adaptive_clock">
+<code class="descname">enable_adaptive_clock</code><span class="sig-paren">(</span><em>enable=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.enable_adaptive_clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable adaptative clock mode, useful in MPSEE mode.</p>
+<p>Adaptive clock is a unique feature designed for a feedback clock
+for JTAG with ARM core.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.enable_drivezero_mode">
+<code class="descname">enable_drivezero_mode</code><span class="sig-paren">(</span><em>lines</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.enable_drivezero_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable drive-zero mode, useful in MPSSE mode.</p>
+<p>drive-zero mode is mostly useful with I2C mode, to support the open
+collector driving mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled or device is
+not capable of drive-zero mode</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.fifo_sizes">
+<code class="descname">fifo_sizes</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.fifo_sizes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the (TX, RX) tupple of hardware FIFO sizes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">2-tuple of TX, RX FIFO size in bytes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple(int, int)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="pyftdi.ftdi.Ftdi.find_all">
+<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>vps</em>, <em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.find_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find all devices that match the vendor/product pairs of the vps
+list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vps</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) – a sequence of 2-tuple (vid, pid) pairs</li>
+<li><strong>nocache</strong> (<em>bool</em>) – bypass cache to re-enumerate USB devices on
+the host</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a list of 5-tuple (vid, pid, sernum, iface, description)
+device descriptors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list(tuple(int,int,str,int,str))</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.frequency_max">
+<code class="descname">frequency_max</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.frequency_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tells the maximum frequency for MPSSE clock.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the maximum supported frequency in Hz</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_cd">
+<code class="descname">get_cd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read terminal status line: Carrier Detect</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">CD line logical level</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_cts">
+<code class="descname">get_cts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read terminal status line: Clear To Send</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">CTS line logical level</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_dsr">
+<code class="descname">get_dsr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_dsr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read terminal status line: Data Set Ready</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">DSR line logical level</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_error_string">
+<code class="descname">get_error_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_error_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for libftdi compatibility.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a constant, meaningless string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyftdi.ftdi.Ftdi.get_identifiers">
+<em class="property">classmethod </em><code class="descname">get_identifiers</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract the identifiers of an FTDI device from URL, if any</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> (<em>str</em>) – input URL to parse</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(vendor, product, index, sernum, interface)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_latency_timer">
+<code class="descname">get_latency_timer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_latency_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get latency timer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_ri">
+<code class="descname">get_ri</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_ri" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read terminal status line: Ring Indicator</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">RI line logical level</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.has_drivezero">
+<code class="descname">has_drivezero</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_drivezero" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device supports drive-zero mode, i.e. if the
+device supports the open-collector drive mode, useful for I2C
+communication for example.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI device features drive-zero mode</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.has_mpsse">
+<code class="descname">has_mpsse</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_mpsse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device supports MPSSE (I2C, SPI, JTAG, …)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI device supports MPSSE</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.ic_name">
+<code class="descname">ic_name</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.ic_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current type of the FTDI device as a string</p>
+<p>see also <a class="reference external" href="http://www.ftdichip.com/Support/">http://www.ftdichip.com/Support/</a>
+Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the identified FTDI device as a string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.is_H_series">
+<code class="descname">is_H_series</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_H_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device is a high-end FTDI</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI device is a high-end USB-UART bridge</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.is_legacy">
+<code class="descname">is_legacy</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_legacy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device is a low-end FTDI</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI device can only be used as a slow USB-UART
+bridge</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.is_mpsse">
+<code class="descname">is_mpsse</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_mpsse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device is configured in MPSSE mode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI interface is configured in MPSSE mode</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.modem_status">
+<code class="descname">modem_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.modem_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the current modem status as a tuple of set signals</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">decodede modem status as short strings</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple(str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open">
+<code class="descname">open</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>interface=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device.</p>
+<p>If several FTDI devices of the same kind (vid, pid) are connected
+to the host, either index or serial argument should be used to
+discriminate the FTDI device.</p>
+<p>index argument is not a reliable solution as the host may enumerate
+the USB device in random order. serial argument is more reliable
+selector and should always be prefered.</p>
+<p>Some FTDI devices support several interfaces/ports (such as FT2232H
+and FT4232H). The interface argument selects the FTDI port to use,
+starting from 1 (not 0).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vendor</strong> (<em>int</em>) – USB vendor id</li>
+<li><strong>product</strong> (<em>int</em>) – USB product id</li>
+<li><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+FTDI enumerated USB device on the host</li>
+<li><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+by its serial number</li>
+<li><strong>interface</strong> (<em>str</em>) – FTDI interface/port</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_bitbang">
+<code class="descname">open_bitbang</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>interface=1</em>, <em>direction=0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
+<p>Bitbang enables direct read or write to FTDI GPIOs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vendor</strong> (<em>int</em>) – USB vendor id</li>
+<li><strong>product</strong> (<em>int</em>) – USB product id</li>
+<li><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+FTDI enumerated USB device on the host</li>
+<li><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+by its serial number</li>
+<li><strong>interface</strong> (<em>str</em>) – FTDI interface/port</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+delay. The shorter the delay, the higher the host CPU load.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_bitbang_from_url">
+<code class="descname">open_bitbang_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>initial=0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
+<p>Bitbang enables direct read or write to FTDI GPIOs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – a FTDI URL selector</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+<li><strong>initial</strong> (<em>int</em>) – ignored</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+delay. The shorter the delay, the higher the host CPU load.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_from_url">
+<code class="descname">open_from_url</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> (<em>str</em>) – a FTDI URL selector</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_mpsse">
+<code class="descname">open_mpsse</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>interface=1</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
+<p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+modes (vs. UART mode).</p>
+<p>If several FTDI devices of the same kind (vid, pid) are connected
+to the host, either index or serial argument should be used to
+discriminate the FTDI device.</p>
+<p>index argument is not a reliable solution as the host may enumerate
+the USB device in random order. serial argument is more reliable
+selector and should always be prefered.</p>
+<p>Some FTDI devices support several interfaces/ports (such as FT2232H
+and FT4232H). The interface argument selects the FTDI port to use,
+starting from 1 (not 0). Note that not all FTDI ports are MPSSE
+capable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vendor</strong> (<em>int</em>) – USB vendor id</li>
+<li><strong>product</strong> (<em>int</em>) – USB product id</li>
+<li><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+FTDI enumerated USB device on the host</li>
+<li><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+by its serial number</li>
+<li><strong>interface</strong> (<em>str</em>) – FTDI interface/port</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+<li><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</li>
+<li><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+delay. The shorter the delay, the higher the host CPU load.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_mpsse_from_url">
+<code class="descname">open_mpsse_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
+<p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+modes (vs. UART mode).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – a FTDI URL selector</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+<li><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</li>
+<li><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+delay. The shorter the delay, the higher the host CPU load.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.poll_modem_status">
+<code class="descname">poll_modem_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.poll_modem_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll modem status information.</p>
+<p>This function allows the retrieve the two status bytes of the
+device, useful in UART mode.</p>
+<p>FTDI device does not have a so-called USB “interrupt” end-point,
+event polling on the UART interface is done through the regular
+control endpoint.</p>
+<p>see <a class="reference internal" href="#pyftdi.ftdi.Ftdi.modem_status" title="pyftdi.ftdi.Ftdi.modem_status"><code class="xref py py-func docutils literal"><span class="pre">modem_status()</span></code></a> to obtain decoded status strings</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">modem status, as a proprietary bitfield</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">integer</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.purge_buffers">
+<code class="descname">purge_buffers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_buffers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the buffers on the chip and the internal read buffer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.purge_rx_buffer">
+<code class="descname">purge_rx_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_rx_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the read buffer on the chip and the internal read buffer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.purge_tx_buffer">
+<code class="descname">purge_tx_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_tx_buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the write buffer on the chip.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_data">
+<code class="descname">read_data</code><span class="sig-paren">(</span><em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shortcut to received a bytes buffer instead of the array of bytes.</p>
+<p>Note that output byte buffer may be shorted than the requested
+size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>size</strong> (<em>int</em>) – the number of bytes to received from the device</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">payload bytes</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bytes</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_data_bytes">
+<code class="descname">read_data_bytes</code><span class="sig-paren">(</span><em>size</em>, <em>attempt=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data from the FTDI interface</p>
+<p>In UART mode, data contains the serial stream read from the UART
+interface.</p>
+<p>In MPSSE mode, data contains the sequence of data received and
+processed with the MPSEE engine.</p>
+<p>Data buffer is rebuilt from chunk-sized blocks received over the USB
+bus.</p>
+<p>FTDI device always sends internal status bytes, which are stripped
+out as not part of the data payload.</p>
+<p>Because of the multiple buses, buffers, FIFOs, and MPSSE command
+processing, data might not be immediately available on the host
+side. The attempt argument can be used to increase the attempt count
+to retrieve the expected amount of data, before giving up and
+returning all the received data, which may be shorted than the
+requested amount.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>size</strong> (<em>int</em>) – the number of bytes to received from the device</li>
+<li><strong>attempt</strong> (<em>int</em>) – attempt cycle count</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">payload bytes, as an array of bytes</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_data_get_chunksize">
+<code class="descname">read_data_get_chunksize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_get_chunksize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get read buffer chunk size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the size of the write buffer in bytes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_data_set_chunksize">
+<code class="descname">read_data_set_chunksize</code><span class="sig-paren">(</span><em>chunksize</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_set_chunksize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure read buffer chunk size.</p>
+<p>This is a low-level configuration option, which is not intended to
+be use for a regular usage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chunksize</strong> (<em>int</em>) – the size of the read buffer in bytes</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_pins">
+<code class="descname">read_pins</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Directly read pin state, circumventing the read buffer.
+Useful for bitbang mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">bitfield of FTDI interface input GPIO</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_baudrate">
+<code class="descname">set_baudrate</code><span class="sig-paren">(</span><em>baudrate</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_baudrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the current UART baudrate.</p>
+<p>The FTDI device is not able to use an arbitrary baudrate. Its
+internal dividors are only able to achieve some baudrates.</p>
+<p>PyFtdi attemps to find the closest configurable baudrate and if
+the deviation from the requested baudrate is too high, it rejects
+the configuration.</p>
+<p>see <code class="xref py py-attr docutils literal"><span class="pre">baudrate</span></code> for the exact selected baudrate.</p>
+<dl class="docutils">
+<dt><code class="xref py py-const docutils literal"><span class="pre">BAUDRATE_TOLERANCE</span></code> defines the maximum deviation, which</dt>
+<dd>matches standard UART clock drift (3%)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>baudrate</strong> (<em>int</em>) – the new baudrate for the UART.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if deviation from selected baudrate is too large</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Rause FtdiError:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">on IO Error</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_bitmode">
+<code class="descname">set_bitmode</code><span class="sig-paren">(</span><em>bitmask</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_bitmode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable bitbang modes.</p>
+<p>Switch the FTDI interface to bitbang mode.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_break">
+<code class="descname">set_break</code><span class="sig-paren">(</span><em>break_</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_break" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start or stop a break exception event on the serial line</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>break</strong> (<em>bool</em>) – either start or stop break event</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_dtr">
+<code class="descname">set_dtr</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_dtr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set dtr line</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> (<em>bool</em>) – new DTR logical level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_dtr_rts">
+<code class="descname">set_dtr_rts</code><span class="sig-paren">(</span><em>dtr</em>, <em>rts</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_dtr_rts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set dtr and rts lines at once</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dtr</strong> (<em>bool</em>) – new DTR logical level</li>
+<li><strong>rts</strong> (<em>bool</em>) – new RTS logical level</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_dynamic_latency">
+<code class="descname">set_dynamic_latency</code><span class="sig-paren">(</span><em>lmin</em>, <em>lmax</em>, <em>threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_dynamic_latency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up or disable latency values.</p>
+<p>Dynamic latency management is a load balancer to adapt the
+responsiveness of FTDI read request vs. the host CPU load.</p>
+<p>It is mostly useful in UART mode, so that read bandwidth can be
+increased to the maximum achievable throughput, while maintaining
+very low host CPU load when no data is received from the UART.</p>
+<p>There should be no need to tweak the default values. Use with care.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lmin</strong> (<em>int</em>) – minimum latency level</li>
+<li><strong>lmax</strong> (<em>int</em>) – maximum latenty level</li>
+<li><strong>threshold</strong> (<em>int</em>) – latency to reset latency to maximum level</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_error_char">
+<code class="descname">set_error_char</code><span class="sig-paren">(</span><em>errorch</em>, <em>enable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_error_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set error character</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_event_char">
+<code class="descname">set_event_char</code><span class="sig-paren">(</span><em>eventch</em>, <em>enable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_event_char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the special event character</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_flowctrl">
+<code class="descname">set_flowctrl</code><span class="sig-paren">(</span><em>flowctrl</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_flowctrl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Select flowcontrol in UART mode.</p>
+<p>Either hardware flow control through RTS/CTS UART lines,
+software or no flow control.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘sw’, ”</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if the flow control argument is invalid</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_frequency">
+<code class="descname">set_frequency</code><span class="sig-paren">(</span><em>frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the current MPSSE bus frequency</p>
+<p>The FTDI device is not able to use an arbitrary frequency. Its
+internal dividors are only able to achieve some frequencies.</p>
+<p>PyFtdi finds and selects the closest configurable frequency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frequency</strong> (<em>float</em>) – the new frequency for the serial interface,
+in Hz.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the selected frequency, which may differ from the requested
+one, in Hz</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_latency_timer">
+<code class="descname">set_latency_timer</code><span class="sig-paren">(</span><em>latency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_latency_timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set latency timer.</p>
+<p>The FTDI chip keeps data in the internal buffer for a specific
+amount of time if the buffer is not full yet to decrease
+load on the usb bus.</p>
+<p>The shorted the latency, the shorted the delay to obtain data and
+the higher the host CPU load. Be careful with this option.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>latency</strong> (<em>int</em>) – latency (unspecified unit)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_line_property">
+<code class="descname">set_line_property</code><span class="sig-paren">(</span><em>bits</em>, <em>stopbit</em>, <em>parity</em>, <em>break_=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_line_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the (RS232) UART characteristics.</p>
+<p>Parity accepts one of the following strings:
+* <code class="docutils literal"><span class="pre">N</span></code> for no parity bit
+* <code class="docutils literal"><span class="pre">O</span></code> for odd parity bit
+* <code class="docutils literal"><span class="pre">E</span></code> for even parity bit
+* <code class="docutils literal"><span class="pre">M</span></code> for parity bit always set
+* <code class="docutils literal"><span class="pre">S</span></code> for parity bit always reset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>bits</strong> (<em>int</em>) – data bit count</li>
+<li><strong>stopbit</strong> (<em>float</em>) – stop bit count</li>
+<li><strong>parity</strong> (<em>str</em>) – parity mode as a single uppercase character</li>
+<li><strong>break</strong> (<em>bool</em>) – force break event</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_rts">
+<code class="descname">set_rts</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_rts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set rts line</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>state</strong> (<em>bool</em>) – new RTS logical level</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.validate_mpsse">
+<code class="descname">validate_mpsse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.validate_mpsse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the previous MPSSE request has been accepted by the FTDI
+device.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if the FTDI device rejected the command.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.write_data">
+<code class="descname">write_data</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.write_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write data to the FTDI port.</p>
+<p>In UART mode, data contains the serial stream to write to the UART
+interface.</p>
+<p>In MPSSE mode, data contains the sequence of MPSSE commands and
+data.</p>
+<p>Data buffer is split into chunk-sized blocks before being sent over
+the USB bus.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>array</em><em> or </em><em>bytes</em>) – the byte stream to send to the FTDI interface</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.write_data_get_chunksize">
+<code class="descname">write_data_get_chunksize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.write_data_get_chunksize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get write buffer chunk size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the size of the write buffer in bytes</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.write_data_set_chunksize">
+<code class="descname">write_data_set_chunksize</code><span class="sig-paren">(</span><em>chunksize</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.write_data_set_chunksize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure write buffer chunk size.</p>
+<p>This is a low-level configuration option, which is not intended to
+be use for a regular usage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chunksize</strong> (<em>int</em>) – the size of the write buffer in bytes</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="pyftdi.ftdi.FtdiError">
+<em class="property">exception </em><code class="descclassname">pyftdi.ftdi.</code><code class="descname">FtdiError</code><a class="headerlink" href="#pyftdi.ftdi.FtdiError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class error for all FTDI device</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pyftdi.ftdi.FtdiMpsseError">
+<em class="property">exception </em><code class="descclassname">pyftdi.ftdi.</code><code class="descname">FtdiMpsseError</code><a class="headerlink" href="#pyftdi.ftdi.FtdiMpsseError" title="Permalink to this definition">¶</a></dt>
+<dd><p>MPSSE mode not supported on FTDI device</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pyftdi.ftdi.FtdiFeatureError">
+<em class="property">exception </em><code class="descclassname">pyftdi.ftdi.</code><code class="descname">FtdiFeatureError</code><a class="headerlink" href="#pyftdi.ftdi.FtdiFeatureError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requested feature is not available on FTDI device</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="gpio.html" class="btn btn-neutral float-right" title="gpio - GPIO API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="PyFtdi API documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

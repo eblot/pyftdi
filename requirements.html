@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Requirements &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="index.html"/>
+        <link rel="next" title="Installation" href="installation.html"/>
+        <link rel="prev" title="Supported features" href="features.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Supported features</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Requirements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Requirements</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/requirements.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="requirements">
+<h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://www.python.org/">Python</a> 3.5 or above is required. (see next section for Python 2.x support)</p>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
+libraries:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.libusb.info/">libusb</a>, currently tested with 1.0.21</li>
+</ul>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not depend on any other native library, and only uses standard
+Python modules along with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Note about previous releases</p>
+<p>If you have no choice but using previous releases of software, such as</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3+),</li>
+<li>other <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</li>
+<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</li>
+<li><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</li>
+</ul>
+<p class="last">please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
+for these deprecated environmement, but is no longer actively maintained.</p>
+</div>
+<div class="section" id="development">
+<h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed on macOS platforms (64-bit kernel), and is validated on a
+regular basis on Linux hosts.</p>
+<p>As it contains no native code, it should work on any <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="http://www.libusb.info/">libusb</a>
+supported platforms. However, M$ Windows is a seamless source of issues and is
+not officially supported, although users have reported successful installation
+with Windows 7 for example. Your mileage may vary.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="features.html" class="btn btn-neutral" title="Supported features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
