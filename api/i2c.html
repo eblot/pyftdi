@@ -36,7 +36,7 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
-        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="up" title="API documentation" href="index.html"/>
         <link rel="next" title="spi - SPI API" href="spi.html"/>
         <link rel="prev" title="gpio - GPIO API" href="gpio.html"/> 
 
@@ -92,21 +92,23 @@
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
@@ -141,7 +143,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+          <li><a href="index.html">API documentation</a> &raquo;</li>
       
     <li><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</li>
       <li class="wy-breadcrumbs-aside">
@@ -159,6 +161,30 @@
             
   <div class="section" id="module-pyftdi.i2c">
 <span id="i2c-i2c-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API<a class="headerlink" href="#module-pyftdi.i2c" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>Example: communication with an I<sup>2</sup>C GPIO expander</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate an I2C controller</span>
+<span class="n">i2c</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
+
+<span class="c1"># Configure the first interface (IF/1) of the FTDI device as an I2C master</span>
+<span class="n">i2c</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get a port to an I2C slave device</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">i2c</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span>
+
+<span class="c1"># Send one byte, then receive one byte</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x04</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Write a register to the I2C slave</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="mh">0x06</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># Read a register from the I2C slave</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">read_from</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also <a class="reference external" href="https://github.com/eblot/pyi2cflash/">pyi2cflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py">tests/i2c.py</a></p>
+</div>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -579,6 +605,27 @@ are invalid</p>
 <dd><p>I2c NACK receive from slave</p>
 </dd></dl>
 
+</div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>I<sup>2</sup>C sample tests expect:</dt>
+<dd><ul class="first last simple">
+<li>TCA9555 device on slave address 0x21</li>
+<li>ADXL345 device on slave address 0x53</li>
+</ul>
+</dd>
+</dl>
+<p>Checkout a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> github repository.</p>
+<p>See <a class="reference internal" href="../pinout.html"><span class="doc">FTDI device pinout</span></a> for FTDI wiring.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># optional: specify an alternative FTDI device</span>
+<span class="nb">export</span> <span class="nv">FTDI_DEVICE</span><span class="o">=</span>ftdi://ftdi:2232h/1
+<span class="c1"># optional: increase log level</span>
+<span class="nb">export</span> <span class="nv">FTDI_LOGLEVEL</span><span class="o">=</span>DEBUG
+<span class="c1"># be sure to connect the appropriate I2C slaves to the FTDI I2C bus and run</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span>. python3 pyftdi/tests/i2c.py
+</pre></div>
+</div>
 </div>
 </div>
 

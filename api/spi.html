@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
-        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
-        <link rel="next" title="usbtools - USB tools" href="usbtools.html"/>
+        <link rel="up" title="API documentation" href="index.html"/>
+        <link rel="next" title="serialext - UART API" href="uart.html"/>
         <link rel="prev" title="i2c - I2C API" href="i2c.html"/> 
 
   
@@ -92,21 +92,23 @@
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
@@ -141,7 +143,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+          <li><a href="index.html">API documentation</a> &raquo;</li>
       
     <li><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</li>
       <li class="wy-breadcrumbs-aside">
@@ -159,6 +161,24 @@
             
   <div class="section" id="module-pyftdi.spi">
 <span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<p>Example: communication with a SPI data flash</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+
+<span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
+<span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">12E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Request the JEDEC ID from the SPI slave</span>
+<span class="n">jedec_id</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x9f</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
+</div>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -406,6 +426,28 @@ further call to exchange()</li>
 </dd></dl>
 
 </div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>SPI sample tests expect:</dt>
+<dd><ul class="first last simple">
+<li>MX25L1606E device on /CS 0, SPI mode 0</li>
+<li>ADXL345 device on /CS 1, SPI mode 3</li>
+<li>RFDA2125 device on /CS 2, SPI mode 0</li>
+</ul>
+</dd>
+</dl>
+<p>Checkout a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> github repository.</p>
+<p>See <a class="reference internal" href="../pinout.html"><span class="doc">FTDI device pinout</span></a> for FTDI wiring.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># optional: specify an alternative FTDI device</span>
+<span class="nb">export</span> <span class="nv">FTDI_DEVICE</span><span class="o">=</span>ftdi://ftdi:2232h/1
+<span class="c1"># optional: increase log level</span>
+<span class="nb">export</span> <span class="nv">FTDI_LOGLEVEL</span><span class="o">=</span>DEBUG
+<span class="c1"># be sure to connect the appropriate SPI slaves to the FTDI SPI bus and run</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span>. python3 pyftdi/tests/spi.py
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -415,7 +457,7 @@ further call to exchange()</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="usbtools.html" class="btn btn-neutral float-right" title="usbtools - USB tools" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="uart.html" class="btn btn-neutral float-right" title="serialext - UART API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="i2c.html" class="btn btn-neutral" title="i2c - I2C API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

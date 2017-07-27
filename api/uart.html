@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>serialext - UART API &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
+        <link rel="up" title="API documentation" href="index.html"/>
+        <link rel="next" title="usbtools - USB tools" href="usbtools.html"/>
+        <link rel="prev" title="spi - SPI API" href="spi.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.25.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mini-serial-terminal-example">Mini serial terminal example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">PyFtdi</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">API documentation</a> &raquo;</li>
+      
+    <li><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/api/uart.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="serialext-uart-api">
+<h1><code class="xref py py-mod docutils literal"><span class="pre">serialext</span></code> - UART API<a class="headerlink" href="#serialext-uart-api" title="Permalink to this headline">¶</a></h1>
+<p>There is no dedicated module for the UART API, as <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> acts as a backend of
+the well-known <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> module.</p>
+<p>The <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> backend module is implemented as the <cite>serialext.protocol_ftdi</cite>
+module. It is not documented here as no direct call to this module is required,
+as the UART client should use the regular <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> API.</p>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>To enable <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> as a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> backend, use the following import:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+</pre></div>
+</div>
+<p>Then use</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to open a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> serial port instance.</p>
+</div>
+<div class="section" id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Enable pyserial extensions</span>
+<span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+
+<span class="c1"># Open a serial port on the second FTDI device interface (IF/2) @ 3Mbaud</span>
+<span class="n">port</span> <span class="o">=</span> <span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/2&#39;</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="mi">3000000</span><span class="p">)</span>
+
+<span class="c1"># Send bytes</span>
+<span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;Hello World&#39;</span><span class="p">)</span>
+
+<span class="c1"># Receive bytes</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="mini-serial-terminal-example">
+<h2>Mini serial terminal example<a class="headerlink" href="#mini-serial-terminal-example" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">serialext/tests/pyterm.py</span></code> is a simple serial terminal that can be used
+to test the serial port feature.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
+<span class="n">Pure</span> <span class="n">python</span> <span class="n">simple</span> <span class="n">serial</span> <span class="n">terminal</span>
+
+<span class="n">Options</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
+  <span class="o">-</span><span class="n">f</span><span class="p">,</span> <span class="o">--</span><span class="n">fullmode</span>        <span class="n">use</span> <span class="n">full</span> <span class="n">terminal</span> <span class="n">mode</span><span class="p">,</span> <span class="n">exit</span> <span class="k">with</span> <span class="p">[</span><span class="n">Ctrl</span><span class="p">]</span><span class="o">+</span><span class="n">A</span>
+  <span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">,</span> <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="n">DEVICE</span>
+                        <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="nb">list</span> <span class="n">available</span> <span class="n">ports</span> <span class="k">with</span>
+                        <span class="s1">&#39;ftdi:///?)</span>
+  <span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">,</span> <span class="o">--</span><span class="n">baudrate</span><span class="o">=</span><span class="n">BAUDRATE</span>
+                        <span class="n">serial</span> <span class="n">port</span> <span class="n">baudrate</span>
+  <span class="o">-</span><span class="n">r</span> <span class="n">RESET</span><span class="p">,</span> <span class="o">--</span><span class="n">reset</span><span class="o">=</span><span class="n">RESET</span>
+                        <span class="n">HW</span> <span class="n">reset</span> <span class="n">on</span> <span class="n">DTR</span> <span class="n">line</span>
+  <span class="o">-</span><span class="n">o</span> <span class="n">LOGFILE</span><span class="p">,</span> <span class="o">--</span><span class="n">logfile</span><span class="o">=</span><span class="n">LOGFILE</span>
+                        <span class="n">path</span> <span class="n">to</span> <span class="n">the</span> <span class="n">log</span> <span class="n">file</span>
+</pre></div>
+</div>
+<p>If the PyFtdi module is not yet installed and <code class="docutils literal"><span class="pre">pyterm.py</span></code> is run from the
+archive directory, <code class="docutils literal"><span class="pre">PYTHONPATH</span></code> should be defined to the current directory:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi:///?
+</pre></div>
+</div>
+<p>The above command lists all the available FTDI device ports.</p>
+<p>To start up a serial terminal session, use the <code class="docutils literal"><span class="pre">-p</span></code> option switch to select
+the proper port, for example:</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># detect all FTDI connected devices</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span>. python3 pyftdi/serialext/tests/pyterm.py -p ftdi:///?
+<span class="c1"># use the first interface of the first FT2232H as a serial port</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span> pyftdi/serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="usbtools.html" class="btn btn-neutral float-right" title="usbtools - USB tools" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="spi.html" class="btn btn-neutral" title="spi - SPI API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

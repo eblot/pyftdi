@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PyFtdi API documentation &mdash; PyFtdi  documentation</title>
+  <title>API documentation &mdash; PyFtdi  documentation</title>
   
 
   
@@ -91,21 +91,15 @@
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">PyFtdi API documentation</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#release"></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#uart">UART</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#spi">SPI</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#i2c">I<sup>2</sup>C</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#gpio">GPIO</a></li>
 </ul>
 </li>
 </ul>
@@ -142,7 +136,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>PyFtdi API documentation</li>
+    <li>API documentation</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -156,8 +150,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pyftdi-api-documentation">
-<h1>PyFtdi API documentation<a class="headerlink" href="#pyftdi-api-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="api-documentation">
+<h1>API documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="release">
 <h2><a class="headerlink" href="#release" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -166,75 +160,10 @@
 <li class="toctree-l1"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
-</div>
-</div>
-<div class="section" id="quickstart">
-<h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="uart">
-<h3>UART<a class="headerlink" href="#uart" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Enable pyserial extensions</span>
-<span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
-
-<span class="c1"># Open a serial port on the second FTDI device interface (IF/2) @ 3Mbaud</span>
-<span class="n">port</span> <span class="o">=</span> <span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/2&#39;</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="mi">3000000</span><span class="p">)</span>
-
-<span class="c1"># Send bytes</span>
-<span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;Hello World&#39;</span><span class="p">)</span>
-
-<span class="c1"># Receive bytes</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See also <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/serialext/README.rst">Mini serial terminal</a></p>
-</div>
-<div class="section" id="spi">
-<h3>SPI<a class="headerlink" href="#spi" title="Permalink to this headline">¶</a></h3>
-<p>Example: communication with a SPI data flash</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
-<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
-
-<span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
-<span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
-
-<span class="c1"># Get a port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz</span>
-<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">12E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="c1"># Request the JEDEC ID from the SPI slave</span>
-<span class="n">jedec_id</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x9f</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
-</div>
-<div class="section" id="i2c">
-<h3>I<sup>2</sup>C<a class="headerlink" href="#i2c" title="Permalink to this headline">¶</a></h3>
-<p>Example: communication with an I<sup>2</sup>C GPIO expander</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate an I2C controller</span>
-<span class="n">i2c</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
-
-<span class="c1"># Configure the first interface (IF/1) of the FTDI device as an I2C master</span>
-<span class="n">i2c</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
-
-<span class="c1"># Get a port to an I2C slave device</span>
-<span class="n">slave</span> <span class="o">=</span> <span class="n">i2c</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span>
-
-<span class="c1"># Send one byte, then receive one byte</span>
-<span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x04</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
-
-<span class="c1"># Write a register to the I2C slave</span>
-<span class="n">slave</span><span class="o">.</span><span class="n">write_to</span><span class="p">(</span><span class="mh">0x06</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
-
-<span class="c1"># Read a register from the I2C slave</span>
-<span class="n">slave</span><span class="o">.</span><span class="n">read_from</span><span class="p">(</span><span class="mh">0x00</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See also <a class="reference external" href="https://github.com/eblot/pyi2cflash/">pyi2cflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py">tests/i2c.py</a></p>
-</div>
-<div class="section" id="gpio">
-<h3>GPIO<a class="headerlink" href="#gpio" title="Permalink to this headline">¶</a></h3>
-<p>See <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py">tests/gpio.py</a></p>
 </div>
 </div>
 </div>

@@ -36,7 +36,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="index.html"/>
-        <link rel="next" title="PyFtdi API documentation" href="api/index.html"/>
+        <link rel="next" title="API documentation" href="api/index.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
   
@@ -91,7 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">URL Scheme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
@@ -176,6 +176,9 @@ match. Therefore, if you have a single FTDI device connected to your system,
 <code class="docutils literal"><span class="pre">ftdi:///1</span></code> should be enough.</p>
 <p>You can also ask PyFtdi to enumerate all the compatible devices with the
 special <code class="docutils literal"><span class="pre">ftdi:///?</span></code> syntax.</p>
+<p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
+can be as simple as <code class="docutils literal"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
+from 1.</p>
 <p>URL-based methods to open a connection:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
@@ -205,7 +208,7 @@ v0.22.0, be sure to update your code.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api/index.html" class="btn btn-neutral float-right" title="PyFtdi API documentation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="api/index.html" class="btn btn-neutral float-right" title="API documentation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

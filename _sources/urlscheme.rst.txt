@@ -42,6 +42,10 @@ match. Therefore, if you have a single FTDI device connected to your system,
 You can also ask PyFtdi to enumerate all the compatible devices with the
 special ``ftdi:///?`` syntax.
 
+Note that if there's only one FTDI device connected to the host, the FTDI URL
+can be as simple as ``ftdi:///n``, where n is the FTDI port to use, starting
+from 1.
+
 URL-based methods to open a connection:
 
 .. code-block:: python

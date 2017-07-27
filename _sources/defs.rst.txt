@@ -6,7 +6,6 @@
 .. _FT232H: http://www.ftdichip.com/Products/ICs/FT232H.htm
 .. _FT2232H: http://www.ftdichip.com/Products/ICs/FT2232H.html
 .. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
-.. _Mini serial terminal: https://github.com/eblot/pyftdi/blob/master/pyftdi/serialext/README.rst
 .. _tests/gpio.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py
 .. _tests/spi.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py
 .. _tests/i2c.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py

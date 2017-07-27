@@ -97,10 +97,12 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-with-pip">Installing with PIP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-from-source">Installing from source</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/index.html">PyFtdi API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 </ul>
@@ -192,9 +194,29 @@ effective.</p>
 </div>
 <div class="section" id="python-dependencies">
 <h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>pyusb &gt;= 1.0.0</li>
+<li>pyserial &gt;= 3.0</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="installing-with-pip">
+<h2>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this headline">¶</a></h2>
+<p>PIP should automatically install the missing dependencies.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span>pip3 install pyftdi
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-from-source">
+<h2>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
+<p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
+github repository.</p>
 <div class="highlight-shell"><div class="highlight"><pre><span></span>pip3 install pyusb
 pip3 install pyserial
-pip3 install pyftdi
+git clone https://github.com/eblot/pyftdi.git
+<span class="nb">cd</span> pyftdi
+python3 setup.py ...
 </pre></div>
 </div>
 </div>
