@@ -190,4 +190,3 @@ class SerialLogger:
             self._print(name.upper(), '%s' % value)
         except Exception as e:
             print('Cannot log %s (%s)' % (name, e), file=stderr)
-

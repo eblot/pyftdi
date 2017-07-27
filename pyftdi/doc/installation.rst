@@ -58,8 +58,30 @@ see `Libusb on Windows`_
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~
 
+  * pyusb >= 1.0.0
+  * pyserial >= 3.0
+
+
+Installing with PIP
+~~~~~~~~~~~~~~~~~~~
+
+PIP should automatically install the missing dependencies.
+
+.. code-block:: shell
+
+     pip3 install pyftdi
+
+
+Installing from source
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you prefer to install from source, check out a fresh copy from PyFtdi_
+github repository.
+
 .. code-block:: shell
 
      pip3 install pyusb
      pip3 install pyserial
-     pip3 install pyftdi
+     git clone https://github.com/eblot/pyftdi.git
+     cd pyftdi
+     python3 setup.py ...

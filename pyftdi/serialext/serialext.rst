@@ -1,8 +1,5 @@
-Examples
---------
-
 Serial port
-...........
+-----------
 
 ``serialext/tests/pyterm.py`` is a simple serial terminal that can be used
 to test the serial port feature.::
@@ -42,10 +39,10 @@ Quick step-by-step instruction guide
 
 Shell commands::
 
-  pyvenv ~/.pyusb
-  ~/.pyusb/bin/pip install pyserial
-  ~/.pyusb/bin/pip install pyusb
-  PYTHONPATH=. ~/.pyusb/bin/python pyftdi/serialext/tests/pyterm.py -p ftdi:///?
+  pyvenv ~/pyusb
+  ~/pyusb/bin/pip3 install pyserial
+  ~/pyusb/bin/pip3 install pyusb
+  PYTHONPATH=. ~/pyusb/bin/python3 pyftdi/serialext/tests/pyterm.py -p ftdi:///?
 
 Note that if there's only one FTDI device connected to the host, the FTDI URL
 should be as simple as ``ftdi:///n``, where n is the FTDI UART port (starting
