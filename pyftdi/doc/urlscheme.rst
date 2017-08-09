@@ -72,7 +72,7 @@ parameters (among others).
 
 
 Supporting custom USB vendor and product IDs
---------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyFtdi only recognizes FTDI official vendor and product IDs.
 
