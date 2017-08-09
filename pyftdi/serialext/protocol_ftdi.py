@@ -185,3 +185,5 @@ class Serial(FtdiSerial, RawIOBase):
     def __init__(self, *args, **kwargs):
         RawIOBase.__init__(self)
         FtdiSerial.__init__(self, *args, **kwargs)
+        if not hasattr(self, '_timeout') or getattr(self, '_timeout') is None:
+            self._timeout = 0.0
