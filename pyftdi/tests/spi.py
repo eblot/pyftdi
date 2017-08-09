@@ -47,7 +47,8 @@ class SpiDataFlashTest(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._spi.configure('ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._spi.configure(url)
 
     def read_jedec_id(self):
         port = self._spi.get_port(0, freq=3E6, mode=0)
@@ -71,7 +72,8 @@ class SpiAccelTest(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._spi.configure('ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._spi.configure(url)
 
     def read_device_id(self):
         port = self._spi.get_port(1, freq=6E6, mode=3)
@@ -96,7 +98,8 @@ class SpiRfda2125Test(object):
 
     def open(self):
         """Open an I2c connection to a slave"""
-        self._spi.configure('ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._spi.configure(url)
         self._port = self._spi.get_port(2, freq=1E6, mode=0)
 
     def change_attenuation(self, value):

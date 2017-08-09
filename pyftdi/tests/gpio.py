@@ -28,6 +28,7 @@
 
 import unittest
 import sys
+from os import environ
 from pyftdi.gpio import GpioController, GpioException
 from time import sleep
 
@@ -41,10 +42,11 @@ class GpioTest(object):
         self._state = 0  # SW cache of the GPIO output lines
 
     def open(self, out_pins):
-        """Open a GPIO connection, defining which pins are configured as 
+        """Open a GPIO connection, defining which pins are configured as
            output and input"""
         out_pins &= 0xFF
-        self._gpio.open_from_url('ftdi://ftdi:4232h/1', direction=out_pins)
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._gpio.open_from_url(url, direction=out_pins)
 
     def close(self):
         """Close the GPIO connection"""
