@@ -27,7 +27,7 @@ from array import array
 from binascii import hexlify
 from logging import getLogger
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
-from struct import calcsize as scalc, pack as spack
+from struct import calcsize as scalc, pack as spack, unpack as sunpack
 
 
 __all__ = ['I2cPort', 'I2cController']
@@ -41,11 +41,20 @@ class I2cNackError(I2cIOError):
     """I2c NACK receive from slave"""
 
 
+class I2cTimeoutError(TimeoutError):
+    """I2c timeout on polling"""
+
+
 class I2cPort(object):
     """I2C port.
 
        An I2C port is never instanciated directly: use I2cController.get_port()
        method to obtain an I2C port.
+
+       ``relax`` parameter may be used to prevent the master from releasing
+       the I2C bus, if some further data should be exchanged with the slave
+       device. Note that in case of any error, the I2C bus is released and
+       the ``relax`` parameter is ignored in such an event.
 
        Example:
 
@@ -85,33 +94,37 @@ class I2cPort(object):
         I2cController.validate_address(self._address+offset)
         self._shift = offset
 
-    def read(self, readlen=0):
+    def read(self, readlen=0, relax=True):
         """Read one or more bytes from a remote slave
 
            :param int readlen: count of bytes to read out.
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: byte sequence of read out bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
         return self._controller.read(self._address+self._shift,
-                                     readlen=readlen)
+                                     readlen=readlen, relax=relax)
 
-    def write(self, out):
+    def write(self, out, relax=True):
         """Write one or more bytes to a remote slave
 
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
-        return self._controller.write(self._address+self._shift, out)
+        return self._controller.write(self._address+self._shift, out,
+                                      relax=relax)
 
-    def read_from(self, regaddr, readlen=0):
+    def read_from(self, regaddr, readlen=0, relax=True):
         """Read one or more bytes from a remote slave
 
            :param int regaddr: slave register address to read from
            :param int readlen: count of bytes to read out.
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: data read out from the slave
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
@@ -119,41 +132,72 @@ class I2cPort(object):
         """
         return self._controller.exchange(self._address+self._shift,
                                          out=self._make_buffer(regaddr),
-                                         readlen=readlen)
+                                         readlen=readlen, relax=relax)
 
-    def write_to(self, regaddr, out):
+    def write_to(self, regaddr, out, relax=True):
         """Read one or more bytes from a remote slave
 
            :param int regaddr: slave register address to write to
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
         return self._controller.write(self._address+self._shift,
-                                      out=self._make_buffer(regaddr, out))
+                                      out=self._make_buffer(regaddr, out),
+                                      relax=relax)
 
-    def exchange(self, out='', readlen=0):
+    def exchange(self, out=b'', readlen=0, relax=True):
         """Perform an exchange or a transaction with the I2c slave
 
            :param out: an array of bytes to send to the I2c slave,
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: data read out from the slave
            :rtype: array
         """
         return self._controller.exchange(self._address+self._shift, out,
-                                         readlen)
+                                         readlen, relax=relax)
 
-    def poll(self, write=False):
+    def poll(self, write=False, relax=True):
         """Poll a remote slave, expect ACK or NACK.
 
            :param bool write: poll in write mode (vs. read)
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: True if the slave acknowledged, False otherwise
            :rtype: bool
         """
-        return self._controller.poll(self._address+self._shift, write)
+        return self._controller.poll(self._address+self._shift, write,
+                                     relax=relax)
+
+    def poll_cond(self, width, mask, value, count, relax=True):
+        """Poll a remove slave, watching for condition to satisfy.
+           On each poll cycle, a repeated start condition is emitted, without
+           releasing the I2C bus, and an ACK is returned to the slave.
+
+           If relax is set, this method releases the I2C bus however it leaves.
+
+           :param int width: count of bytes to poll for the condition check,
+                that is the size of the condition register
+           :param int mask: binary mask to apply on the condition register
+                before testing for the value
+           :param int value: value to test the masked condition register
+                against. Condition is satisfied when register & mask == value
+           :param int count: maximum poll count before raising a timeout
+           :param bool relax: whether to relax the bus (emit STOP) or not
+           :return: the polled register value
+           :rtype: array
+           :raise I2cTimeoutError: if poll condition is not satisified
+        """
+        try:
+            fmt = ''.join((self._endian, self.FORMATS[width]))
+        except KeyError:
+            raise I2cIOError('Unsupported integer width')
+        return self._controller.poll_cond(self._address+self._shift,
+                                          fmt, mask, value, count, relax=relax)
 
     def flush(self):
         """Force the flush of the HW FIFOs.
@@ -307,11 +351,12 @@ class I2cController(object):
         """
         return self._frequency
 
-    def read(self, address, readlen=1):
+    def read(self, address, readlen=1, relax=True):
         """Read one or more bytes from a remote slave
 
            :param int address: the address on the I2C bus
            :param int readlen: count of bytes to read out.
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: read bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
@@ -343,12 +388,13 @@ class I2cController(object):
             finally:
                 self._do_epilog()
 
-    def write(self, address, out):
+    def write(self, address, out, relax=True):
         """Write one or more bytes to a remote slave
 
            :param int address: the address on the I2C bus
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
 
@@ -364,10 +410,12 @@ class I2cController(object):
             raise I2cIOError('Nothing to write')
         i2caddress = (address << 1) & self.HIGH
         retries = self.RETRY_COUNT
+        do_epilog = True
         while True:
             try:
                 self._do_prolog(i2caddress)
                 self._do_write(out)
+                do_epilog = relax
                 return
             except I2cNackError:
                 retries -= 1
@@ -375,9 +423,10 @@ class I2cController(object):
                     raise
                 self.log.warning('Retry write')
             finally:
-                self._do_epilog()
+                if do_epilog:
+                    self._do_epilog()
 
-    def exchange(self, address, out, readlen=1):
+    def exchange(self, address, out, readlen=0, relax=True):
         """Send a byte sequence to a remote slave followed with
            a read request of one or more bytes.
 
@@ -388,6 +437,7 @@ class I2cController(object):
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
            :param int readlen: count of bytes to read out.
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: read bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
@@ -406,12 +456,15 @@ class I2cController(object):
             raise I2cIOError("Input payload is too large")
         i2caddress = (address << 1) & self.HIGH
         retries = self.RETRY_COUNT
+        do_epilog = True
         while True:
             try:
                 self._do_prolog(i2caddress)
                 self._do_write(out)
                 self._do_prolog(i2caddress | self.BIT0)
-                data = self._do_read(readlen)
+                if readlen:
+                    data = self._do_read(readlen)
+                do_epilog = relax
                 return data
             except I2cNackError:
                 retries -= 1
@@ -419,13 +472,15 @@ class I2cController(object):
                     raise
                 self.log.warning('Retry exchange')
             finally:
-                self._do_epilog()
+                if do_epilog:
+                    self._do_epilog()
 
-    def poll(self, address, write=False):
+    def poll(self, address, write=False, relax=True):
         """Poll a remote slave, expect ACK or NACK.
 
            :param int address: the address on the I2C bus
            :param bool write: poll in write mode (vs. read)
+           :param bool relax: whether to relax the bus (emit STOP) or not
            :return: True if the slave acknowledged, False otherwise
            :rtype: bool
         """
@@ -436,14 +491,69 @@ class I2cController(object):
         if not write:
             i2caddress |= self.BIT0
         self.log.debug('- poll 0x%x', i2caddress >> 1)
+        do_epilog = True
         try:
             self._do_prolog(i2caddress)
+            do_epilog = relax
             return True
         except I2cNackError:
             self.log.info('Not ready')
             return False
         finally:
-            self._do_epilog()
+            if do_epilog:
+                self._do_epilog()
+
+    def poll_cond(self, address, fmt, mask, value, count, relax=True):
+        """Poll a remove slave, watching for condition to satisfy.
+           On each poll cycle, a repeated start condition is emitted, without
+           releasing the I2C bus, and an ACK is returned to the slave.
+
+           If relax is set, this method releases the I2C bus however it leaves.
+
+           :param int address: the address on the I2C bus
+           :param str fmt: struct format for poll register
+           :param int mask: binary mask to apply on the condition register
+                before testing for the value
+           :param int value: value to test the masked condition register
+                against. Condition is satisfied when register & mask == value
+           :param int count: maximum poll count before raising a timeout
+           :param bool relax: whether to relax the bus (emit STOP) or not
+           :return: the polled register value, or None if poll failed
+           :rtype: array or None
+        """
+        if not self._ftdi:
+            raise I2cIOError("FTDI controller not initialized")
+        self.validate_address(address)
+        i2caddress = (address << 1) & self.HIGH
+        i2caddress |= self.BIT0
+        self.log.debug('- cond poll 0x%x', i2caddress >> 1)
+        do_epilog = True
+        try:
+            retry = 0
+            while retry < count:
+                retry += 1
+                size = scalc(fmt)
+                self._do_prolog(i2caddress)
+                data = self._do_read(size)
+                self.log.debug("Poll data: %s", hexlify(data).decode())
+                cond, = sunpack(fmt, data)
+                if (cond & mask) == value:
+                    self.log.debug('Poll condition matched')
+                    break
+                else:
+                    data = None
+                    self.log.debug('Poll condition not fulfilled: %x/%x',
+                                   cond & mask, value)
+            do_epilog = relax
+            if not data:
+                self.log.warning('Poll condition failed')
+            return data
+        except I2cNackError:
+            self.log.info('Not ready')
+            return None
+        finally:
+            if do_epilog:
+                self._do_epilog()
 
     def flush(self):
         """Flush the HW FIFOs
@@ -480,8 +590,8 @@ class I2cController(object):
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _do_read(self, readlen):
-        self.log.debug('- read %d bytes', readlen)
+    def _do_read(self, readlen,):
+        self.log.debug('- read %d byte(s)', readlen)
         if self._tristate:
             read_byte = self._tristate + self._read_byte + \
                         self._clock_low_data_high
@@ -523,7 +633,8 @@ class I2cController(object):
     def _do_write(self, out):
         if not isinstance(out, array):
             out = array('B', out)
-        self.log.debug('- write %d bytes: %s', len(out), hexlify(out).decode())
+        self.log.debug('- write %d byte(s): %s',
+                       len(out), hexlify(out).decode())
         for byte in out:
             cmd = array('B', self._write_byte)
             cmd.append(byte)
