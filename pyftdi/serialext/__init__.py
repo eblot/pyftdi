@@ -45,3 +45,10 @@ except ImportError:
     raise SerialException('Cannot register pyftdi extensions')
 
 serial_for_url = serial4url
+
+
+def touch():
+    """Do nothing, only for static checkers than do not like module import
+       with no module references
+    """
+    pass

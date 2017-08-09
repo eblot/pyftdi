@@ -1048,6 +1048,15 @@ class Ftdi(object):
         self.write_data(array('B', [Ftdi.DRIVE_ZERO, lines & 0xff,
                                     (lines >> 8) & 0xff]))
 
+    def enable_loopback_mode(self, loopback=False):
+        """Enable loopback, i.e. connect DO to DI in FTDI MPSSE port for test
+        purposes only. It does not support UART (TX to RX) mode.
+
+           :param bool loopback: whether to enable or disable this mode
+        """
+        self.write_data(array('B', (loopback and Ftdi.LOOPBACK_START or
+                                    Ftdi.LOOPBACK_END,)))
+
     def write_data(self, data):
         """Write data to the FTDI port.
 
