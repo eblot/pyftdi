@@ -69,3 +69,48 @@ parameters (among others).
 .. warning:: API break
    ``open()``, ``open_mpsse()`` and ``open_bitbang`` arguments have changed in
    v0.22.0, be sure to update your code.
+
+
+Supporting custom USB vendor and product IDs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyFtdi only recognizes FTDI official vendor and product IDs.
+
+If you have an FTDI device with an EEPROM with customized IDs, you need to tell
+PyFtdi to support those custom USB identifiers.
+
+Custom PID
+..........
+To support a custom product ID (16-bit integer) with the official FTDI ID, add
+the following code **before** any call to an FTDI ``open()`` method.
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_product(Ftdi.DEFAULT_VENDOR, product_id)
+
+Custom VID
+..........
+To support a custom vendor ID and product ID (16-bit integers), add the
+following code **before** any call to an FTDI ``open()`` method.
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_vendor(vendor_id)
+   Ftdi.add_custom_product(vendor_id, product_id)
+
+You may also specify an arbitrary string to each method if you want to specify
+a URL by custom vendor and product names instead of their numerical values:
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_vendor(0x1234, 'myvendor')
+   Ftdi.add_custom_product(0x1234, 0x5678, 'myproduct')
+
+   f1 = Ftdi.create_from_url('ftdi://0x1234:0x5678/1')
+   f2 = Ftdi.create_from_url('ftdi://myvendor:myproduct/2')

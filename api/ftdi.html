@@ -36,9 +36,9 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
-        <link rel="up" title="PyFtdi API documentation" href="index.html"/>
+        <link rel="up" title="API documentation" href="index.html"/>
         <link rel="next" title="gpio - GPIO API" href="gpio.html"/>
-        <link rel="prev" title="PyFtdi API documentation" href="index.html"/> 
+        <link rel="prev" title="API documentation" href="index.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.25.2
+                0.25.3
               </div>
             
           
@@ -92,7 +92,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">PyFtdi API documentation</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
@@ -102,11 +103,11 @@
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="index.html#quickstart">Quickstart</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
@@ -141,7 +142,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-          <li><a href="index.html">PyFtdi API documentation</a> &raquo;</li>
+          <li><a href="index.html">API documentation</a> &raquo;</li>
       
     <li><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</li>
       <li class="wy-breadcrumbs-aside">
@@ -303,6 +304,24 @@ not capable of drive-zero mode</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.enable_loopback_mode">
+<code class="descname">enable_loopback_mode</code><span class="sig-paren">(</span><em>loopback=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.enable_loopback_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable loopback, i.e. connect DO to DI in FTDI MPSSE port for test
+purposes only. It does not support UART (TX to RX) mode.</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param bool loopback:</th></tr>
+<tr class="field-odd field"><td>&#160;</td><td class="field-body">whether to enable or disable this mode</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
 </dd></dl>
 
 <dl class="attribute">
@@ -1229,7 +1248,7 @@ be use for a regular usage.</p>
         <a href="gpio.html" class="btn btn-neutral float-right" title="gpio - GPIO API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="PyFtdi API documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="API documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
