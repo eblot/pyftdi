@@ -44,9 +44,6 @@ class FtdiSerial(SerialBase):
 
     PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
 
-    def makeDeviceName(self, port):
-        return port
-
     def open(self):
         """Open the initialized serial port"""
         if self.port is None:

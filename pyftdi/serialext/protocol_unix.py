@@ -59,9 +59,6 @@ class SocketSerial(SerialBase):
     def _reconfigure_port(self):
         pass
 
-    def makeDeviceName(self, port):
-        return port
-
     def open(self):
         """Open the initialized serial port"""
         if self._port is None:

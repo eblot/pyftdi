@@ -26,8 +26,9 @@
 
 """Miscelleanous helpers"""
 
-import re
 from array import array
+from re import match
+
 
 
 # String values evaluated as true boolean values
@@ -134,7 +135,7 @@ def to_int(value):
         return 0
     if isinstance(value, int):
         return value
-    mo = re.match('^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
+    mo = match('^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
     if mo:
         mult = {'K': (1000),
                 'KI': (1 << 10),
