@@ -239,7 +239,7 @@ class Ftdi(object):
     # temt: Transmitter empty
     # err:  Error in RCVR FIFO
     MODEM_STATUS = [('_0 _1 _2 _3 cts dsr ri dcd'.split()),
-                    ('dr oe pe fe bi thre temt error'.split())]
+                    ('dr oe pe fe bi thre txe error'.split())]
 
     # Clocks and baudrates
     BUS_CLOCK_BASE = 6.0E6  # 6 MHz
@@ -287,6 +287,8 @@ class Ftdi(object):
            URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface
 
            :param str url: FTDI device selector
+           :return: a fresh, open Ftdi instance
+           :rtype: py:class:`Ftdi`
         """
         device = Ftdi()
         device.open_from_url(url)
@@ -340,6 +342,22 @@ class Ftdi(object):
         if not pidname:
             pidname = '0x%04x' % pid
         cls.PRODUCT_IDS[vid][pidname] = pid
+
+    @classmethod
+    def decode_modem_status(cls, value):
+        """Decode the FTDI modem status bitfield into short strings.
+
+           :param value: 2-byte mode status
+           :type value: array
+           :return: a tuple of status identifiers
+           :rtype: tuple(str)
+        """
+        status = []
+        for pos, byte_ in enumerate(value):
+            for b, v in enumerate(cls.MODEM_STATUS[pos]):
+                if byte_ & (1 << b):
+                    status.append(cls.MODEM_STATUS[pos][b])
+        return tuple(status)
 
     @staticmethod
     def find_all(vps, nocache=False):
@@ -854,12 +872,7 @@ class Ftdi(object):
         value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
-        status = []
-        for pos, byte_ in enumerate(value):
-            for b, v in enumerate(Ftdi.MODEM_STATUS[pos]):
-                if byte_ & (1 << b):
-                    status.append(Ftdi.MODEM_STATUS[pos][b])
-        return tuple(status)
+        return self.decode_modem_status(value)
 
     def set_flowctrl(self, flowctrl):
         """Select flowcontrol in UART mode.
@@ -1149,6 +1162,10 @@ class Ftdi(object):
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
+                        # if you want to show status, use the following code:
+                        #   status = tempbuf[:2]
+                        #   self.log.debug('Status: %s', ' '.join(
+                        #       self.decode_modem_status(status)))
                         self.readbuffer = array('B')
                         self.readoffset = 0
                         srcoff = 2
