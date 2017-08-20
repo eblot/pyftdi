@@ -295,15 +295,10 @@ class SpiController(object):
             self._clock_phase = cpha
         if writelen:
             wcmd = (cpol ^ cpha) and \
-                Ftdi.WRITE_BYTES_PVE_MSB or Ftdi.WRITE_BYTES_NVE_MSB
+                Ftdi.RW_BYTES_NVE_PVE_MSB or Ftdi.RW_BYTES_PVE_NVE_MSB 
             write_cmd = struct.pack('<BH', wcmd, writelen-1)
             cmd.frombytes(write_cmd)
             cmd.extend(out)
-        if readlen:
-            rcmd = (cpol ^ cpha) and \
-                Ftdi.READ_BYTES_PVE_MSB or Ftdi.READ_BYTES_NVE_MSB
-            read_cmd = struct.pack('<BH', rcmd, readlen-1)
-            cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 if epilog:
@@ -316,18 +311,7 @@ class SpiController(object):
             # USB read cycle may occur before the FTDI device has actually
             # sent the data, so try to read more than once if no data is
             # actually received
-            data = self._ftdi.read_data_bytes(readlen, 4)
-        else:
-            if writelen:
-                if self._turbo:
-                    if epilog:
-                        cmd.extend(epilog)
-                    self._ftdi.write_data(cmd)
-                else:
-                    self._ftdi.write_data(cmd)
-                    if epilog:
-                        self._ftdi.write_data(epilog)
-            data = array('B')
+            data = self._ftdi.read_data_bytes(writelen, 4)
         return data
 
     def _flush(self):
