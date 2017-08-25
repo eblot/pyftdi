@@ -30,24 +30,29 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import termios
 import time
 import threading
 from _thread import interrupt_main
 from argparse import ArgumentParser
+from pyftdi import serialext
 from pyftdi.misc import to_bool, to_int
-from sys import modules, stdin, stdout, stderr
+from sys import modules, platform, stdin, stdout, stderr
 from term import getkey
 from traceback import format_exc
+if platform != 'win32':
+    import termios
 
 
 class MiniTerm(object):
     """A mini serial terminal to demonstrate pyserial extensions"""
 
     def __init__(self, device, baudrate=115200, logfile=None, debug=False):
-        self._termstates = [(fd, termios.tcgetattr(fd)) for fd in
-                            (stdin.fileno(), stdout.fileno(),
-                             stderr.fileno())]
+        self._termstates = []
+        if platform != 'win32' and stdout.isatty():
+            self._termstates = [(fd, termios.tcgetattr(fd)) for fd in
+                                (stdin.fileno(), stdout.fileno(),
+                                 stderr.fileno())]
+
         self._device = device
         self._baudrate = baudrate
         self._logfile = logfile
@@ -114,6 +119,9 @@ class MiniTerm(object):
         while self._resume:
             try:
                 c = getkey(fullmode)
+                if platform == 'win32':
+                    if ord(c) == 0x3:
+                        raise KeyboardInterrupt()
                 if fullmode and ord(c) == 0x1:  # Ctrl+A
                     self._cleanup()
                     return
@@ -132,7 +140,7 @@ class MiniTerm(object):
             time.sleep(0.5)
             try:
                 rem = self._port.in_waiting()
-            except IOError:
+            except Exception:
                 # maybe a bug in underlying wrapper...
                 rem = 0
             # consumes all the received bytes
@@ -148,11 +156,9 @@ class MiniTerm(object):
     def _open_port(device, baudrate, logfile=False, debug=False):
         """Open the serial communication port"""
         # the following import enables serial protocol extensions
-        import pyftdi.serialext
         try:
             if logfile:
-                port = pyftdi.serialext.serial_for_url(device,
-                                                       do_not_open=True)
+                port = serialext.serial_for_url(device, do_not_open=True)
                 basecls = port.__class__
                 from pyftdi.serialext.logger import SerialLogger
                 cls = type('Spy%s' % basecls.__name__,
@@ -160,10 +166,10 @@ class MiniTerm(object):
                 port = cls(device, baudrate=baudrate,
                            timeout=0, logfile=logfile)
             else:
-                port = pyftdi.serialext.serial_for_url(device,
-                                                       baudrate=baudrate,
-                                                       timeout=0,
-                                                       do_not_open=True)
+                port = serialext.serial_for_url(device,
+                                                baudrate=baudrate,
+                                                timeout=0,
+                                                do_not_open=True)
             port.open()
             if not port.is_open:
                 raise IOError('Cannot open port "%s"' % device)
