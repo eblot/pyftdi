@@ -33,10 +33,17 @@ from pyftdi import FtdiLogger
 from pyftdi.serialext import serial_for_url
 from random import choice, seed
 from string import printable
-from sys import modules, stdout
+from sys import modules, platform, stdout
 from time import sleep
 import logging
 import unittest
+
+
+# Specify the second port for multi port device
+# Unfortunately, auto detection triggers some issue in multiprocess test
+url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232/2')
+URL = ''.join((url[:-1], '1'))
+IFCOUNT = int(url[-1])
 
 
 class UartTestCase(unittest.TestCase):
@@ -44,10 +51,13 @@ class UartTestCase(unittest.TestCase):
 
        Simple test to demonstrate UART feature.
 
-       You need a FTDI device that support at least two serial ports to run
-       this test.
+       Depending on your FTDI device, you need to either:
+         * connect RXD and TXD on the unique port for 1-port FTDI device
+           (AD0 and AD1)
+         * connect RXD1 and TXD2, and RXD2 and TXD1 on the two first port of
+           2- or 4- port FTDI devices (AD0 - BD1 and AD1 - BD0)
 
-       Do NOT run this test if you use FTDI port A as an SPI or I2C
+       Do NOT run this test if you use FTDI port(s) as an SPI or I2C
        bridge -or any unsupported setup!! You've been warned.
     """
 
@@ -57,6 +67,7 @@ class UartTestCase(unittest.TestCase):
     def setUpClass(cls):
         seed()
 
+    @unittest.skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
     def test_uart_cross_talk_sp(self):
         something_out = self.generate_bytes()
         """Exchange a random byte stream between the two first UART interfaces
@@ -65,7 +76,7 @@ class UartTestCase(unittest.TestCase):
            This also validates PyFtdi support to use several interfaces on the
            same FTDI device from the same Python process
         """
-        urla = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        urla = URL
         urlb = self.build_next_url(urla)
         porta = serial_for_url(urla, baudrate=1000000)
         portb = serial_for_url(urlb, baudrate=1000000)
@@ -74,6 +85,8 @@ class UartTestCase(unittest.TestCase):
                 porta.open()
             if not portb.is_open:
                 portb.open()
+            # print("porta: %d:%d:%d" % porta.usb_path)
+            # print("portb: %d:%d:%d" % portb.usb_path)
             porta.timeout = 1.0
             portb.timeout = 1.0
             something_out = self.generate_bytes()
@@ -90,8 +103,12 @@ class UartTestCase(unittest.TestCase):
             porta.close()
             portb.close()
 
+    @unittest.skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
+    @unittest.skipIf(platform == 'win32', 'Not tested on Windows')
     def test_uart_cross_talk_mp(self):
-        urla = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        if IFCOUNT > 4:
+            raise IOError('No FTDI device')
+        urla = URL
         urlb = self.build_next_url(urla)
         something_out = self.generate_bytes()
         proca = Process(target=self._cross_talk_write_then_read,
@@ -112,7 +129,35 @@ class UartTestCase(unittest.TestCase):
         self.assertEqual(exita, 0)
         self.assertEqual(exitb, 0)
 
+    @unittest.skipIf(IFCOUNT != 1, 'Test reserved for single-port FTDI device')
+    def test_uart_loopback(self):
+        something_out = self.generate_bytes()
+        """Exchange a random byte stream between the two first UART interfaces
+           of the same FTDI device, from the same process
+
+           This also validates PyFtdi support to use several interfaces on the
+           same FTDI device from the same Python process
+        """
+        port = serial_for_url(URL, baudrate=1000000)
+        for cycle in range(10):
+            print("cycle %d" % cycle)
+            try:
+                if not port.is_open:
+                    print("open")
+                    port.open()
+                port.timeout = 1.0
+                something_out = self.generate_bytes()
+                port.write(something_out)
+                something_in = port.read(len(something_out))
+                print(len(something_in))
+                self.assertEqual(len(something_in), len(something_out))
+                self.assertEqual(something_in, something_out)
+            finally:
+                print("close")
+                port.close()
+
     def _cross_talk_write_then_read(self, url, refstream):
+        print("OPEN", url)
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
@@ -128,6 +173,7 @@ class UartTestCase(unittest.TestCase):
             port.close()
 
     def _cross_talk_read_then_write(self, url, refstream):
+        print("OPEN", url)
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
