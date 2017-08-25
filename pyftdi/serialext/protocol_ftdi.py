@@ -116,6 +116,20 @@ class FtdiSerial(SerialBase):
         self.udev.set_dtr(self._dtr_state)
 
     @property
+    def usb_path(self):
+        """Return the physical location as a triplet, only for debugging
+           purposes.
+             * bus is the USB bus
+             * address is the address on the USB bus
+             * interface is the interface number on the FTDI debice
+
+           :return: (bus, address, interface)
+           :rtype: tuple(int)
+        """
+        return (self.udev.usb_dev.bus, self.udev.usb_dev.address,
+                self.udev.interface.bInterfaceNumber)
+
+    @property
     def cts(self):
         """Read terminal status line: Clear To Send"""
         return self.udev.get_cts()
