@@ -140,10 +140,8 @@ class UartTestCase(unittest.TestCase):
         """
         port = serial_for_url(URL, baudrate=1000000)
         for cycle in range(10):
-            print("cycle %d" % cycle)
             try:
                 if not port.is_open:
-                    print("open")
                     port.open()
                 port.timeout = 1.0
                 something_out = self.generate_bytes()
@@ -157,7 +155,6 @@ class UartTestCase(unittest.TestCase):
                 port.close()
 
     def _cross_talk_write_then_read(self, url, refstream):
-        print("OPEN", url)
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
@@ -173,7 +170,6 @@ class UartTestCase(unittest.TestCase):
             port.close()
 
     def _cross_talk_read_then_write(self, url, refstream):
-        print("OPEN", url)
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
