@@ -52,7 +52,32 @@ Homebrew macOS
 Windows
 .......
 
-see `Libusb on Windows`_
+Windows is not officially supported (*i.e.* not tested) but some users have
+reported successful installations. Windows requires a specific libusb backend
+installation.
+
+Here is a brief setup guide from Andrea Concil for use with the libusb-0.1
+backend:
+
+Libusb-devel-filter
+...................
+
+ * install Libusb-win32-devel-filter from `Libusb win32`_
+ * before using it, install the so called "filter" so that libusb can coexist
+   with specific peripherals usb drivers:
+
+   * go into the Libusb-Win32 menu (it should be something like
+     ``C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LibUSB-Win32``) and
+     into the folder Class Filter launch the installation of the filter for all
+     the usb devices `i.e.` Install all class filters. Once done libusb can be
+     used "in parallel" with original drivers.
+
+Zadig
+.....
+
+Another libusb backend implementation can be installed with Zadig_
+
+See also `Libusb on Windows`_
 
 
 Python dependencies

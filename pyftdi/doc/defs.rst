@@ -19,6 +19,8 @@
 .. _pyi2cflash: https://github.com/eblot/pyi2cflash/
 .. _libusb: http://www.libusb.info/
 .. _Libusb on Windows: https://github.com/libusb/libusb/wiki/Windows
+.. _Libusb win32: https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/
+.. _Zadig: http://zadig.akeo.ie/
 .. _FTDI macOS guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _Libusb issue on macOs: https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152
 
