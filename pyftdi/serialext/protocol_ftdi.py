@@ -73,7 +73,7 @@ class FtdiSerial(SerialBase):
             buf = self.udev.read_data(size)
             data += buf
             size -= len(buf)
-            if self._timeout > 0:
+            if self._timeout is not None:
                 if buf:
                     break
                 ms = now()-start
