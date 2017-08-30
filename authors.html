@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Requirements &mdash; PyFtdi  documentation</title>
+  <title>Authors &mdash; PyFtdi  documentation</title>
   
 
   
@@ -36,8 +36,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="index.html"/>
-        <link rel="next" title="Installation" href="installation.html"/>
-        <link rel="prev" title="Features" href="features.html"/> 
+        <link rel="prev" title="Troubleshooting" href="troubleshooting.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,16 +87,17 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Requirements</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Authors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-developers">Main developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contributors">Contributors</a></li>
+</ul>
+</li>
 </ul>
 
             
@@ -128,11 +128,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Requirements</li>
+    <li>Authors</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/requirements.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/authors.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -142,43 +142,144 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="requirements">
-<h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://www.python.org/">Python</a> 3.5 or above is required. (see next section for Python 2.x support)</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
-libraries:</p>
-<ul class="simple">
-<li><a class="reference external" href="http://www.libusb.info/">libusb</a>, currently tested with 1.0.21</li>
-</ul>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not depend on any other native library, and only uses standard
-Python modules along with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
+  <div class="section" id="authors">
+<h1>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="main-developers">
+<h2>Main developers<a class="headerlink" href="#main-developers" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</li>
+<li>Emmanuel Blot &lt;<a class="reference external" href="mailto:emmanuel&#46;blot&#37;&#52;&#48;free&#46;fr">emmanuel<span>&#46;</span>blot<span>&#64;</span>free<span>&#46;</span>fr</a>&gt;</li>
+<li>Emmanuel Bouaziz &lt;<a class="reference external" href="mailto:ebouaziz&#37;&#52;&#48;free&#46;fr">ebouaziz<span>&#64;</span>free<span>&#46;</span>fr</a>&gt;</li>
 </ul>
 </div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p>Note about previous releases</p>
-<p>If you have no choice but using previous releases of software, such as</p>
-<ul class="simple">
-<li><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3+),</li>
-<li>other <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</li>
-<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</li>
-<li><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</li>
-</ul>
-<p class="last">please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
-for these deprecated environmement, but is no longer actively maintained.</p>
 </div>
-<div class="section" id="development">
-<h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed on macOS platforms (64-bit kernel), and is validated on a
-regular basis on Linux hosts.</p>
-<p>As it contains no native code, it should work on any <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="http://www.libusb.info/">libusb</a>
-supported platforms. However, M$ Windows is a seamless source of issues and is
-not officially supported, although users have reported successful installation
-with Windows 7 for example. Your mileage may vary.</p>
+<div class="section" id="contributors">
+<h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Nikus-V:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Added open device by description, USB timeout support, RTS bug fix</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Dave McCoy:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix a long-lasting syntax issue with bus hi-speed management</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Adam Feuer:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Add support for FT232H FTDI device</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>endlesscoil:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Add support for FT232R FTDI device</li>
+<li>Add support for FT232x FTDI device</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>humm (Fabien Benureau):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix implementation for PyUSB 1.0.0b2 (API break)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>dlharmon:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>JTAG speed optimisation for long transfer</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>DavidWC:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Update PyUSB API adaptation code</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Sebastian:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix bitmask definition</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Anders (anders-code):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Remove the double-layer directory structure, an historical mess :-)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Andrea Concil:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix SPI implementation so that any SPI /CS can be addressed</li>
+<li>Documentation hints for installation on Windows hosts</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Darren Garnier</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix open() arguments (issue #40)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Michael Leonard</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Document FTDI URL schemes</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>nopeppermint (Stefan)</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Documentation reviewer and editor</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>hannesweisbach</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>I2C poll mode (read/write)</li>
+<li>I2C soft tristate for FT2232H/FT4232H devices</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Vianney le Clément de Saint-Marcq:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix timeout in UART mode</li>
+</ul>
+</div></blockquote>
+</div></blockquote>
 </div>
 </div>
 
@@ -189,10 +290,8 @@ with Windows 7 for example. Your mileage may vary.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="features.html" class="btn btn-neutral" title="Features" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="troubleshooting.html" class="btn btn-neutral" title="Troubleshooting" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -36,6 +36,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PyFtdi  documentation" href="index.html"/>
+        <link rel="next" title="Authors" href="authors.html"/>
         <link rel="prev" title="FTDI device pinout" href="pinout.html"/> 
 
   
@@ -95,10 +96,13 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#error-no-backend-available">“Error: No backend available”</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#error-access-denied-insufficient-permissions">“Error: Access denied (insufficient permissions)”</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-the-device-has-no-langid">“Error: The device has no langid”</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#serial-serialutil-serialexception-unable-to-open-usb-port">“serial.serialutil.SerialException: Unable to open USB port”</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#slow-initialisation-on-os-x-el-capitan">Slow initialisation on OS X El Capitan</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
 </ul>
 
             
@@ -182,6 +186,15 @@ already in use.</p>
 </li>
 </ul>
 </div>
+<div class="section" id="error-the-device-has-no-langid">
+<h2>“Error: The device has no langid”<a class="headerlink" href="#error-the-device-has-no-langid" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>On Linux, it usually comes from the same installation issue as the
+<code class="docutils literal"><span class="pre">Access</span> <span class="pre">denied</span></code> error: the current user is not granted the permissions to
+access the FTDI device, therefore pyusb cannot read the FTDI registers. Check
+out the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</li>
+</ul>
+</div>
 <div class="section" id="serial-serialutil-serialexception-unable-to-open-usb-port">
 <h2>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Permalink to this headline">¶</a></h2>
 <p>May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
@@ -201,6 +214,8 @@ with OS X 10.11+.</p>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="authors.html" class="btn btn-neutral float-right" title="Authors" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="pinout.html" class="btn btn-neutral" title="FTDI device pinout" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

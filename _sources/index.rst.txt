@@ -56,3 +56,5 @@ PyFTDI in details
    api/index
    pinout
    troubleshooting
+   authors
+   licenses

@@ -94,6 +94,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#debian-ubuntu-linux">Debian/Ubuntu Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#homebrew-macos">Homebrew macOS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#libusb-devel-filter">Libusb-devel-filter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Zadig</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
@@ -105,6 +107,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 </ul>
 
             
@@ -189,7 +192,33 @@ effective.</p>
 </div>
 <div class="section" id="windows">
 <h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
-<p>see <a class="reference external" href="https://github.com/libusb/libusb/wiki/Windows">Libusb on Windows</a></p>
+<p>Windows is not officially supported (<em>i.e.</em> not tested) but some users have
+reported successful installations. Windows requires a specific libusb backend
+installation.</p>
+<p>Here is a brief setup guide from Andrea Concil for use with the libusb-0.1
+backend:</p>
+</div>
+<div class="section" id="libusb-devel-filter">
+<h3>Libusb-devel-filter<a class="headerlink" href="#libusb-devel-filter" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li>install Libusb-win32-devel-filter from <a class="reference external" href="https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/">Libusb win32</a></li>
+<li>before using it, install the so called “filter” so that libusb can coexist
+with specific peripherals usb drivers:<ul>
+<li>go into the Libusb-Win32 menu (it should be something like
+<code class="docutils literal"><span class="pre">C:\ProgramData\Microsoft\Windows\Start</span> <span class="pre">Menu\Programs\LibUSB-Win32</span></code>) and
+into the folder Class Filter launch the installation of the filter for all
+the usb devices <cite>i.e.</cite> Install all class filters. Once done libusb can be
+used “in parallel” with original drivers.</li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="id1">
+<h3>Zadig<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Another libusb backend implementation can be installed with <a class="reference external" href="http://zadig.akeo.ie/">Zadig</a></p>
+<p>See also <a class="reference external" href="https://github.com/libusb/libusb/wiki/Windows">Libusb on Windows</a></p>
 </div>
 </div>
 <div class="section" id="python-dependencies">
