@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.25.3
+                0.26.1
               </div>
             
           
@@ -92,7 +92,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
@@ -223,7 +222,7 @@ for its associated HW slave.</p>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cController.exchange">
-<code class="descname">exchange</code><span class="sig-paren">(</span><em>address</em>, <em>out</em>, <em>readlen=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>address</em>, <em>out</em>, <em>readlen=0</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send a byte sequence to a remote slave followed with
 a read request of one or more bytes.</p>
 <p>This command is useful to tell the slave what data
@@ -236,6 +235,7 @@ should be read out.</p>
 <li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
 <li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
 <li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -302,7 +302,7 @@ are invalid</p>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cController.poll">
-<code class="descname">poll</code><span class="sig-paren">(</span><em>address</em>, <em>write=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll" title="Permalink to this definition">¶</a></dt>
+<code class="descname">poll</code><span class="sig-paren">(</span><em>address</em>, <em>write=False</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll" title="Permalink to this definition">¶</a></dt>
 <dd><p>Poll a remote slave, expect ACK or NACK.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -311,6 +311,7 @@ are invalid</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
 <li><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -325,8 +326,41 @@ are invalid</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.i2c.I2cController.poll_cond">
+<code class="descname">poll_cond</code><span class="sig-paren">(</span><em>address</em>, <em>fmt</em>, <em>mask</em>, <em>value</em>, <em>count</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll_cond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remove slave, watching for condition to satisfy.
+On each poll cycle, a repeated start condition is emitted, without
+releasing the I2C bus, and an ACK is returned to the slave.</p>
+<p>If relax is set, this method releases the I2C bus however it leaves.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
+<li><strong>fmt</strong> (<em>str</em>) – struct format for poll register</li>
+<li><strong>mask</strong> (<em>int</em>) – binary mask to apply on the condition register
+before testing for the value</li>
+<li><strong>value</strong> (<em>int</em>) – value to test the masked condition register
+against. Condition is satisfied when register &amp; mask == value</li>
+<li><strong>count</strong> (<em>int</em>) – maximum poll count before raising a timeout</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the polled register value, or None if poll failed</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cController.read">
-<code class="descname">read</code><span class="sig-paren">(</span><em>address</em>, <em>readlen=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read" title="Permalink to this definition">¶</a></dt>
+<code class="descname">read</code><span class="sig-paren">(</span><em>address</em>, <em>readlen=1</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read one or more bytes from a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -335,6 +369,7 @@ are invalid</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
 <li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -379,7 +414,7 @@ check out the exchange() method.</p>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cController.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>address</em>, <em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write</code><span class="sig-paren">(</span><em>address</em>, <em>out</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write one or more bytes to a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -388,6 +423,7 @@ check out the exchange() method.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>address</strong> (<em>int</em>) – the address on the I2C bus</li>
 <li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -410,6 +446,10 @@ be added as the first (byte)s of the output buffer.</p>
 <dd><p>I2C port.</p>
 <p>An I2C port is never instanciated directly: use I2cController.get_port()
 method to obtain an I2C port.</p>
+<p><code class="docutils literal"><span class="pre">relax</span></code> parameter may be used to prevent the master from releasing
+the I2C bus, if some further data should be exchanged with the slave
+device. Note that in case of any error, the I2C bus is released and
+the <code class="docutils literal"><span class="pre">relax</span></code> parameter is ignored in such an event.</p>
 <p>Example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
@@ -441,7 +481,7 @@ False otherwise</li>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.exchange">
-<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=”</em>, <em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.exchange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=b”</em>, <em>readlen=0</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform an exchange or a transaction with the I2c slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -452,6 +492,7 @@ False otherwise</li>
 may be empty to only read out data from the slave</li>
 <li><strong>readlen</strong> – count of bytes to read out from the slave,
 may be zero to only write to the slave</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -479,17 +520,59 @@ may be zero to only write to the slave</li>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.poll">
-<code class="descname">poll</code><span class="sig-paren">(</span><em>write=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.poll" title="Permalink to this definition">¶</a></dt>
+<code class="descname">poll</code><span class="sig-paren">(</span><em>write=False</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.poll" title="Permalink to this definition">¶</a></dt>
 <dd><p>Poll a remote slave, expect ACK or NACK.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the slave acknowledged, False otherwise</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if the slave acknowledged, False otherwise</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cPort.poll_cond">
+<code class="descname">poll_cond</code><span class="sig-paren">(</span><em>width</em>, <em>mask</em>, <em>value</em>, <em>count</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.poll_cond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remove slave, watching for condition to satisfy.
+On each poll cycle, a repeated start condition is emitted, without
+releasing the I2C bus, and an ACK is returned to the slave.</p>
+<p>If relax is set, this method releases the I2C bus however it leaves.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>int</em>) – count of bytes to poll for the condition check,
+that is the size of the condition register</li>
+<li><strong>mask</strong> (<em>int</em>) – binary mask to apply on the condition register
+before testing for the value</li>
+<li><strong>value</strong> (<em>int</em>) – value to test the masked condition register
+against. Condition is satisfied when register &amp; mask == value</li>
+<li><strong>count</strong> (<em>int</em>) – maximum poll count before raising a timeout</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the polled register value</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>I2cTimeoutError</strong> – if poll condition is not satisified</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -497,20 +580,27 @@ may be zero to only write to the slave</li>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.read">
-<code class="descname">read</code><span class="sig-paren">(</span><em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read" title="Permalink to this definition">¶</a></dt>
+<code class="descname">read</code><span class="sig-paren">(</span><em>readlen=0</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read one or more bytes from a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">byte sequence of read out bytes</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">byte sequence of read out bytes</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array</p>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
-are invalid</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -518,7 +608,7 @@ are invalid</td>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.read_from">
-<code class="descname">read_from</code><span class="sig-paren">(</span><em>regaddr</em>, <em>readlen=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read_from" title="Permalink to this definition">¶</a></dt>
+<code class="descname">read_from</code><span class="sig-paren">(</span><em>regaddr</em>, <em>readlen=0</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.read_from" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read one or more bytes from a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -527,6 +617,7 @@ are invalid</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>regaddr</strong> (<em>int</em>) – slave register address to read from</li>
 <li><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
@@ -552,16 +643,21 @@ are invalid</p>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write</code><span class="sig-paren">(</span><em>out</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write one or more bytes to a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
-are invalid</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -569,7 +665,7 @@ are invalid</td>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.write_to">
-<code class="descname">write_to</code><span class="sig-paren">(</span><em>regaddr</em>, <em>out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write_to" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write_to</code><span class="sig-paren">(</span><em>regaddr</em>, <em>out</em>, <em>relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.write_to" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read one or more bytes from a remote slave</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -578,6 +674,7 @@ are invalid</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>regaddr</strong> (<em>int</em>) – slave register address to write to</li>
 <li><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</li>
+<li><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</li>
 </ul>
 </td>
 </tr>
