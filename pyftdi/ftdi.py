@@ -308,6 +308,17 @@ class Ftdi(object):
         return ids
 
     @classmethod
+    def get_device(cls, url):
+        """Get a USB device from its URL, without opening an instance.
+
+           :param str url: input URL to parse
+           :return: the USB device that match the specified URL
+           :rtype: py:class:`usb.core.Device`
+        """
+        vendor, product, index, serial, interface = cls.get_identifiers(url)
+        return UsbTools.get_device(vendor, product, index, serial)
+
+    @classmethod
     def add_custom_vendor(cls, vid, vidname=''):
         """Add a custom USB vendor identifier.
 

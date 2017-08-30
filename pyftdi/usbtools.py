@@ -21,7 +21,7 @@ import usb.core
 import usb.util
 from pyftdi.misc import to_int
 from string import printable as printablechars
-from sys import stdout
+from sys import platform, stdout
 from urllib.parse import urlsplit
 
 __all__ = ['UsbTools']
@@ -243,13 +243,33 @@ class UsbTools(object):
                 vpdict[vendor].append(product)
                 for dev in backend.enumerate_devices():
                     device = usb.core.Device(dev, backend)
-                    vendor = device.idVendor
-                    product = device.idProduct
-                    if vendor in vpdict:
-                        products = vpdict[vendor]
-                        if products and (product not in products):
+                    if device.idVendor in vpdict:
+                        products = vpdict[device.idVendor]
+                        if products and (device.idProduct not in products):
                             continue
                         devs.add(device)
+                if platform == 'win32':
+                    # ugly kludge for a boring OS:
+                    # on Windows, the USB stack may enumerate the very same
+                    # devices several times: a real device with N interface
+                    # appears also as N device with as single interface.
+                    # We only keep the "device" that declares the most
+                    # interface count and discard the "virtual" ones.
+                    filtered_devs = dict()
+                    for dev in devs:
+                        vid = dev.idVendor
+                        pid = dev.idProduct
+                        ifc = max([cfg.bNumInterfaces for cfg in dev])
+                        sn = UsbTools.get_string(dev, dev.iSerialNumber)
+                        k = (vid, pid, sn)
+                        if k not in filtered_devs:
+                            filtered_devs[k] = dev
+                        else:
+                            fdev = filtered_devs[k]
+                            fifc = max([cfg.bNumInterfaces for cfg in fdev])
+                            if fifc < ifc:
+                                filtered_devs[k] = dev
+                    devs = set(filtered_devs.values())
                 cls.UsbDevices[vp] = devs
             return cls.UsbDevices[vp]
         finally:
