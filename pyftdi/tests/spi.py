@@ -46,7 +46,7 @@ class SpiDataFlashTest(object):
         self._spi = SpiController()
 
     def open(self):
-        """Open an I2c connection to a slave"""
+        """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         self._spi.configure(url)
 
@@ -58,7 +58,7 @@ class SpiDataFlashTest(object):
         return hex_jedec_id
 
     def close(self):
-        """Close the I2C connection"""
+        """Close the SPI connection"""
         self._spi.terminate()
 
 
@@ -71,7 +71,7 @@ class SpiAccelTest(object):
         self._spi = SpiController()
 
     def open(self):
-        """Open an I2c connection to a slave"""
+        """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         self._spi.configure(url)
 
@@ -83,7 +83,7 @@ class SpiAccelTest(object):
         return hex_device_id
 
     def close(self):
-        """Close the I2C connection"""
+        """Close the SPI connection"""
         self._spi.terminate()
 
 
@@ -97,7 +97,7 @@ class SpiRfda2125Test(object):
         self._spi = SpiController()
 
     def open(self):
-        """Open an I2c connection to a slave"""
+        """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         self._spi.configure(url)
         self._port = self._spi.get_port(2, freq=1E6, mode=0)
@@ -109,7 +109,7 @@ class SpiRfda2125Test(object):
         self._port.write(bytes([intval]), 1)
 
     def close(self):
-        """Close the I2C connection"""
+        """Close the SPI connection"""
         self._spi.terminate()
 
 
