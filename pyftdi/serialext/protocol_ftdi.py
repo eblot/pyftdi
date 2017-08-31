@@ -69,10 +69,12 @@ class FtdiSerial(SerialBase):
            until the requested number of bytes is read."""
         data = bytearray()
         start = now()
-        while size > 0:
+        while True:
             buf = self.udev.read_data(size)
             data += buf
             size -= len(buf)
+            if size == 0:
+                break
             if self._timeout is not None:
                 if buf:
                     break
