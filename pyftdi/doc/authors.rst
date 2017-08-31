@@ -71,4 +71,4 @@ Contributors
 
  * Vianney le Clément de Saint-Marcq:
 
-  * Fix timeout in UART mode
+  * Fix timeout and remove useless delay in UART mode
