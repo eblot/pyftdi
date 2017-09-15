@@ -434,8 +434,10 @@ class Ftdi(object):
 
     def close(self):
         """Close the FTDI interface/port."""
-        self.set_latency_timer(self.LATENCY_MAX)
-        UsbTools.release_device(self.usb_dev)
+        if self.usb_dev:
+            self.set_latency_timer(self.LATENCY_MAX)
+            UsbTools.release_device(self.usb_dev)
+            self.usb_dev = None
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
                             frequency=6.0E6, latency=16):
