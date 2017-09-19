@@ -333,50 +333,58 @@ class UsbTools(object):
                     idx -= 1
             except ValueError:
                 sernum = plcomps[2]
-        if not vendor or not product or sernum or idx:
-            # Need to enumerate USB devices to find a matching device
-            vendors = vendor and [vendor] or \
-                set(vdict.values())
-            vps = set()
-            for v in vendors:
-                products = pdict.get(v, [])
-                for p in products:
-                    vps.add((v, products[p]))
-            devices = devclass.find_all(vps)
-            candidates = []
-            if sernum:
-                if sernum not in [dev[2] for dev in devices]:
-                    raise UsbToolsError("No USB device with S/N %s" % sernum)
-                for v, p, s, i, d in devices:
-                    if s != sernum:
-                        continue
-                    if vendor and vendor != v:
-                        continue
-                    if product and product != p:
-                        continue
-                    candidates.append((v, p, s, i, d))
-            else:
-                for v, p, s, i, d in devices:
-                    if vendor and vendor != v:
-                        continue
-                    if product and product != p:
-                        continue
-                    candidates.append((v, p, s, i, d))
-                if not show_devices:
-                    try:
-                        vendor, product, ifport, ifcount, description = \
-                            candidates[idx]
-                    except IndexError:
-                        raise UsbToolsError("No USB device #%d" % idx)
+        candidates = []
+        vendors = vendor and [vendor] or set(vdict.values())
+        vps = set()
+        for v in vendors:
+            products = pdict.get(v, [])
+            for p in products:
+                vps.add((v, products[p]))
+        devices = devclass.find_all(vps)
+        if sernum:
+            if sernum not in [dev[2] for dev in devices]:
+                raise UsbToolsError("No USB device with S/N %s" % sernum)
+            for v, p, s, i, d in devices:
+                if s != sernum:
+                    continue
+                if vendor and vendor != v:
+                    continue
+                if product and product != p:
+                    continue
+                candidates.append((v, p, s, i, d))
+        else:
+            for v, p, s, i, d in devices:
+                if vendor and vendor != v:
+                    continue
+                if product and product != p:
+                    continue
+                candidates.append((v, p, s, i, d))
+            if not show_devices:
+                try:
+                    vendor, product, ifport, ifcount, description = \
+                        candidates[idx]
+                except IndexError:
+                    raise UsbToolsError("No USB device #%d" % idx)
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
             raise SystemExit(candidates and
                              'Please specify the USB device' or
                              'No USB-Serial device has been detected')
+        if not vendor:
+            cvendors = set([candidate[0] for candidate in candidates])
+            if len(cvendors) == 1:
+                vendor = cvendors.pop()
         if vendor not in pdict:
-            raise UsbToolsError('Vendor ID 0x%04x not supported' % vendor)
+            raise UsbToolsError('Vendor ID %s not supported' %
+                                (vendor and '0x%04x' % vendor))
+        if not product:
+            cproducts = set([candidate[1] for candidate in candidates
+                            if candidate[0] == vendor])
+            if len(cproducts) == 1:
+                product = cproducts.pop()
         if product not in pdict[vendor].values():
-            raise UsbToolsError('Product ID 0x%04x not supported' % product)
+            raise UsbToolsError('Product ID %s not supported' %
+                                (product and '0x%04x' % product))
         return vendor, product, idx, sernum, interface
 
     @staticmethod
