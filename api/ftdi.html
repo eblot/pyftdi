@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.26.1
+                0.26.3
               </div>
             
           
@@ -111,6 +111,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Licenses</a></li>
 </ul>
 
             
@@ -167,7 +169,7 @@
 <dd><p>FTDI device driver</p>
 <dl class="classmethod">
 <dt id="pyftdi.ftdi.Ftdi.add_custom_product">
-<em class="property">classmethod </em><code class="descname">add_custom_product</code><span class="sig-paren">(</span><em>vid</em>, <em>pid</em>, <em>pidname=”</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">add_custom_product</code><span class="sig-paren">(</span><em>vid</em>, <em>pid</em>, <em>pidname=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a custom USB product identifier.</p>
 <p>It is required for opening FTDI device with non-standard VID/PID
 USB identifiers.</p>
@@ -191,7 +193,7 @@ USB identifiers.</p>
 
 <dl class="classmethod">
 <dt id="pyftdi.ftdi.Ftdi.add_custom_vendor">
-<em class="property">classmethod </em><code class="descname">add_custom_vendor</code><span class="sig-paren">(</span><em>vid</em>, <em>vidname=”</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">add_custom_vendor</code><span class="sig-paren">(</span><em>vid</em>, <em>vidname=''</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a custom USB vendor identifier.</p>
 <p>It can be useful to use a pretty URL for opening FTDI device</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -255,7 +257,7 @@ bitbanging</td>
 
 <dl class="classmethod">
 <dt id="pyftdi.ftdi.Ftdi.decode_modem_status">
-<em class="property">classmethod </em><code class="descname">decode_modem_status</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.decode_modem_status" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">decode_modem_status</code><span class="sig-paren">(</span><em>value</em>, <em>error_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.decode_modem_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decode the FTDI modem status bitfield into short strings.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1057,14 +1059,21 @@ responsiveness of FTDI read request vs. the host CPU load.</p>
 increased to the maximum achievable throughput, while maintaining
 very low host CPU load when no data is received from the UART.</p>
 <p>There should be no need to tweak the default values. Use with care.</p>
+<p>Minimum latency is limited to 12 or above, at FTDI device starts
+losing bytes when latency is too short…</p>
+<p>Maximum latency value is 255 ms.</p>
+<p>Polling latency is reset to <cite>lmin</cite> each time at least one payload
+byte is received from the FTDI device.</p>
+<p>It doubles, up to <cite>lmax</cite>, every <cite>threshold</cite> times no payload has
+been received from the FTDI device.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>lmin</strong> (<em>int</em>) – minimum latency level</li>
-<li><strong>lmax</strong> (<em>int</em>) – maximum latenty level</li>
-<li><strong>threshold</strong> (<em>int</em>) – latency to reset latency to maximum level</li>
+<li><strong>lmin</strong> (<em>int</em>) – minimum latency level (ms)</li>
+<li><strong>lmax</strong> (<em>int</em>) – maximum latenty level (ms)</li>
+<li><strong>threshold</strong> (<em>int</em>) – count to reset latency to maximum level</li>
 </ul>
 </td>
 </tr>
@@ -1094,7 +1103,7 @@ software or no flow control.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘sw’, ”</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘sw’, ‘’</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if the flow control argument is invalid</td>
 </tr>

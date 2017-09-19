@@ -10,7 +10,7 @@ using a URL. The URL scheme is defined as:
 
 ::
 
-    protocol://[vendor[:product[:index|:serial]]]/interface
+    protocol://[vendor][:[product][:index|:serial]]/interface
 
 where:
 
@@ -45,6 +45,9 @@ special ``ftdi:///?`` syntax.
 Note that if there's only one FTDI device connected to the host, the FTDI URL
 can be as simple as ``ftdi:///n``, where n is the FTDI port to use, starting
 from 1.
+
+You may also select a FTDI device by its sole serial number, *e.g.*
+`ftdi://::serial/1`.
 
 URL-based methods to open a connection:
 

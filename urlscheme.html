@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.26.1
+                0.26.3
               </div>
             
           
@@ -102,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
 </ul>
 
             
@@ -151,7 +152,7 @@
 <p>There are two ways to open a connection to an <cite>Ftdi</cite> object.</p>
 <p>The recommended way to open a connection is to specify connection details
 using a URL. The URL scheme is defined as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">protocol</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">[:</span><span class="n">product</span><span class="p">[:</span><span class="n">index</span><span class="o">|</span><span class="p">:</span><span class="n">serial</span><span class="p">]]]</span><span class="o">/</span><span class="n">interface</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">protocol</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">][:[</span><span class="n">product</span><span class="p">][:</span><span class="n">index</span><span class="o">|</span><span class="p">:</span><span class="n">serial</span><span class="p">]]</span><span class="o">/</span><span class="n">interface</span>
 </pre></div>
 </div>
 <p>where:</p>
@@ -187,6 +188,8 @@ special <code class="docutils literal"><span class="pre">ftdi:///?</span></code>
 <p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
 can be as simple as <code class="docutils literal"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
 from 1.</p>
+<p>You may also select a FTDI device by its sole serial number, <em>e.g.</em>
+<cite>ftdi://::serial/1</cite>.</p>
 <p>URL-based methods to open a connection:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>

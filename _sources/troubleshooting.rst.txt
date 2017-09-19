@@ -3,6 +3,17 @@
 Troubleshooting
 ---------------
 
+Logging
+~~~~~~~
+
+FTDI uses the `pyftdi` logger.
+
+It emits log messages with raw payload bytes at DEBUG level, and data loss
+at ERROR level.
+
+Common error messages
+~~~~~~~~~~~~~~~~~~~~~
+
 "Error: No backend available"
 .............................
 
