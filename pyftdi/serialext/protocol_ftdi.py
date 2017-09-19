@@ -180,7 +180,7 @@ class FtdiSerial(SerialBase):
             else:
                 self.udev.set_flowctrl('')
             try:
-                self.udev.set_dynamic_latency(2, 200, 400)
+                self.udev.set_dynamic_latency(12, 200, 50)
             except AttributeError:
                 # backend does not support this feature
                 pass

@@ -254,9 +254,8 @@ class Ftdi(object):
     BITBANG_CLOCK_MULTIPLIER = 4
 
     # Latency
-    LATENCY_MIN = 1
+    LATENCY_MIN = 12
     LATENCY_MAX = 255
-    LATENCY_THRESHOLD = 1000
 
     def __init__(self):
         self.log = getLogger('pyftdi.ftdi')
@@ -1208,8 +1207,12 @@ class Ftdi(object):
                             self.latency_count += 1
                             if self.latency != self.latency_max:
                                 if self.latency_count > self.latency_threshold:
-                                    self.set_latency_timer(self.latency_max)
-                                    self.latency = self.latency_max
+                                    self.latency *= 2
+                                    if self.latency > self.latency_max:
+                                        self.latency = self.latency_max
+                                    else:
+                                        self.latency_count = 0
+                                    self.set_latency_timer(self.latency)
                         # no more data to read?
                         return data
                 if length > 0:
@@ -1297,21 +1300,32 @@ class Ftdi(object):
 
            There should be no need to tweak the default values. Use with care.
 
-           :param int lmin: minimum latency level
-           :param int lmax: maximum latenty level
-           :param int threshold: latency to reset latency to maximum level
+           Minimum latency is limited to 12 or above, at FTDI device starts
+           losing bytes when latency is too short...
+
+           Maximum latency value is 255 ms.
+
+           Polling latency is reset to `lmin` each time at least one payload
+           byte is received from the FTDI device.
+
+           It doubles, up to `lmax`, every `threshold` times no payload has
+           been received from the FTDI device.
+
+           :param int lmin: minimum latency level (ms)
+           :param int lmax: maximum latenty level (ms)
+           :param int threshold: count to reset latency to maximum level
         """
         if not threshold:
             self.latency_count = 0
             self.latency_threshold = None
         else:
             for lat in (lmin, lmax):
-                if not (0 < lat < 256):
-                    raise ValueError("Latency out of range: %d")
+                if not (self.LATENCY_MIN <= lat <= self.LATENCY_MAX):
+                    raise ValueError("Latency out of range: %d" % lat)
             self.latency_min = lmin
             self.latency_max = lmax
             self.latency_threshold = threshold
-            self.latency = lmax
+            self.latency = lmin
             self.set_latency_timer(self.latency)
 
     def validate_mpsse(self):
