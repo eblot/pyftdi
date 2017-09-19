@@ -238,8 +238,11 @@ class Ftdi(object):
     # thre: Transmitter holding register
     # temt: Transmitter empty
     # err:  Error in RCVR FIFO
-    MODEM_STATUS = [('_0 _1 _2 _3 cts dsr ri dcd'.split()),
-                    ('dr oe pe fe bi thre txe error'.split())]
+    MODEM_STATUS = [('', '', '', '', 'cts', 'dsr', 'ri', 'dcd'),
+                    ('dr', 'overrun', 'parity', 'framing',
+                     'break', 'thre', 'txe', 'rcvr')]
+
+    ERROR_BITS = (0x00, 0x8E)
 
     # Clocks and baudrates
     BUS_CLOCK_BASE = 6.0E6  # 6 MHz
@@ -355,7 +358,7 @@ class Ftdi(object):
         cls.PRODUCT_IDS[vid][pidname] = pid
 
     @classmethod
-    def decode_modem_status(cls, value):
+    def decode_modem_status(cls, value, error_only=False):
         """Decode the FTDI modem status bitfield into short strings.
 
            :param value: 2-byte mode status
@@ -364,8 +367,10 @@ class Ftdi(object):
            :rtype: tuple(str)
         """
         status = []
-        for pos, byte_ in enumerate(value):
+        for pos, (byte_, ebits) in enumerate(zip(value, cls.ERROR_BITS)):
             for b, v in enumerate(cls.MODEM_STATUS[pos]):
+                if error_only:
+                    byte_ &= ebits
                 if byte_ & (1 << b):
                     status.append(cls.MODEM_STATUS[pos][b])
         return tuple(status)
@@ -1176,9 +1181,13 @@ class Ftdi(object):
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
                         # if you want to show status, use the following code:
-                        #   status = tempbuf[:2]
-                        #   self.log.debug('Status: %s', ' '.join(
-                        #       self.decode_modem_status(status)))
+                        status = tempbuf[:2]
+                        if status[1] & self.ERROR_BITS[1]:
+                            self.log.error(
+                                'FTDI error: %02x:%02x %s',
+                                status[0], status[1], (' '.join(
+                                    self.decode_modem_status(status,
+                                                             True)).title()))
                         self.readbuffer = array('B')
                         self.readoffset = 0
                         srcoff = 2
