@@ -68,7 +68,7 @@ class SpiPort(object):
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
         self._cs_prolog = bytes([cs_clock, cs_select])
-        self._cs_epilog = bytes([cs_select] + [cs_clock * int(cs_hold)])
+        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
 
     def exchange(self, out=b'', readlen=0, start=True, stop=True):
@@ -95,10 +95,10 @@ class SpiPort(object):
                     slave
            :rtype: array
         """
-        return self._controller._exchange(self._frequency, out, readlen,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, out, readlen,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def read(self, readlen=0, start=True, stop=True):
         """Read out bytes from the slave
@@ -115,10 +115,10 @@ class SpiPort(object):
                     slave
            :rtype: array
         """
-        return self._controller._exchange(self._frequency, [], readlen,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, [], readlen,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def write(self, out, start=True, stop=True):
         """Write bytes to the slave
@@ -133,10 +133,10 @@ class SpiPort(object):
                        Use False if the transaction should complete with a
                        further call to exchange()
         """
-        return self._controller._exchange(self._frequency, out, 0,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, out, 0,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -211,7 +211,7 @@ class SpiController(object):
     SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=1, turbo=True):
+    def __init__(self, silent_clock=False, cs_count=4, turbo=True):
         self._ftdi = Ftdi()
         self._lock = Lock()
         self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
@@ -326,8 +326,8 @@ class SpiController(object):
     def exchange(self, frequency, out, readlen,
                  cs_prolog=None, cs_epilog=None, cpol=False, cpha=False):
         with self._lock:
-            self._exchange_half_duplex(frequency, out, readlen,
-                                       cs_prolog, cs_epilog, cpol, cpha)
+            return self._exchange_half_duplex(frequency, out, readlen,
+                                              cs_prolog, cs_epilog, cpol, cpha)
 
     def read_gpio(self):
         """Read GPIO port
