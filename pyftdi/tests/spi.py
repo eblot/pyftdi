@@ -43,7 +43,7 @@ class SpiDataFlashTest(object):
     """
 
     def __init__(self):
-        self._spi = SpiController()
+        self._spi = SpiController(cs_count=3)
 
     def open(self):
         """Open an SPI connection to a slave"""
@@ -68,7 +68,7 @@ class SpiAccelTest(object):
     """
 
     def __init__(self):
-        self._spi = SpiController()
+        self._spi = SpiController(cs_count=3)
 
     def open(self):
         """Open an SPI connection to a slave"""
@@ -94,7 +94,7 @@ class SpiRfda2125Test(object):
     """
 
     def __init__(self):
-        self._spi = SpiController()
+        self._spi = SpiController(cs_count=3)
 
     def open(self):
         """Open an SPI connection to a slave"""
