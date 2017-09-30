@@ -439,6 +439,7 @@ class Ftdi(object):
     def close(self):
         """Close the FTDI interface/port."""
         if self.usb_dev:
+            self.set_bitmode(0, Ftdi.BITMODE_RESET)
             self.set_latency_timer(self.LATENCY_MAX)
             UsbTools.release_device(self.usb_dev)
             self.usb_dev = None
