@@ -612,6 +612,18 @@ class Ftdi(object):
         return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0800, 0x0900)
 
     @property
+    def has_wide_port(self):
+        """Tell whether the device supports 16-bit GPIO ports (vs. 8 bits)
+
+           :return: True if the FTDI device supports wide GPIO port
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
+        if not self.usb_dev:
+            raise FtdiError('Device characteristics not yet known')
+        return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0900)
+
+    @property
     def is_legacy(self):
         """Tell whether the device is a low-end FTDI
 
