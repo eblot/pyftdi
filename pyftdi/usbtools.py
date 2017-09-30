@@ -308,7 +308,8 @@ class UsbTools(object):
                 try:
                     product = to_int(plcomps[1])
                 except ValueError:
-                    product = None
+                    raise UsbToolsError('Product %s is not referenced' %
+                                        plcomps[1])
             else:
                 product = None
             if not urlparts.path:
@@ -322,13 +323,12 @@ class UsbTools(object):
         except (IndexError, ValueError):
             raise UsbToolsError('Invalid device URL: %s' % urlstr)
         sernum = None
-        idx = 0
+        idx = None
         if plcomps[2]:
             try:
                 idx = to_int(plcomps[2])
                 if idx > 255:
-                    idx = 0
-                    raise ValueError
+                    raise ValueError()
                 if idx:
                     idx -= 1
             except ValueError:
@@ -360,11 +360,16 @@ class UsbTools(object):
                     continue
                 candidates.append((v, p, s, i, d))
             if not show_devices:
+                if idx is None:
+                    if len(candidates) > 1:
+                        raise UsbToolsError('%d USB devices match URL' %
+                                            len(candidates))
+                    idx = 0
                 try:
                     vendor, product, ifport, ifcount, description = \
                         candidates[idx]
                 except IndexError:
-                    raise UsbToolsError("No USB device #%d" % idx)
+                    raise UsbToolsError("No USB device matches URL")
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
             raise SystemExit(candidates and
@@ -385,7 +390,7 @@ class UsbTools(object):
         if product not in pdict[vendor].values():
             raise UsbToolsError('Product ID %s not supported' %
                                 (product and '0x%04x' % product))
-        return vendor, product, idx, sernum, interface
+        return vendor, product, idx or 0, sernum, interface
 
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
