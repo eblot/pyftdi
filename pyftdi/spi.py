@@ -332,7 +332,7 @@ class SpiController(object):
            :rtype: int
         """
         with self._lock:
-            data = self._read_raw()
+            data = self._read_raw(self._wide_port)
             return data & self._gpio_dir
 
     def write_gpio(self, value):
@@ -347,10 +347,11 @@ class SpiController(object):
             if (value & mask) != value:
                 raise SpiIOError('No such GPIO pin(s)')
             # perform read-modify-write
-            data = self._read_raw()
+            use_high = self._wide_port and (self.direction & 0xff00)
+            data = self._read_raw(use_high)
             data &= ~mask
             data |= value
-            self._write_raw(data)
+            self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._spi_mask
 
     def set_gpio_direction(self, pins, direction):
@@ -374,8 +375,8 @@ class SpiController(object):
         gpio_mask &= ~self._spi_mask
         return gpio_mask
 
-    def _read_raw(self):
-        if self._wide_port:
+    def _read_raw(self, read_high):
+        if read_high:
             cmd = array('B', [Ftdi.GET_BITS_LOW, Ftdi.GET_BITS_HIGH])
             fmt = '<H'
         else:
@@ -389,11 +390,11 @@ class SpiController(object):
         value, = sunpack(fmt, data)
         return value
 
-    def _write_raw(self, data):
+    def _write_raw(self, data, write_high):
         direction = self.direction
         low_data = data & 0xFF
         low_dir = direction & 0xFF
-        if self._wide_port:
+        if write_high:
             high_data = (data >> 8) & 0xFF
             high_dir = (direction >> 8) & 0xFF
             cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
@@ -424,10 +425,15 @@ class SpiController(object):
         direction = self.direction
         cmd = array('B')
         for ctrl in cs_prolog or []:
+            ctrl &= self._spi_mask
+            ctrl |= self._gpio_low
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         epilog = array('B')
         if cs_epilog:
-            epilog.extend(cs_epilog)
+            for ctrl in cs_epilog:
+                ctrl &= self._spi_mask
+                ctrl |= self._gpio_low
+                epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
             # Restore idle state
             cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
                        direction]
