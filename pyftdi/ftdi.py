@@ -145,7 +145,7 @@ class Ftdi(object):
     GET_BITS_HIGH = 0x83    # Get MSB GPIO output
     LOOPBACK_START = 0x84   # Enable loopback
     LOOPBACK_END = 0x85     # Disable loopback
-    TCK_DIVISOR = 0x86
+    SET_TCK_DIVISOR = 0x86  # Set clock
     # -H series only
     ENABLE_CLK_3PHASE = 0x8c       # Enable 3-phase data clocking (I2C)
     DISABLE_CLK_3PHASE = 0x8d      # Disable 3-phase data clocking
@@ -279,6 +279,7 @@ class Ftdi(object):
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None  # disable dynamic latency
         self.lineprop = 0
+        self._tracer = None
 
     # --- Public API -------------------------------------------------------
 
@@ -445,7 +446,7 @@ class Ftdi(object):
             self.usb_dev = None
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
-                            frequency=6.0E6, latency=16):
+                            frequency=6.0E6, latency=16, debug=False):
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -459,13 +460,15 @@ class Ftdi(object):
            :param float frequency: serial interface clock in Hz
            :param int latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
+           :param bool debug: use a tracer to decode MPSSE protocol
         """
         vendor, product, index, serial, interface = self.get_identifiers(url)
         return self.open_mpsse(vendor, product, index, serial, interface,
-                               direction, initial, frequency, latency)
+                               direction, initial, frequency, latency, debug)
 
     def open_mpsse(self, vendor, product, index=0, serial=None, interface=1,
-                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
+                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16,
+                   debug=False):
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -498,12 +501,16 @@ class Ftdi(object):
            :param float frequency: serial interface clock in Hz
            :param int latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
+           :param bool debug: use a tracer to decode MPSSE protocol
         """
         # Open an FTDI interface
         self.open(vendor, product, index, serial, interface)
         if not self.has_mpsse:
             self.close()
             raise FtdiMpsseError('This device does not support MPSSE')
+        if debug:
+            from .tracer import FtdiMpsseTracer
+            self._tracer = FtdiMpsseTracer()
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -1402,6 +1409,8 @@ class Ftdi(object):
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
         self.log.debug('> %s', hexlify(data).decode())
+        if self._tracer:
+            self._tracer.send(data)
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
     def _read(self):
@@ -1410,6 +1419,8 @@ class Ftdi(object):
                                  self.usb_read_timeout)
         if data:
             self.log.debug('< %s', hexlify(data).decode())
+            if self._tracer and len(data) > 2:
+                self._tracer.receive(data[2:])
         return data
 
     def _get_max_packet_size(self):
@@ -1534,7 +1545,8 @@ class Ftdi(object):
             cmd = array('B', (divcode,))
         else:
             cmd = array('B')
-        cmd.extend((Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff))
+        cmd.extend((Ftdi.SET_TCK_DIVISOR, divisor & 0xff,
+                   (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()
         # Drain input buffer

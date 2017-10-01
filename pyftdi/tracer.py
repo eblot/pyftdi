@@ -1,0 +1,251 @@
+from array import array
+from binascii import hexlify
+from inspect import stack
+from logging import getLogger
+from string import ascii_uppercase
+from struct import unpack as sunpack
+from .ftdi import Ftdi
+
+
+class FtdiMpsseTracer(object):
+    """FTDI MPSSE protocol decoder
+
+       Far from being complete for now
+    """
+
+    COMMAND_PREFIX = 'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND'
+
+    def build_commands(prefix):
+        commands = {}
+        for cmd in dir(Ftdi):
+            if cmd[0] not in ascii_uppercase:
+                continue
+            value = getattr(Ftdi, cmd)
+            if not isinstance(value, int):
+                continue
+            family = cmd.split('_')[0]
+            if family not in prefix.split():
+                continue
+            commands[value] = cmd
+        return commands
+
+    COMMANDS = build_commands(COMMAND_PREFIX)
+
+    ST_IDLE = range(1)
+
+    def __init__(self):
+        self.log = getLogger('pyftdi.mpsse')
+        self._trace_tx = array('B')
+        self._trace_rx = array('B')
+        self._state = self.ST_IDLE
+        self._clkdiv5 = False
+        self._cmd_decoded = True
+        self._resp_decoded = True
+        self._last_code = None
+
+    def send(self, buffer):
+        self._trace_tx.extend(buffer)
+        while self._trace_tx:
+            try:
+                code = self._trace_tx[0]
+                self._last_code = code
+                cmd = self.COMMANDS[code]
+                if self._cmd_decoded:
+                    self.log.debug("Command: %02X: %s", code, cmd)
+                cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
+                self._cmd_decoded = cmd_decoder()
+                if self._cmd_decoded:
+                    continue
+            except IndexError:
+                self.log.warning('Empty buffer')
+            except KeyError:
+                self.log.warning('Unknown command code: %02X', code)
+            except AttributeError:
+                self.log.warning('Decoder for command %s is not implemented',
+                                 cmd)
+            # on error, flush all buffers
+            self._trace_tx = array('B')
+            self._trace_rx = array('B')
+
+    def receive(self, buffer):
+        self._trace_rx.extend(buffer)
+        while self._trace_rx:
+            try:
+                cmd = self.COMMANDS[self._last_code]
+                resp_decoder = getattr(self, '_resp_%s' % cmd.lower())
+                self._resp_decoded = resp_decoder()
+                if self._resp_decoded:
+                    continue
+            except IndexError:
+                self.log.warning('Empty buffer')
+            except KeyError:
+                self.log.warning('Unknown command code: %02X', self._last_code)
+            except AttributeError:
+                self.log.warning('Decoder for response %s is not implemented',
+                                 cmd)
+            # on error, flush RX buffer
+            self._trace_rx = array('B')
+
+    def _cmd_enable_clk_div5(self):
+        self.log.info('Enable clock divisor /5')
+        self._clkdiv5 = True
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_disable_clk_div5(self):
+        self.log.info('Disable clock divisor /5')
+        self._clkdiv5 = False
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_set_tck_divisor(self):
+        if len(self._trace_tx) < 3:
+            return False
+        value, = sunpack('<H', self._trace_tx[1:3])
+        base = self._clkdiv5 and 12E6 or 60E6
+        freq = base / ((1 + value) * 2)
+        self.log.info('Set frequency %.3fMHZ', freq/1E6)
+        self._trace_tx[:] = self._trace_tx[3:]
+        return True
+
+    def _cmd_loopback_end(self):
+        self.log.info('Disable loopback')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_enable_clk_adaptive(self):
+        self.log.info('Enable adaptive clock')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_disable_clk_adaptive(self):
+        self.log.info('Disable adaptive clock')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_enable_clk_3phase(self):
+        self.log.info('Enable 3-phase clock')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_disable_clk_3phase(self):
+        self.log.info('Disable 3-phase clock')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_send_immediate(self):
+        self.log.info('Send immediate')
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_get_bits_low(self):
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_get_bits_high(self):
+        self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_set_bits_low(self):
+        if len(self._trace_tx) < 3:
+            return False
+        value, direction = sunpack('BB', self._trace_tx[1:3])
+        self.log.info('Set gpio[7:0]  %02x %s',
+                      value, self.bits2str(value, direction))
+        self._trace_tx[:] = self._trace_tx[3:]
+        return True
+
+    def _cmd_set_bits_high(self):
+        if len(self._trace_tx) < 3:
+            return False
+        value, direction = sunpack('BB', self._trace_tx[1:3])
+        self.log.info('Set gpio[15:8] %02x %s',
+                      value, self.bits2str(value, direction))
+        self._trace_tx[:] = self._trace_tx[3:]
+        return True
+
+    def _cmd_write_bytes_pve_msb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bytes_nve_msb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bytes_pve_lsb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bytes_nve_lsb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bits_pve_msb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bits_nve_msb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bits_pve_lsb(self):
+        return self._decode_mpsse_bytes()
+
+    def _cmd_write_bits_nve_lsb(self):
+        return self._decode_mpsse_bytes()
+
+    def _resp_get_bits_low(self):
+        if len(self._trace_rx) < 1:
+            return False
+        value = self._trace_rx[0]
+        self.log.info('Get gpio[7:0]  %02x %s',
+                      value, self.bits2str(value, 0xFF))
+        self._trace_rx[:] = self._trace_rx[1:]
+        return True
+
+    def _resp_get_bits_high(self):
+        if len(self._trace_rx) < 1:
+            return False
+        value = self._trace_rx[0]
+        self.log.info('Get gpio[15:8] %02x %s',
+                      value, self.bits2str(value, 0xFF))
+        self._trace_rx[:] = self._trace_rx[1:]
+        return True
+
+    def _decode_mpsse_bytes(self):
+        caller = stack()[1].function
+        if len(self._trace_tx) < 4:
+            return False
+        length = sunpack('<H', self._trace_tx[1:3])[0] + 1
+        if len(self._trace_tx) < 4 + length:
+            return False
+        payload = self._trace_tx[3:3+length]
+        funcname = caller[5:].title().replace('_', ' ')
+        self.log.info('%s (%d) %s',
+                      funcname, length, hexlify(payload).decode('utf8'))
+        self._trace_tx[:] = self._trace_tx[3+length:]
+        return True
+
+    @classmethod
+    def bits2str(cls, value, mask, z='_'):
+        vstr = '{0:08b}'.format(value)
+        mstr = '{0:08b}'.format(mask)
+        return ''.join([m == '1' and v or z for v, m in zip(vstr, mstr)])
+
+    # read_bytes_pve_msb
+    # read_bytes_nve_msb
+    # read_bits_pve_msb
+    # read_bits_nve_msb
+    # read_bytes_pve_lsb
+    # read_bytes_nve_lsb
+    # read_bits_pve_lsb
+    # read_bits_nve_lsb
+    # rw_bytes_pve_pve_lsb
+    # rw_bytes_pve_nve_lsb
+    # rw_bytes_nve_pve_lsb
+    # rw_bytes_nve_nve_lsb
+    # rw_bits_pve_pve_lsb
+    # rw_bits_pve_nve_lsb
+    # rw_bits_nve_pve_lsb
+    # rw_bits_nve_nve_lsb
+    # write_bits_tms_pve
+    # write_bits_tms_nve
+    # rw_bits_tms_pve_pve
+    # rw_bits_tms_nve_pve
+    # rw_bits_tms_pve_nve
+    # rw_bits_tms_nve_nve
+
