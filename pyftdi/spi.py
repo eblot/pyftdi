@@ -189,7 +189,7 @@ class SpiGpioPort(object):
         return self._controller.read_gpio()
 
     def write(self, value):
-        return self._controller.write_gpio()
+        return self._controller.write_gpio(value)
 
     def set_direction(self, pins, direction):
         self._controller.set_gpio_direction(pins, direction)
@@ -223,13 +223,9 @@ class SpiController(object):
         self._spi_mask = self._cs_bits | self.SPI_BITS
         self._gpio_port = None
         self._gpio_dir = 0
+        self._gpio_low = 0
         self._wide_port = False
         self._turbo = turbo
-        # Restore idle state
-        cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits, self._spi_dir]
-        if not self._turbo:
-            cs_high.append(Ftdi.SEND_IMMEDIATE)
-        self._cs_high = bytes(cs_high)
         self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
@@ -237,7 +233,7 @@ class SpiController(object):
     @property
     def direction(self):
         """Provide the FTDI GPIO direction"""
-        return self._spi_dir
+        return self._spi_dir | self._gpio_dir
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master
@@ -355,8 +351,9 @@ class SpiController(object):
             data &= ~mask
             data |= value
             self._write_raw(data)
+            self._gpio_low = data & 0xFF & ~self._spi_mask
 
-    def set_direction(self, pins, direction):
+    def set_gpio_direction(self, pins, direction):
         """Change the direction of the GPIO pins
 
            :param int pins: which GPIO pins should be reconfigured
@@ -393,7 +390,7 @@ class SpiController(object):
         return value
 
     def _write_raw(self, data):
-        direction = self._spi_dir | self._gpio_dir
+        direction = self.direction
         low_data = data & 0xFF
         low_dir = direction & 0xFF
         if self._wide_port:
@@ -424,13 +421,19 @@ class SpiController(object):
             self._ftdi.set_frequency(frequency)
             # store the requested value, not the actual one (best effort)
             self._frequency = frequency
+        direction = self.direction
         cmd = array('B')
         for ctrl in cs_prolog or []:
-            cmd.extend((Ftdi.SET_BITS_LOW, ctrl, self.direction))
+            cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         epilog = array('B')
         if cs_epilog:
             epilog.extend(cs_epilog)
-            epilog.extend(self._cs_high)
+            # Restore idle state
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+                       direction]
+            if not self._turbo:
+                cs_high.append(Ftdi.SEND_IMMEDIATE)
+            epilog.extend(cs_high)
         writelen = len(out)
         if self._clock_phase != cpha:
             self._ftdi.enable_3phase_clock(cpha)
