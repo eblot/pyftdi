@@ -458,8 +458,9 @@ class Ftdi(object):
                 input
            :param int initial: a bitfield specifying the initial output value
            :param float frequency: serial interface clock in Hz
-           :param int latency: low-level latency to select the USB FTDI poll
-                delay. The shorter the delay, the higher the host CPU load.
+           :param int latency: low-level latency in milliseconds. The shorter
+                the delay, the higher the host CPU load. Do not use shorter
+                values than the default, as it triggers data loss in FTDI.
            :param bool debug: use a tracer to decode MPSSE protocol
         """
         vendor, product, index, serial, interface = self.get_identifiers(url)
@@ -499,8 +500,9 @@ class Ftdi(object):
                 input
            :param int initial: a bitfield specifying the initial output value
            :param float frequency: serial interface clock in Hz
-           :param int latency: low-level latency to select the USB FTDI poll
-                delay. The shorter the delay, the higher the host CPU load.
+           :param int latency: low-level latency in milliseconds. The shorter
+                the delay, the higher the host CPU load. Do not use shorter
+                values than the default, as it triggers data loss in FTDI.
            :param bool debug: use a tracer to decode MPSSE protocol
         """
         # Open an FTDI interface
@@ -1530,14 +1532,14 @@ class Ftdi(object):
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
+            divisor = int((Ftdi.BUS_CLOCK_BASE+frequency-1)/frequency)-1
+            actual_freq = (Ftdi.BUS_CLOCK_BASE+divisor-1)/(divisor+1)
         elif frequency <= Ftdi.BUS_CLOCK_HIGH:
             # not supported on non-H device, however it seems that 2232D
             # devices simply ignore the settings. Could be improved though
             divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_HIGH/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_HIGH/(divisor+1)
+            divisor = int((Ftdi.BUS_CLOCK_HIGH+frequency-1)/frequency)-1
+            actual_freq = (Ftdi.BUS_CLOCK_HIGH+divisor-1)/(divisor+1)
         else:
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
@@ -1551,6 +1553,7 @@ class Ftdi(object):
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
+        self.log.debug('Bus frequency: %.3f MHz' % (actual_freq/1E6))
         return actual_freq
 
     def __get_timeouts(self):
