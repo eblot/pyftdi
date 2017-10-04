@@ -30,7 +30,7 @@ from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 
 
-__all__ = ['SpiPort', 'SpiController']
+__all__ = ['SpiPort', 'SpiGpioPort', 'SpiController']
 
 
 class SpiIOError(IOError):
@@ -377,10 +377,13 @@ class SpiController(object):
 
     def _read_raw(self, read_high):
         if read_high:
-            cmd = array('B', [Ftdi.GET_BITS_LOW, Ftdi.GET_BITS_HIGH])
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.GET_BITS_HIGH,
+                              Ftdi.SEND_IMMEDIATE])
             fmt = '<H'
         else:
-            cmd = array('B', [Ftdi.GET_BITS_LOW])
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.SEND_IMMEDIATE])
             fmt = 'B'
         self._ftdi.write_data(cmd)
         size = scalc(fmt)
@@ -420,7 +423,8 @@ class SpiController(object):
             frequency = (3*frequency)//2
         if self._frequency != frequency:
             self._ftdi.set_frequency(frequency)
-            # store the requested value, not the actual one (best effort)
+            # store the requested value, not the actual one (best effort),
+            # to avoid setting unavailable values on each call.
             self._frequency = frequency
         direction = self.direction
         cmd = array('B')
