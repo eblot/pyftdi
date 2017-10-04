@@ -156,24 +156,29 @@ class SpiPort(object):
 
 
 class SpiGpioPort(object):
-    """GPio port
+    """GPIO port
 
        A SpiGpioPort instance enables to drive GPIOs wich are not reseerved for
        SPI feature as regular GPIOs.
 
-       GPIO are managed as a byte bitfield. The LSBs are reserved for the SPI
+       GPIO are managed as a bitfield. The LSBs are reserved for the SPI
        feature, which means that the lowest pin that can be used as a GPIO is
        b4:
-         * b0: SPI SCLK
-         * b1: SPI MOSI
-         * b2: SPI MISO
-         * b3: SPI CS0
-         * b4: SPI CS1 or first GPIO
+
+       * b0: SPI SCLK
+       * b1: SPI MOSI
+       * b2: SPI MISO
+       * b3: SPI CS0
+       * b4: SPI CS1 or first GPIO
+
        If more than one SPI device is used, less GPIO pins are available, see
        the cs_count argument of the SpiController constructor.
 
        There is no offset bias in GPIO bit position, *i.e.* the first available
-       GPIO can be reached from as 0x10.
+       GPIO can be reached from as ``0x10``.
+
+       Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+       ports, while 232H and 2232H series use wide 16-bit ports.
 
        An SpiGpio port is never instanciated directly: use
        SpiController.get_gpio() method to obtain the GPIO port.
@@ -183,15 +188,30 @@ class SpiGpioPort(object):
 
     @property
     def pins(self):
+        """Report the addressable GPIOs as a bitfield."""
         return self._controller.gpio_pins
 
     def read(self):
+        """Read GPIO port.
+
+           :return: the GPIO port pins as a bitfield
+           :rtype: int
+        """
         return self._controller.read_gpio()
 
     def write(self, value):
+        """Write GPIO port.
+
+           :param int value: the GPIO port pins as a bitfield
+        """
         return self._controller.write_gpio(value)
 
     def set_direction(self, pins, direction):
+        """Change the direction of the GPIO pins.
+
+           :param int pins: which GPIO pins should be reconfigured
+           :param int direction: direction bitfield (high level for output)
+        """
         self._controller.set_gpio_direction(pins, direction)
 
 
