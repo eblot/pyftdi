@@ -24,12 +24,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import struct
 from array import array
 from pyftdi.ftdi import Ftdi
+from struct import calcsize as scalc, pack as spack, unpack as sunpack
+from threading import Lock
 
 
-__all__ = ['SpiPort', 'SpiController']
+__all__ = ['SpiPort', 'SpiGpioPort', 'SpiController']
 
 
 class SpiIOError(IOError):
@@ -66,14 +67,8 @@ class SpiPort(object):
         cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
-        cs_cmd = array('B',
-                       (Ftdi.SET_BITS_LOW, cs_clock, controller.direction,
-                        Ftdi.SET_BITS_LOW, cs_select, controller.direction))
-        self._cs_cmd = cs_cmd
-        self._cs_release = \
-            array('B', [Ftdi.SET_BITS_LOW, cs_select, controller.direction] +
-                       [Ftdi.SET_BITS_LOW, cs_clock, controller.direction] *
-                  int(cs_hold))
+        self._cs_prolog = bytes([cs_clock, cs_select])
+        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
 
     def exchange(self, out=b'', readlen=0, start=True, stop=True):
@@ -100,10 +95,10 @@ class SpiPort(object):
                     slave
            :rtype: array
         """
-        return self._controller._exchange(self._frequency, out, readlen,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, out, readlen,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def read(self, readlen=0, start=True, stop=True):
         """Read out bytes from the slave
@@ -120,10 +115,10 @@ class SpiPort(object):
                     slave
            :rtype: array
         """
-        return self._controller._exchange(self._frequency, [], readlen,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, [], readlen,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def write(self, out, start=True, stop=True):
         """Write bytes to the slave
@@ -138,10 +133,10 @@ class SpiPort(object):
                        Use False if the transaction should complete with a
                        further call to exchange()
         """
-        return self._controller._exchange(self._frequency, out, 0,
-                                          start and self._cs_cmd,
-                                          stop and self._cs_release,
-                                          self._cpol, self._cpha)
+        return self._controller.exchange(self._frequency, out, 0,
+                                         start and self._cs_prolog,
+                                         stop and self._cs_epilog,
+                                         self._cpol, self._cpha)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -160,6 +155,66 @@ class SpiPort(object):
         return self._frequency
 
 
+class SpiGpioPort(object):
+    """GPIO port
+
+       A SpiGpioPort instance enables to drive GPIOs wich are not reseerved for
+       SPI feature as regular GPIOs.
+
+       GPIO are managed as a bitfield. The LSBs are reserved for the SPI
+       feature, which means that the lowest pin that can be used as a GPIO is
+       b4:
+
+       * b0: SPI SCLK
+       * b1: SPI MOSI
+       * b2: SPI MISO
+       * b3: SPI CS0
+       * b4: SPI CS1 or first GPIO
+
+       If more than one SPI device is used, less GPIO pins are available, see
+       the cs_count argument of the SpiController constructor.
+
+       There is no offset bias in GPIO bit position, *i.e.* the first available
+       GPIO can be reached from as ``0x10``.
+
+       Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+       ports, while 232H and 2232H series use wide 16-bit ports.
+
+       An SpiGpio port is never instanciated directly: use
+       SpiController.get_gpio() method to obtain the GPIO port.
+    """
+    def __init__(self, controller):
+        self._controller = controller
+
+    @property
+    def pins(self):
+        """Report the addressable GPIOs as a bitfield."""
+        return self._controller.gpio_pins
+
+    def read(self):
+        """Read GPIO port.
+
+           :return: the GPIO port pins as a bitfield
+           :rtype: int
+        """
+        return self._controller.read_gpio()
+
+    def write(self, value):
+        """Write GPIO port.
+
+           :param int value: the GPIO port pins as a bitfield
+        """
+        return self._controller.write_gpio(value)
+
+    def set_direction(self, pins, direction):
+        """Change the direction of the GPIO pins.
+
+           :param int pins: which GPIO pins should be reconfigured
+           :param int direction: direction bitfield (high level for output)
+        """
+        self._controller.set_gpio_direction(pins, direction)
+
+
 class SpiController(object):
     """SPI master.
 
@@ -173,31 +228,32 @@ class SpiController(object):
     DO_BIT = 0x02
     DI_BIT = 0x04
     CS_BIT = 0x08
+    SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
     def __init__(self, silent_clock=False, cs_count=4, turbo=True):
         self._ftdi = Ftdi()
+        self._lock = Lock()
         self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
                          ~(SpiController.CS_BIT - 1))
-        self._ports = [None] * cs_count
-        self._direction = (self._cs_bits |
-                           SpiController.DO_BIT |
-                           SpiController.SCK_BIT)
+        self._spi_ports = [None] * cs_count
+        self._spi_dir = (self._cs_bits |
+                         SpiController.DO_BIT |
+                         SpiController.SCK_BIT)
+        self._spi_mask = self._cs_bits | self.SPI_BITS
+        self._gpio_port = None
+        self._gpio_dir = 0
+        self._gpio_low = 0
+        self._wide_port = False
         self._turbo = turbo
-        self._cs_high = array('B')
-        # Restore idle state
-        self._cs_high.extend((Ftdi.SET_BITS_LOW, self._cs_bits,
-                              self._direction))
-        if not self._turbo:
-            self._cs_high.append(Ftdi.SEND_IMMEDIATE)
-        self._immediate = array('B', (Ftdi.SEND_IMMEDIATE,))
+        self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
 
     @property
     def direction(self):
         """Provide the FTDI GPIO direction"""
-        return self._direction
+        return self._spi_dir | self._gpio_dir
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master
@@ -212,10 +268,14 @@ class SpiController(object):
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
-        self._frequency = self._ftdi.open_mpsse_from_url(
-            # /CS all high
-            url, direction=self._direction, initial=self._cs_bits, **kwargs)
-        self._ftdi.enable_adaptive_clock(False)
+        with self._lock:
+            if self._frequency > 0.0:
+                raise SpiIOError('Already configured')
+            self._frequency = self._ftdi.open_mpsse_from_url(
+                # /CS all high
+                url, direction=self._spi_dir, initial=self._cs_bits, **kwargs)
+            self._ftdi.enable_adaptive_clock(False)
+            self._wide_port = self._ftdi.has_wide_port
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -233,25 +293,35 @@ class SpiController(object):
            :param int mode: SPI mode [0,1,3]
            :rtype: SpiPort
         """
-        if not self._ftdi:
-            raise SpiIOError("FTDI controller not initialized")
-        if cs >= len(self._ports):
-            raise SpiIOError("No such SPI port")
-        if not (0 <= mode <= 3):
-            raise SpiIOError("Invalid SPI mode")
-        if (mode & 0x2) and not self._ftdi.is_H_series:
-            raise SpiIOError("SPI with CPHA high is not supported by "
-                             "this FTDI device")
-        if mode == 2:
-            raise SpiIOError("SPI mode 2 has no known workaround with FTDI "
-                             "devices")
-        if not self._ports[cs]:
-            freq = min(freq or self.frequency_max, self.frequency_max)
-            hold = freq and (1+int(1E6/freq))
-            self._ports[cs] = SpiPort(self, cs, cs_hold=hold, spi_mode=mode)
-            self._ports[cs].set_frequency(freq)
-            self._flush()
-        return self._ports[cs]
+        with self._lock:
+            if not self._ftdi:
+                raise SpiIOError("FTDI controller not initialized")
+            if cs >= len(self._spi_ports):
+                raise SpiIOError("No such SPI port")
+            if not (0 <= mode <= 3):
+                raise SpiIOError("Invalid SPI mode")
+            if (mode & 0x2) and not self._ftdi.is_H_series:
+                raise SpiIOError("SPI with CPHA high is not supported by "
+                                 "this FTDI device")
+            if mode == 2:
+                raise SpiIOError("SPI mode 2 has no known workaround with "
+                                 "FTDI devices")
+            if not self._spi_ports[cs]:
+                freq = min(freq or self.frequency_max, self.frequency_max)
+                hold = freq and (1+int(1E6/freq))
+                self._spi_ports[cs] = SpiPort(self, cs, cs_hold=hold,
+                                              spi_mode=mode)
+                self._spi_ports[cs].set_frequency(freq)
+                self._flush()
+            return self._spi_ports[cs]
+
+    def get_gpio(self):
+        with self._lock:
+            if not self._ftdi:
+                raise SpiIOError("FTDI controller not initialized")
+            if not self._gpio_port:
+                self._gpio_port = SpiGpioPort(self)
+            return self._gpio_port
 
     @property
     def frequency_max(self):
@@ -263,9 +333,101 @@ class SpiController(object):
         """Returns the current SPI clock"""
         return self._frequency
 
-    def _exchange(self, frequency, out, readlen, cs_cmd=None, cs_release=None,
-                  cpol=False, cpha=False):
-        """Perform a half-duplex exchange or transaction with the SPI slave"""
+    @property
+    def gpio_pins(self):
+        """Report the addressable GPIOs as a bitfield"""
+        with self._lock:
+            return self._get_gpio_mask()
+
+    def exchange(self, frequency, out, readlen,
+                 cs_prolog=None, cs_epilog=None, cpol=False, cpha=False):
+        with self._lock:
+            return self._exchange_half_duplex(frequency, out, readlen,
+                                              cs_prolog, cs_epilog, cpol, cpha)
+
+    def read_gpio(self):
+        """Read GPIO port
+
+           :return: the GPIO port pins as a bitfield
+           :rtype: int
+        """
+        with self._lock:
+            data = self._read_raw(self._wide_port)
+            return data & self._gpio_dir
+
+    def write_gpio(self, value):
+        """Write GPIO port
+
+           :param int value: the GPIO port pins as a bitfield
+        """
+        with self._lock:
+            if value & self._spi_mask:
+                raise SpiIOError('Cannot change SPI pins')
+            mask = self._get_gpio_mask()
+            if (value & mask) != value:
+                raise SpiIOError('No such GPIO pin(s)')
+            # perform read-modify-write
+            use_high = self._wide_port and (self.direction & 0xff00)
+            data = self._read_raw(use_high)
+            data &= ~mask
+            data |= value
+            self._write_raw(data, use_high)
+            self._gpio_low = data & 0xFF & ~self._spi_mask
+
+    def set_gpio_direction(self, pins, direction):
+        """Change the direction of the GPIO pins
+
+           :param int pins: which GPIO pins should be reconfigured
+           :param int direction: direction bitfield (on for output)
+        """
+        with self._lock:
+            if pins & self._spi_mask:
+                raise SpiIOError('Cannot access SPI pins as GPIO')
+            mask = self._get_gpio_mask()
+            if (pins & mask) != pins:
+                raise SpiIOError('No such GPIO pin(s)')
+            self._gpio_dir &= pins
+            self._gpio_dir |= (pins & direction)
+
+    def _get_gpio_mask(self):
+        gpio_width = self._wide_port and 16 or 8
+        gpio_mask = (1 << gpio_width) - 1
+        gpio_mask &= ~self._spi_mask
+        return gpio_mask
+
+    def _read_raw(self, read_high):
+        if read_high:
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.GET_BITS_HIGH,
+                              Ftdi.SEND_IMMEDIATE])
+            fmt = '<H'
+        else:
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.SEND_IMMEDIATE])
+            fmt = 'B'
+        self._ftdi.write_data(cmd)
+        size = scalc(fmt)
+        data = self._ftdi.read_data_bytes(size, 4)
+        if len(data) != size:
+            raise SpiIOError('Cannot read GPIO')
+        value, = sunpack(fmt, data)
+        return value
+
+    def _write_raw(self, data, write_high):
+        direction = self.direction
+        low_data = data & 0xFF
+        low_dir = direction & 0xFF
+        if write_high:
+            high_data = (data >> 8) & 0xFF
+            high_dir = (direction >> 8) & 0xFF
+            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
+                              Ftdi.SET_BITS_HIGH, high_data, high_dir])
+        else:
+            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir])
+        self._ftdi.write_data(cmd)
+
+    def _exchange_half_duplex(self, frequency, out, readlen,
+                              cs_prolog, cs_epilog, cpol, cpha):
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -281,14 +443,27 @@ class SpiController(object):
             frequency = (3*frequency)//2
         if self._frequency != frequency:
             self._ftdi.set_frequency(frequency)
-            # store the requested value, not the actual one (best effort)
+            # store the requested value, not the actual one (best effort),
+            # to avoid setting unavailable values on each call.
             self._frequency = frequency
-        cmd = cs_cmd and array('B', cs_cmd) or array('B')
-        if cs_release:
-            epilog = array('B', cs_release)
-            epilog.extend(self._cs_high)
-        else:
-            epilog = None
+        direction = self.direction
+        cmd = array('B')
+        for ctrl in cs_prolog or []:
+            ctrl &= self._spi_mask
+            ctrl |= self._gpio_low
+            cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
+        epilog = array('B')
+        if cs_epilog:
+            for ctrl in cs_epilog:
+                ctrl &= self._spi_mask
+                ctrl |= self._gpio_low
+                epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
+            # Restore idle state
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+                       direction]
+            if not self._turbo:
+                cs_high.append(Ftdi.SEND_IMMEDIATE)
+            epilog.extend(cs_high)
         writelen = len(out)
         if self._clock_phase != cpha:
             self._ftdi.enable_3phase_clock(cpha)
@@ -296,13 +471,13 @@ class SpiController(object):
         if writelen:
             wcmd = (cpol ^ cpha) and \
                 Ftdi.WRITE_BYTES_PVE_MSB or Ftdi.WRITE_BYTES_NVE_MSB
-            write_cmd = struct.pack('<BH', wcmd, writelen-1)
+            write_cmd = spack('<BH', wcmd, writelen-1)
             cmd.frombytes(write_cmd)
             cmd.extend(out)
         if readlen:
             rcmd = (cpol ^ cpha) and \
                 Ftdi.READ_BYTES_PVE_MSB or Ftdi.READ_BYTES_NVE_MSB
-            read_cmd = struct.pack('<BH', rcmd, readlen-1)
+            read_cmd = spack('<BH', rcmd, readlen-1)
             cmd.frombytes(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:

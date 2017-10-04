@@ -145,7 +145,7 @@ class Ftdi(object):
     GET_BITS_HIGH = 0x83    # Get MSB GPIO output
     LOOPBACK_START = 0x84   # Enable loopback
     LOOPBACK_END = 0x85     # Disable loopback
-    TCK_DIVISOR = 0x86
+    SET_TCK_DIVISOR = 0x86  # Set clock
     # -H series only
     ENABLE_CLK_3PHASE = 0x8c       # Enable 3-phase data clocking (I2C)
     DISABLE_CLK_3PHASE = 0x8d      # Disable 3-phase data clocking
@@ -279,6 +279,7 @@ class Ftdi(object):
         self.latency_max = self.LATENCY_MAX
         self.latency_threshold = None  # disable dynamic latency
         self.lineprop = 0
+        self._tracer = None
 
     # --- Public API -------------------------------------------------------
 
@@ -439,12 +440,13 @@ class Ftdi(object):
     def close(self):
         """Close the FTDI interface/port."""
         if self.usb_dev:
+            self.set_bitmode(0, Ftdi.BITMODE_RESET)
             self.set_latency_timer(self.LATENCY_MAX)
             UsbTools.release_device(self.usb_dev)
             self.usb_dev = None
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
-                            frequency=6.0E6, latency=16):
+                            frequency=6.0E6, latency=16, debug=False):
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -456,15 +458,18 @@ class Ftdi(object):
                 input
            :param int initial: a bitfield specifying the initial output value
            :param float frequency: serial interface clock in Hz
-           :param int latency: low-level latency to select the USB FTDI poll
-                delay. The shorter the delay, the higher the host CPU load.
+           :param int latency: low-level latency in milliseconds. The shorter
+                the delay, the higher the host CPU load. Do not use shorter
+                values than the default, as it triggers data loss in FTDI.
+           :param bool debug: use a tracer to decode MPSSE protocol
         """
         vendor, product, index, serial, interface = self.get_identifiers(url)
         return self.open_mpsse(vendor, product, index, serial, interface,
-                               direction, initial, frequency, latency)
+                               direction, initial, frequency, latency, debug)
 
     def open_mpsse(self, vendor, product, index=0, serial=None, interface=1,
-                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16):
+                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16,
+                   debug=False):
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -495,14 +500,19 @@ class Ftdi(object):
                 input
            :param int initial: a bitfield specifying the initial output value
            :param float frequency: serial interface clock in Hz
-           :param int latency: low-level latency to select the USB FTDI poll
-                delay. The shorter the delay, the higher the host CPU load.
+           :param int latency: low-level latency in milliseconds. The shorter
+                the delay, the higher the host CPU load. Do not use shorter
+                values than the default, as it triggers data loss in FTDI.
+           :param bool debug: use a tracer to decode MPSSE protocol
         """
         # Open an FTDI interface
         self.open(vendor, product, index, serial, interface)
         if not self.has_mpsse:
             self.close()
             raise FtdiMpsseError('This device does not support MPSSE')
+        if debug:
+            from .tracer import FtdiMpsseTracer
+            self._tracer = FtdiMpsseTracer()
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
@@ -609,6 +619,18 @@ class Ftdi(object):
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
         return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0800, 0x0900)
+
+    @property
+    def has_wide_port(self):
+        """Tell whether the device supports 16-bit GPIO ports (vs. 8 bits)
+
+           :return: True if the FTDI device supports wide GPIO port
+           :rtype: bool
+           :raise FtdiError: if no FTDI port is open
+        """
+        if not self.usb_dev:
+            raise FtdiError('Device characteristics not yet known')
+        return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0900)
 
     @property
     def is_legacy(self):
@@ -1389,6 +1411,8 @@ class Ftdi(object):
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
         self.log.debug('> %s', hexlify(data).decode())
+        if self._tracer:
+            self._tracer.send(data)
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
     def _read(self):
@@ -1397,6 +1421,8 @@ class Ftdi(object):
                                  self.usb_read_timeout)
         if data:
             self.log.debug('< %s', hexlify(data).decode())
+            if self._tracer and len(data) > 2:
+                self._tracer.receive(data[2:])
         return data
 
     def _get_max_packet_size(self):
@@ -1506,14 +1532,14 @@ class Ftdi(object):
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         if frequency <= Ftdi.BUS_CLOCK_BASE:
             divcode = Ftdi.ENABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_BASE/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
+            divisor = int((Ftdi.BUS_CLOCK_BASE+frequency-1)/frequency)-1
+            actual_freq = (Ftdi.BUS_CLOCK_BASE+divisor-1)/(divisor+1)
         elif frequency <= Ftdi.BUS_CLOCK_HIGH:
             # not supported on non-H device, however it seems that 2232D
             # devices simply ignore the settings. Could be improved though
             divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int(Ftdi.BUS_CLOCK_HIGH/frequency)-1
-            actual_freq = Ftdi.BUS_CLOCK_HIGH/(divisor+1)
+            divisor = int((Ftdi.BUS_CLOCK_HIGH+frequency-1)/frequency)-1
+            actual_freq = (Ftdi.BUS_CLOCK_HIGH+divisor-1)/(divisor+1)
         else:
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
         # FTDI expects little endian
@@ -1521,11 +1547,13 @@ class Ftdi(object):
             cmd = array('B', (divcode,))
         else:
             cmd = array('B')
-        cmd.extend((Ftdi.TCK_DIVISOR, divisor & 0xff, (divisor >> 8) & 0xff))
+        cmd.extend((Ftdi.SET_TCK_DIVISOR, divisor & 0xff,
+                   (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
+        self.log.debug('Bus frequency: %.3f MHz' % (actual_freq/1E6))
         return actual_freq
 
     def __get_timeouts(self):
