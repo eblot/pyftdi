@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.26.4
+                0.27.0
               </div>
             
           
@@ -180,6 +180,31 @@
 </pre></div>
 </div>
 <p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
+<p>Example: communication with a SPI device and an extra GPIO</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+
+<span class="c1"># Configure the first interface (IF/1) of the first FTDI device as a</span>
+<span class="c1"># SPI master</span>
+<span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://::/1&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get a SPI port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">12E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Get GPIO port to manage extra pins, use A*BUS4 as GPO, A*BUS4 as GPI</span>
+<span class="n">gpio</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_gpio</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">set_direction</span><span class="p">(</span><span class="mh">0x30</span><span class="p">,</span> <span class="mh">0x10</span><span class="p">)</span>
+
+<span class="c1"># Assert GPO pin</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0x10</span><span class="p">)</span>
+<span class="c1"># Write to SPI slace</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;hello world!&#39;</span><span class="p">)</span>
+<span class="c1"># Release GPO pin</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0x00</span><span class="p">)</span>
+<span class="c1"># Test GPI pin</span>
+<span class="n">pin</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="o">&amp;</span> <span class="mh">0x20</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
@@ -266,10 +291,64 @@ drive on the SPI bus)</li>
 </table>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiController.gpio_pins">
+<code class="descname">gpio_pins</code><a class="headerlink" href="#pyftdi.spi.SpiController.gpio_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.read_gpio">
+<code class="descname">read_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.read_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GPIO port</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.set_gpio_direction">
+<code class="descname">set_gpio_direction</code><span class="sig-paren">(</span><em>pins</em>, <em>direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.set_gpio_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the direction of the GPIO pins</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</li>
+<li><strong>direction</strong> (<em>int</em>) – direction bitfield (on for output)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyftdi.spi.SpiController.terminate">
 <code class="descname">terminate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.terminate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the FTDI interface</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.write_gpio">
+<code class="descname">write_gpio</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.write_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write GPIO port</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -411,6 +490,86 @@ Use False if the transaction should complete with a
 further call to exchange()</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.spi.SpiGpioPort">
+<em class="property">class </em><code class="descclassname">pyftdi.spi.</code><code class="descname">SpiGpioPort</code><span class="sig-paren">(</span><em>controller</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO port</p>
+<p>A SpiGpioPort instance enables to drive GPIOs wich are not reseerved for
+SPI feature as regular GPIOs.</p>
+<p>GPIO are managed as a bitfield. The LSBs are reserved for the SPI
+feature, which means that the lowest pin that can be used as a GPIO is
+b4:</p>
+<ul class="simple">
+<li>b0: SPI SCLK</li>
+<li>b1: SPI MOSI</li>
+<li>b2: SPI MISO</li>
+<li>b3: SPI CS0</li>
+<li>b4: SPI CS1 or first GPIO</li>
+</ul>
+<p>If more than one SPI device is used, less GPIO pins are available, see
+the cs_count argument of the SpiController constructor.</p>
+<p>There is no offset bias in GPIO bit position, <em>i.e.</em> the first available
+GPIO can be reached from as <code class="docutils literal"><span class="pre">0x10</span></code>.</p>
+<p>Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+ports, while 232H and 2232H series use wide 16-bit ports.</p>
+<p>An SpiGpio port is never instanciated directly: use
+SpiController.get_gpio() method to obtain the GPIO port.</p>
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiGpioPort.pins">
+<code class="descname">pins</code><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiGpioPort.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GPIO port.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiGpioPort.set_direction">
+<code class="descname">set_direction</code><span class="sig-paren">(</span><em>pins</em>, <em>direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.set_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the direction of the GPIO pins.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</li>
+<li><strong>direction</strong> (<em>int</em>) – direction bitfield (high level for output)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiGpioPort.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write GPIO port.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</td>
 </tr>
 </tbody>
 </table>

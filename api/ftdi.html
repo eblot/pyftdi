@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.26.4
+                0.27.0
               </div>
             
           
@@ -567,6 +567,24 @@ communication for example.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pyftdi.ftdi.Ftdi.has_wide_port">
+<code class="descname">has_wide_port</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_wide_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device supports 16-bit GPIO ports (vs. 8 bits)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the FTDI device supports wide GPIO port</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="pyftdi.ftdi.Ftdi.ic_name">
 <code class="descname">ic_name</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.ic_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the current type of the FTDI device as a string</p>
@@ -754,7 +772,7 @@ delay. The shorter the delay, the higher the host CPU load.</li>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_mpsse">
-<code class="descname">open_mpsse</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>interface=1</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse" title="Permalink to this definition">¶</a></dt>
+<code class="descname">open_mpsse</code><span class="sig-paren">(</span><em>vendor</em>, <em>product</em>, <em>index=0</em>, <em>serial=None</em>, <em>interface=1</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
 <p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
 modes (vs. UART mode).</p>
@@ -785,8 +803,10 @@ where high level defines an output, and low level defines an
 input</li>
 <li><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</li>
 <li><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</li>
-<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
-delay. The shorter the delay, the higher the host CPU load.</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency in milliseconds. The shorter
+the delay, the higher the host CPU load. Do not use shorter
+values than the default, as it triggers data loss in FTDI.</li>
+<li><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</li>
 </ul>
 </td>
 </tr>
@@ -796,7 +816,7 @@ delay. The shorter the delay, the higher the host CPU load.</li>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_mpsse_from_url">
-<code class="descname">open_mpsse_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_url" title="Permalink to this definition">¶</a></dt>
+<code class="descname">open_mpsse_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>initial=0</em>, <em>frequency=6000000.0</em>, <em>latency=16</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
 <p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
 modes (vs. UART mode).</p>
@@ -811,8 +831,10 @@ where high level defines an output, and low level defines an
 input</li>
 <li><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</li>
 <li><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</li>
-<li><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
-delay. The shorter the delay, the higher the host CPU load.</li>
+<li><strong>latency</strong> (<em>int</em>) – low-level latency in milliseconds. The shorter
+the delay, the higher the host CPU load. Do not use shorter
+values than the default, as it triggers data loss in FTDI.</li>
+<li><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</li>
 </ul>
 </td>
 </tr>

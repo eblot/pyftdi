@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.26.4
+                0.27.0
               </div>
             
           
@@ -162,6 +162,15 @@
             
   <div class="section" id="module-pyftdi.gpio">
 <span id="gpio-gpio-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">gpio</span></code> - GPIO API<a class="headerlink" href="#module-pyftdi.gpio" title="Permalink to this headline">¶</a></h1>
+<p>Direct drive GPIO pins of FTDI device.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>This mode is mutually exclusive with advanced serial MPSSE features, such as
+I<sup>2</sup>C, SPI, JTAG, …</p>
+<p class="last">If you need to use GPIO pins and MPSSE interface on the same port, you need
+to use the dedicated API. For now, this shared mode is only supported with
+the <a class="reference internal" href="spi.html"><span class="doc">SPI API</span></a>.</p>
+</div>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>See <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/gpio.py">tests/gpio.py</a> example</p>

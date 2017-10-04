@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.26.4
+                0.27.0
               </div>
             
           
@@ -220,11 +220,13 @@ name.</p>
 use the FTDI SPI master with a pure-Python serial flash device driver for
 several common devices.</p>
 <p>Only half-duplex communication is supported for now.</p>
+<p>GPIOs can be used while SPI mode is enabled.</p>
 </div>
 <div class="section" id="i2c-master">
 <h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Permalink to this headline">¶</a></h3>
 <p>Supported devices: <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a></p>
 <p>For now, only 7-bit address are supported.</p>
+<p>GPIOs cannot be used while I<sup>2</sup>C mode is enabled (not yet implemented).</p>
 </div>
 <div class="section" id="jtag">
 <h3>JTAG<a class="headerlink" href="#jtag" title="Permalink to this headline">¶</a></h3>

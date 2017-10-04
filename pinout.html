@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.26.4
+                0.27.0
               </div>
             
           
@@ -144,16 +144,16 @@
 <h1>FTDI device pinout<a class="headerlink" href="#ftdi-device-pinout" title="Permalink to this headline">¶</a></h1>
 <table border="1" class="docutils">
 <colgroup>
+<col width="20%" />
 <col width="21%" />
-<col width="22%" />
 <col width="10%" />
-<col width="24%" />
-<col width="12%" />
+<col width="23%" />
+<col width="16%" />
 <col width="10%" />
 </colgroup>
 <thead valign="bottom">
-<tr class="row-odd"><th class="head">IF/1</th>
-<th class="head">IF/2 <a class="footnote-reference" href="#if2" id="id1">[2]</a></th>
+<tr class="row-odd"><th class="head">IF/1 <a class="footnote-reference" href="#ih" id="id1">[1]</a></th>
+<th class="head">IF/2 <a class="footnote-reference" href="#if2" id="id2">[3]</a></th>
 <th class="head">UART</th>
 <th class="head">I<sup>2</sup>C</th>
 <th class="head">SPI</th>
@@ -171,14 +171,14 @@
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS1</span></code></td>
 <td><code class="docutils literal"><span class="pre">BDBUS1</span></code></td>
 <td>RxD</td>
-<td>SDA/O <a class="footnote-reference" href="#i2c" id="id2">[1]</a></td>
+<td>SDA/O <a class="footnote-reference" href="#i2c" id="id3">[2]</a></td>
 <td>MOSI</td>
 <td>TDI</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS2</span></code></td>
 <td><code class="docutils literal"><span class="pre">BDBUS2</span></code></td>
 <td>RTS</td>
-<td>SDA/I <a class="footnote-reference" href="#i2c" id="id3">[1]</a></td>
+<td>SDA/I <a class="footnote-reference" href="#i2c" id="id4">[2]</a></td>
 <td>MISO</td>
 <td>TDO</td>
 </tr>
@@ -193,29 +193,98 @@
 <td><code class="docutils literal"><span class="pre">BDBUS4</span></code></td>
 <td>&#160;</td>
 <td>&#160;</td>
-<td>CS1</td>
+<td>CS1/GPIO4</td>
 <td>&#160;</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS5</span></code></td>
 <td><code class="docutils literal"><span class="pre">BDBUS5</span></code></td>
 <td>&#160;</td>
 <td>&#160;</td>
-<td>CS2</td>
+<td>CS2/GPIO5</td>
 <td>&#160;</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal"><span class="pre">ADBUS6</span></code></td>
 <td><code class="docutils literal"><span class="pre">BDBUS6</span></code></td>
 <td>&#160;</td>
 <td>&#160;</td>
-<td>CS3</td>
+<td>CS3/GPIO6</td>
 <td>&#160;</td>
 </tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ADBUS7</span></code></td>
+<td><code class="docutils literal"><span class="pre">BDBUS7</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>CS4/GPIO7</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ACBUS0</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS0</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO8</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ACBUS1</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS1</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO9</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ACBUS2</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS2</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO10</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ACBUS3</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS3</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO11</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ACBUS4</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS4</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO12</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ACBUS5</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS5</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO13</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal"><span class="pre">ACBUS6</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS6</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO14</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal"><span class="pre">ACBUS7</span></code></td>
+<td><code class="docutils literal"><span class="pre">BCBUS7</span></code></td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>GPIO15</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="ih" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>16-bit port (ACBUS, BCBUS) is not available with <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> series</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="i2c" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id2">1</a>, <a class="fn-backref" href="#id3">2</a>)</em> FTDI pins are either configured as input or output. As I<sup>2</sup>C SDA line
+<tr><td class="label">[2]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> FTDI pins are either configured as input or output. As I<sup>2</sup>C SDA line
 is bi-directional, two FTDI pins are required to provide the SDA
 feature, and they should be connected together and to the SDA I<sup>2</sup>C
 bus line. Pull-up resistors on SCK and SDA lines should be used.</td></tr>
@@ -224,7 +293,7 @@ bus line. Pull-up resistors on SCK and SDA lines should be used.</td></tr>
 <table class="docutils footnote" frame="void" id="if2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[2]</a></td><td><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> does not support a secondary MPSSE port, only <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> and
+<tr><td class="label"><a class="fn-backref" href="#id2">[3]</a></td><td><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> does not support a secondary MPSSE port, only <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> and
 <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> do. Note that <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> has 4 serial ports, but only the
 first two interfaces are MPSSE-capable.</td></tr>
 </tbody>
