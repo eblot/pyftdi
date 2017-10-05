@@ -239,17 +239,11 @@ class SpiController(object):
     def __init__(self, silent_clock=False, cs_count=4, turbo=True):
         self._ftdi = Ftdi()
         self._lock = Lock()
-        self._cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
-                         ~(SpiController.CS_BIT - 1))
-        self._spi_ports = [None] * cs_count
-        self._spi_dir = (self._cs_bits |
-                         SpiController.DO_BIT |
-                         SpiController.SCK_BIT)
-        self._spi_mask = self._cs_bits | self.SPI_BITS
         self._gpio_port = None
         self._gpio_dir = 0
         self._gpio_low = 0
         self._wide_port = False
+        self._cs_count = cs_count
         self._turbo = turbo
         self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
@@ -268,14 +262,34 @@ class SpiController(object):
 
            Accepted options:
 
-           * ``frequency`` the SPI bus frequency in Hz
+           * ``frequency`` the SPI bus frequency in Hz. Note that each slave
+                          may reconfigure the SPI bus with a specialized
+                          frequency.
+           * ``cs_count`` count of chip select signals dedicated to select
+                          SPI slave devices
+           * ``turbo`` whether to enable or disable turbo mode
+           * ``debug`` for extra debug output
         """
-        for k in ('direction', 'initial'):
+        # it is better to specify CS and turbo in configure, but the older
+        # API where these parameters are specified at instanciation has been
+        # preserved
+        self._cs_count = int(kwargs.get('cs_count', self._cs_count))
+        if not (1 <= self._cs_count <= 5):
+            raise ValueError('Unsupported CS line count: %d' % self._cs_count)
+        self._turbo = bool(kwargs.get('turbo', self._turbo))
+        for k in ('direction', 'initial', 'cs_count', 'turbo'):
             if k in kwargs:
                 del kwargs[k]
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
+            self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
+                             ~(SpiController.CS_BIT - 1))
+            self._spi_ports = [None] * self._cs_count
+            self._spi_dir = (self._cs_bits |
+                             SpiController.DO_BIT |
+                             SpiController.SCK_BIT)
+            self._spi_mask = self._cs_bits | self.SPI_BITS
             self._frequency = self._ftdi.open_mpsse_from_url(
                 # /CS all high
                 url, direction=self._spi_dir, initial=self._cs_bits, **kwargs)

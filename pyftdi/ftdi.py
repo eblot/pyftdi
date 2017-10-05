@@ -32,6 +32,7 @@ from logging import getLogger
 from pyftdi.usbtools import UsbTools
 from struct import unpack as sunpack
 from sys import platform
+from .misc import to_bool
 
 import usb.core
 import usb.util
@@ -510,7 +511,7 @@ class Ftdi(object):
         if not self.has_mpsse:
             self.close()
             raise FtdiMpsseError('This device does not support MPSSE')
-        if debug:
+        if to_bool(debug):
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer()
         # Set latency timer
