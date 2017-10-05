@@ -191,6 +191,11 @@ class SpiGpioPort(object):
         """Report the addressable GPIOs as a bitfield."""
         return self._controller.gpio_pins
 
+    @property
+    def direction(self):
+        """Provide the FTDI GPIO direction"""
+        return self._controller.direction
+
     def read(self):
         """Read GPIO port.
 
@@ -361,11 +366,10 @@ class SpiController(object):
            :param int value: the GPIO port pins as a bitfield
         """
         with self._lock:
-            if value & self._spi_mask:
-                raise SpiIOError('Cannot change SPI pins')
             mask = self._get_gpio_mask()
             if (value & mask) != value:
-                raise SpiIOError('No such GPIO pin(s)')
+                raise SpiIOError('No such GPIO pins: %04x/%04x' %
+                                 (mask, value))
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
@@ -386,7 +390,7 @@ class SpiController(object):
             mask = self._get_gpio_mask()
             if (pins & mask) != pins:
                 raise SpiIOError('No such GPIO pin(s)')
-            self._gpio_dir &= pins
+            self._gpio_dir &= ~pins
             self._gpio_dir |= (pins & direction)
 
     def _get_gpio_mask(self):
