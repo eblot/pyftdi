@@ -48,8 +48,9 @@ class FtdiMpsseTracer(object):
         while self._trace_tx:
             try:
                 code = self._trace_tx[0]
-                self._last_code = code
                 cmd = self.COMMANDS[code]
+                if cmd not in ('SEND_IMMEDIATE', ):
+                    self._last_code = code
                 if self._cmd_decoded:
                     self.log.debug("Command: %02X: %s", code, cmd)
                 cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
