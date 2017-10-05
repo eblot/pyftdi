@@ -19,10 +19,10 @@
 import threading
 import usb.core
 import usb.util
-from pyftdi.misc import to_int
 from string import printable as printablechars
 from sys import platform, stdout
 from urllib.parse import urlsplit
+from .misc import to_int
 
 __all__ = ['UsbTools']
 

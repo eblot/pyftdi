@@ -29,9 +29,9 @@ import os
 import select
 import socket
 from io import RawIOBase
-from pyftdi.misc import hexdump
 from serial import (SerialBase, SerialException, portNotOpenError,
                     writeTimeoutError, VERSION as pyserialver)
+from ..misc import hexdump
 
 
 __all__ = ['Serial']
