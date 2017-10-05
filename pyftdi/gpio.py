@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -45,6 +45,11 @@ class GpioController(object):
         self._direction = 0
 
     @property
+    def pins(self):
+        """Report the addressable GPIOs as a bitfield."""
+        return self.MASK
+
+    @property
     def direction(self):
         """Reports the GPIO direction.
 
@@ -59,7 +64,7 @@ class GpioController(object):
         """Reports whether a connection exists with the FTDI interface."""
         return bool(self._ftdi)
 
-    def open_from_url(self, url, direction, **kwargs):
+    def configure(self, url, direction=0, **kwargs):
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            :param str url: a FTDI URL selector
@@ -84,19 +89,21 @@ class GpioController(object):
             self._ftdi.close()
             self._ftdi = None
 
-    def set_direction(self, direction):
+    def set_direction(self, pins, direction):
         """Update the GPIO pin direction.
 
+           :param int pins: which GPIO pins should be reconfigured
            :param int direction: a bitfield of GPIO pins. Each bit represent a
                 GPIO pin, where a high level sets the pin as output and a low
                 level sets the pin as input/high-Z.
         """
         if direction > self.MASK:
             raise GpioException("Invalid direction mask")
-        self._direction = direction
+        self._direction &= ~pins
+        self._direction |= (pins & direction)
         self._ftdi.set_bitmode(self.direction, Ftdi.BITMODE_BITBANG)
 
-    def read_port(self):
+    def read(self):
         """Read the GPIO input pin electrical level.
 
            :param int value: a bitfield of GPIO pins. Each bit represent a GPIO
@@ -106,13 +113,18 @@ class GpioController(object):
             raise GpioException('Not connected')
         return self._ftdi.read_pins()
 
-    def write_port(self, value):
+    def write(self, value):
         """Set the GPIO output pin electrical level.
 
            :param int value: a bitfield of GPIO pins.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if value > self._direction or (value & ~self._direction):
+        if value > self.MASK:
             raise GpioException("Invalid value")
         self._ftdi.write_data(spack('<B', value))
+
+    # old API names
+    open_from_url = configure
+    read_port = read
+    write_port = write
