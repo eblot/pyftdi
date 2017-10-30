@@ -180,17 +180,29 @@ class FtdiMpsseTracer(object):
     def _cmd_write_bytes_nve_lsb(self):
         return self._decode_output_mpsse_bytes()
 
-    def _cmd_write_bits_pve_msb(self):
-        return self._decode_output_mpsse_bytes()
+    def _cmd_read_bytes_pve_msb(self):
+        return self._decode_input_mpsse_request()
 
-    def _cmd_write_bits_nve_msb(self):
-        return self._decode_output_mpsse_bytes()
+    def _resp_read_bytes_pve_msb(self):
+        return self._decode_input_mpsse_bytes()
 
-    def _cmd_write_bits_pve_lsb(self):
-        return self._decode_output_mpsse_bytes()
+    def _cmd_read_bytes_nve_msb(self):
+        return self._decode_input_mpsse_request()
 
-    def _cmd_write_bits_nve_lsb(self):
-        return self._decode_output_mpsse_bytes()
+    def _resp_read_bytes_nve_msb(self):
+        return self._decode_input_mpsse_bytes()
+
+    def _cmd_read_bytes_pve_lsb(self):
+        return self._decode_input_mpsse_request()
+
+    def _resp_read_bytes_pve_lsb(self):
+        return self._decode_input_mpsse_bytes()
+
+    def _cmd_read_bytes_nve_lsb(self):
+        return self._decode_input_mpsse_request()
+
+    def _resp_read_bytes_nve_lsb(self):
+        return self._decode_input_mpsse_bytes()
 
     def _cmd_rw_bytes_nve_pve_msb(self):
         return self._decode_output_mpsse_bytes(True)
@@ -236,6 +248,14 @@ class FtdiMpsseTracer(object):
         self.log.info('%s> (%d) %s',
                       funcname, length, hexlify(payload).decode('utf8'))
         self._trace_tx[:] = self._trace_tx[3+length:]
+        return True
+
+    def _decode_input_mpsse_request(self):
+        if len(self._trace_tx) < 3:
+            return False
+        length = sunpack('<H', self._trace_tx[1:3])[0] + 1
+        self._expect_resp.append(length)
+        self._trace_tx[:] = self._trace_tx[3:]
         return True
 
     def _decode_input_mpsse_bytes(self):
