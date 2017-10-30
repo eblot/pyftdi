@@ -71,7 +71,8 @@ class SpiPort(object):
         self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
 
-    def exchange(self, out=b'', readlen=0, start=True, stop=True):
+    def exchange(self, out=b'', readlen=0, start=True, stop=True,
+                 duplex=False):
         """Perform an exchange or a transaction with the SPI slave
 
            .. note:: Exchange is a dual half-duplex transmission: output bytes
@@ -91,6 +92,8 @@ class SpiPort(object):
            :param bool stop: whether to desactivete the /CS line for the slave.
                        Use False if the transaction should complete with a
                        further call to exchange()
+           :param duplex: perform a full-duplex exchange (vs. half-duplex),
+                    i.e. bits are clocked in and out at once.
            :return: an array of bytes containing the data read out from the
                     slave
            :rtype: array
@@ -98,7 +101,8 @@ class SpiPort(object):
         return self._controller.exchange(self._frequency, out, readlen,
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
-                                         self._cpol, self._cpha)
+                                         self._cpol, self._cpha,
+                                         duplex=duplex)
 
     def read(self, readlen=0, start=True, stop=True):
         """Read out bytes from the slave
@@ -359,10 +363,25 @@ class SpiController(object):
             return self._get_gpio_mask()
 
     def exchange(self, frequency, out, readlen,
-                 cs_prolog=None, cs_epilog=None, cpol=False, cpha=False):
+                 cs_prolog=None, cs_epilog=None,
+                 cpol=False, cpha=False, duplex=False):
+        if duplex:
+            if readlen > len(out):
+                tmp = array('B', out)
+                tmp.append([0] * readlen-len(out))
+                out = tmp
+            elif not readlen:
+                readlen = len(out)
         with self._lock:
-            return self._exchange_half_duplex(frequency, out, readlen,
-                                              cs_prolog, cs_epilog, cpol, cpha)
+            if duplex:
+                data = self._exchange_full_duplex(frequency, out,
+                                                  cs_prolog, cs_epilog,
+                                                  cpol, cpha)
+                return data[:readlen]
+            else:
+                return self._exchange_half_duplex(frequency, out, readlen,
+                                                  cs_prolog, cs_epilog,
+                                                  cpol, cpha)
 
     def read_gpio(self):
         """Read GPIO port
@@ -521,6 +540,66 @@ class SpiController(object):
                     if epilog:
                         self._ftdi.write_data(epilog)
             data = array('B')
+        return data
+
+    def _exchange_full_duplex(self, frequency, out,
+                              cs_prolog, cs_epilog, cpol, cpha):
+        if not self._ftdi:
+            raise SpiIOError("FTDI controller not initialized")
+        if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
+            raise SpiIOError("Output payload is too large")
+        if cpha:
+            # to enable CPHA, we need to use a workaround with FTDI device,
+            # that is enable 3-phase clocking (which is usually dedicated to
+            # I2C support). This mode use use 3 clock period instead of 2,
+            # which implies the FTDI frequency should be fixed to match the
+            # requested one.
+            frequency = (3*frequency)//2
+        if self._frequency != frequency:
+            self._ftdi.set_frequency(frequency)
+            # store the requested value, not the actual one (best effort),
+            # to avoid setting unavailable values on each call.
+            self._frequency = frequency
+        direction = self.direction
+        cmd = array('B')
+        for ctrl in cs_prolog or []:
+            ctrl &= self._spi_mask
+            ctrl |= self._gpio_low
+            cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
+        epilog = array('B')
+        if cs_epilog:
+            for ctrl in cs_epilog:
+                ctrl &= self._spi_mask
+                ctrl |= self._gpio_low
+                epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
+            # Restore idle state
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+                       direction]
+            if not self._turbo:
+                cs_high.append(Ftdi.SEND_IMMEDIATE)
+            epilog.extend(cs_high)
+        writelen = len(out)
+        if self._clock_phase != cpha:
+            self._ftdi.enable_3phase_clock(cpha)
+            self._clock_phase = cpha
+        wcmd = (cpol ^ cpha) and \
+            Ftdi.RW_BYTES_NVE_PVE_MSB or Ftdi.RW_BYTES_PVE_NVE_MSB
+        write_cmd = spack('<BH', wcmd, writelen-1)
+        cmd.frombytes(write_cmd)
+        cmd.extend(out)
+        cmd.extend(self._immediate)
+        if self._turbo:
+            if epilog:
+                cmd.extend(epilog)
+            self._ftdi.write_data(cmd)
+        else:
+            self._ftdi.write_data(cmd)
+            if epilog:
+                self._ftdi.write_data(epilog)
+        # USB read cycle may occur before the FTDI device has actually
+        # sent the data, so try to read more than once if no data is
+        # actually received
+        data = self._ftdi.read_data_bytes(len(out), 4)
         return data
 
     def _flush(self):

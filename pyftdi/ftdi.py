@@ -100,10 +100,10 @@ class Ftdi(object):
     READ_BYTES_NVE_LSB = 0x2c
     READ_BITS_PVE_LSB = 0x2a
     READ_BITS_NVE_LSB = 0x2e
-    RW_BYTES_PVE_PVE_LSB = 0x38
+    RW_BYTES_PVE_NVE_MSB = 0x31
+    RW_BYTES_NVE_PVE_MSB = 0x34
     RW_BYTES_PVE_NVE_LSB = 0x39
     RW_BYTES_NVE_PVE_LSB = 0x3c
-    RW_BYTES_NVE_NVE_LSB = 0x3d
     RW_BITS_PVE_PVE_LSB = 0x3a
     RW_BITS_PVE_NVE_LSB = 0x3b
     RW_BITS_NVE_PVE_LSB = 0x3e
@@ -514,6 +514,7 @@ class Ftdi(object):
         if to_bool(debug):
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer()
+            self.log.debug('Using MPSSE tracer')
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size

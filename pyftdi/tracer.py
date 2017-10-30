@@ -1,5 +1,6 @@
 from array import array
 from binascii import hexlify
+from collections import deque
 from inspect import stack
 from logging import getLogger
 from string import ascii_uppercase
@@ -14,6 +15,7 @@ class FtdiMpsseTracer(object):
     """
 
     COMMAND_PREFIX = 'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND'
+    NO_RX = ('SEND_IMMEDIATE', 'SET_BITS_LOW', 'SET_BITS_HIGH')
 
     def build_commands(prefix):
         commands = {}
@@ -42,6 +44,7 @@ class FtdiMpsseTracer(object):
         self._cmd_decoded = True
         self._resp_decoded = True
         self._last_code = None
+        self._expect_resp = deque()
 
     def send(self, buffer):
         self._trace_tx.extend(buffer)
@@ -49,7 +52,7 @@ class FtdiMpsseTracer(object):
             try:
                 code = self._trace_tx[0]
                 cmd = self.COMMANDS[code]
-                if cmd not in ('SEND_IMMEDIATE', ):
+                if cmd not in self.NO_RX:
                     self._last_code = code
                 if self._cmd_decoded:
                     self.log.debug("Command: %02X: %s", code, cmd)
@@ -166,28 +169,40 @@ class FtdiMpsseTracer(object):
         return True
 
     def _cmd_write_bytes_pve_msb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bytes_nve_msb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bytes_pve_lsb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bytes_nve_lsb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bits_pve_msb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bits_nve_msb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bits_pve_lsb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
 
     def _cmd_write_bits_nve_lsb(self):
-        return self._decode_mpsse_bytes()
+        return self._decode_output_mpsse_bytes()
+
+    def _cmd_rw_bytes_nve_pve_msb(self):
+        return self._decode_output_mpsse_bytes(True)
+
+    def _resp_rw_bytes_nve_pve_msb(self):
+        return self._decode_input_mpsse_bytes()
+
+    def _cmd_rw_bytes_pve_nve_msb(self):
+        return self._decode_output_mpsse_bytes(True)
+
+    def _resp_rw_bytes_pve_nve_msb(self):
+        return self._decode_input_mpsse_bytes()
 
     def _resp_get_bits_low(self):
         if len(self._trace_rx) < 1:
@@ -207,19 +222,35 @@ class FtdiMpsseTracer(object):
         self._trace_rx[:] = self._trace_rx[1:]
         return True
 
-    def _decode_mpsse_bytes(self):
+    def _decode_output_mpsse_bytes(self, expect_rx=False):
         caller = stack()[1].function
         if len(self._trace_tx) < 4:
             return False
         length = sunpack('<H', self._trace_tx[1:3])[0] + 1
         if len(self._trace_tx) < 4 + length:
             return False
+        if expect_rx:
+            self._expect_resp.append(length)
         payload = self._trace_tx[3:3+length]
-        funcname = caller[5:].title().replace('_', ' ')
-        self.log.info('%s (%d) %s',
+        funcname = caller[5:].title().replace('_', '')
+        self.log.info('%s> (%d) %s',
                       funcname, length, hexlify(payload).decode('utf8'))
         self._trace_tx[:] = self._trace_tx[3+length:]
         return True
+
+    def _decode_input_mpsse_bytes(self):
+        if not self._expect_resp:
+            self.log.warning('Response w/o request?')
+            return False
+        if len(self._trace_rx) < self._expect_resp[0]:  # peek
+            return False
+        caller = stack()[1].function
+        length = self._expect_resp.popleft()
+        payload = self._trace_rx[:length]
+        self._trace_rx[:] = self._trace_rx[length:]
+        funcname = caller[5:].title().replace('_', '')
+        self.log.info('%s< (%d) %s',
+                      funcname, length, hexlify(payload).decode('utf8'))
 
     @classmethod
     def bits2str(cls, value, mask, z='_'):
