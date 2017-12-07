@@ -419,8 +419,11 @@ class JtagEngine(object):
 
     def configure(self, vendor=0x0403, product=0x6011, interface=0):
         """Configure the FTDI interface as a JTAG controller"""
-        self._ctrl.configure(vendor=vendor, product=product,
-                             interface=interface)
+        if vendor == 0 and product == 0:
+            url = "ftdi:///?"       # Enumerate all the FTDI devices
+        else:
+            url = "ftdi://" + hex(vendor) + ":" + hex(product) + "/" + str(interface)
+        self._ctrl.configure(url)
 
     def close(self):
         """Terminate a JTAG session/connection"""
