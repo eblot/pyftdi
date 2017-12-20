@@ -31,7 +31,7 @@ class UsbToolsError(Exception):
     """UsbTools error"""
 
 
-class UsbTools(object):
+class UsbTools:
     """Helpers to obtain information about connected USB devices."""
 
     # Need to maintain a list of reference USB devices, to circumvent a
@@ -369,7 +369,8 @@ class UsbTools(object):
                     vendor, product, ifport, ifcount, description = \
                         candidates[idx]
                 except IndexError:
-                    raise UsbToolsError("No USB device matches URL")
+                    raise UsbToolsError('No USB device matches URL %s' %
+                                        urlstr)
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
             raise SystemExit(candidates and

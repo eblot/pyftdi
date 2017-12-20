@@ -53,7 +53,7 @@ class FtdiFeatureError(FtdiError):
     """Requested feature is not available on FTDI device"""
 
 
-class Ftdi(object):
+class Ftdi:
     """FTDI device driver"""
 
     SCHEME = 'ftdi'
@@ -1388,6 +1388,8 @@ class Ftdi(object):
         """Reset the ftdi device"""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
+        # Reset feature mode
+        self.set_bitmode(0, Ftdi.BITMODE_RESET)
         # Invalidate data in the readbuffer
         self.readoffset = 0
         self.readbuffer = array('B')

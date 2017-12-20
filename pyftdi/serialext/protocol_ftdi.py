@@ -103,11 +103,14 @@ class FtdiSerial(SerialBase):
         self.udev.purge_tx_buffer()
 
     def send_break(self, duration=0.25):
-        """Send break condition. Not supported"""
+        """Send break condition."""
+        self.udev.set_break(True)
+        sleep(duration)
+        self.udev.set_break(False)
 
     def _update_break_state(self):
         """Send break condition. Not supported"""
-        pass
+        self.udev.set_break(self._break_state)
 
     def _update_rts_state(self):
         """Set terminal status line: Request To Send"""

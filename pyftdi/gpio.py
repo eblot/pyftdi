@@ -35,7 +35,7 @@ class GpioException(IOError):
     """Base class for GPIO errors"""
 
 
-class GpioController(object):
+class GpioController:
     """GPIO controller for an FTDI port"""
 
     MASK = 0xff

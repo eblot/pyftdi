@@ -45,7 +45,7 @@ class I2cTimeoutError(TimeoutError):
     """I2c timeout on polling"""
 
 
-class I2cPort(object):
+class I2cPort:
     """I2C port.
 
        An I2C port is never instanciated directly: use I2cController.get_port()
@@ -218,7 +218,7 @@ class I2cPort(object):
         return data.tobytes()
 
 
-class I2cController(object):
+class I2cController:
     """I2c master.
 
        An I2c master should be instanciated only once for each FTDI port that

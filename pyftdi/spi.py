@@ -37,7 +37,7 @@ class SpiIOError(IOError):
     """SPI I/O error"""
 
 
-class SpiPort(object):
+class SpiPort:
     """SPI port
 
        An SPI port is never instanciated directly: use SpiController.get_port()
@@ -159,7 +159,7 @@ class SpiPort(object):
         return self._frequency
 
 
-class SpiGpioPort(object):
+class SpiGpioPort:
     """GPIO port
 
        A SpiGpioPort instance enables to drive GPIOs wich are not reseerved for
@@ -224,7 +224,7 @@ class SpiGpioPort(object):
         self._controller.set_gpio_direction(pins, direction)
 
 
-class SpiController(object):
+class SpiController:
     """SPI master.
 
         :param silent_clock: deprecated.

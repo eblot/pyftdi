@@ -29,7 +29,7 @@ class JtagError(Exception):
     """Generic JTAG error"""
 
 
-class JtagState(object):
+class JtagState:
     """Test Access Port controller state"""
 
     def __init__(self, name, modes):
@@ -53,7 +53,7 @@ class JtagState(object):
         return mode in self.modes
 
 
-class JtagStateMachine(object):
+class JtagStateMachine:
     """Test Access Port controller state machine"""
 
     def __init__(self):
@@ -164,7 +164,7 @@ class JtagStateMachine(object):
             self._current = self._current.getx(event)
 
 
-class JtagController(object):
+class JtagController:
     """JTAG master of an FTDI device"""
 
     TCK_BIT = 0x01   # FTDI output
@@ -409,7 +409,7 @@ class JtagController(object):
         self._stack_cmd(cmd)
 
 
-class JtagEngine(object):
+class JtagEngine:
     """High-level JTAG engine controller"""
 
     def __init__(self, trst=False, frequency=3E06):
@@ -506,7 +506,7 @@ class JtagEngine(object):
         self._ctrl.sync()
 
 
-class JtagTool(object):
+class JtagTool:
     """A helper class with facility functions"""
 
     def __init__(self, engine):

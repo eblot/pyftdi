@@ -8,7 +8,7 @@ from struct import unpack as sunpack
 from .ftdi import Ftdi
 
 
-class FtdiMpsseTracer(object):
+class FtdiMpsseTracer:
     """FTDI MPSSE protocol decoder
 
        Far from being complete for now

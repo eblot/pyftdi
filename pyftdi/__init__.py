@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.27.2'
+__version__ = '0.28.0'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
@@ -38,7 +38,7 @@ __copyright__ = 'Copyright (c) 2011-2017 Emmanuel Blot'
 from logging import WARNING, getLogger
 
 
-class FtdiLogger(object):
+class FtdiLogger:
 
     log = getLogger("pyftdi")
     log.setLevel(level=WARNING)
