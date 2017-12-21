@@ -1414,7 +1414,10 @@ class Ftdi:
 
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
-        self.log.debug('> %s', hexlify(data).decode())
+        try:
+            self.log.debug('> %s', hexlify(data).decode())
+        except TypeError:
+            self.log.error('> (invalid output byte sequence)')
         if self._tracer:
             self._tracer.send(data)
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)

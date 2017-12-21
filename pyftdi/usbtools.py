@@ -326,11 +326,12 @@ class UsbTools:
         idx = None
         if plcomps[2]:
             try:
-                idx = to_int(plcomps[2])
-                if idx > 255:
+                devidx = to_int(plcomps[2])
+                if devidx > 255:
                     raise ValueError()
+                idx = devidx
                 if idx:
-                    idx -= 1
+                    idx = devidx-1
             except ValueError:
                 sernum = plcomps[2]
         candidates = []
@@ -359,23 +360,22 @@ class UsbTools:
                 if product and product != p:
                     continue
                 candidates.append((v, p, s, i, d))
-            if not show_devices:
-                if idx is None:
-                    if len(candidates) > 1:
-                        raise UsbToolsError('%d USB devices match URL' %
-                                            len(candidates))
-                    idx = 0
-                try:
-                    vendor, product, ifport, ifcount, description = \
-                        candidates[idx]
-                except IndexError:
-                    raise UsbToolsError('No USB device matches URL %s' %
-                                        urlstr)
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
             raise SystemExit(candidates and
                              'Please specify the USB device' or
                              'No USB-Serial device has been detected')
+        if idx is None:
+            if len(candidates) > 1:
+                raise UsbToolsError('%d USB devices match URL' %
+                                    len(candidates))
+            idx = 0
+        try:
+            vendor, product, ifport, ifcount, description = \
+                candidates[idx]
+        except IndexError:
+            raise UsbToolsError('No USB device matches URL %s' %
+                                urlstr)
         if not vendor:
             cvendors = set([candidate[0] for candidate in candidates])
             if len(cvendors) == 1:
