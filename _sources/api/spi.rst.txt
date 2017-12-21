@@ -8,7 +8,7 @@
 Quickstart
 ~~~~~~~~~~
 
-Example: communication with a SPI data flash
+Example: communication with a SPI data flash (half-duplex example)
 
 .. code-block:: python
 
@@ -24,6 +24,23 @@ Example: communication with a SPI data flash
     # Request the JEDEC ID from the SPI slave
     jedec_id = slave.exchange([0x9f], 3).tobytes()
 
+
+Example: communication with a remote SPI device using full-duplex mode
+
+.. code-block:: python
+
+    # Instanciate a SPI controller
+    spi = SpiController()
+
+    # Configure the first interface (IF/1) of the FTDI device as a SPI master
+    spi.configure('ftdi://ftdi:2232h/1')
+
+    # Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 3 @ 10MHz
+    slave = spi.get_port(cs=1, freq=10E6, mode=3)
+
+    # Synchronous exchange with the remote SPI slave
+    write_buf = b'\x01\x02\x03'
+    read_buf = slave.exchange(write_buf, duplex=True).tobytes()
 
 See also pyspiflash_ module and `tests/spi.py`_
 

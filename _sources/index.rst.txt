@@ -37,7 +37,7 @@ PyFtdi_ currently supports the following features:
 * Bitbang/GPIO support
 * SPI master
 * |I2C| master
-* JTAG master
+* (JTAG master)
 
 PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI_ devices.

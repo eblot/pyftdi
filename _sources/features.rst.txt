@@ -36,7 +36,7 @@ Supported devices:
 =====  ===== ====== ====================================================
 Mode   CPol   CPha  Status
 =====  ===== ====== ====================================================
-  0      0      0   Supported on all MPSEE devices
+  0      0      0   Supported on all MPSSE devices
   1      0      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
   2      1      0   Not supported (FTDI HW limitation)
   3      1      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
@@ -46,7 +46,8 @@ PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
 use the FTDI SPI master with a pure-Python serial flash device driver for
 several common devices.
 
-Only half-duplex communication is supported for now.
+Half-duplex (write or read) and full-duplex (synchronous write and read)
+communication modes are supported.
 
 GPIOs can be used while SPI mode is enabled.
 

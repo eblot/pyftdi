@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.27.0
+                0.28.0
               </div>
             
           
@@ -187,6 +187,26 @@ the <a class="reference internal" href="spi.html"><span class="doc">SPI API</spa
 <dd><p>Close the FTDI interface.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.configure">
+<code class="descname">configure</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>url</strong> (<em>str</em>) – a FTDI URL selector</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pyftdi.gpio.GpioController.direction">
 <code class="descname">direction</code><a class="headerlink" href="#pyftdi.gpio.GpioController.direction" title="Permalink to this definition">¶</a></dt>
@@ -212,7 +232,7 @@ level reports an output pin, and low level reports an input pin</td>
 
 <dl class="method">
 <dt id="pyftdi.gpio.GpioController.open_from_url">
-<code class="descname">open_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.open_from_url" title="Permalink to this definition">¶</a></dt>
+<code class="descname">open_from_url</code><span class="sig-paren">(</span><em>url</em>, <em>direction=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.open_from_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -225,6 +245,27 @@ where high level defines an output, and low level defines an
 input</li>
 </ul>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pyftdi.gpio.GpioController.pins">
+<code class="descname">pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.read">
+<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the GPIO input pin electrical level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a GPIO
+pin, matching the logical input level of the pin.</td>
 </tr>
 </tbody>
 </table>
@@ -247,15 +288,33 @@ pin, matching the logical input level of the pin.</td>
 
 <dl class="method">
 <dt id="pyftdi.gpio.GpioController.set_direction">
-<code class="descname">set_direction</code><span class="sig-paren">(</span><em>direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.set_direction" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_direction</code><span class="sig-paren">(</span><em>pins</em>, <em>direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.set_direction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the GPIO pin direction.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>direction</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</li>
+<li><strong>direction</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a
 GPIO pin, where a high level sets the pin as output and a low
-level sets the pin as input/high-Z.</td>
+level sets the pin as input/high-Z.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</td>
 </tr>
 </tbody>
 </table>

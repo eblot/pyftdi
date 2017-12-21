@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                0.27.0
+                0.28.0
               </div>
             
           
@@ -165,7 +165,7 @@
 <span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
-<p>Example: communication with a SPI data flash</p>
+<p>Example: communication with a SPI data flash (half-duplex example)</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
@@ -177,6 +177,21 @@
 
 <span class="c1"># Request the JEDEC ID from the SPI slave</span>
 <span class="n">jedec_id</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x9f</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Example: communication with a remote SPI device using full-duplex mode</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+
+<span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
+<span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 3 @ 10MHz</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">10E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Synchronous exchange with the remote SPI slave</span>
+<span class="n">write_buf</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x01\x02\x03</span><span class="s1">&#39;</span>
+<span class="n">read_buf</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">write_buf</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
@@ -244,7 +259,19 @@ drive on the SPI bus)</li>
 </table>
 <p>Accepted options:</p>
 <ul class="simple">
-<li><code class="docutils literal"><span class="pre">frequency</span></code> the SPI bus frequency in Hz</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">frequency</span></code> the SPI bus frequency in Hz. Note that each slave</dt>
+<dd>may reconfigure the SPI bus with a specialized
+frequency.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select</dt>
+<dd>SPI slave devices</dd>
+</dl>
+</li>
+<li><code class="docutils literal"><span class="pre">turbo</span></code> whether to enable or disable turbo mode</li>
+<li><code class="docutils literal"><span class="pre">debug</span></code> for extra debug output</li>
 </ul>
 </dd></dl>
 
@@ -375,7 +402,7 @@ method to obtain an SPI port.</p>
 </div>
 <dl class="method">
 <dt id="pyftdi.spi.SpiPort.exchange">
-<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=b''</em>, <em>readlen=0</em>, <em>start=True</em>, <em>stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.exchange" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exchange</code><span class="sig-paren">(</span><em>out=b''</em>, <em>readlen=0</em>, <em>start=True</em>, <em>stop=True</em>, <em>duplex=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform an exchange or a transaction with the SPI slave</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -400,6 +427,8 @@ resume a previously started transaction</li>
 <li><strong>stop</strong> (<em>bool</em>) – whether to desactivete the /CS line for the slave.
 Use False if the transaction should complete with a
 further call to exchange()</li>
+<li><strong>duplex</strong> – perform a full-duplex exchange (vs. half-duplex),
+i.e. bits are clocked in and out at once.</li>
 </ul>
 </td>
 </tr>
@@ -521,6 +550,12 @@ GPIO can be reached from as <code class="docutils literal"><span class="pre">0x1
 ports, while 232H and 2232H series use wide 16-bit ports.</p>
 <p>An SpiGpio port is never instanciated directly: use
 SpiController.get_gpio() method to obtain the GPIO port.</p>
+<dl class="attribute">
+<dt id="pyftdi.spi.SpiGpioPort.direction">
+<code class="descname">direction</code><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the FTDI GPIO direction</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pyftdi.spi.SpiGpioPort.pins">
 <code class="descname">pins</code><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.pins" title="Permalink to this definition">¶</a></dt>
