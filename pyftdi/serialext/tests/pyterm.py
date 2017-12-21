@@ -72,7 +72,7 @@ class MiniTerm:
         register(self._cleanup)
 
     def run(self, fullmode=False, loopback=False, silent=False,
-            localecho=False):
+            localecho=False, autocr=False):
         """Switch to a pure serial terminal application"""
 
         # wait forever, although Windows is stupid and does not signal Ctrl+C,
@@ -102,7 +102,7 @@ class MiniTerm:
         reader.setDaemon(1)
         reader.start()
         # start the writer (host to target direction)
-        self._writer(fullmode, silent, localecho)
+        self._writer(fullmode, silent, localecho, autocr)
 
     def _sourcer(self):
         try:
@@ -161,7 +161,7 @@ class MiniTerm:
                 print(format_exc(chain=False), file=stderr)
             interrupt_main()
 
-    def _writer(self, fullmode, silent, localecho):
+    def _writer(self, fullmode, silent, localecho, crlf=0):
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
@@ -185,6 +185,11 @@ class MiniTerm:
                     if localecho:
                         stdout.write(c.decode('utf8', errors='replace'))
                         stdout.flush()
+                    if crlf:
+                        if c == b'\n':
+                            self._port.write(b'\r')
+                            if crlf > 1:
+                                continue
                     self._port.write(c)
             except KeyboardInterrupt:
                 if fullmode:
@@ -298,6 +303,10 @@ def main():
         argparser.add_argument('-e', '--localecho',
                                action='store_true',
                                help='local echo mode (print all typed chars)')
+        argparser.add_argument('-r', '--crlf',
+                               action='count', default=0,
+                               help='prefix LF with CR char, use twice to '
+                                    'replace all LF with CR chars')
         argparser.add_argument('-l', '--loopback',
                                action='store_true',
                                help='loopback mode (send back all received '
@@ -329,7 +338,8 @@ def main():
                             parity='N',
                             rtscts=args.hwflow,
                             debug=args.debug)
-        miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho)
+        miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho,
+                     args.crlf)
 
     except (IOError, ValueError) as e:
         print('\nError: %s' % e, file=stderr)
