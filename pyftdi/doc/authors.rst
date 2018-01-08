@@ -72,3 +72,7 @@ Contributors
  * Vianney le Clément de Saint-Marcq:
 
   * Fix timeout and remove useless delay in UART mode
+
+ * Pete Schwamb
+
+  * Fix issue with SPI duplex mode

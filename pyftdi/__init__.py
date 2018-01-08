@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2018 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.28.1'
+__version__ = '0.28.2'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
