@@ -368,7 +368,7 @@ class SpiController:
         if duplex:
             if readlen > len(out):
                 tmp = array('B', out)
-                tmp.append([0] * readlen-len(out))
+                tmp.extend([0] * (readlen - len(out)))
                 out = tmp
             elif not readlen:
                 readlen = len(out)
