@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -391,7 +391,8 @@ class SpiController:
         """
         with self._lock:
             data = self._read_raw(self._wide_port)
-            return data & self._gpio_dir
+        mask = self._get_gpio_mask()
+        return data & mask
 
     def write_gpio(self, value):
         """Write GPIO port
