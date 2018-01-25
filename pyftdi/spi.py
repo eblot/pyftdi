@@ -304,7 +304,7 @@ class SpiController:
         """Close the FTDI interface"""
         if self._ftdi:
             self._ftdi.close()
-            self._ftdi = None
+        self._frequency = 0.0
 
     def get_port(self, cs, freq=None, mode=0):
         """Obtain a SPI port to drive a SPI device selected by Chip Select.
