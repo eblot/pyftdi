@@ -76,3 +76,7 @@ Contributors
  * Pete Schwamb
 
   * Fix issue with SPI duplex mode
+
+ * Will Richey
+
+  * makes write() compatible with write() from pySerial.
