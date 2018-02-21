@@ -109,7 +109,7 @@ class SpiPort:
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
                                          self._cpol, self._cpha,
-                                         duplex=(self._bidir and False or duplex),
+                                         duplex=(not self._bidir and duplex),
                                          bidir=self._bidir)
 
     def read(self, readlen=0, start=True, stop=True):
