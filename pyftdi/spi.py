@@ -58,7 +58,8 @@ class SpiPort:
        >>> out.extend(spi.exchange([], 2, False, True))
     """
 
-    def __init__(self, controller, cs, cs_hold=3, spi_mode=0, cs_count=4, cs_act_hi=False, bidir=False):
+    def __init__(self, controller, cs, cs_hold=3, spi_mode=0,
+                 cs_count=4, cs_act_hi=False, bidir=False):
         self._controller = controller
         self._cpol = spi_mode & 0x1
         self._cpha = spi_mode & 0x2
@@ -130,7 +131,8 @@ class SpiPort:
         return self._controller.exchange(self._frequency, [], readlen,
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
-                                         self._cpol, self._cpha, bidir=self._bidir)
+                                         self._cpol, self._cpha,
+                                         bidir=self._bidir)
 
     def write(self, out, start=True, stop=True):
         """Write bytes to the slave
@@ -148,7 +150,8 @@ class SpiPort:
         return self._controller.exchange(self._frequency, out, 0,
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
-                                         self._cpol, self._cpha, bidir=self._bidir)
+                                         self._cpol, self._cpha,
+                                         bidir=self._bidir)
 
     def flush(self):
         """Force the flush of the HW FIFOs"""
@@ -248,7 +251,8 @@ class SpiController:
     SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=4, turbo=True, cs_act_hi=False):
+    def __init__(self, silent_clock=False, cs_count=4, turbo=True,
+                 cs_act_hi=False):
         self._ftdi = Ftdi()
         self._lock = Lock()
         self._gpio_port = None
@@ -263,12 +267,14 @@ class SpiController:
         self._cs_idle = 0
         self._last_prolog_ctrl = 0
 
-        # If True  CS, the select line, starts LOW and then goes HIGH to select device (ie. Active High)
-        # If False CS, the select line, starts HIGH and then goes LOW to select device (ie. Active Low)
+        # If True  CS, starts LOW and then goes HIGH to select device
+        #              (ie. Active High)
+        # If False CS, starts HIGH and then goes LOW to select device
+        #              (ie. Active Low)
         #
-        # This is here instead of in get_port, where mode is set, is because
-        # the initial setting of CS is done in configure(), so need to save
-        # cs_act_hi here and use it during configure().
+        # This is here instead of in get_port, where mode is set, is
+        # because the initial setting of CS is done in configure(), so
+        # need to save cs_act_hi here and use it during configure().
         self._cs_act_hi = cs_act_hi
 
 
@@ -339,7 +345,8 @@ class SpiController:
            :param int cs: chip select slot, starting from 0
            :param float freq: SPI bus frequency for this slave in Hz
            :param int mode: SPI mode [0,1,3]
-           :param bool bidir: If True, Data is a single, bi-directional line; If False, two uni-directional data lines (MISO and MOSI)
+           :param bool bidir: If True, Data is a single, bi-directional line; 
+                              If False, two uni-directional data lines
            :rtype: SpiPort
         """
         with self._lock:
@@ -359,7 +366,10 @@ class SpiController:
                 freq = min(freq or self.frequency_max, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
                 self._spi_ports[cs] = SpiPort(self, cs, cs_hold=hold,
-                                              spi_mode=mode, cs_count=self._cs_count, cs_act_hi=self._cs_act_hi, bidir=bidir)
+                                              spi_mode=mode,
+                                              cs_count=self._cs_count,
+                                              cs_act_hi=self._cs_act_hi,
+                                              bidir=bidir)
                 self._spi_ports[cs].set_frequency(freq)
                 self._flush()
             return self._spi_ports[cs]
@@ -516,18 +526,25 @@ class SpiController:
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
-            self._last_prolog_ctrl = ctrl # save last prolog ctrl for bi-directional turn-around
+            # save last prolog ctrl for bi-directional turn-around
+            self._last_prolog_ctrl = ctrl 
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         if bidir:
-            # set DO to an input during turnaround for bi-directional implementations (single DI/DO line)
-            turnaround = array('B', [Ftdi.SET_BITS_LOW, self._last_prolog_ctrl, direction & (~SpiController.DO_BIT)])
+            # set DO to an input during turnaround for bi-directional
+            # implementations (single DI/DO line)
+            turnaround = array('B', [Ftdi.SET_BITS_LOW,
+                                     self._last_prolog_ctrl,
+                                     direction & (~SpiController.DO_BIT)])
         epilog = array('B')
         if cs_epilog:
             for ctrl in cs_epilog:
                 ctrl &= self._spi_mask
                 ctrl |= self._gpio_low
-                # if bidir and data to be read (readlen != 0), keep the DO Bit as an input
-                bitdir = (bidir and readlen) and (direction & (~SpiController.DO_BIT)) or direction
+                # if bidir and data to be read (readlen != 0), keep
+                # the DO Bit as an input
+                bitdir = ((bidir and readlen)
+                          and (direction & (~SpiController.DO_BIT))
+                          or direction)
                 epilog.extend((Ftdi.SET_BITS_LOW, ctrl, bitdir))
             # Restore idle state
             cs_high = [Ftdi.SET_BITS_LOW, self._cs_idle | self._gpio_low,
@@ -601,7 +618,8 @@ class SpiController:
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
-            self._last_prolog_ctrl = ctrl # save last prolog ctrl for bi-directional turn-around for half-duplex
+            # save last prolog ctrl for bi-dir turn-around for half-duplex
+            self._last_prolog_ctrl = ctrl 
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         epilog = array('B')
         if cs_epilog:

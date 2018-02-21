@@ -30,9 +30,7 @@ from binascii import hexlify
 from doctest import testmod
 from os import environ
 from pyftdi import FtdiLogger
-from pyftdi.ftdi import FtdiError
-from pyftdi.spi import SpiController, SpiIOError
-from pyftdi.misc import hexdump
+from pyftdi.spi import SpiController
 from sys import modules, stderr, stdout
 from time import sleep
 import logging
@@ -156,7 +154,7 @@ class SpiTestCase(unittest.TestCase):
             slope = -slope
         spi.close()
 
-            
+
 def suite():
     suite_ = unittest.TestSuite()
     suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
