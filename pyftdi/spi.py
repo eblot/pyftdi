@@ -58,14 +58,17 @@ class SpiPort:
        >>> out.extend(spi.exchange([], 2, False, True))
     """
 
-    def __init__(self, controller, cs, cs_bits, cs_hold=3, spi_mode=0, cs_pol=1, bidir=False):
+    def __init__(self, controller, cs, cs_hold=3, spi_mode=0, cs_count=4, cs_act_hi=False, bidir=False):
         self._controller = controller
         self._cpol = spi_mode & 0x1
         self._cpha = spi_mode & 0x2
         cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
                             SpiController.DO_BIT)
 
-        cs_bit_sel = (SpiController.CS_BIT << cs) ^ (cs_bits * (cs_pol == 0))
+        cs_bits = (((SpiController.CS_BIT << cs_count) - 1) &
+                   ~(SpiController.CS_BIT - 1))
+
+        cs_bit_sel = (SpiController.CS_BIT << cs) ^ (cs_bits * cs_act_hi)
         cs_select = 0xFF & ~(cs_bit_sel |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
@@ -245,7 +248,7 @@ class SpiController:
     SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=4, turbo=True, cs_pol=1):
+    def __init__(self, silent_clock=False, cs_count=4, turbo=True, cs_act_hi=False):
         self._ftdi = Ftdi()
         self._lock = Lock()
         self._gpio_port = None
@@ -260,13 +263,13 @@ class SpiController:
         self._cs_idle = 0
         self._last_prolog_ctrl = 0
 
-        # If 0, select, or CS, starts LOW and then goes HIGH to select device (ie. Active High)
-        # If 1, select, or CS, starts HIGH and then goes LOW to select device (ie. Active Low)
+        # If True  CS, the select line, starts LOW and then goes HIGH to select device (ie. Active High)
+        # If False CS, the select line, starts HIGH and then goes LOW to select device (ie. Active Low)
         #
-        # This is here instead of get_port, like with mode, because
-        # the initial setting of CS is done in configure(), so save
-        # cs_pol here and use it during configure().
-        self._cs_pol = cs_pol
+        # This is here instead of in get_port, where mode is set, is because
+        # the initial setting of CS is done in configure(), so need to save
+        # cs_act_hi here and use it during configure().
+        self._cs_act_hi = cs_act_hi
 
 
     @property
@@ -303,18 +306,19 @@ class SpiController:
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
-            self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
-                             ~(SpiController.CS_BIT - 1))
 
-            # If CS is Active Low  (self._cs_pol = 1), CS idle state is all high
-            # If CS is Active High (self._cs_pol = 0), CS idle state is all low (0x00)
-            self._cs_idle = self._cs_pol and self._cs_bits or 0x00
+            cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
+                       ~(SpiController.CS_BIT - 1))
+
+            # If CS is Active Low,  CS idle state is all high
+            # If CS is Active High, CS idle state is all low (0x00)
+            self._cs_idle = (not self._cs_act_hi) and cs_bits or 0x00
 
             self._spi_ports = [None] * self._cs_count
-            self._spi_dir = (self._cs_bits |
+            self._spi_dir = (cs_bits |
                              SpiController.DO_BIT |
                              SpiController.SCK_BIT)
-            self._spi_mask = self._cs_bits | self.SPI_BITS
+            self._spi_mask = cs_bits | self.SPI_BITS
             self._frequency = self._ftdi.open_mpsse_from_url(
                 # /CS inactive
                 url, direction=self._spi_dir, initial=self._cs_idle, **kwargs)
@@ -355,7 +359,7 @@ class SpiController:
                 freq = min(freq or self.frequency_max, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
                 self._spi_ports[cs] = SpiPort(self, cs, cs_hold=hold,
-                                              spi_mode=mode, cs_bits=self._cs_bits, cs_pol=self._cs_pol, bidir=bidir)
+                                              spi_mode=mode, cs_count=self._cs_count, cs_act_hi=self._cs_act_hi, bidir=bidir)
                 self._spi_ports[cs].set_frequency(freq)
                 self._flush()
             return self._spi_ports[cs]
