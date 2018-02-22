@@ -728,6 +728,18 @@ class Ftdi:
                  0x1000: (512, 512)}    # TX: 512, RX: 512
         return sizes.get(self.usb_dev.bcdDevice, (128, 128))  # default sizes
 
+    @property
+    def mpsse_bit_delay(self):
+        """Delay between execution of two MPSSE SET_BITS commands.
+
+           :return: minimum delay (actual value might be larger) in seconds
+           :rtype: float
+        """
+        # measured on FTDI2232H, not documented, may vary from on FTDI model
+        # to another, left as a variable so it could be tweaked base on the
+        # FTDI bcd type, the frequency, or ... whatever else
+        return 0.5E-6  # seems to vary between 5 and 6.5 us
+
     def set_baudrate(self, baudrate):
         """Change the current UART baudrate.
 
