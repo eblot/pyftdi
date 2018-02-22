@@ -81,6 +81,10 @@ forced into reset by grounding its RESET# signal.
 
 .. code-block:: python
 
+    # Import SpiController & hexdump
+    from pyftdi.spi import SpiController
+    from pyftdi.misc import hexdump
+
     # Instanciate a SPI controller
     mw = SpiController(cs_count=1,cs_act_hi=True)
 
@@ -98,7 +102,10 @@ forced into reset by grounding its RESET# signal.
     # byte swap to handle data in little endian
     eeprom[0::2], eeprom[1::2] = eeprom[1::2], eeprom[0::2]
 
-    # Convert to a byte string
+    # Print contents of eeprom
+    print(hexdump(eeprom))
+    
+    # Convert to a byte string, if desired
     eepromB = eeprom.tobytes()
 
     # Close the SPI Controller
