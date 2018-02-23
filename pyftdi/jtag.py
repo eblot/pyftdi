@@ -1,3 +1,5 @@
+"""JTAG support for PyFdti"""
+
 # Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
@@ -417,10 +419,9 @@ class JtagEngine:
         self._sm = JtagStateMachine()
         self._seq = array('B')
 
-    def configure(self, vendor=0x0403, product=0x6011, interface=0):
+    def configure(self, url):
         """Configure the FTDI interface as a JTAG controller"""
-        self._ctrl.configure(vendor=vendor, product=product,
-                             interface=interface)
+        self._ctrl.configure(url)
 
     def close(self):
         """Terminate a JTAG session/connection"""

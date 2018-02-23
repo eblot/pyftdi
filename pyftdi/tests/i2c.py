@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,14 +26,14 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
+import unittest
 from binascii import hexlify
 from doctest import testmod
 from os import environ
+from sys import modules, stdout
 from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController
-from sys import modules, stdout
-import logging
-import unittest
 
 
 class I2cTca9555Test(object):
@@ -87,6 +87,27 @@ class I2cAccelTest(object):
         self._i2c.terminate()
 
 
+class I2cReadTest(object):
+    """Simple test to read a sequence of bytes I2C bus @ address 0x21
+    """
+
+    def __init__(self):
+        self._i2c = I2cController()
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._i2c.configure(url)
+
+    def read(self):
+        port = self._i2c.get_port(0x36)
+        print(hexlify(port.read(32)).decode())
+
+    def close(self):
+        """Close the I2C connection"""
+        self._i2c.terminate()
+
+
 class I2cTestCase(unittest.TestCase):
     """FTDI I2C driver test case
 
@@ -113,6 +134,12 @@ class I2cTestCase(unittest.TestCase):
         i2c.read_device_id()
         i2c.close()
 
+    def test_i2c3(self):
+        i2c = I2cReadTest()
+        i2c.open()
+        i2c.read()
+        i2c.close()
+
 
 def suite():
     suite_ = unittest.TestSuite()
@@ -120,7 +147,7 @@ def suite():
     return suite_
 
 
-if __name__ == '__main__':
+def main():
     testmod(modules[__name__])
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
@@ -130,3 +157,7 @@ if __name__ == '__main__':
         raise ValueError('Invalid log level: %s', level)
     FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
+
+
+if __name__ == '__main__':
+    main()

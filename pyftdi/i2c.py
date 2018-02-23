@@ -1,4 +1,6 @@
-# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
+"""I2C support for PyFdti"""
+
+# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,9 +27,10 @@
 
 from array import array
 from binascii import hexlify
+from collections import namedtuple
 from logging import getLogger
-from pyftdi.ftdi import Ftdi, FtdiFeatureError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
+from pyftdi.ftdi import Ftdi, FtdiFeatureError
 
 
 __all__ = ['I2cPort', 'I2cController']
@@ -218,6 +221,11 @@ class I2cPort:
         return data.tobytes()
 
 
+I2CTimings = namedtuple('I2CTimings', 't_hd_sta t_su_sta t_su_sto t_buf')
+"""I2C standard timings.
+"""
+
+
 class I2cController:
     """I2c master.
 
@@ -245,32 +253,43 @@ class I2cController:
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
 
+    I2C_100K = I2CTimings(4.0E-6, 4.7E-6, 4.0E-6, 4.7E-6)
+    I2C_400K = I2CTimings(0.6E-6, 0.6E-6, 0.6E-6, 1.3E-6)
+    I2C_1M = I2CTimings(0.26E-6, 0.26E-6, 0.26E-6, 0.5E-6)
+
     def __init__(self):
         self._ftdi = Ftdi()
         self.log = getLogger('pyftdi.i2c')
         self._slaves = {}
         self._frequency = 0.0
-        self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
+        self._direction = self.SCL_BIT | self.SDA_O_BIT
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
         self._idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
-        data_low = (Ftdi.SET_BITS_LOW,
-                    self.IDLE & ~self.SDA_O_BIT, self._direction)
-        clock_low_data_low = (Ftdi.SET_BITS_LOW,
-                              self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
-                              self._direction)
-        self._clock_low_data_high = (Ftdi.SET_BITS_LOW,
-                                     self.IDLE & ~self.SCL_BIT,
-                                     self._direction)
+        self._data_lo = (Ftdi.SET_BITS_LOW,
+                         self.IDLE & ~self.SDA_O_BIT, self._direction)
+        self._clk_lo_data_lo = (Ftdi.SET_BITS_LOW,
+                                self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
+                                self._direction)
+        self._clk_lo_data_hi = (Ftdi.SET_BITS_LOW,
+                                self.IDLE & ~self.SCL_BIT,
+                                self._direction)
         self._read_bit = (Ftdi.READ_BITS_PVE_MSB, 0)
         self._read_byte = (Ftdi.READ_BYTES_PVE_MSB, 0, 0)
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
-        self._start = data_low*4 + clock_low_data_low*4
-        self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
+        self._start = None
+        self._stop = None
+        self._ck_delay = 1
         self._tristate = None
         self._tx_size = 1
         self._rx_size = 1
+
+    def _compute_delay_cycles(self, value):
+        # approx ceiling without relying on math module
+        # the bit delay is far from being precisely known anyway
+        bit_delay = self._ftdi.mpsse_bit_delay
+        return max(1, int((value + bit_delay) / bit_delay))
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
@@ -291,6 +310,23 @@ class I2cController:
         else:
             frequency = self.DEFAULT_BUS_FREQUENCY
         # Fix frequency for 3-phase clock
+        if frequency <= 100E3:
+            timings = self.I2C_100K
+        elif frequency <= 400E3:
+            timings = self.I2C_100K
+        else:
+            timings = self.I2C_100K
+        ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
+        ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
+        ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
+        ck_buf = self._compute_delay_cycles(timings.t_buf)
+        ck_idle = max(ck_su_sta, ck_buf)
+        self._ck_delay = ck_buf
+        self._start = (self._data_lo * ck_hd_sta +
+                       self._clk_lo_data_lo * ck_hd_sta)
+        self._stop = (self._clk_lo_data_lo * ck_hd_sta +
+                      self._data_lo*ck_su_sto +
+                      self._idle*ck_idle)
         frequency = (3.0*frequency)/2.0
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
@@ -356,7 +392,7 @@ class I2cController:
 
            :param int address: the address on the I2C bus
            :param int readlen: count of bytes to read out.
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool relax: not used
            :return: read bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
@@ -448,7 +484,7 @@ class I2cController:
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if not out or not len(out):
+        if not out:
             raise I2cIOError('Nothing to write')
         if readlen < 1:
             raise I2cIOError('Nothing to read')
@@ -570,9 +606,9 @@ class I2cController:
         if self._tristate:
             cmd.extend(self._tristate)
             cmd.extend(self._read_bit)
-            cmd.extend(self._clock_low_data_high)
+            cmd.extend(self._clk_lo_data_hi)
         else:
-            cmd.extend(self._clock_low_data_high)
+            cmd.extend(self._clk_lo_data_hi)
             cmd.extend(self._read_bit)
         cmd.extend(self._immediate)
         self._ftdi.write_data(cmd)
@@ -590,18 +626,23 @@ class I2cController:
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _do_read(self, readlen,):
+    def _do_read(self, readlen):
         self.log.debug('- read %d byte(s)', readlen)
         if self._tristate:
-            read_byte = self._tristate + self._read_byte + \
-                        self._clock_low_data_high
-            read_not_last = read_byte + self._ack
-            read_last = read_byte + self._nack
+            read_byte = self._tristate + \
+                        self._read_byte + \
+                        self._clk_lo_data_hi
+            read_not_last = \
+                read_byte + self._ack + self._clk_lo_data_lo * self._ck_delay
+            read_last = \
+                read_byte + self._nack + self._clk_lo_data_hi * self._ck_delay
         else:
-            read_not_last = self._read_byte + self._ack + \
-                self._clock_low_data_high
-            read_last = self._read_byte + self._nack + \
-                self._clock_low_data_high
+            read_not_last = \
+                self._read_byte + self._ack + \
+                self._clk_lo_data_hi * self._ck_delay
+            read_last = \
+                self._read_byte + self._nack + \
+                self._clk_lo_data_hi * self._ck_delay
         chunk_size = self._rx_size-2
         cmd_size = len(read_last)
         # limit RX chunk size to the count of I2C packable ommands in the FTDI
@@ -641,9 +682,9 @@ class I2cController:
             if self._tristate:
                 cmd.extend(self._tristate)
                 cmd.extend(self._read_bit)
-                cmd.extend(self._clock_low_data_high)
+                cmd.extend(self._clk_lo_data_hi)
             else:
-                cmd.extend(self._clock_low_data_high)
+                cmd.extend(self._clk_lo_data_hi)
                 cmd.extend(self._read_bit)
             cmd.extend(self._immediate)
             self._ftdi.write_data(cmd)
