@@ -74,9 +74,9 @@ class SpiPort:
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
         self._cs_prolog = bytes([cs_clock, cs_select])
+        self._bidir = bidir and cs_select or None
         self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
-        self._bidir = bidir
 
     def exchange(self, out=b'', readlen=0, start=True, stop=True,
                  duplex=False):
@@ -101,7 +101,7 @@ class SpiPort:
                        further call to exchange()
            :param duplex: perform a full-duplex exchange (vs. half-duplex),
                           i.e. bits are clocked in and out at once.
-                          Note: forced to False if self._bidir is True.
+                          Note: forced to False if self._bidir is not None.
            :return: an array of bytes containing the data read out from the
                     slave
            :rtype: array
@@ -265,7 +265,6 @@ class SpiController:
         self._frequency = 0.0
         self._clock_phase = False
         self._cs_idle = 0
-        self._last_prolog_ctrl = 0
 
         # If True  CS, starts LOW and then goes HIGH to select device
         #              (ie. Active High)
@@ -401,7 +400,7 @@ class SpiController:
     def exchange(self, frequency, out, readlen,
                  cs_prolog=None, cs_epilog=None,
                  cpol=False, cpha=False, duplex=False,
-                 bidir=False):
+                 bidir=None):
         if duplex:
             if readlen > len(out):
                 tmp = array('B', out)
@@ -502,7 +501,7 @@ class SpiController:
         self._ftdi.write_data(cmd)
 
     def _exchange_half_duplex(self, frequency, out, readlen,
-                              cs_prolog, cs_epilog, cpol, cpha, bidir=False):
+                              cs_prolog, cs_epilog, cpol, cpha, bidir=None):
         if not self._ftdi:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -526,23 +525,25 @@ class SpiController:
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
-            # save last prolog ctrl for bi-directional turn-around
-            self._last_prolog_ctrl = ctrl 
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         if bidir:
             # set DO to an input during turnaround for bi-directional
-            # implementations (single DI/DO line)
+            # implementations (single DI/DO line). Must also handle
+            # gpio in bctrl.
+            bctrl = bidir
+            bctrl &= self._spi_mask
+            bctrl |= self._gpio_low
             turnaround = array('B', [Ftdi.SET_BITS_LOW,
-                                     self._last_prolog_ctrl,
+                                     bctrl,
                                      direction & (~SpiController.DO_BIT)])
         epilog = array('B')
         if cs_epilog:
             for ctrl in cs_epilog:
                 ctrl &= self._spi_mask
                 ctrl |= self._gpio_low
-                # if bidir and data to be read (readlen != 0), keep
+                # if bidir in not None and data is to be read (readlen != 0), keep
                 # the DO Bit as an input
-                bitdir = ((bidir and readlen)
+                bitdir = (((bidir != None) and readlen)
                           and (direction & (~SpiController.DO_BIT))
                           or direction)
                 epilog.extend((Ftdi.SET_BITS_LOW, ctrl, bitdir))
@@ -618,8 +619,6 @@ class SpiController:
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
-            # save last prolog ctrl for bi-dir turn-around for half-duplex
-            self._last_prolog_ctrl = ctrl 
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
         epilog = array('B')
         if cs_epilog:

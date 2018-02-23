@@ -98,6 +98,8 @@ class MicrowireData93LC56BTest(object):
         self._mw.configure(url)
 
     def read_word(self, addr):
+        """Read a single 16-bit word from the EEPROM starting at word address, addr"""
+        
         # NOTE: Using SPI Mode 0. This really should have the FTDI
         # clock the read bits in on the rising edge, at least based on
         # my understanding of SPI. However, spi.py reads the bits on
@@ -110,9 +112,8 @@ class MicrowireData93LC56BTest(object):
 
         # byteswap() is to handle little endian data
         word = port.exchange(self._SBOC_read+[(addr&0xFF)],2)
-        word = word.byteswap().tobytes()
-
-        return word
+        word[0],word[1] = word[1],word[0]
+        return word.tobytes()
 
     def read_all(self, readlen):
         # NOTE: Using SPI Mode 0. This really should have the FTDI
@@ -282,13 +283,58 @@ class MicrowireTestCase(unittest.TestCase):
     """
 
     def test_microwire1(self):
+        """Test reading EEPROM with read_word() and read_all()"""
         chksumAct = 0
         chksumExp = 1
+        chksumSav = 2
         
+        print()
         mw = MicrowireData93LC56BTest()
         mw.open()
 
         try:
+            # Test read_word()
+            data = b''
+            for addr in range(0,256//2):
+                data += mw.read_word(addr)                
+            print(hexdump(data))
+
+            # check that the right number of bytes were read
+            self.assertTrue(len(data) == 256)
+
+            # Pull out actual checksum from EEPROM data
+            chksumAct = (data[-1] << 8) | data[-2]
+
+            # compute expected checksum value over the EEPROM
+            # contents, except the EEPROM word
+            chksumExp = mw.calc_eeprom_checksum(data[:-2])
+
+            print('Checksum Actual: 0x{:04x} Expected: 0x{:04x}'
+                  .format(chksumAct,chksumExp))
+
+        except FtdiError:
+            self.assertTrue(chksumAct == chksumExp)
+        except SpiIOError:
+            self.assertTrue(chksumAct == chksumExp)
+        else:        
+            self.assertTrue(chksumAct == chksumExp)
+
+        mw.close()
+
+        # save checksum so can be compared when data is read with
+        # read_all()
+        chksumSav = chksumAct
+
+        # reset chksumAct & chksumExp
+        chksumAct = 0
+        chksumExp = 1
+        
+        print()
+        mw = MicrowireData93LC56BTest()
+        mw.open()
+
+        try:
+            # Test read_all()
             data = mw.read_all(256)
             print(hexdump(data))
 
@@ -311,6 +357,7 @@ class MicrowireTestCase(unittest.TestCase):
             self.assertTrue(chksumAct == chksumExp)
         else:        
             self.assertTrue(chksumAct == chksumExp)
+            self.assertTrue(chksumAct == chksumSav)
 
         mw.close()
             
