@@ -1,4 +1,6 @@
-# Copyright (c) 2014-2017, Emmanuel Blot <emmanuel.blot@free.fr>
+"""GPIO/BitBang support for PyFdti"""
+
+# Copyright (c) 2014-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -24,8 +26,8 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pyftdi.ftdi import Ftdi
 from struct import pack as spack
+from pyftdi.ftdi import Ftdi
 
 
 __all__ = ['GpioController']
@@ -79,8 +81,8 @@ class GpioController:
             ftdi = Ftdi()
             ftdi.open_bitbang_from_url(url, direction=direction, **kwargs)
             self._ftdi = ftdi
-        except IOError as e:
-            raise GpioException('Unable to open USB port: %s' % str(e))
+        except IOError as ex:
+            raise GpioException('Unable to open USB port: %s' % str(ex))
         self._direction = direction
 
     def close(self):
