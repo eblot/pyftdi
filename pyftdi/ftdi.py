@@ -258,6 +258,9 @@ class Ftdi:
     LATENCY_MIN = 12
     LATENCY_MAX = 255
 
+    # EEPROM Properties
+    EEPROM_MAX_SIZE = 256       # in bytes
+
     def __init__(self):
         self.log = getLogger('pyftdi.ftdi')
         self.usb_dev = None
@@ -859,6 +862,218 @@ class Ftdi:
         if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitmode = mode
+
+    def _read_eeprom_word(self, addr):
+        """Read a single 16-bit word from word address, addr
+
+           :param int addr: word address that desire to read
+           :return: read word
+           :rtype: int
+        """
+        # If addr is too large, simply wrap it around by clearing higher bits
+        addr &= 0x007F
+        length = 2              # 2 bytes
+        try:
+            return self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_IN, Ftdi.SIO_READ_EEPROM, 0, addr, length,
+                self.usb_read_timeout)
+        except usb.core.USBError as e:
+            raise FtdiError('UsbError: %s' % str(e))
+
+    def read_eeprom(self, addr=0, length=EEPROM_MAX_SIZE):
+        """Read the EEPROM starting at byte address, addr, and returning
+           length bytes. Here, addr and length are in bytes but we
+           access a 16-bit word at a time, so automatically update
+           addr and length to work with word accesses.
+
+           :param int addr: byte address that desire to read - nearest word will be read
+           :param int length: byte length to read - nearest word boundary will be read
+           :return: eeprom bytes, as an array of bytes
+           :rtype: array
+        """
+
+        # adjust length based on if addr or length are odd before converting to word-based values
+        if (addr & 0x01):
+            length += 1
+        addr >>= 1
+
+        if (length & 0x01):
+            length += 1
+        length >>= 1
+
+        eeprom = array('B')
+        for idx in [x+addr for x in range(0,length)]:
+            data = self._read_eeprom_word(idx)
+            if not data:
+                raise FtdiError('Unable to read EEPROM')
+            eeprom.extend(data)
+        return eeprom
+
+    def _write_eeprom_word(self, addr, val):
+        """Write a single 16-bit word, val, to word address, addr
+
+           WARNING: Writing to the EEPROM can cause very UNDESIRED
+           effects if the wrong value is written in the wrong
+           place. You can even essentially BRICK your FTDI device. Use
+           this function only with EXTREME caution.
+
+           If using a Hi-Speed Mini Module and you brick your FTDI
+           device, see
+           http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
+
+           :param int addr: word address that desire to write
+           :param int val: word value to write
+           :return: return status, < 0 means error
+           :rtype: int
+        """
+        # If addr is too large, simply wrap it around by clearing higher bits
+        addr &= 0x007F
+        length = 2              # 2 bytes
+        data=b''                # need to send a null array for this parameter
+        try:
+            return self.usb_dev.ctrl_transfer(
+                Ftdi.REQ_OUT, Ftdi.SIO_WRITE_EEPROM, val, addr,
+                array('B').frombytes(data), self.usb_read_timeout)
+        except usb.core.USBError as e:
+            raise FtdiError('UsbError: %s' % str(e))
+
+
+    def _write_eeprom_raw(self, addr, data):
+        """Write multiple bytes to the EEPROM starting at byte address,
+           addr. Length of data must be a multiple of 2 since the
+           EEPROM is 16-bits. So automatically extend data by 1 byte
+           if this is not the case.
+
+           WARNING: Writing to the EEPROM can cause very UNDESIRED
+           effects if the wrong value is written in the wrong
+           place. You can even essentially BRICK your FTDI device. Use
+           this function only with EXTREME caution.
+
+           If using a Hi-Speed Mini Module and you brick your FTDI
+           device, see
+           http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
+
+           :param int addr: starting byte address to start writing
+           :param bytes data: data to be written
+
+        """
+
+        if not isinstance(data, bytes):
+            data = data.tobytes()
+
+        # If byte addr is odd, shift over by a byte since EEPROM is a 16-bit device
+        if (addr & 0x01):
+            data = b'\xff' + data
+
+        wd_addr = (addr >> 1) # convert to word address
+
+        # if the byte data is an odd number of bytes, force it to be on 16-bit divisions
+        if (len(data) & 0x01):
+            data = data + b'\xff'
+
+        for idx in range(0, len(data), 2):
+            # Send the next word, assuming data is little endian
+            status = self._write_eeprom_word(wd_addr, (int(data[idx+1]) << 8) + (data[idx] & 0x0ff))
+
+            if (status < 0):
+                raise FtdiError('EEPROM Write Error: error code = {}'.format(status))
+
+            # increment to the next word address
+            wd_addr += 1
+
+    def calc_eeprom_checksum(self, data):
+        """Calculate EEPROM checksum over the data
+
+           :param bytes data: data to compute checksum over. Must be
+                              an even number of bytes to properly
+                              compute checksum.
+
+        """
+
+        # if the byte data is an odd number of bytes, force it to be
+        # on 16-bit divisions
+        if not isinstance(data, bytes):
+            data = data.tobytes()
+
+        if (len(data) & 0x01):
+            data = data + b'\x00'
+
+        # NOTE: checksum is computed using 16-bit values in little endian ordering
+        checksum = 0xAAAA
+        for idx in range(0, len(data), 2):
+            val = ((data[idx+1] << 8) + data[idx]) & 0x0ffff
+            checksum = val^checksum
+            checksum = ((checksum << 1) & 0x0ffff) | ((checksum >> 15) & 0x0ffff)
+
+        return checksum
+
+    def write_eeprom(self, addr, data, eeprom_sz=EEPROM_MAX_SIZE):
+        """Write multiple bytes to the EEPROM starting at byte address,
+           addr. This function also updates the checksum
+           automatically.
+
+           WARNING: Writing to the EEPROM can cause very UNDESIRED
+           effects if the wrong value is written in the wrong
+           place. You can even essentially BRICK your FTDI device. Use
+           this function only with EXTREME caution.
+
+           If using a Hi-Speed Mini Module and you brick your FTDI
+           device, see
+           http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
+
+           :param int addr: starting byte address to start writing
+           :param bytes data: data to be written
+           :param int eeprom_sz: total size in bytes of the eeprom
+                                 NOTE: DOUBLE CHECK that this is
+                                 correct for your device or else you
+                                 could cause yourself problems.
+        """
+
+        # make sure addr and data length are within eeprom_sz
+        if not (0 <= addr < eeprom_sz):
+            raise FtdiError('Invalid addr - not within EEPROM')
+
+        if not (0 < addr+len(data) <= eeprom_sz):
+            raise FtdiError('Invalid data length - does not fit within EEPROM')
+
+        if isinstance(data, bytes):
+            data = list(data)
+
+        # First, read out the entire EEPROM, based on eeprom_sz.
+        eeprom = self.read_eeprom(0,eeprom_sz)
+
+        # patch in the new data
+        eeprom[addr:addr+len(data)] = data
+
+        # compute new checksum
+        chksum = self.calc_eeprom_checksum(eeprom[:-2])
+
+        # insert updated checksum - it is last 16-bits in EEPROM
+        eeprom[-2] = chksum & 0x0ff
+        eeprom[-1] = (chksum >> 8) & 0x0ff
+
+        # Write back the new data and checksum back to
+        # EEPROM. Only write data that is changing instead of writing
+        # everything in EEPROM, even if the data does not change.
+        #
+        # Compute start and end sections of eeprom baring in mind that
+        # they must be even since it is a 16-bit EEPROM.
+        #
+        # If start addr is odd, back it up one.
+        datStart = addr
+        if (datStart & 0x01):
+            datStart -= 1
+
+        # If end addr is odd, increase it by 1
+        datEnd = addr+len(data)
+        if (datEnd & 0x01):
+            datEnd += 1
+
+        # finally, write new section of data and ...
+        self._write_eeprom_raw(datStart,eeprom[datStart:datEnd])
+        # updated checksum
+        self._write_eeprom_raw((eeprom_sz-2),eeprom[-2:])
+
 
     def read_pins(self):
         """Directly read pin state, circumventing the read buffer.
