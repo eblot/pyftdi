@@ -27,106 +27,77 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import sys
 from os import environ
+from sys import modules
 from pyftdi.ftdi import Ftdi, FtdiEepromError
 from pyftdi.misc import hexdump
 
 
-class EepromTest(object):
-    """FTDI EEPROM test
-    """
+class EepromTestCase(unittest.TestCase):
+    """FTDI EEPROM access method test case"""
 
-    def __init__(self):
-        self._ftdi = None
+    @classmethod
+    def setUpClass(cls):
+        """Default values"""
+        cls.eeprom_size = int(environ.get('FTDI_EEPROM_SIZE', '256'))
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
 
-    def open(self):
+    def setUp(self):
         """Open a connection to the FTDI, defining which pins are configured as
            output and input"""
         # out_pins value of 0x00 means all inputs
         out_pins = 0x00
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         try:
             ftdi = Ftdi()
             # If you REALLY muck things up, need to use this open_bitbang()
             # function directly and enter vendor and product ID:
             # ftdi.open_bitbang(vendor=0x0403, product=0x6011,
             #                   direction=out_pins)
-            ftdi.open_bitbang_from_url(url, direction=out_pins)
-            self._ftdi = ftdi
+            ftdi.open_bitbang_from_url(self.url, direction=out_pins)
+            self.ftdi = ftdi
         except IOError as ex:
             raise IOError('Unable to open USB port: %s' % str(ex))
 
-    def close(self):
+    def tearDown(self):
         """Close the FTDI connection"""
-        if self._ftdi:
-            self._ftdi.close()
-            self._ftdi = None
-
-    def read_eeprom(self, addr=0, length=Ftdi.EEPROM_MAX_SIZE):
-        """Pass through function for Ftdi Class read_eeprom:
-
-           Read the EEPROM starting at byte address, addr, and returning
-           length bytes. Here, addr and length are in bytes but we access
-           a 16-bit word at a time so update addr and length to work with
-           word accesses.
-
-           :param int addr: byte address that desire to read - nearest word
-                            will be read
-           :param int length: byte length to read - nearest word boundary will
-                              be read
-           :return: eeprom bytes, as an array of bytes
-           :rtype: array
-        """
-        return self._ftdi.read_eeprom(addr, length)
-
-    def calc_eeprom_checksum(self, data):
-        """Pass through function for Ftdi Class calc_eeprom_checksum:
-
-           Calculate EEPROM checksum over the data
-
-           :param bytes data: data to compute checksum over. Must be
-                              an even number of bytes to properly
-                              compute checksum.
-        """
-        return self._ftdi.calc_eeprom_checksum(data)
-
-    def write_eeprom(self, addr, data, eeprom_sz=Ftdi.EEPROM_MAX_SIZE):
-        """Pass through function for Ftdi Class write_eeprom:
-
-           Write multiple bytes starting at byte address, addr. Length of
-           data must be a multiple of 2 since the EEPROM is 16-bits. So
-           extend data by 1 byte if this is not the case.
-
-           :param int addr: starting byte address to start writing
-           :param bytes data: data to be written
-        """
-        self._ftdi.write_eeprom(addr, data, eeprom_sz)
-
-
-class EepromTestCase(unittest.TestCase):
-    """FTDI EEPROM access method test case"""
+        self.ftdi.close()
 
     def test_eeprom_read(self):
-        """Simple test to demonstrate can read EEPROM by checking its checksum.
+        """Simple test to demonstrate can read EEPROM.
         """
-
-        eeprom = EepromTest()
-        eeprom.open()
-        data = eeprom.read_eeprom()
-        print(hexdump(data))
+        ref_data = self.ftdi.read_eeprom(eeprom_sz=self.eeprom_size)
         # check that the right number of bytes were read
-        self.assertTrue(len(data) == Ftdi.EEPROM_MAX_SIZE)
+        self.assertEqual(len(ref_data), self.eeprom_size)
         # Pull out actual checksum from EEPROM data
-        ck_act = (data[-1] << 8) | data[-2]
+        ck_act = (ref_data[-1] << 8) | ref_data[-2]
         # compute expected checksum value over the EEPROM contents, except
         # the EEPROM word
-        ck_expo = eeprom.calc_eeprom_checksum(data[:-2])
-        print('Checksum actual: 0x%04x expected: 0x%04x' %
-              (ck_act, ck_expo))
-        self.assertTrue(ck_act == ck_expo)
+        ck_expo = self.ftdi.calc_eeprom_checksum(ref_data[:-2])
+        self.assertEqual(ck_act, ck_expo)
+        maxsize = self.eeprom_size
+        # verify access to various data segments
+        segments = ((1, 2), (1, 3), (2, 4), (2, 5), (maxsize-8, 8),
+                    (maxsize-3, 3), (0, maxsize))
+        for start, size in segments:
+            chunk = self.ftdi.read_eeprom(start, size, self.eeprom_size)
+            self.assertEqual(len(chunk), size)
+            self.assertEqual(chunk, ref_data[start:start+size])
+        # verify reject access to various invalid data segments
+        segments = (-1, 2), (0, maxsize+1), (maxsize-6, maxsize+1)
+        for start, size in segments:
+            self.assertRaises(ValueError, self.ftdi.read_eeprom, start, size)
 
-        eeprom.close()
+    def test_eeprom_write(self):
+        """Simple test to demonstrate can read EEPROM by checking its checksum.
+        """
+        ref_data = self.ftdi.read_eeprom(eeprom_sz=self.eeprom_size)
+        # check that the right number of bytes were read
+        self.assertEqual(len(ref_data), self.eeprom_size)
+        # verify reject access to various invalid data segments
+        segments = (-1, 2), (0, 257), (250, 7)
+        for start, size in segments:
+            self.assertRaises(ValueError, self.ftdi.write_eeprom, start,
+                              [0] * size, self.eeprom_size)
 
 
 def suite():
@@ -137,5 +108,5 @@ def suite():
 
 if __name__ == '__main__':
     import doctest
-    doctest.testmod(sys.modules[__name__])
+    doctest.testmod(modules[__name__])
     unittest.main(defaultTest='suite')

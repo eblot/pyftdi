@@ -3,6 +3,8 @@
 EEPROM Management
 -----------------
 
+TO BE DOCUMENTED
+
 .. warning::
    Writing to the EEPROM can cause very **undesired** effects if the wrong
    value is written in the wrong place. You can even essentially **brick** your
