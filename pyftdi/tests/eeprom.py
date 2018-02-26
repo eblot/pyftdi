@@ -29,13 +29,12 @@
 import unittest
 import sys
 from os import environ
-from pyftdi.ftdi import Ftdi, FtdiError
+from pyftdi.ftdi import Ftdi, FtdiEepromError
 from pyftdi.misc import hexdump
-from time import sleep
 
 
 class EepromTest(object):
-    """
+    """FTDI EEPROM test
     """
 
     def __init__(self):
@@ -44,21 +43,19 @@ class EepromTest(object):
     def open(self):
         """Open a connection to the FTDI, defining which pins are configured as
            output and input"""
-
         # out_pins value of 0x00 means all inputs
         out_pins = 0x00
-        
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-
         try:
             ftdi = Ftdi()
-            ## If you REALLY muck things up, need to use this open_bitbang() function directly and enter vendor and product ID:
-            # ftdi.open_bitbang(vendor=0x0403, product=0x6011, direction=out_pins)
+            # If you REALLY muck things up, need to use this open_bitbang()
+            # function directly and enter vendor and product ID:
+            # ftdi.open_bitbang(vendor=0x0403, product=0x6011,
+            #                   direction=out_pins)
             ftdi.open_bitbang_from_url(url, direction=out_pins)
             self._ftdi = ftdi
-        except IOError as e:
-            raise IOError ('Unable to open USB port: %s' % str(e))
-
+        except IOError as ex:
+            raise IOError('Unable to open USB port: %s' % str(ex))
 
     def close(self):
         """Close the FTDI connection"""
@@ -69,17 +66,19 @@ class EepromTest(object):
     def read_eeprom(self, addr=0, length=Ftdi.EEPROM_MAX_SIZE):
         """Pass through function for Ftdi Class read_eeprom:
 
-           Read the EEPROM starting at byte address, addr, and returning 
-           length bytes. Here, addr and length are in bytes but we access 
-           a 16-bit word at a time so update addr and length to work with 
+           Read the EEPROM starting at byte address, addr, and returning
+           length bytes. Here, addr and length are in bytes but we access
+           a 16-bit word at a time so update addr and length to work with
            word accesses.
 
-           :param int addr: byte address that desire to read - nearest word will be read
-           :param int length: byte length to read - nearest word boundary will be read
+           :param int addr: byte address that desire to read - nearest word
+                            will be read
+           :param int length: byte length to read - nearest word boundary will
+                              be read
            :return: eeprom bytes, as an array of bytes
            :rtype: array
         """
-        return self._ftdi.read_eeprom(addr,length)
+        return self._ftdi.read_eeprom(addr, length)
 
     def calc_eeprom_checksum(self, data):
         """Pass through function for Ftdi Class calc_eeprom_checksum:
@@ -92,21 +91,12 @@ class EepromTest(object):
         """
         return self._ftdi.calc_eeprom_checksum(data)
 
-    def write_eeprom(self,addr,data,eeprom_sz=Ftdi.EEPROM_MAX_SIZE):
+    def write_eeprom(self, addr, data, eeprom_sz=Ftdi.EEPROM_MAX_SIZE):
         """Pass through function for Ftdi Class write_eeprom:
 
            Write multiple bytes starting at byte address, addr. Length of
            data must be a multiple of 2 since the EEPROM is 16-bits. So
            extend data by 1 byte if this is not the case.
-
-           WARNING: Writing to the EEPROM can cause very UNDESIRED
-           effects if the wrong value is written in the wrong
-           place. You can even essentially BRICK your FTDI device. Use
-           this function only with EXTREME caution.
-
-           If using a Hi-Speed Mini Module and you brick for FTDI
-           device, see
-           http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
 
            :param int addr: starting byte address to start writing
            :param bytes data: data to be written
@@ -123,28 +113,21 @@ class EepromTestCase(unittest.TestCase):
 
         eeprom = EepromTest()
         eeprom.open()
+        data = eeprom.read_eeprom()
+        print(hexdump(data))
+        # check that the right number of bytes were read
+        self.assertTrue(len(data) == Ftdi.EEPROM_MAX_SIZE)
+        # Pull out actual checksum from EEPROM data
+        ck_act = (data[-1] << 8) | data[-2]
+        # compute expected checksum value over the EEPROM contents, except
+        # the EEPROM word
+        ck_expo = eeprom.calc_eeprom_checksum(data[:-2])
+        print('Checksum actual: 0x%04x expected: 0x%04x' %
+              (ck_act, ck_expo))
+        self.assertTrue(ck_act == ck_expo)
 
-        try:
-            data = eeprom.read_eeprom()
-            print(hexdump(data))
-
-            # check that the right number of bytes were read
-            self.assertTrue(len(data) == Ftdi.EEPROM_MAX_SIZE)
-            
-            # Pull out actual checksum from EEPROM data
-            chksumAct = (data[-1] << 8) | data[-2]
-
-            # compute expected checksum value over the EEPROM contents, except the EEPROM word
-            chksumExp = eeprom.calc_eeprom_checksum(data[:-2])
-
-            print('Checksum Actual: 0x{:04x} Expected: 0x{:04x}'.format(chksumAct,chksumExp))
-
-        except FtdiError:
-            self.assertFalse(chksumAct == chksumExp)
-        else:
-            self.assertTrue(chksumAct == chksumExp)
-        
         eeprom.close()
+
 
 def suite():
     suite_ = unittest.TestSuite()
