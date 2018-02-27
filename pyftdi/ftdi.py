@@ -906,7 +906,7 @@ class Ftdi:
            :rtype: array
         """
         if eeprom_sz is None:
-            eeprom_sz = self.EEPROM_SIZES[0]
+            eeprom_sz = self.EEPROM_SIZES[-1]
         if eeprom_sz not in self.EEPROM_SIZES:
             raise ValueError('Invalid EEPROM size')
         if length is None:
@@ -947,7 +947,7 @@ class Ftdi:
            :param int eeprom_sz: total size in bytes of the eeprom or None
         """
         if eeprom_sz is None:
-            eeprom_sz = self.EEPROM_SIZES[0]
+            eeprom_sz = self.EEPROM_SIZES[-1]
         if eeprom_sz not in self.EEPROM_SIZES:
             raise ValueError('Invalid EEPROM size')
         if not data:
