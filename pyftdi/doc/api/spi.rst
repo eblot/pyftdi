@@ -72,6 +72,46 @@ Example: communication with a SPI device and an extra GPIO
     pin = bool(gpio.read() & 0x20)
 
 
+Example: communication with a MicroWire 93LC56B data flash (half-duplex,
+bi-directional data, active high CS example). 
+
+NOTE: This is the EEPROM used by many FTDI devices. If accessing a
+93LC56B attached to a FTDI device, be sure that the FTDI device is
+forced into reset by grounding its RESET# signal.
+
+.. code-block:: python
+
+    # Import SpiController & hexdump
+    from pyftdi.spi import SpiController
+    from pyftdi.misc import hexdump
+
+    # Instanciate a SPI controller
+    mw = SpiController(cs_count=1,cs_act_hi=True)
+
+    # Configure the second interface (IF/2) of the FTDI device as a SPI master
+    mw.configure('ftdi://ftdi:2232h/2') 
+
+    # Get a port to a SPI slave w/ CS on A*BUS3 and SPI mode 0 @ 1MHz,
+    # bi-directional data (ie. a single data line like I2C)
+    slave = mw.get_port(cs=0, freq=1E6, mode=0, bidir=True)    
+
+    # Read 256 bytes from EEPROM starting at address 0
+    addr = 0
+    eeprom = slave.exchange([0x06, addr], 256)
+    
+    # byte swap to handle data in little endian
+    eeprom[0::2], eeprom[1::2] = eeprom[1::2], eeprom[0::2]
+
+    # Print contents of eeprom
+    print(hexdump(eeprom))
+    
+    # Convert to a byte string, if desired
+    eepromB = eeprom.tobytes()
+
+    # Close the SPI Controller
+    mw.terminate()
+
+
 Classes
 ~~~~~~~
 
@@ -96,6 +136,9 @@ SPI sample tests expect:
   * MX25L1606E device on /CS 0, SPI mode 0
   * ADXL345 device on /CS 1, SPI mode 3
   * RFDA2125 device on /CS 2, SPI mode 0
+
+MicroWireSPI sample tests expect:
+  * 93LC56B device on CS 0, SPI mode 0, bi-directional data
 
 Checkout a fresh copy from PyFtdi_ github repository.
 
