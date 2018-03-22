@@ -69,7 +69,16 @@ class UsbTools:
 
     @classmethod
     def flush_cache(cls):
-        """Flush the FTDI device cache."""
+        """Flush the FTDI device cache.
+
+           It is highly recommanded to call this method a FTDI device is
+           unplugged/plugged back since the last enumeration, as the device
+           may appear on a different USB location each time it is plugged
+           in.
+
+           Failing to clear out the cache may lead to USB Error 19:
+           ``Device may have been disconnected``.
+        """
         cls.Lock.acquire()
         cls.UsbDevices = {}
         cls.Lock.release()
@@ -155,7 +164,12 @@ class UsbTools:
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
-                if dev.get_active_configuration().bConfigurationValue != 1:
+                try:
+                    config = dev.get_active_configuration()
+                    setconf = config.bConfigurationValue != 1
+                except usb.core.USBError:
+                    setconf = True
+                if setconf:
                     try:
                         dev.set_configuration()
                     except usb.core.USBError:
