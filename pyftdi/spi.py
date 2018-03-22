@@ -27,7 +27,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from array import array
-from pyftdi.ftdi import Ftdi
+from logging import getLogger
+from pyftdi.ftdi import Ftdi, FtdiError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 
@@ -35,7 +36,7 @@ from threading import Lock
 __all__ = ['SpiPort', 'SpiGpioPort', 'SpiController']
 
 
-class SpiIOError(IOError):
+class SpiIOError(FtdiError):
     """SPI I/O error"""
 
 
@@ -61,6 +62,7 @@ class SpiPort:
     """
 
     def __init__(self, controller, cs, cs_hold=3, spi_mode=0):
+        self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
         self._cpol = spi_mode & 0x1
         self._cpha = spi_mode & 0x2
@@ -190,6 +192,7 @@ class SpiGpioPort:
        SpiController.get_gpio() method to obtain the GPIO port.
     """
     def __init__(self, controller):
+        self.log = getLogger('pyftdi.spi.gpio')
         self._controller = controller
 
     @property
@@ -244,6 +247,7 @@ class SpiController:
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
     def __init__(self, silent_clock=False, cs_count=4, turbo=True):
+        self.log = getLogger('pyftdi.spi.ctrl')
         self._ftdi = Ftdi()
         self._lock = Lock()
         self._gpio_port = None
@@ -334,7 +338,7 @@ class SpiController:
                 raise SpiIOError("SPI mode 2 has no known workaround with "
                                  "FTDI devices")
             if not self._spi_ports[cs]:
-                freq = min(freq or self.frequency_max, self.frequency_max)
+                freq = min(freq or self._frequency, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
                 self._spi_ports[cs] = SpiPort(self, cs, cs_hold=hold,
                                               spi_mode=mode)
