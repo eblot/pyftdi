@@ -443,6 +443,12 @@ class Ftdi:
         if self.usb_dev:
             self.set_bitmode(0, Ftdi.BITMODE_RESET)
             self.set_latency_timer(self.LATENCY_MAX)
+            self.usb_dev._ctx.managed_release_interface(self.usb_dev,
+                                                        self.index - 1)
+            try:
+                self.usb_dev.attach_kernel_driver(self.index - 1)
+            except (NotImplementedError, usb.core.USBError):
+                pass
             UsbTools.release_device(self.usb_dev)
             self.usb_dev = None
 
