@@ -1404,6 +1404,13 @@ class Ftdi:
         endpoints = sorted([ep.bEndpointAddress for ep in self.interface])
         self.in_ep, self.out_ep = endpoints[:2]
 
+        # detach kernel driver from the interface
+        try:
+            if self.usb_dev.is_kernel_driver_active(self.index - 1):
+                self.usb_dev.detach_kernel_driver(self.index - 1)
+        except (NotImplementedError, usb.core.USBError):
+            pass
+
     def _reset_device(self):
         """Reset the ftdi device"""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
