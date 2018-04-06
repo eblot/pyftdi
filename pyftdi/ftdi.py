@@ -422,7 +422,7 @@ class Ftdi:
                               by its serial number
            :param str interface: FTDI interface/port
         """
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
+        self.usb_dev = UsbTools.get_device(vendor, product, index, serial, interface=interface)
         try:
             self.usb_dev.set_configuration()
         except usb.core.USBError:
