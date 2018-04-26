@@ -31,9 +31,9 @@ from collections import namedtuple
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
+from threading import Lock
 
-
-__all__ = ['I2cPort', 'I2cController']
+__all__ = ['I2cPort', 'I2cController', 'I2cGpioPort']
 
 
 class I2cIOError(IOError):
@@ -221,6 +221,68 @@ class I2cPort:
         return data.tobytes()
 
 
+class I2cGpioPort:
+    """GPIO port
+
+       A I2cGpioPort instance enables to drive GPIOs wich are not reseerved for
+       I2c feature as regular GPIOs.
+
+       GPIO are managed as a bitfield. The LSBs are reserved for the I2c
+       feature, which means that the lowest pin that can be used as a GPIO is
+       b4:
+
+       * b0: I2c SCL
+       * b1: I2c SDA_O
+       * b2: I2c SDA_I
+       * b3: unused
+       * b4: first GPIO
+
+       There is no offset bias in GPIO bit position, *i.e.* the first available
+       GPIO can be reached from as ``0x10``.
+
+       Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+       ports, while 232H and 2232H series use wide 16-bit ports.
+
+       An I2cGpio port is never instanciated directly: use
+       I2cController.get_gpio() method to obtain the GPIO port.
+    """
+    def __init__(self, controller):
+        self._controller = controller
+
+    @property
+    def pins(self):
+        """Report the addressable GPIOs as a bitfield."""
+        return self._controller.gpio_pins
+
+    @property
+    def direction(self):
+        """Provide the FTDI GPIO direction"""
+        return self._controller.direction
+
+    def read(self):
+        """Read GPIO port.
+
+           :return: the GPIO port pins as a bitfield
+           :rtype: int
+        """
+        return self._controller.read_gpio()
+
+    def write(self, value):
+        """Write GPIO port.
+
+           :param int value: the GPIO port pins as a bitfield
+        """
+        return self._controller.write_gpio(value)
+
+    def set_direction(self, pins, direction):
+        """Change the direction of the GPIO pins.
+
+           :param int pins: which GPIO pins should be reconfigured
+           :param int direction: direction bitfield (high level for output)
+        """
+        self._controller.set_gpio_direction(pins, direction)
+
+
 I2CTimings = namedtuple('I2CTimings', 't_hd_sta t_su_sta t_su_sto t_buf')
 """I2C standard timings.
 """
@@ -264,26 +326,52 @@ class I2cController:
         self._frequency = 0.0
         self._direction = self.SCL_BIT | self.SDA_O_BIT
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
-        self._idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
-        self._data_lo = (Ftdi.SET_BITS_LOW,
-                         self.IDLE & ~self.SDA_O_BIT, self._direction)
-        self._clk_lo_data_lo = (Ftdi.SET_BITS_LOW,
-                                self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
-                                self._direction)
-        self._clk_lo_data_hi = (Ftdi.SET_BITS_LOW,
-                                self.IDLE & ~self.SCL_BIT,
-                                self._direction)
         self._read_bit = (Ftdi.READ_BITS_PVE_MSB, 0)
         self._read_byte = (Ftdi.READ_BYTES_PVE_MSB, 0, 0)
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
-        self._start = None
-        self._stop = None
         self._ck_delay = 1
         self._tristate = None
         self._tx_size = 1
         self._rx_size = 1
+        self._lock = Lock()
+        self._gpio_port = None
+        self._gpio_dir = 0
+        self._gpio_low = 0
+        self._wide_port = False
+
+    @property
+    def _data_lo(self):
+        direction = self.direction & 0xFF
+        out_data = self.gpio_out_data & 0xFF
+        return Ftdi.SET_BITS_LOW, out_data & ~self.SDA_O_BIT, direction
+
+    @property
+    def _clk_lo_data_hi(self):
+        direction = self.direction & 0xFF
+        out_data = self.gpio_out_data & 0xFF
+        return Ftdi.SET_BITS_LOW, out_data & ~self.SCL_BIT, direction
+
+    @property
+    def _clk_lo_data_lo(self):
+        direction = self.direction & 0xFF
+        out_data = self.gpio_out_data & 0xFF
+        return Ftdi.SET_BITS_LOW, out_data & ~(self.SCL_BIT | self.SDA_O_BIT), direction
+
+    @property
+    def _start(self):
+        return self._data_lo * self._ck_hd_sta + self._clk_lo_data_lo * self._ck_hd_sta
+
+    @property
+    def _idle(self):
+        direction = self.direction & 0xFF
+        out_data = self.gpio_out_data & 0xFF
+        return Ftdi.SET_BITS_LOW, out_data, direction
+
+    @property
+    def _stop(self):
+        return self._clk_lo_data_hi * self._ck_hd_sta + self._data_lo * self._ck_su_sto + self._idle * self._ck_idle
 
     def _compute_delay_cycles(self, value):
         # approx ceiling without relying on math module
@@ -316,17 +404,12 @@ class I2cController:
             timings = self.I2C_100K
         else:
             timings = self.I2C_100K
-        ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
+        self._ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
         ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
-        ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
+        self._ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
         ck_buf = self._compute_delay_cycles(timings.t_buf)
-        ck_idle = max(ck_su_sta, ck_buf)
+        self._ck_idle = max(ck_su_sta, ck_buf)
         self._ck_delay = ck_buf
-        self._start = (self._data_lo * ck_hd_sta +
-                       self._clk_lo_data_lo * ck_hd_sta)
-        self._stop = (self._clk_lo_data_lo * ck_hd_sta +
-                      self._data_lo*ck_su_sto +
-                      self._idle*ck_idle)
         frequency = (3.0*frequency)/2.0
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
@@ -340,6 +423,11 @@ class I2cController:
                                              self.SDA_I_BIT)
         except FtdiFeatureError:
             self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
+
+        self._i2c_mask = I2cController.SCL_BIT | I2cController.SDA_O_BIT | I2cController.SDA_I_BIT
+        self._i2c_dir = I2cController.SCL_BIT | I2cController.SDA_O_BIT | I2cController.SDA_I_BIT
+        self._wide_port = self._ftdi.has_wide_port
+        self._out_data = self._i2c_mask
 
     def terminate(self):
         """Close the FTDI interface.
@@ -411,18 +499,19 @@ class I2cController:
         i2caddress = (address << 1) & self.HIGH
         i2caddress |= self.BIT0
         retries = self.RETRY_COUNT
-        while True:
-            try:
-                self._do_prolog(i2caddress)
-                data = self._do_read(readlen)
-                return data
-            except I2cNackError:
-                retries -= 1
-                if not retries:
-                    raise
-                self.log.warning('Retry read')
-            finally:
-                self._do_epilog()
+        with self._lock:
+            while True:
+                try:
+                    self._do_prolog(i2caddress)
+                    data = self._do_read(readlen)
+                    return data
+                except I2cNackError:
+                    retries -= 1
+                    if not retries:
+                        raise
+                    self.log.warning('Retry read')
+                finally:
+                    self._do_epilog()
 
     def write(self, address, out, relax=True):
         """Write one or more bytes to a remote slave
@@ -447,20 +536,21 @@ class I2cController:
         i2caddress = (address << 1) & self.HIGH
         retries = self.RETRY_COUNT
         do_epilog = True
-        while True:
-            try:
-                self._do_prolog(i2caddress)
-                self._do_write(out)
-                do_epilog = relax
-                return
-            except I2cNackError:
-                retries -= 1
-                if not retries:
-                    raise
-                self.log.warning('Retry write')
-            finally:
-                if do_epilog:
-                    self._do_epilog()
+        with self._lock:
+            while True:
+                try:
+                    self._do_prolog(i2caddress)
+                    self._do_write(out)
+                    do_epilog = relax
+                    return
+                except I2cNackError:
+                    retries -= 1
+                    if not retries:
+                        raise
+                    self.log.warning('Retry write')
+                finally:
+                    if do_epilog:
+                        self._do_epilog()
 
     def exchange(self, address, out, readlen=0, relax=True):
         """Send a byte sequence to a remote slave followed with
@@ -493,23 +583,24 @@ class I2cController:
         i2caddress = (address << 1) & self.HIGH
         retries = self.RETRY_COUNT
         do_epilog = True
-        while True:
-            try:
-                self._do_prolog(i2caddress)
-                self._do_write(out)
-                self._do_prolog(i2caddress | self.BIT0)
-                if readlen:
-                    data = self._do_read(readlen)
-                do_epilog = relax
-                return data
-            except I2cNackError:
-                retries -= 1
-                if not retries:
-                    raise
-                self.log.warning('Retry exchange')
-            finally:
-                if do_epilog:
-                    self._do_epilog()
+        with self._lock:
+            while True:
+                try:
+                    self._do_prolog(i2caddress)
+                    self._do_write(out)
+                    self._do_prolog(i2caddress | self.BIT0)
+                    if readlen:
+                        data = self._do_read(readlen)
+                    do_epilog = relax
+                    return data
+                except I2cNackError:
+                    retries -= 1
+                    if not retries:
+                        raise
+                    self.log.warning('Retry exchange')
+                finally:
+                    if do_epilog:
+                        self._do_epilog()
 
     def poll(self, address, write=False, relax=True):
         """Poll a remote slave, expect ACK or NACK.
@@ -528,16 +619,17 @@ class I2cController:
             i2caddress |= self.BIT0
         self.log.debug('- poll 0x%x', i2caddress >> 1)
         do_epilog = True
-        try:
-            self._do_prolog(i2caddress)
-            do_epilog = relax
-            return True
-        except I2cNackError:
-            self.log.info('Not ready')
-            return False
-        finally:
-            if do_epilog:
-                self._do_epilog()
+        with self._lock:
+            try:
+                self._do_prolog(i2caddress)
+                do_epilog = relax
+                return True
+            except I2cNackError:
+                self.log.info('Not ready')
+                return False
+            finally:
+                if do_epilog:
+                    self._do_epilog()
 
     def poll_cond(self, address, fmt, mask, value, count, relax=True):
         """Poll a remove slave, watching for condition to satisfy.
@@ -564,32 +656,33 @@ class I2cController:
         i2caddress |= self.BIT0
         self.log.debug('- cond poll 0x%x', i2caddress >> 1)
         do_epilog = True
-        try:
-            retry = 0
-            while retry < count:
-                retry += 1
-                size = scalc(fmt)
-                self._do_prolog(i2caddress)
-                data = self._do_read(size)
-                self.log.debug("Poll data: %s", hexlify(data).decode())
-                cond, = sunpack(fmt, data)
-                if (cond & mask) == value:
-                    self.log.debug('Poll condition matched')
-                    break
-                else:
-                    data = None
-                    self.log.debug('Poll condition not fulfilled: %x/%x',
-                                   cond & mask, value)
-            do_epilog = relax
-            if not data:
-                self.log.warning('Poll condition failed')
-            return data
-        except I2cNackError:
-            self.log.info('Not ready')
-            return None
-        finally:
-            if do_epilog:
-                self._do_epilog()
+        with self._lock:
+            try:
+                retry = 0
+                while retry < count:
+                    retry += 1
+                    size = scalc(fmt)
+                    self._do_prolog(i2caddress)
+                    data = self._do_read(size)
+                    self.log.debug("Poll data: %s", hexlify(data).decode())
+                    cond, = sunpack(fmt, data)
+                    if (cond & mask) == value:
+                        self.log.debug('Poll condition matched')
+                        break
+                    else:
+                        data = None
+                        self.log.debug('Poll condition not fulfilled: %x/%x',
+                                       cond & mask, value)
+                do_epilog = relax
+                if not data:
+                    self.log.warning('Poll condition failed')
+                return data
+            except I2cNackError:
+                self.log.info('Not ready')
+                return None
+            finally:
+                if do_epilog:
+                    self._do_epilog()
 
     def flush(self):
         """Flush the HW FIFOs
@@ -697,3 +790,109 @@ class I2cController:
                 msg = 'NACK from slave'
                 self.log.warning(msg)
                 raise I2cNackError(msg)
+
+    def get_gpio(self):
+        with self._lock:
+            if not self._ftdi:
+                raise I2cIOError("FTDI controller not initialized")
+            if not self._gpio_port:
+                self._gpio_port = I2cGpioPort(self)
+            return self._gpio_port
+
+    @property
+    def gpio_pins(self):
+        """Report the addressable GPIOs as a bitfield"""
+        with self._lock:
+            return self._get_gpio_mask()
+
+    def read_gpio(self):
+        """Read GPIO port
+
+           :return: the GPIO port pins as a bitfield
+           :rtype: int
+        """
+        with self._lock:
+            data = self._read_raw(self._wide_port)
+        mask = self._get_gpio_mask()
+        return data & mask
+
+    def write_gpio(self, value):
+        """Write GPIO port
+
+           :param int value: the GPIO port pins as a bitfield
+        """
+        with self._lock:
+            mask = self._get_gpio_mask()
+            if (value & mask) != value:
+                raise I2cIOError('No such GPIO pins: %04x/%04x' %
+                                 (mask, value))
+            # perform read-modify-write
+            use_high = self._wide_port and (self.direction & 0xff00)
+            data = self._read_raw(use_high)
+            data &= ~mask
+            data |= value
+            self._write_raw(data, use_high)
+            self._gpio_low = data & 0xFF & ~self._i2c_mask
+
+    def set_gpio_direction(self, pins, direction):
+        """Change the direction of the GPIO pins
+
+           :param int pins: which GPIO pins should be reconfigured
+           :param int direction: direction bitfield (on for output)
+        """
+        with self._lock:
+            if pins & self._i2c_mask:
+                raise I2cIOError('Cannot access I2C pins as GPIO')
+            mask = self._get_gpio_mask()
+            if (pins & mask) != pins:
+                raise I2cIOError('No such GPIO pin(s)')
+            self._gpio_dir &= ~pins
+            self._gpio_dir |= (pins & direction)
+
+    def _get_gpio_mask(self):
+        gpio_width = self._wide_port and 16 or 8
+        gpio_mask = (1 << gpio_width) - 1
+        gpio_mask &= ~self._i2c_mask
+        return gpio_mask
+
+    def _read_raw(self, read_high):
+        if read_high:
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.GET_BITS_HIGH,
+                              Ftdi.SEND_IMMEDIATE])
+            fmt = '<H'
+        else:
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.SEND_IMMEDIATE])
+            fmt = 'B'
+        self._ftdi.write_data(cmd)
+        size = scalc(fmt)
+        data = self._ftdi.read_data_bytes(size, 4)
+        if len(data) != size:
+            raise I2cIOError('Cannot read GPIO')
+        value, = sunpack(fmt, data)
+        return value
+
+    def _write_raw(self, data, write_high):
+        direction = self.direction
+        low_data = data & 0xFF
+        low_dir = direction & 0xFF
+        if write_high:
+            high_data = (data >> 8) & 0xFF
+            high_dir = (direction >> 8) & 0xFF
+            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
+                              Ftdi.SET_BITS_HIGH, high_data, high_dir])
+        else:
+            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir])
+        self._ftdi.write_data(cmd)
+        self._out_data = (data & self.direction) | self._i2c_mask
+
+    @property
+    def gpio_out_data(self):
+        """Provide the FTDI GPIO output state"""
+        return self._out_data & self.direction
+
+    @property
+    def direction(self):
+        """Provide the FTDI GPIO direction"""
+        return self._i2c_dir | self._gpio_dir
