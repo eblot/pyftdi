@@ -658,10 +658,10 @@ class I2cController:
         cmd = None
         rem = readlen
         while rem:
-            if rem <= chunk_size:
+            if rem > chunk_size:
                 if not cmd:
                     cmd = array('B')
-                    cmd = cmd.extend(read_not_last * chunk_size)
+                    cmd.extend(read_not_last * chunk_size)
                     size = chunk_size
             else:
                 cmd = array('B')
