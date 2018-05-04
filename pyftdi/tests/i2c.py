@@ -100,14 +100,8 @@ class I2cReadTest(object):
         self._i2c.configure(url)
 
     def read(self):
-        # port = self._i2c.get_port(0x36)
-        # print(hexlify(port.read(32)).decode())
-        port = self._i2c.get_port(0x50)
-        port.write(b'\x00\x40', relax=False)
-        port.read(0, relax=False)
-        from time import sleep
-        sleep(0.001)
-        print(hexlify(port.read(3, start=False)))
+        port = self._i2c.get_port(0x36)
+        print(hexlify(port.read(32)).decode())
 
     def close(self):
         """Close the I2C connection"""
@@ -127,14 +121,14 @@ class I2cTestCase(unittest.TestCase):
        bridge -or any unsupported setup!! You've been warned.
     """
 
-    def _test_i2c1(self):
+    def test_i2c1(self):
         i2c = I2cTca9555Test()
         i2c.open()
         i2c.read_it()
         i2c.write_it()
         i2c.close()
 
-    def _test_i2c2(self):
+    def test_i2c2(self):
         i2c = I2cAccelTest()
         i2c.open()
         i2c.read_device_id()
