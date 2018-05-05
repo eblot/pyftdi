@@ -85,7 +85,7 @@ class UsbTools:
 
     @classmethod
     def get_device(cls, vendor, product, index=0, serial=None,
-                   description=None):
+                   description=None, interface=None):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it.
 
@@ -107,7 +107,7 @@ class UsbTools:
                              FTDI enumerated USB device on the host
            :param str serial: optional selector, specified the FTDI device
                               by its serial number
-           :param str interface: FTDI interface/port
+           :param int interface: FTDI interface/port
            :return: PyUSB device instance
            :rtype: usb.core.Device
         """
@@ -149,18 +149,20 @@ class UsbTools:
             if devkey not in cls.Devices:
                 for configuration in dev:
                     # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        try:
-                            if not dev.is_kernel_driver_active(ifnum):
-                                continue
-                            dev.detach_kernel_driver(ifnum)
-                        except NotImplementedError:
-                            # only libusb 1.x backend implements this method
-                            break
-                        except usb.core.USBError:
-                            pass
+                    # only claim the interface that is opened and leave
+                    # the others as they are.
+                    for cfg_if in configuration:
+                        ifnum = cfg_if.bInterfaceNumber
+                        if ifnum == (interface - 1) or interface is None:
+                            try:
+                                if not dev.is_kernel_driver_active(ifnum):
+                                    continue
+                                dev.detach_kernel_driver(ifnum)
+                            except NotImplementedError:
+                                # only libusb 1.x backend implements this method
+                                break
+                            except usb.core.USBError:
+                                pass
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
