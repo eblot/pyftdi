@@ -32,6 +32,10 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
 
+# pylint: disable-msg=too-many-locals,too-many-instance-attributes
+# pylint: disable-msg=too-many-arguments
+# pylint: disable-msg=consider-using-ternary
+
 
 __all__ = ['I2cPort', 'I2cController']
 
@@ -643,32 +647,34 @@ class I2cController:
             read_last = \
                 self._read_byte + self._nack + \
                 self._clk_lo_data_hi * self._ck_delay
+        # maximum RX size to fit in FTDI FIFO, minus 2 status bytes
         chunk_size = self._rx_size-2
         cmd_size = len(read_last)
-        # limit RX chunk size to the count of I2C packable ommands in the FTDI
+        # limit RX chunk size to the count of I2C packable commands in the FTDI
         # TX FIFO (minus one byte for the last 'send immediate' command)
         tx_count = (self._tx_size-1) // cmd_size
         chunk_size = min(tx_count, chunk_size)
         chunks = []
-        last_count = 0
-        last_cmd = None
-        count = readlen
-        while count:
-            block_count = min(count, chunk_size)
-            count -= block_count
-            if last_count != block_count:
-                cmd = array('B')
-                cmd.extend(read_not_last * (block_count-1))
-                cmd.extend(read_last)
-                last_cmd = cmd
+        cmd = None
+        rem = readlen
+        while rem:
+            if rem > chunk_size:
+                if not cmd:
+                    cmd = array('B')
+                    cmd.extend(read_not_last * chunk_size)
+                    size = chunk_size
             else:
-                cmd = last_cmd
-            if count <= 0:
-                # only force immediate read out on last chunk
+                cmd = array('B')
+                cmd.extend(read_not_last * (rem-1))
+                cmd.extend(read_last)
                 cmd.extend(self._immediate)
+                size = rem
             self._ftdi.write_data(cmd)
-            buf = self._ftdi.read_data_bytes(block_count, 4)
+            buf = self._ftdi.read_data_bytes(size, 4)
+            self.log.debug('- read %d byte(s): %s',
+                           len(buf), hexlify(buf).decode())
             chunks.append(buf)
+            rem -= size
         return array('B', b''.join(chunks))
 
     def _do_write(self, out):
