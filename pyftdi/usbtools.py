@@ -147,20 +147,6 @@ class UsbTools:
             except AttributeError:
                 devkey = (vendor, product)
             if devkey not in cls.Devices:
-                for configuration in dev:
-                    # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        try:
-                            if not dev.is_kernel_driver_active(ifnum):
-                                continue
-                            dev.detach_kernel_driver(ifnum)
-                        except NotImplementedError:
-                            # only libusb 1.x backend implements this method
-                            break
-                        except usb.core.USBError:
-                            pass
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
