@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,9 +34,11 @@ from pyftdi.i2c import I2cController, I2cNackError
 
 class I2cBusScanner(object):
     """Scan I2C bus to find slave.
+
+       Emit the I2C address message, but no data. Detect any ACK on each valid
+       address.
     """
 
-    RESERVED_ADDRESSES = (0x00, )
     def scan(self):
         """Open an I2c connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
@@ -49,7 +51,7 @@ class I2cBusScanner(object):
             for addr in range(i2c.HIGHEST_I2C_ADDRESS+1):
                 port = i2c.get_port(addr)
                 try:
-                    port.write(b'')
+                    port.read(0)
                     slaves.append('X')
                 except I2cNackError:
                     slaves.append('.')

@@ -264,7 +264,7 @@ class I2cController:
     SDA_O_BIT = 0x02
     SDA_I_BIT = 0x04
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
-    HIGHEST_I2C_ADDRESS = 0x7f
+    HIGHEST_I2C_ADDRESS = 0x78
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
@@ -277,6 +277,7 @@ class I2cController:
         self._ftdi = Ftdi()
         self.log = getLogger('pyftdi.i2c')
         self._slaves = {}
+        self._retry_count = self.RETRY_COUNT
         self._frequency = 0.0
         self._direction = self.SCL_BIT | self.SDA_O_BIT
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
@@ -306,6 +307,15 @@ class I2cController:
         # the bit delay is far from being precisely known anyway
         bit_delay = self._ftdi.mpsse_bit_delay
         return max(1, int((value + bit_delay) / bit_delay))
+
+    def set_retry_count(self, count):
+        """Change the default retry count when a communication error occurs,
+           before bailing out.
+           :param int count: count of retries
+        """
+        if not isinstance(count, int) or not 0 < count <= 16:
+            raise ValueError('Invalid retry count')
+        self._retry_count = count
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
@@ -390,7 +400,7 @@ class I2cController:
         if address is None:
             return
         if address > cls.HIGHEST_I2C_ADDRESS:
-            raise I2cIOError("No such I2c slave")
+            raise I2cIOError("No such I2c slave: 0x%02x" % address)
 
     @property
     def frequency_max(self):
@@ -432,7 +442,7 @@ class I2cController:
         else:
             i2caddress = (address << 1) & self.HIGH
             i2caddress |= self.BIT0
-        retries = self.RETRY_COUNT
+        retries = self._retry_count
         do_epilog = True
         while True:
             try:
@@ -472,7 +482,7 @@ class I2cController:
             i2caddress = None
         else:
             i2caddress = (address << 1) & self.HIGH
-        retries = self.RETRY_COUNT
+        retries = self._retry_count
         do_epilog = True
         while True:
             try:
@@ -520,7 +530,7 @@ class I2cController:
             i2caddress = None
         else:
             i2caddress = (address << 1) & self.HIGH
-        retries = self.RETRY_COUNT
+        retries = self._retry_count
         do_epilog = True
         while True:
             try:
