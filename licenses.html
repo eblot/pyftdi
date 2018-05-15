@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -85,7 +88,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -111,8 +117,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -121,23 +129,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Licenses</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Licenses</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/licenses.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -146,25 +171,25 @@
   <div class="section" id="licenses">
 <h1>Licenses<a class="headerlink" href="#licenses" title="Permalink to this headline">¶</a></h1>
 <p>For historical reasons (PyFtdi has been initially developed as a compatibility
-layer with <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a>), the main <code class="docutils literal"><span class="pre">ftdi.py</span></code> file has been license under the same
+layer with <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a>), the main <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file has been license under the same
 license as the <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a> project, the GNU Lesser General Public License LGPL v2
 license. It does not share code from this project anymore, but implements some
 parts of the same API.</p>
 <p>It’s really hard to figure out what implies this license with the Python
 language. If you can, let me know :-) It is also quite complex to change the
 license now, so PyFtdi has to live with it.</p>
-<p>Anyway wherease the <code class="docutils literal"><span class="pre">ftdi.py</span></code> file has been kept under the LGPL v2 license,
+<p>Anyway wherease the <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file has been kept under the LGPL v2 license,
 all other files are released under a less controversial and less
 nearly-impossible-to-understand licensing scheme: the MIT license.</p>
 <p>From my perspective, you may use it freely in open source or close source, free
 or commercial projects as long as you comply with the MIT license. However,
 I’m not a lawyer so I can’t help you with the implications of the LGPL v2
 license in a Python-based close-source project, check out for yourself to be
-sure you comply with the <code class="docutils literal"><span class="pre">ftdi.py</span></code> file license, which is always required
+sure you comply with the <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file license, which is always required
 whatever the actual use of <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>.</p>
 <div class="section" id="lgpl-v2">
 <h2>LGPL v2<a class="headerlink" href="#lgpl-v2" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-none"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 All Rights Reserved.
 
 This library is free software; you can redistribute it and/or
@@ -185,7 +210,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 </div>
 <div class="section" id="mit">
 <h2>MIT<a class="headerlink" href="#mit" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-none"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 All Rights Reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -216,13 +241,16 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="authors.html" class="btn btn-neutral" title="Authors" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="authors.html" class="btn btn-neutral" title="Authors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -256,7 +284,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

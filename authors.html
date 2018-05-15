@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -46,6 +48,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -86,7 +89,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -112,8 +118,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -122,23 +130,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Authors</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Authors</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/authors.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -241,7 +266,7 @@
 </ul>
 </div></blockquote>
 <ul class="simple">
-<li>Darren Garnier</li>
+<li>Darren Garnier:</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
@@ -249,7 +274,7 @@
 </ul>
 </div></blockquote>
 <ul class="simple">
-<li>Michael Leonard</li>
+<li>Michael Leonard:</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
@@ -257,7 +282,7 @@
 </ul>
 </div></blockquote>
 <ul class="simple">
-<li>nopeppermint (Stefan)</li>
+<li>nopeppermint (Stefan):</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
@@ -265,7 +290,7 @@
 </ul>
 </div></blockquote>
 <ul class="simple">
-<li>hannesweisbach</li>
+<li>hannesweisbach:</li>
 </ul>
 <blockquote>
 <div><ul class="simple">
@@ -278,7 +303,39 @@
 </ul>
 <blockquote>
 <div><ul class="simple">
-<li>Fix timeout and remove useless delay in UART mode</li>
+<li>Fix timeout and remove useless delay in UART mode:</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Pete Schwamb:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Fix issue with SPI duplex mode</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Will Richey:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>makes write() compatible with write() from pySerial.</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>sgoadhouse:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>JTAG constant definitions debunking and engine instanciation fixes.</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>tavip (Octavian Purdila):</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Allow simulatenous usage with kernel drivers (per FTDI port management)</li>
 </ul>
 </div></blockquote>
 </div></blockquote>
@@ -287,15 +344,18 @@
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="licenses.html" class="btn btn-neutral float-right" title="Licenses" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="licenses.html" class="btn btn-neutral float-right" title="Licenses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="troubleshooting.html" class="btn btn-neutral" title="Troubleshooting" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="troubleshooting.html" class="btn btn-neutral" title="Troubleshooting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -329,7 +389,8 @@
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

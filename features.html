@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -46,6 +48,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -86,7 +89,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Features</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#devices">Devices</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#supported-features">Supported features</a><ul>
@@ -119,8 +125,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -129,23 +137,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Features</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Features</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/features.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -171,7 +196,7 @@ runtime instance.</li>
 <h3>UART<a class="headerlink" href="#uart" title="Permalink to this headline">¶</a></h3>
 <p>Serial port, up to 12 Mbps. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> includes a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> emulation layer that
 offers transparent access to the FTDI serial ports through a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>-
-compliant API. The <code class="docutils literal"><span class="pre">serialext</span></code> directory contains a minimal serial terminal
+compliant API. The <code class="docutils literal notranslate"><span class="pre">serialext</span></code> directory contains a minimal serial terminal
 demonstrating the use of this extension, and a dispatcher automatically
 selecting the serial backend (<a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>), based on the serial port
 name.</p>
@@ -226,7 +251,7 @@ communication modes are supported.</p>
 <div class="section" id="i2c-master">
 <h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Permalink to this headline">¶</a></h3>
 <p>Supported devices: <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>, <a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a></p>
-<p>For now, only 7-bit address are supported.</p>
+<p>For now, only 7-bit addresses are supported.</p>
 <p>GPIOs cannot be used while I<sup>2</sup>C mode is enabled (not yet implemented).</p>
 </div>
 <div class="section" id="jtag">
@@ -246,15 +271,18 @@ solution.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="requirements.html" class="btn btn-neutral float-right" title="Requirements" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="requirements.html" class="btn btn-neutral float-right" title="Requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="PyFtdi" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="PyFtdi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -288,7 +316,8 @@ solution.</p>
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

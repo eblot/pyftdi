@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -47,6 +49,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -66,7 +69,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -87,26 +90,29 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a></li>
-<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
 </li>
 </ul>
@@ -127,8 +133,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -137,36 +145,53 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">API documentation</a> &raquo;</li>
-      
-    <li><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../_sources/api/spi.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="module-pyftdi.spi">
-<span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
+<span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>Example: communication with a SPI data flash (half-duplex example)</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
@@ -180,7 +205,7 @@
 </pre></div>
 </div>
 <p>Example: communication with a remote SPI device using full-duplex mode</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
@@ -196,7 +221,7 @@
 </div>
 <p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
 <p>Example: communication with a SPI device and an extra GPIO</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the first FTDI device as a</span>
@@ -260,18 +285,18 @@ drive on the SPI bus)</li>
 <p>Accepted options:</p>
 <ul class="simple">
 <li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">frequency</span></code> the SPI bus frequency in Hz. Note that each slave</dt>
+<dt><code class="docutils literal notranslate"><span class="pre">frequency</span></code> the SPI bus frequency in Hz. Note that each slave</dt>
 <dd>may reconfigure the SPI bus with a specialized
 frequency.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><code class="docutils literal"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select</dt>
+<dt><code class="docutils literal notranslate"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select</dt>
 <dd>SPI slave devices</dd>
 </dl>
 </li>
-<li><code class="docutils literal"><span class="pre">turbo</span></code> whether to enable or disable turbo mode</li>
-<li><code class="docutils literal"><span class="pre">debug</span></code> for extra debug output</li>
+<li><code class="docutils literal notranslate"><span class="pre">turbo</span></code> whether to enable or disable turbo mode</li>
+<li><code class="docutils literal notranslate"><span class="pre">debug</span></code> for extra debug output</li>
 </ul>
 </dd></dl>
 
@@ -326,15 +351,17 @@ frequency.</dd>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiController.read_gpio">
-<code class="descname">read_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.read_gpio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">read_gpio</code><span class="sig-paren">(</span><em>with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.read_gpio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read GPIO port</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -387,7 +414,7 @@ frequency.</dd>
 <p>An SPI port is never instanciated directly: use SpiController.get_port()
 method to obtain an SPI port.</p>
 <p>Example:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">(</span><span class="n">silent_clock</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">(</span><span class="n">silent_clock</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span><span class="o">.</span><span class="n">set_frequency</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
@@ -545,7 +572,7 @@ b4:</p>
 <p>If more than one SPI device is used, less GPIO pins are available, see
 the cs_count argument of the SpiController constructor.</p>
 <p>There is no offset bias in GPIO bit position, <em>i.e.</em> the first available
-GPIO can be reached from as <code class="docutils literal"><span class="pre">0x10</span></code>.</p>
+GPIO can be reached from as <code class="docutils literal notranslate"><span class="pre">0x10</span></code>.</p>
 <p>Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
 ports, while 232H and 2232H series use wide 16-bit ports.</p>
 <p>An SpiGpio port is never instanciated directly: use
@@ -564,15 +591,17 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiGpioPort.read">
-<code class="descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.read" title="Permalink to this definition">¶</a></dt>
+<code class="descname">read</code><span class="sig-paren">(</span><em>with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiGpioPort.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read GPIO port.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the GPIO port pins as a bitfield</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -635,7 +664,7 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
 </dl>
 <p>Checkout a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> github repository.</p>
 <p>See <a class="reference internal" href="../pinout.html"><span class="doc">FTDI device pinout</span></a> for FTDI wiring.</p>
-<div class="highlight-shell"><div class="highlight"><pre><span></span><span class="c1"># optional: specify an alternative FTDI device</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># optional: specify an alternative FTDI device</span>
 <span class="nb">export</span> <span class="nv">FTDI_DEVICE</span><span class="o">=</span>ftdi://ftdi:2232h/1
 <span class="c1"># optional: increase log level</span>
 <span class="nb">export</span> <span class="nv">FTDI_LOGLEVEL</span><span class="o">=</span>DEBUG
@@ -648,15 +677,18 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="uart.html" class="btn btn-neutral float-right" title="serialext - UART API" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="uart.html" class="btn btn-neutral float-right" title="serialext - UART API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="i2c.html" class="btn btn-neutral" title="i2c - I2C API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="i2c.html" class="btn btn-neutral" title="i2c - I2C API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -690,7 +722,8 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

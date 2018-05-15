@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -47,6 +49,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -66,7 +69,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -87,24 +90,27 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal"><span class="pre">gpio</span></code> - GPIO API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal"><span class="pre">spi</span></code> - SPI API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal"><span class="pre">serialext</span></code> - UART API</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
 </ul>
 </li>
 </ul>
@@ -125,8 +131,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -135,32 +143,49 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
           <li><a href="index.html">API documentation</a> &raquo;</li>
-      
-    <li><code class="docutils literal"><span class="pre">usbtools</span></code> - USB tools</li>
+        
+      <li><code class="docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="../_sources/api/usbtools.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="module-pyftdi.usbtools">
-<span id="usbtools-usb-tools"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">usbtools</span></code> - USB tools<a class="headerlink" href="#module-pyftdi.usbtools" title="Permalink to this headline">¶</a></h1>
+<span id="usbtools-usb-tools"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools<a class="headerlink" href="#module-pyftdi.usbtools" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -169,7 +194,7 @@
 <dd><p>Helpers to obtain information about connected USB devices.</p>
 <dl class="staticmethod">
 <dt id="pyftdi.usbtools.UsbTools.find_all">
-<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>vps</em>, <em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all devices that match the specified vendor/product pairs.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -197,6 +222,12 @@ device descriptors</p>
 <dt id="pyftdi.usbtools.UsbTools.flush_cache">
 <em class="property">classmethod </em><code class="descname">flush_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.flush_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Flush the FTDI device cache.</p>
+<p>It is highly recommanded to call this method a FTDI device is
+unplugged/plugged back since the last enumeration, as the device
+may appear on a different USB location each time it is plugged
+in.</p>
+<p>Failing to clear out the cache may lead to USB Error 19:
+<code class="docutils literal notranslate"><span class="pre">Device</span> <span class="pre">may</span> <span class="pre">have</span> <span class="pre">been</span> <span class="pre">disconnected</span></code>.</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -264,7 +295,7 @@ by its serial number</li>
 
 <dl class="staticmethod">
 <dt id="pyftdi.usbtools.UsbTools.parse_url">
-<em class="property">static </em><code class="descname">parse_url</code><span class="sig-paren">(</span><em>urlstr</em>, <em>devclass</em>, <em>scheme</em>, <em>vdict</em>, <em>pdict</em>, <em>default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">parse_url</code><span class="sig-paren">(</span><em>devclass</em>, <em>scheme</em>, <em>vdict</em>, <em>pdict</em>, <em>default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a device specifier URL.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -307,8 +338,8 @@ device descriptors</p>
 
 <dl class="staticmethod">
 <dt id="pyftdi.usbtools.UsbTools.show_devices">
-<em class="property">static </em><code class="descname">show_devices</code><span class="sig-paren">(</span><em>scheme</em>, <em>vdict</em>, <em>pdict</em>, <em>candidates</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Show supported devices. When the joker url <code class="docutils literal"><span class="pre">scheme://*/?</span></code> is
+<em class="property">static </em><code class="descname">show_devices</code><span class="sig-paren">(</span><em>vdict</em>, <em>pdict</em>, <em>candidates</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show supported devices. When the joker url <code class="docutils literal notranslate"><span class="pre">scheme://*/?</span></code> is
 specified as an URL, it generates a list of connected USB devices
 that match the supported USB devices. It can be used to provide the
 end-user with a list of valid URL schemes.</p>
@@ -344,15 +375,18 @@ end-user with a list of valid URL schemes.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="misc.html" class="btn btn-neutral float-right" title="misc - Miscellaneous helpers" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="misc.html" class="btn btn-neutral float-right" title="misc - Miscellaneous helpers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="uart.html" class="btn btn-neutral" title="serialext - UART API" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="uart.html" class="btn btn-neutral" title="serialext - UART API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -386,7 +420,8 @@ end-user with a list of valid URL schemes.</p>
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

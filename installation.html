@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -46,6 +48,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -86,7 +89,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
@@ -121,8 +127,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -131,23 +139,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Installation</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -162,13 +187,13 @@
 see below</p>
 <div class="section" id="debian-ubuntu-linux">
 <h3>Debian/Ubuntu Linux<a class="headerlink" href="#debian-ubuntu-linux" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-shell"><div class="highlight"><pre><span></span>apt-get install libusb-1.0
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>apt-get install libusb-1.0
 </pre></div>
 </div>
 <p>On Linux, you also need to create a <cite>udev</cite> configuration file to allow
 user-space processes to access to the FTDI devices. There are many ways to
 configure <cite>udev</cite>, here is a typical setup:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># /etc/udev/rules.d/11-ftdi.rules</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># /etc/udev/rules.d/11-ftdi.rules</span>
 <span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6001&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0666&quot;</span>
 <span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6011&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0666&quot;</span>
 <span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6010&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0666&quot;</span>
@@ -187,7 +212,7 @@ effective.</p>
 </div>
 <div class="section" id="homebrew-macos">
 <h3>Homebrew macOS<a class="headerlink" href="#homebrew-macos" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-shell"><div class="highlight"><pre><span></span>brew install libusb
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>brew install libusb
 </pre></div>
 </div>
 </div>
@@ -207,7 +232,7 @@ backend:</p>
 <li>before using it, install the so called “filter” so that libusb can coexist
 with specific peripherals usb drivers:<ul>
 <li>go into the Libusb-Win32 menu (it should be something like
-<code class="docutils literal"><span class="pre">C:\ProgramData\Microsoft\Windows\Start</span> <span class="pre">Menu\Programs\LibUSB-Win32</span></code>) and
+<code class="docutils literal notranslate"><span class="pre">C:\ProgramData\Microsoft\Windows\Start</span> <span class="pre">Menu\Programs\LibUSB-Win32</span></code>) and
 into the folder Class Filter launch the installation of the filter for all
 the usb devices <cite>i.e.</cite> Install all class filters. Once done libusb can be
 used “in parallel” with original drivers.</li>
@@ -234,7 +259,7 @@ used “in parallel” with original drivers.</li>
 <div class="section" id="installing-with-pip">
 <h2>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this headline">¶</a></h2>
 <p>PIP should automatically install the missing dependencies.</p>
-<div class="highlight-shell"><div class="highlight"><pre><span></span>pip3 install pyftdi
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyftdi
 </pre></div>
 </div>
 </div>
@@ -242,7 +267,7 @@ used “in parallel” with original drivers.</li>
 <h2>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
 <p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
 github repository.</p>
-<div class="highlight-shell"><div class="highlight"><pre><span></span>pip3 install pyusb
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyusb
 pip3 install pyserial
 git clone https://github.com/eblot/pyftdi.git
 <span class="nb">cd</span> pyftdi
@@ -254,15 +279,18 @@ python3 setup.py ...
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="urlscheme.html" class="btn btn-neutral float-right" title="URL Scheme" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="urlscheme.html" class="btn btn-neutral float-right" title="URL Scheme" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="requirements.html" class="btn btn-neutral" title="Requirements" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="requirements.html" class="btn btn-neutral" title="Requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -296,7 +324,8 @@ python3 setup.py ...
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

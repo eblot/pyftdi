@@ -14,6 +14,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -85,7 +88,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -107,8 +113,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -121,17 +129,34 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Index</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Index</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -202,6 +227,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.configure_register">configure_register() (pyftdi.i2c.I2cPort method)</a>
+</li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.configured">configured (pyftdi.i2c.I2cController attribute)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.create_from_url">create_from_url() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
@@ -315,7 +342,7 @@
       </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_dsr">get_dsr() (pyftdi.ftdi.Ftdi method)</a>
 </li>
-      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_error_string">get_error_string() (pyftdi.ftdi.Ftdi method)</a>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_error_string">get_error_string() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_identifiers">get_identifiers() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
@@ -392,6 +419,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.modem_status">modem_status() (pyftdi.ftdi.Ftdi method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.mpsse_bit_delay">mpsse_bit_delay (pyftdi.ftdi.Ftdi attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -535,19 +566,21 @@
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_flowctrl">set_flowctrl() (pyftdi.ftdi.Ftdi method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_frequency">set_frequency() (pyftdi.ftdi.Ftdi method)</a>
 
       <ul>
         <li><a href="api/spi.html#pyftdi.spi.SpiPort.set_frequency">(pyftdi.spi.SpiPort method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/spi.html#pyftdi.spi.SpiController.set_gpio_direction">set_gpio_direction() (pyftdi.spi.SpiController method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_latency_timer">set_latency_timer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_line_property">set_line_property() (pyftdi.ftdi.Ftdi method)</a>
+</li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.set_retry_count">set_retry_count() (pyftdi.i2c.I2cController method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_rts">set_rts() (pyftdi.ftdi.Ftdi method)</a>
 </li>
@@ -651,6 +684,9 @@
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -684,7 +720,8 @@
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

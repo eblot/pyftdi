@@ -52,23 +52,39 @@ Contributors
   * Fix SPI implementation so that any SPI /CS can be addressed
   * Documentation hints for installation on Windows hosts
 
- * Darren Garnier
+ * Darren Garnier:
 
   * Fix open() arguments (issue #40)
 
- * Michael Leonard
+ * Michael Leonard:
 
   * Document FTDI URL schemes
 
- * nopeppermint (Stefan)
+ * nopeppermint (Stefan):
 
   * Documentation reviewer and editor
 
- * hannesweisbach
+ * hannesweisbach:
 
   * I2C poll mode (read/write)
   * I2C soft tristate for FT2232H/FT4232H devices
 
  * Vianney le Clément de Saint-Marcq:
 
-  * Fix timeout and remove useless delay in UART mode
+  * Fix timeout and remove useless delay in UART mode:
+
+ * Pete Schwamb:
+
+  * Fix issue with SPI duplex mode
+
+ * Will Richey:
+
+  * makes write() compatible with write() from pySerial.
+
+ * sgoadhouse:
+
+  * JTAG constant definitions debunking and engine instanciation fixes.
+
+ * tavip (Octavian Purdila):
+
+  * Allow simulatenous usage with kernel drivers (per FTDI port management)

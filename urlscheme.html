@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -46,6 +48,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -65,7 +68,7 @@
             
             
               <div class="version">
-                0.28.0
+                0.29.0
               </div>
             
           
@@ -86,7 +89,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
@@ -115,8 +121,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PyFtdi</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
       </nav>
 
 
@@ -125,23 +133,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>URL Scheme</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>URL Scheme</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
+            
             <a href="_sources/urlscheme.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -152,22 +177,22 @@
 <p>There are two ways to open a connection to an <cite>Ftdi</cite> object.</p>
 <p>The recommended way to open a connection is to specify connection details
 using a URL. The URL scheme is defined as:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">protocol</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">][:[</span><span class="n">product</span><span class="p">][:</span><span class="n">index</span><span class="o">|</span><span class="p">:</span><span class="n">serial</span><span class="p">]]</span><span class="o">/</span><span class="n">interface</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">protocol</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">][:[</span><span class="n">product</span><span class="p">][:</span><span class="n">index</span><span class="o">|</span><span class="p">:</span><span class="n">serial</span><span class="p">]]</span><span class="o">/</span><span class="n">interface</span>
 </pre></div>
 </div>
 <p>where:</p>
 <ul class="simple">
-<li>protocol: always <code class="docutils literal"><span class="pre">ftdi</span></code></li>
+<li>protocol: always <code class="docutils literal notranslate"><span class="pre">ftdi</span></code></li>
 <li>vendor: the USB vendor ID of the manufacturer<ul>
-<li>ex: <code class="docutils literal"><span class="pre">ftdi</span></code> or <code class="docutils literal"><span class="pre">0x403</span></code></li>
+<li>ex: <code class="docutils literal notranslate"><span class="pre">ftdi</span></code> or <code class="docutils literal notranslate"><span class="pre">0x403</span></code></li>
 </ul>
 </li>
 <li>product: the USB product ID of the device<ul>
-<li>ex: <code class="docutils literal"><span class="pre">232h</span></code> or <code class="docutils literal"><span class="pre">0x6014</span></code></li>
-<li>Supported product IDs: <code class="docutils literal"><span class="pre">0x6001</span></code>, <code class="docutils literal"><span class="pre">0x6010</span></code>, <code class="docutils literal"><span class="pre">0x6011</span></code>, <code class="docutils literal"><span class="pre">0x6014</span></code>, <code class="docutils literal"><span class="pre">0x6015</span></code></li>
+<li>ex: <code class="docutils literal notranslate"><span class="pre">232h</span></code> or <code class="docutils literal notranslate"><span class="pre">0x6014</span></code></li>
+<li>Supported product IDs: <code class="docutils literal notranslate"><span class="pre">0x6001</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6010</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6011</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6014</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6015</span></code></li>
 <li>Supported product aliases:<ul>
-<li><code class="docutils literal"><span class="pre">232</span></code>, <code class="docutils literal"><span class="pre">232r</span></code>, <code class="docutils literal"><span class="pre">232h</span></code>, <code class="docutils literal"><span class="pre">2232d</span></code>, <code class="docutils literal"><span class="pre">2232h</span></code>, <code class="docutils literal"><span class="pre">4232h</span></code>, <code class="docutils literal"><span class="pre">230x</span></code></li>
-<li><code class="docutils literal"><span class="pre">ft</span></code> prefix for all aliases is also accepted, as for example <code class="docutils literal"><span class="pre">ft232h</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">232</span></code>, <code class="docutils literal notranslate"><span class="pre">232r</span></code>, <code class="docutils literal notranslate"><span class="pre">232h</span></code>, <code class="docutils literal notranslate"><span class="pre">2232d</span></code>, <code class="docutils literal notranslate"><span class="pre">2232h</span></code>, <code class="docutils literal notranslate"><span class="pre">4232h</span></code>, <code class="docutils literal notranslate"><span class="pre">230x</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">ft</span></code> prefix for all aliases is also accepted, as for example <code class="docutils literal notranslate"><span class="pre">ft232h</span></code></li>
 </ul>
 </li>
 </ul>
@@ -176,30 +201,30 @@ using a URL. The URL scheme is defined as:</p>
 <li>index: an integer (not particularly useful, as it depends on the enumeration
 order on the USB buses)</li>
 <li>interface: the interface of FTDI device, starting from 1<ul>
-<li>ex: <code class="docutils literal"><span class="pre">1</span></code> for 232*, <code class="docutils literal"><span class="pre">1</span></code> or <code class="docutils literal"><span class="pre">2</span></code> for 2232*, <code class="docutils literal"><span class="pre">1</span></code>-<code class="docutils literal"><span class="pre">4</span></code> for 4232* devices</li>
+<li>ex: <code class="docutils literal notranslate"><span class="pre">1</span></code> for 232*, <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> for 2232*, <code class="docutils literal notranslate"><span class="pre">1</span></code>-<code class="docutils literal notranslate"><span class="pre">4</span></code> for 4232* devices</li>
 </ul>
 </li>
 </ul>
 <p>All parameters but the interface are optional, PyFtdi tries to find the best
 match. Therefore, if you have a single FTDI device connected to your system,
-<code class="docutils literal"><span class="pre">ftdi:///1</span></code> should be enough.</p>
+<code class="docutils literal notranslate"><span class="pre">ftdi:///1</span></code> should be enough.</p>
 <p>You can also ask PyFtdi to enumerate all the compatible devices with the
-special <code class="docutils literal"><span class="pre">ftdi:///?</span></code> syntax.</p>
+special <code class="docutils literal notranslate"><span class="pre">ftdi:///?</span></code> syntax.</p>
 <p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
-can be as simple as <code class="docutils literal"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
+can be as simple as <code class="docutils literal notranslate"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
 from 1.</p>
 <p>You may also select a FTDI device by its sole serial number, <em>e.g.</em>
 <cite>ftdi://::serial/1</cite>.</p>
 <p>URL-based methods to open a connection:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
 <span class="n">open_bitbang_from_url</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The old, deprecated method to open a connection is to use the <code class="docutils literal"><span class="pre">open()</span></code>
-methods without the <code class="docutils literal"><span class="pre">_from_url</span></code> suffix, which accept VID, PID, and serial
+<p>The old, deprecated method to open a connection is to use the <code class="docutils literal notranslate"><span class="pre">open()</span></code>
+methods without the <code class="docutils literal notranslate"><span class="pre">_from_url</span></code> suffix, which accept VID, PID, and serial
 parameters (among others).</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nb">open</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">open</span><span class="p">()</span>
 <span class="n">open_mpsse</span><span class="p">()</span>
 <span class="n">open_bitbang</span><span class="p">()</span>
 </pre></div>
@@ -207,7 +232,7 @@ parameters (among others).</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">API break
-<code class="docutils literal"><span class="pre">open()</span></code>, <code class="docutils literal"><span class="pre">open_mpsse()</span></code> and <code class="docutils literal"><span class="pre">open_bitbang</span></code> arguments have changed in
+<code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">open_mpsse()</span></code> and <code class="docutils literal notranslate"><span class="pre">open_bitbang</span></code> arguments have changed in
 v0.22.0, be sure to update your code.</p>
 </div>
 <div class="section" id="supporting-custom-usb-vendor-and-product-ids">
@@ -218,8 +243,8 @@ PyFtdi to support those custom USB identifiers.</p>
 <div class="section" id="custom-pid">
 <h3>Custom PID<a class="headerlink" href="#custom-pid" title="Permalink to this headline">¶</a></h3>
 <p>To support a custom product ID (16-bit integer) with the official FTDI ID, add
-the following code <strong>before</strong> any call to an FTDI <code class="docutils literal"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+the following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">Ftdi</span><span class="o">.</span><span class="n">DEFAULT_VENDOR</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
 </pre></div>
@@ -228,8 +253,8 @@ the following code <strong>before</strong> any call to an FTDI <code class="docu
 <div class="section" id="custom-vid">
 <h3>Custom VID<a class="headerlink" href="#custom-vid" title="Permalink to this headline">¶</a></h3>
 <p>To support a custom vendor ID and product ID (16-bit integers), add the
-following code <strong>before</strong> any call to an FTDI <code class="docutils literal"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">)</span>
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
@@ -237,7 +262,7 @@ following code <strong>before</strong> any call to an FTDI <code class="docutils
 </div>
 <p>You may also specify an arbitrary string to each method if you want to specify
 a URL by custom vendor and product names instead of their numerical values:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="s1">&#39;myvendor&#39;</span><span class="p">)</span>
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="mh">0x5678</span><span class="p">,</span> <span class="s1">&#39;myproduct&#39;</span><span class="p">)</span>
@@ -252,15 +277,18 @@ a URL by custom vendor and product names instead of their numerical values:</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api/index.html" class="btn btn-neutral float-right" title="API documentation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="api/index.html" class="btn btn-neutral float-right" title="API documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -294,7 +322,8 @@ a URL by custom vendor and product names instead of their numerical values:</p>
             VERSION:'',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

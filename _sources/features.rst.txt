@@ -56,7 +56,7 @@ GPIOs can be used while SPI mode is enabled.
 
 Supported devices: FT232H_, FT2232H_, FT4232H_
 
-For now, only 7-bit address are supported.
+For now, only 7-bit addresses are supported.
 
 GPIOs cannot be used while |I2C| mode is enabled (not yet implemented).
 
