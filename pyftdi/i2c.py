@@ -388,6 +388,14 @@ class I2cController:
             self._slaves[address] = I2cPort(self, address)
         return self._slaves[address]
 
+    @property
+    def configured(self):
+        """Test whether the device has been properly configured.
+
+           :return: True if configured
+        """
+        return bool(self._ftdi) and bool(self._start)
+
     @classmethod
     def validate_address(cls, address):
         """Assert an I2C slave address is in the supported range.
@@ -434,7 +442,7 @@ class I2cController:
            Most I2C devices require a register address to read out
            check out the exchange() method.
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if address is None:
@@ -475,7 +483,7 @@ class I2cController:
            Most I2C devices require a register address to write into. It should
            be added as the first (byte)s of the output buffer.
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if address is None:
@@ -519,7 +527,7 @@ class I2cController:
 
            Address is a logical slave address (0x7f max)
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if readlen < 1:
@@ -560,7 +568,7 @@ class I2cController:
            :return: True if the slave acknowledged, False otherwise
            :rtype: bool
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if address is None:
@@ -600,7 +608,7 @@ class I2cController:
            :return: the polled register value, or None if poll failed
            :rtype: array or None
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if address is None:
@@ -639,6 +647,8 @@ class I2cController:
     def flush(self):
         """Flush the HW FIFOs
         """
+        if not self.configured:
+            raise I2cIOError("FTDI controller not initialized")
         self._ftdi.write_data(self._immediate)
         self._ftdi.purge_buffers()
 
