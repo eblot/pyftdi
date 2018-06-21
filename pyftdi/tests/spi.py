@@ -242,4 +242,3 @@ if __name__ == '__main__':
         raise ValueError('Invalid log level: %s', level)
     FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
-
