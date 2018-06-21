@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,15 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
-import unittest
 from binascii import hexlify
 from doctest import testmod
 from os import environ
+from pyftdi import FtdiLogger
+from pyftdi.spi import SpiController
 from sys import modules, stderr, stdout
 from time import sleep
-from pyftdi import FtdiLogger
-from pyftdi.spi import SpiController, SpiIOError
-from pyftdi.misc import hexdump
+import logging
+import unittest
 
 
 class SpiDataFlashTest(object):
@@ -114,190 +113,6 @@ class SpiRfda2125Test(object):
         self._spi.terminate()
 
 
-class SpiData93LC56BTest(object):
-    """Basic class for a Microchip 93LC56B data flash device selected as CS0,
-       SPI mode 0, Active High polarity for CS and Bi-directional data.
-
-       Test setup: UM232H connected to the EEPROM on a FT4232H-56Q
-       Mini Module. The FT4232H is forced into reset by connecting the
-       RT# pin (CN2-8) to GND (CN2-6). Then make the following
-       connections between the boards:
-
-       UM232H       FT4232H-56Q
-       ======       ===========
-       GND        - GND
-       D0 (CN2-1) - ECL (CN3-6)
-       D1 (CN2-2) - EDA (CN3-7)
-       D2 (CN2-3) - EDA (CN3-7)
-       D3 (CN2-4) - ECS (CN3-5)
-
-       NOTE: D1 & D2 are indeed both tied to the same EDA pin.
-    """
-
-    def __init__(self):
-        self._spi = SpiController(cs_count=1,cs_pol=0)
-        self._freq = 1E6
-        self._mode = 0
-        self._bidir = True
-        
-        # Maximum number of read cycles to wait while looking for the
-        # Ready status after each write
-        self._write_timeout_cnt = 25
-
-        # According to the datasheet, the maximum write time is 6 ms
-        self._Twc = 0.006
-        
-        # The opcodes are a full byte to make it easy to use with the
-        # byte interface of SpiController. These opcodes also include
-        # the start bit (SB), which is simply the left-most '1'
-        # bit. The actual 2-bit opcode (OC) follows this start bit.
-        #
-        # The instructions ERAL, EWDS, EWEN and WRAL require a special
-        # address byte to complete the opcode. So they are 2 element
-        # lists whereas the others are single element lists.
-        self._SBOC_erase = [0x07]
-        self._SBOC_eral  = [0x04, 0x80] # requires EEPROM Vcc >= 4.5V
-        self._SBOC_ewds  = [0x04, 0x00]
-        self._SBOC_ewen  = [0x04, 0xc0]
-        self._SBOC_read  = [0x06]
-        self._SBOC_write = [0x05]
-        self._SBOC_wral  = [0x04, 0x40] # requires EEPROM Vcc >= 4.5V
-        
-    def open(self):
-        """Open an SPI connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:232h/1')
-        self._spi.configure(url)
-
-    def read_word(self, addr):
-        # NOTE: Using SPI Mode 0. This really should have the FTDI
-        # clock the read bits in on the rising edge, at least based on
-        # my understanding of SPI. However, spi.py reads the bits on
-        # the falling edge of the clock. For the 93LC56B, this is
-        # exactly what we want. However, if spi.py ever gets changed,
-        # will need to do writes and reads seperately with reads in
-        # SPI Mode 1.
-        port = self._spi.get_port(0, freq=self._freq,
-                                  mode=self._mode, bidir=self._bidir)
-
-        # byteswap() is to handle little endian data
-        word = port.exchange(self._SBOC_read+[(addr&0xFF)],2)
-        word = word.byteswap().tobytes()
-
-        return word
-
-    def read_all(self, readlen):
-        # NOTE: Using SPI Mode 0. This really should have the FTDI
-        # clock the read bits in on the rising edge, at least base don
-        # my understanding of SPI. However, spi.py reads the bits on
-        # the falling edge of the clock. For the 93LC56B, this is
-        # exactly what we want. However, if spi.py ever gets changed,
-        # will need to do writes and reads seperately with reads in
-        # SPI Mode 1.
-        port = self._spi.get_port(0, freq=self._freq,
-                                  mode=self._mode, bidir=self._bidir)
-        
-        # readlen is byte len but extend it to the nearest 16-bit
-        # boundary.
-        readlen = ((readlen + 1) // 2) * 2
-        data = port.exchange(self._SBOC_read+[0x00], readlen)
-
-        # byte swap to handle data in little endian (from:
-        # https://stackoverflow.com/questions/36096292/
-        #         efficient-way-to-swap-bytes-in-python)
-        data[0::2], data[1::2] = data[1::2], data[0::2]
-
-        #print('DATA: ', data)
-        #words = spack('H'*(len(data)//2), data)
-        
-        return data.tobytes()
-
-    def write_word(self, addr, word):
-        port = self._spi.get_port(0, freq=self._freq,
-                                  mode=self._mode, bidir=self._bidir)
-
-        # Must first enable Erase/Write
-        port.exchange(self._SBOC_ewen)
-
-        # Send the word, LSB first (little endian)
-        port.exchange(self._SBOC_write+[(addr&0xFF),
-                                        word & 0x0000ff,
-                                        (word & 0x00ff00) >> 8])
-            
-        # Wait the write time
-        sleep(self._Twc)
-        
-        # send a stop condition if sent at least 1 read with stop
-        # False. Data is thrown away.
-        status = port.read(1)
-        print('Status: {}'.format(status))
-
-        # Check the last bit of the last byte to make sure it is high
-        # for Ready
-        if ((status[-1] & 0x01) == 0x00):
-            raise SpiIOError('ERROR: SPI Write never completed!')
-
-        # Now disable Erase/Write since done with this write
-        port.exchange(self._SBOC_ewds)
-        
-
-    # Write multiple bytes starting at byte address, addr. Length of
-    # data must be a multiple of 2 since the EEPROM is 16-bits. So
-    # extend data by 1 byte if this is not the case.
-    def write(self, addr, data):
-
-        if not isinstance(data, bytes):
-            data = data.tobytes()
-
-        # If addr is odd, raise an exception since it must be even
-        if (addr & 0x01):
-            err = "write addr must be even - the EEPROM is a 16-bit device"
-            raise SpiIOError(err)
-            
-        wd_addr = (addr >> 1) # convert to word address
-
-        # if the byte data is an odd number of bytes, force it to be
-        # on 16-bit divisions
-        if (len(data) & 0x01):
-            err = "data length must be even - the EEPROM is a 16-bit device"
-            raise SpiIOError(err)
-        
-        port = self._spi.get_port(0, freq=self._freq,
-                                  mode=self._mode, bidir=self._bidir)
-
-        # Must first enable Erase/Write
-        port.exchange(self._SBOC_ewen)
-
-        for idx in range(0, len(data), 2):
-            # Send the word, MSB first
-            port.exchange(self._SBOC_write+[(wd_addr&0xFF),
-                                            data[idx+1],
-                                            data[idx]])
-            
-            # Wait the write time
-            sleep(self._Twc)
-        
-            # send a stop condition if sent at least 1 read with stop
-            # False. Data is thrown away.
-            status = port.read(1)
-
-            # Check the last bit of the last byte to make sure it is
-            # high for Ready
-            if ((status[-1] & 0x01) == 0x00):
-                print('ERROR: Last write never completed! Aborting!')
-                break
-
-            # increment to the next word address
-            wd_addr += 1
-
-        # Now disable Erase/Write since done with this write
-        port.exchange(self._SBOC_ewds)
-        
-
-    def close(self):
-        """Close the SPI connection"""
-        self._spi.terminate()
-
-
 class SpiTestCase(unittest.TestCase):
     """FTDI SPI driver test case
 
@@ -311,21 +126,21 @@ class SpiTestCase(unittest.TestCase):
        bridge -or any unsupported setup!! You've been warned.
     """
 
-    def _test_spi1(self):
+    def test_spi1(self):
         spi = SpiDataFlashTest()
         spi.open()
         jedec_id = spi.read_jedec_id()
         self.assertEqual(jedec_id, 'c22016')
         spi.close()
 
-    def _test_spi2(self):
+    def test_spi2(self):
         spi = SpiAccelTest()
         spi.open()
         device_id = spi.read_device_id()
         self.assertEqual(device_id, 'e5')
         spi.close()
 
-    def _test_spi3(self):
+    def test_spi3(self):
         spi = SpiRfda2125Test()
         spi.open()
         slope = 1
@@ -339,89 +154,10 @@ class SpiTestCase(unittest.TestCase):
             slope = -slope
         spi.close()
 
-    def test_spi4(self):
-        spi = SpiData93LC56BTest()
-        spi.open()
-        words = spi.read_all(256)
-        print(hexdump(words))
-        spi.close()
-        #@@@#self.assertEqual(device_id, 'e5')
-
-
-class SpiGpioTestCase(unittest.TestCase):
-    """Basic test for GPIO access w/ SPI mode
-
-       It expects the following I/O setup:
-
-       AD4 connected t0 AC0
-       AD5 connected t0 AC1
-       AD6 connected t0 AC2
-       AD7 connected t0 AC3
-    """
-
-    # AD0: SCLK, AD1: MOSI, AD2: MISO, AD3: /CS
-    AD_OFFSET = 4
-    AC_OFFSET = 8
-    PIN_COUNT = 4
-
-    def setUp(self):
-        self._spi = SpiController(cs_count=1)
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
-        self._port = self._spi.get_port(0, freq=1E6, mode=0)
-        self._io = self._spi.get_gpio()
-
-    def tearDown(self):
-        """Close the SPI connection"""
-        self._spi.terminate()
-
-    def test_ac_to_ad(self):
-        ad_pins = ((1 << self.PIN_COUNT) - 1) << self.AD_OFFSET  # input
-        ac_pins = ((1 << self.PIN_COUNT) - 1) << self.AC_OFFSET  # output
-        io_pins = ad_pins | ac_pins
-
-        def ac_to_ad(ac_output):
-            ac_output &= ac_pins
-            ac_output >>= self.AC_OFFSET - self.AD_OFFSET
-            return ac_output & ad_pins
-
-        self._io.set_direction(io_pins, ac_pins)
-        for ac in range(1 << self.PIN_COUNT):
-            ac_out = ac << self.AC_OFFSET
-            ad_in = ac_to_ad(ac_out)
-            self._io.write(ac_out)
-            # random SPI exchange to ensure SPI does not change GPIO
-            self._port.exchange([0x00, 0xff], 2)
-            rd = self._io.read()
-            self.assertEqual(rd, ad_in)
-        self.assertRaises(SpiIOError, self._io.write, ad_pins)
-
-    def test_ad_to_ac(self):
-        ad_pins = ((1 << self.PIN_COUNT) - 1) << self.AD_OFFSET  # output
-        ac_pins = ((1 << self.PIN_COUNT) - 1) << self.AC_OFFSET  # input
-        io_pins = ad_pins | ac_pins
-
-        def ad_to_ac(ad_output):
-            ad_output &= ad_pins
-            ad_output <<= self.AC_OFFSET - self.AD_OFFSET
-            return ad_output & ac_pins
-
-        self._io.set_direction(io_pins, ad_pins)
-        for ad in range(1 << self.PIN_COUNT):
-            ad_out = ad << self.AD_OFFSET
-            ac_in = ad_to_ac(ad_out)
-            self._io.write(ad_out)
-            # random SPI exchange to ensure SPI does not change GPIO
-            self._port.exchange([0x00, 0xff], 2)
-            rd = self._io.read()
-            self.assertEqual(rd, ac_in)
-        self.assertRaises(SpiIOError, self._io.write, ac_pins)
-
 
 def suite():
     suite_ = unittest.TestSuite()
     suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
-    suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
     return suite_
 
 
