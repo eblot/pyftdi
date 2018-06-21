@@ -26,8 +26,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from struct import pack as spack
+from array import array
 from pyftdi.ftdi import Ftdi
+from struct import calcsize as scalc, pack as spack, unpack as sunpack
+from threading import Lock
 
 
 __all__ = ['GpioController']
@@ -38,18 +40,24 @@ class GpioException(IOError):
 
 
 class GpioController:
-    """GPIO controller for an FTDI port"""
+    """GPIO controller for an FTDI port
 
-    MASK = 0xff
+       Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+       ports, while 232H and 2232H series use wide 16-bit ports.
+
+       """
 
     def __init__(self):
         self._ftdi = None
         self._direction = 0
+        self._wide_port = False
+        self._lock = Lock()
+        self._gpio_mask = 0
 
     @property
     def pins(self):
         """Report the addressable GPIOs as a bitfield."""
-        return self.MASK
+        return self._gpio_mask
 
     @property
     def direction(self):
@@ -85,6 +93,25 @@ class GpioController:
             raise GpioException('Unable to open USB port: %s' % str(ex))
         self._direction = direction
 
+        with self._lock:
+            if (self._ftdi.has_wide_port and self._ftdi.has_mpsse):
+                # If this device supports the wide 16-bit GPIO port,
+                # must open as MPSSE to access the 16-bits. So close
+                # ftdi and re-open it as MPSSE.
+                try:
+                    self._ftdi.close()
+                    ftdi = Ftdi()
+                    ftdi.open_mpsse_from_url(url, direction=direction, **kwargs)
+                    self._ftdi = ftdi
+                except IOError as ex:
+                    raise GpioException('Unable to open USB port: %s' % str(ex))
+
+            self._wide_port = self._ftdi.has_wide_port
+            
+            gpio_width = self._wide_port and 16 or 8
+            gpio_mask = (1 << gpio_width) - 1
+            self._gpio_mask =  gpio_mask
+        
     def close(self):
         """Close the FTDI interface."""
         if self._ftdi:
@@ -99,11 +126,16 @@ class GpioController:
                 GPIO pin, where a high level sets the pin as output and a low
                 level sets the pin as input/high-Z.
         """
-        if direction > self.MASK:
+        gpio_width = self._wide_port and 16 or 8
+        gpio_mask = (1 << gpio_width) - 1
+        if (pins & gpio_mask) != pins:
             raise GpioException("Invalid direction mask")
         self._direction &= ~pins
         self._direction |= (pins & direction)
-        self._ftdi.set_bitmode(self.direction, Ftdi.BITMODE_BITBANG)
+        self._gpio_mask = gpio_mask & pins
+
+        if (not self._wide_port):
+            self._ftdi.set_bitmode(self._direction, Ftdi.BITMODE_BITBANG)
 
     def read(self):
         """Read the GPIO input pin electrical level.
@@ -113,8 +145,14 @@ class GpioController:
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        return self._ftdi.read_pins()
 
+        with self._lock:
+            data = self._read_raw(self._wide_port)
+        value = data & self._gpio_mask
+        #print('1: wide_port: 0x{:x}  data: 0x{:x}  mask: 0x{:x}  value: 0x{:x}'
+        #          .format(self._wide_port, data, self._gpio_mask, value))
+        return value
+    
     def write(self, value):
         """Set the GPIO output pin electrical level.
 
@@ -122,10 +160,57 @@ class GpioController:
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if value > self.MASK:
-            raise GpioException("Invalid value")
-        self._ftdi.write_data(spack('<B', value))
 
+        with self._lock:
+            if (value & self._direction) != value:
+                raise GpioException('No such GPO pins: %04x/%04x' %
+                                        (self._direction, value))
+            # perform read-modify-write
+            use_high = self._wide_port and (self._direction & 0xff00)
+            data = self._read_raw(use_high)
+            #print('1: use_high: 0x{:x}  data: 0x{:x}  mask: 0x{:x}'
+            #          .format(use_high, data, self._gpio_mask))
+            data &= ~self._gpio_mask
+            data |= value
+            #print('2: use_high: 0x{:x}  data: 0x{:x}'.format(use_high, data))
+            self._write_raw(data, use_high)
+        
+    def _read_raw(self, read_high):
+        if read_high:
+            cmd = array('B', [Ftdi.GET_BITS_LOW,
+                              Ftdi.GET_BITS_HIGH,
+                              Ftdi.SEND_IMMEDIATE])
+            fmt = '<H'
+            self._ftdi.write_data(cmd)
+            size = scalc(fmt)
+            data = self._ftdi.read_data_bytes(size, 4)
+            if len(data) != size:
+                raise GpioException('Cannot read GPIO')
+            value, = sunpack(fmt, data)
+        else:
+            # If not using read_high method, then also means this is
+            # BIT BANG and not MPSSE, so just use read_pins()
+            value = self._ftdi.read_pins()
+        
+        return value
+
+    def _write_raw(self, data, write_high):
+        direction = self.direction
+        low_data = data & 0xFF
+        low_dir = direction & 0xFF
+        if write_high:
+            high_data = (data >> 8) & 0xFF
+            high_dir = (direction >> 8) & 0xFF
+            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
+                              Ftdi.SET_BITS_HIGH, high_data, high_dir])
+        else:
+            # If not using read_high method, then also means this is
+            # BIT BANG and not MPSSE, so just write the data - no CMD
+            # needed
+            cmd = spack('<B', low_data)
+            
+        self._ftdi.write_data(cmd)
+        
     # old API names
     open_from_url = configure
     read_port = read
