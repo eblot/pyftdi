@@ -1,4 +1,6 @@
-# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
+"""I2C support for PyFdti"""
+
+# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,9 +27,14 @@
 
 from array import array
 from binascii import hexlify
+from collections import namedtuple
 from logging import getLogger
-from pyftdi.ftdi import Ftdi, FtdiFeatureError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
+from pyftdi.ftdi import Ftdi, FtdiFeatureError
+
+# pylint: disable-msg=too-many-locals,too-many-instance-attributes
+# pylint: disable-msg=too-many-arguments
+# pylint: disable-msg=consider-using-ternary
 
 
 __all__ = ['I2cPort', 'I2cController']
@@ -94,61 +101,67 @@ class I2cPort:
         I2cController.validate_address(self._address+offset)
         self._shift = offset
 
-    def read(self, readlen=0, relax=True):
+    def read(self, readlen=0, relax=True, start=True):
         """Read one or more bytes from a remote slave
 
            :param int readlen: count of bytes to read out.
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :return: byte sequence of read out bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
-        return self._controller.read(self._address+self._shift,
-                                     readlen=readlen, relax=relax)
+        return self._controller.read(
+            self._address+self._shift if start else None,
+            readlen=readlen, relax=relax)
 
-    def write(self, out, relax=True):
+    def write(self, out, relax=True, start=True):
         """Write one or more bytes to a remote slave
 
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
-        return self._controller.write(self._address+self._shift, out,
-                                      relax=relax)
+        return self._controller.write(
+            self._address+self._shift if start else None,
+            out, relax=relax)
 
-    def read_from(self, regaddr, readlen=0, relax=True):
+    def read_from(self, regaddr, readlen=0, relax=True, start=True):
         """Read one or more bytes from a remote slave
 
            :param int regaddr: slave register address to read from
            :param int readlen: count of bytes to read out.
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :return: data read out from the slave
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
-        return self._controller.exchange(self._address+self._shift,
-                                         out=self._make_buffer(regaddr),
-                                         readlen=readlen, relax=relax)
+        return self._controller.exchange(
+            self._address+self._shift if start else None,
+            out=self._make_buffer(regaddr), readlen=readlen, relax=relax)
 
-    def write_to(self, regaddr, out, relax=True):
+    def write_to(self, regaddr, out, relax=True, start=True):
         """Read one or more bytes from a remote slave
 
            :param int regaddr: slave register address to write to
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
-        return self._controller.write(self._address+self._shift,
-                                      out=self._make_buffer(regaddr, out),
-                                      relax=relax)
+        return self._controller.write(
+            self._address+self._shift if start else None,
+            out=self._make_buffer(regaddr, out), relax=relax)
 
-    def exchange(self, out=b'', readlen=0, relax=True):
+    def exchange(self, out=b'', readlen=0, relax=True, start=True):
         """Perform an exchange or a transaction with the I2c slave
 
            :param out: an array of bytes to send to the I2c slave,
@@ -156,24 +169,28 @@ class I2cPort:
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :return: data read out from the slave
            :rtype: array
         """
-        return self._controller.exchange(self._address+self._shift, out,
-                                         readlen, relax=relax)
+        return self._controller.exchange(
+            self._address+self._shift if start else None, out,
+            readlen, relax=relax)
 
-    def poll(self, write=False, relax=True):
+    def poll(self, write=False, relax=True, start=True):
         """Poll a remote slave, expect ACK or NACK.
 
            :param bool write: poll in write mode (vs. read)
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :return: True if the slave acknowledged, False otherwise
            :rtype: bool
         """
-        return self._controller.poll(self._address+self._shift, write,
-                                     relax=relax)
+        return self._controller.poll(
+            self._address+self._shift if start else None, write,
+            relax=relax)
 
-    def poll_cond(self, width, mask, value, count, relax=True):
+    def poll_cond(self, width, mask, value, count, relax=True, start=True):
         """Poll a remove slave, watching for condition to satisfy.
            On each poll cycle, a repeated start condition is emitted, without
            releasing the I2C bus, and an ACK is returned to the slave.
@@ -188,6 +205,7 @@ class I2cPort:
                 against. Condition is satisfied when register & mask == value
            :param int count: maximum poll count before raising a timeout
            :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool start: whether to emit a start sequence (w/ address)
            :return: the polled register value
            :rtype: array
            :raise I2cTimeoutError: if poll condition is not satisified
@@ -196,8 +214,9 @@ class I2cPort:
             fmt = ''.join((self._endian, self.FORMATS[width]))
         except KeyError:
             raise I2cIOError('Unsupported integer width')
-        return self._controller.poll_cond(self._address+self._shift,
-                                          fmt, mask, value, count, relax=relax)
+        return self._controller.poll_cond(
+            self._address+self._shift if start else None,
+            fmt, mask, value, count, relax=relax)
 
     def flush(self):
         """Force the flush of the HW FIFOs.
@@ -216,6 +235,11 @@ class I2cPort:
         if out:
             data.extend(out)
         return data.tobytes()
+
+
+I2CTimings = namedtuple('I2CTimings', 't_hd_sta t_su_sta t_su_sto t_buf')
+"""I2C standard timings.
+"""
 
 
 class I2cController:
@@ -240,37 +264,58 @@ class I2cController:
     SDA_O_BIT = 0x02
     SDA_I_BIT = 0x04
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
-    HIGHEST_I2C_ADDRESS = 0x7f
+    HIGHEST_I2C_ADDRESS = 0x78
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
+
+    I2C_100K = I2CTimings(4.0E-6, 4.7E-6, 4.0E-6, 4.7E-6)
+    I2C_400K = I2CTimings(0.6E-6, 0.6E-6, 0.6E-6, 1.3E-6)
+    I2C_1M = I2CTimings(0.26E-6, 0.26E-6, 0.26E-6, 0.5E-6)
 
     def __init__(self):
         self._ftdi = Ftdi()
         self.log = getLogger('pyftdi.i2c')
         self._slaves = {}
+        self._retry_count = self.RETRY_COUNT
         self._frequency = 0.0
-        self._direction = I2cController.SCL_BIT | I2cController.SDA_O_BIT
+        self._direction = self.SCL_BIT | self.SDA_O_BIT
         self._immediate = (Ftdi.SEND_IMMEDIATE,)
         self._idle = (Ftdi.SET_BITS_LOW, self.IDLE, self._direction)
-        data_low = (Ftdi.SET_BITS_LOW,
-                    self.IDLE & ~self.SDA_O_BIT, self._direction)
-        clock_low_data_low = (Ftdi.SET_BITS_LOW,
-                              self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
-                              self._direction)
-        self._clock_low_data_high = (Ftdi.SET_BITS_LOW,
-                                     self.IDLE & ~self.SCL_BIT,
-                                     self._direction)
+        self._data_lo = (Ftdi.SET_BITS_LOW,
+                         self.IDLE & ~self.SDA_O_BIT, self._direction)
+        self._clk_lo_data_lo = (Ftdi.SET_BITS_LOW,
+                                self.IDLE & ~(self.SDA_O_BIT | self.SCL_BIT),
+                                self._direction)
+        self._clk_lo_data_hi = (Ftdi.SET_BITS_LOW,
+                                self.IDLE & ~self.SCL_BIT,
+                                self._direction)
         self._read_bit = (Ftdi.READ_BITS_PVE_MSB, 0)
         self._read_byte = (Ftdi.READ_BYTES_PVE_MSB, 0, 0)
         self._write_byte = (Ftdi.WRITE_BYTES_NVE_MSB, 0, 0)
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
-        self._start = data_low*4 + clock_low_data_low*4
-        self._stop = clock_low_data_low*4 + data_low*4 + self._idle*4
+        self._start = None
+        self._stop = None
+        self._ck_delay = 1
         self._tristate = None
         self._tx_size = 1
         self._rx_size = 1
+
+    def _compute_delay_cycles(self, value):
+        # approx ceiling without relying on math module
+        # the bit delay is far from being precisely known anyway
+        bit_delay = self._ftdi.mpsse_bit_delay
+        return max(1, int((value + bit_delay) / bit_delay))
+
+    def set_retry_count(self, count):
+        """Change the default retry count when a communication error occurs,
+           before bailing out.
+           :param int count: count of retries
+        """
+        if not isinstance(count, int) or not 0 < count <= 16:
+            raise ValueError('Invalid retry count')
+        self._retry_count = count
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a I2c master.
@@ -291,6 +336,23 @@ class I2cController:
         else:
             frequency = self.DEFAULT_BUS_FREQUENCY
         # Fix frequency for 3-phase clock
+        if frequency <= 100E3:
+            timings = self.I2C_100K
+        elif frequency <= 400E3:
+            timings = self.I2C_100K
+        else:
+            timings = self.I2C_100K
+        ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
+        ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
+        ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
+        ck_buf = self._compute_delay_cycles(timings.t_buf)
+        ck_idle = max(ck_su_sta, ck_buf)
+        self._ck_delay = ck_buf
+        self._start = (self._data_lo * ck_hd_sta +
+                       self._clk_lo_data_lo * ck_hd_sta)
+        self._stop = (self._clk_lo_data_lo * ck_hd_sta +
+                      self._data_lo*ck_su_sto +
+                      self._idle*ck_idle)
         frequency = (3.0*frequency)/2.0
         self._frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
@@ -326,15 +388,27 @@ class I2cController:
             self._slaves[address] = I2cPort(self, address)
         return self._slaves[address]
 
+    @property
+    def configured(self):
+        """Test whether the device has been properly configured.
+
+           :return: True if configured
+        """
+        return bool(self._ftdi) and bool(self._start)
+
     @classmethod
     def validate_address(cls, address):
-        """Assert an I2C slave address is in the supported range
+        """Assert an I2C slave address is in the supported range.
+           None is a special bypass address.
 
-           :param int address: I2C slave address
+           :param address: the address on the I2C bus
+           :type address: int or None
            :raise I2cIOError: if the I2C slave address is not supported
         """
+        if address is None:
+            return
         if address > cls.HIGHEST_I2C_ADDRESS:
-            raise I2cIOError("No such I2c slave")
+            raise I2cIOError("No such I2c slave: 0x%02x" % address)
 
     @property
     def frequency_max(self):
@@ -354,9 +428,10 @@ class I2cController:
     def read(self, address, readlen=1, relax=True):
         """Read one or more bytes from a remote slave
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus, or None to discard start
+           :type address: int or None
            :param int readlen: count of bytes to read out.
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param bool relax: not used
            :return: read bytes
            :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
@@ -367,18 +442,21 @@ class I2cController:
            Most I2C devices require a register address to read out
            check out the exchange() method.
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if readlen < 1:
-            raise I2cIOError('Nothing to read')
-        i2caddress = (address << 1) & self.HIGH
-        i2caddress |= self.BIT0
-        retries = self.RETRY_COUNT
+        if address is None:
+            i2caddress = None
+        else:
+            i2caddress = (address << 1) & self.HIGH
+            i2caddress |= self.BIT0
+        retries = self._retry_count
+        do_epilog = True
         while True:
             try:
                 self._do_prolog(i2caddress)
                 data = self._do_read(readlen)
+                do_epilog = relax
                 return data
             except I2cNackError:
                 retries -= 1
@@ -386,12 +464,14 @@ class I2cController:
                     raise
                 self.log.warning('Retry read')
             finally:
-                self._do_epilog()
+                if do_epilog:
+                    self._do_epilog()
 
     def write(self, address, out, relax=True):
         """Write one or more bytes to a remote slave
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus, or None to discard start
+           :type address: int or None
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
            :param bool relax: whether to relax the bus (emit STOP) or not
@@ -403,13 +483,14 @@ class I2cController:
            Most I2C devices require a register address to write into. It should
            be added as the first (byte)s of the output buffer.
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if not out or len(out) < 1:
-            raise I2cIOError('Nothing to write')
-        i2caddress = (address << 1) & self.HIGH
-        retries = self.RETRY_COUNT
+        if address is None:
+            i2caddress = None
+        else:
+            i2caddress = (address << 1) & self.HIGH
+        retries = self._retry_count
         do_epilog = True
         while True:
             try:
@@ -433,7 +514,8 @@ class I2cController:
            This command is useful to tell the slave what data
            should be read out.
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus, or None to discard start
+           :type address: int or None
            :param out: the byte buffer to send
            :type out: array or bytes or list(int)
            :param int readlen: count of bytes to read out.
@@ -445,17 +527,18 @@ class I2cController:
 
            Address is a logical slave address (0x7f max)
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if not out or not len(out):
-            raise I2cIOError('Nothing to write')
         if readlen < 1:
             raise I2cIOError('Nothing to read')
         if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
-        i2caddress = (address << 1) & self.HIGH
-        retries = self.RETRY_COUNT
+        if address is None:
+            i2caddress = None
+        else:
+            i2caddress = (address << 1) & self.HIGH
+        retries = self._retry_count
         do_epilog = True
         while True:
             try:
@@ -478,19 +561,22 @@ class I2cController:
     def poll(self, address, write=False, relax=True):
         """Poll a remote slave, expect ACK or NACK.
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus, or None to discard start
+           :type address: int or None
            :param bool write: poll in write mode (vs. read)
            :param bool relax: whether to relax the bus (emit STOP) or not
            :return: True if the slave acknowledged, False otherwise
            :rtype: bool
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        i2caddress = (address << 1) & self.HIGH
-        if not write:
-            i2caddress |= self.BIT0
-        self.log.debug('- poll 0x%x', i2caddress >> 1)
+        if address is None:
+            i2caddress = None
+        else:
+            i2caddress = (address << 1) & self.HIGH
+            if not write:
+                i2caddress |= self.BIT0
         do_epilog = True
         try:
             self._do_prolog(i2caddress)
@@ -510,7 +596,8 @@ class I2cController:
 
            If relax is set, this method releases the I2C bus however it leaves.
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus, or None to discard start
+           :type address: int or None
            :param str fmt: struct format for poll register
            :param int mask: binary mask to apply on the condition register
                 before testing for the value
@@ -521,12 +608,14 @@ class I2cController:
            :return: the polled register value, or None if poll failed
            :rtype: array or None
         """
-        if not self._ftdi:
+        if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        i2caddress = (address << 1) & self.HIGH
-        i2caddress |= self.BIT0
-        self.log.debug('- cond poll 0x%x', i2caddress >> 1)
+        if address is None:
+            i2caddress = None
+        else:
+            i2caddress = (address << 1) & self.HIGH
+            i2caddress |= self.BIT0
         do_epilog = True
         try:
             retry = 0
@@ -558,10 +647,14 @@ class I2cController:
     def flush(self):
         """Flush the HW FIFOs
         """
+        if not self.configured:
+            raise I2cIOError("FTDI controller not initialized")
         self._ftdi.write_data(self._immediate)
         self._ftdi.purge_buffers()
 
     def _do_prolog(self, i2caddress):
+        if i2caddress is None:
+            return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
         cmd = array('B', self._idle)
         cmd.extend(self._start)
@@ -570,9 +663,9 @@ class I2cController:
         if self._tristate:
             cmd.extend(self._tristate)
             cmd.extend(self._read_bit)
-            cmd.extend(self._clock_low_data_high)
+            cmd.extend(self._clk_lo_data_hi)
         else:
-            cmd.extend(self._clock_low_data_high)
+            cmd.extend(self._clk_lo_data_hi)
             cmd.extend(self._read_bit)
         cmd.extend(self._immediate)
         self._ftdi.write_data(cmd)
@@ -590,49 +683,65 @@ class I2cController:
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _do_read(self, readlen,):
+    def _do_read(self, readlen):
         self.log.debug('- read %d byte(s)', readlen)
+        if not readlen:
+            # force a real read request on device, but discard any result
+            cmd = array('B')
+            cmd.extend(self._immediate)
+            self._ftdi.write_data(cmd)
+            self._ftdi.read_data_bytes(0, 4)
+            return array('B')
         if self._tristate:
-            read_byte = self._tristate + self._read_byte + \
-                        self._clock_low_data_high
-            read_not_last = read_byte + self._ack
-            read_last = read_byte + self._nack
+            read_byte = self._tristate + \
+                        self._read_byte + \
+                        self._clk_lo_data_hi
+            read_not_last = \
+                read_byte + self._ack + self._clk_lo_data_lo * self._ck_delay
+            read_last = \
+                read_byte + self._nack + self._clk_lo_data_hi * self._ck_delay
         else:
-            read_not_last = self._read_byte + self._ack + \
-                self._clock_low_data_high
-            read_last = self._read_byte + self._nack + \
-                self._clock_low_data_high
+            read_not_last = \
+                self._read_byte + self._ack + \
+                self._clk_lo_data_hi * self._ck_delay
+            read_last = \
+                self._read_byte + self._nack + \
+                self._clk_lo_data_hi * self._ck_delay
+        # maximum RX size to fit in FTDI FIFO, minus 2 status bytes
         chunk_size = self._rx_size-2
         cmd_size = len(read_last)
-        # limit RX chunk size to the count of I2C packable ommands in the FTDI
+        # limit RX chunk size to the count of I2C packable commands in the FTDI
         # TX FIFO (minus one byte for the last 'send immediate' command)
         tx_count = (self._tx_size-1) // cmd_size
         chunk_size = min(tx_count, chunk_size)
         chunks = []
-        last_count = 0
-        last_cmd = None
-        count = readlen
-        while count:
-            block_count = min(count, chunk_size)
-            count -= block_count
-            if last_count != block_count:
-                cmd = array('B')
-                cmd.extend(read_not_last * (block_count-1))
-                cmd.extend(read_last)
-                last_cmd = cmd
+        cmd = None
+        rem = readlen
+        while rem:
+            if rem > chunk_size:
+                if not cmd:
+                    cmd = array('B')
+                    cmd.extend(read_not_last * chunk_size)
+                    size = chunk_size
             else:
-                cmd = last_cmd
-            if count <= 0:
-                # only force immediate read out on last chunk
+                cmd = array('B')
+                cmd.extend(read_not_last * (rem-1))
+                cmd.extend(read_last)
                 cmd.extend(self._immediate)
+                size = rem
             self._ftdi.write_data(cmd)
-            buf = self._ftdi.read_data_bytes(block_count, 4)
+            buf = self._ftdi.read_data_bytes(size, 4)
+            self.log.debug('- read %d byte(s): %s',
+                           len(buf), hexlify(buf).decode())
             chunks.append(buf)
+            rem -= size
         return array('B', b''.join(chunks))
 
     def _do_write(self, out):
         if not isinstance(out, array):
             out = array('B', out)
+        if not out:
+            return
         self.log.debug('- write %d byte(s): %s',
                        len(out), hexlify(out).decode())
         for byte in out:
@@ -641,9 +750,9 @@ class I2cController:
             if self._tristate:
                 cmd.extend(self._tristate)
                 cmd.extend(self._read_bit)
-                cmd.extend(self._clock_low_data_high)
+                cmd.extend(self._clk_lo_data_hi)
             else:
-                cmd.extend(self._clock_low_data_high)
+                cmd.extend(self._clk_lo_data_hi)
                 cmd.extend(self._read_bit)
             cmd.extend(self._immediate)
             self._ftdi.write_data(cmd)

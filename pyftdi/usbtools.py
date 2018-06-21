@@ -69,7 +69,16 @@ class UsbTools:
 
     @classmethod
     def flush_cache(cls):
-        """Flush the FTDI device cache."""
+        """Flush the FTDI device cache.
+
+           It is highly recommanded to call this method a FTDI device is
+           unplugged/plugged back since the last enumeration, as the device
+           may appear on a different USB location each time it is plugged
+           in.
+
+           Failing to clear out the cache may lead to USB Error 19:
+           ``Device may have been disconnected``.
+        """
         cls.Lock.acquire()
         cls.UsbDevices = {}
         cls.Lock.release()
@@ -138,24 +147,15 @@ class UsbTools:
             except AttributeError:
                 devkey = (vendor, product)
             if devkey not in cls.Devices:
-                for configuration in dev:
-                    # we need to detach any kernel driver from the device
-                    # be greedy: reclaim all device interfaces from the kernel
-                    for interface in configuration:
-                        ifnum = interface.bInterfaceNumber
-                        try:
-                            if not dev.is_kernel_driver_active(ifnum):
-                                continue
-                            dev.detach_kernel_driver(ifnum)
-                        except NotImplementedError:
-                            # only libusb 1.x backend implements this method
-                            break
-                        except usb.core.USBError:
-                            pass
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
                 # with the same device to run seamlessly.
-                if dev.get_active_configuration().bConfigurationValue != 1:
+                try:
+                    config = dev.get_active_configuration()
+                    setconf = config.bConfigurationValue != 1
+                except usb.core.USBError:
+                    setconf = True
+                if setconf:
                     try:
                         dev.set_configuration()
                     except usb.core.USBError:

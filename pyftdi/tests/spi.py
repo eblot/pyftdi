@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,16 +26,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
+import unittest
 from binascii import hexlify
 from doctest import testmod
 from os import environ
+from sys import modules, stderr, stdout
+from time import sleep
 from pyftdi import FtdiLogger
 from pyftdi.spi import SpiController, SpiIOError
 from pyftdi.misc import hexdump
-from sys import modules, stderr, stdout
-from time import sleep
-import logging
-import unittest
 
 
 class SpiDataFlashTest(object):
@@ -348,9 +348,80 @@ class SpiTestCase(unittest.TestCase):
         #@@@#self.assertEqual(device_id, 'e5')
 
 
+class SpiGpioTestCase(unittest.TestCase):
+    """Basic test for GPIO access w/ SPI mode
+
+       It expects the following I/O setup:
+
+       AD4 connected t0 AC0
+       AD5 connected t0 AC1
+       AD6 connected t0 AC2
+       AD7 connected t0 AC3
+    """
+
+    # AD0: SCLK, AD1: MOSI, AD2: MISO, AD3: /CS
+    AD_OFFSET = 4
+    AC_OFFSET = 8
+    PIN_COUNT = 4
+
+    def setUp(self):
+        self._spi = SpiController(cs_count=1)
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._spi.configure(url)
+        self._port = self._spi.get_port(0, freq=1E6, mode=0)
+        self._io = self._spi.get_gpio()
+
+    def tearDown(self):
+        """Close the SPI connection"""
+        self._spi.terminate()
+
+    def test_ac_to_ad(self):
+        ad_pins = ((1 << self.PIN_COUNT) - 1) << self.AD_OFFSET  # input
+        ac_pins = ((1 << self.PIN_COUNT) - 1) << self.AC_OFFSET  # output
+        io_pins = ad_pins | ac_pins
+
+        def ac_to_ad(ac_output):
+            ac_output &= ac_pins
+            ac_output >>= self.AC_OFFSET - self.AD_OFFSET
+            return ac_output & ad_pins
+
+        self._io.set_direction(io_pins, ac_pins)
+        for ac in range(1 << self.PIN_COUNT):
+            ac_out = ac << self.AC_OFFSET
+            ad_in = ac_to_ad(ac_out)
+            self._io.write(ac_out)
+            # random SPI exchange to ensure SPI does not change GPIO
+            self._port.exchange([0x00, 0xff], 2)
+            rd = self._io.read()
+            self.assertEqual(rd, ad_in)
+        self.assertRaises(SpiIOError, self._io.write, ad_pins)
+
+    def test_ad_to_ac(self):
+        ad_pins = ((1 << self.PIN_COUNT) - 1) << self.AD_OFFSET  # output
+        ac_pins = ((1 << self.PIN_COUNT) - 1) << self.AC_OFFSET  # input
+        io_pins = ad_pins | ac_pins
+
+        def ad_to_ac(ad_output):
+            ad_output &= ad_pins
+            ad_output <<= self.AC_OFFSET - self.AD_OFFSET
+            return ad_output & ac_pins
+
+        self._io.set_direction(io_pins, ad_pins)
+        for ad in range(1 << self.PIN_COUNT):
+            ad_out = ad << self.AD_OFFSET
+            ac_in = ad_to_ac(ad_out)
+            self._io.write(ad_out)
+            # random SPI exchange to ensure SPI does not change GPIO
+            self._port.exchange([0x00, 0xff], 2)
+            rd = self._io.read()
+            self.assertEqual(rd, ac_in)
+        self.assertRaises(SpiIOError, self._io.write, ac_pins)
+
+
 def suite():
     suite_ = unittest.TestSuite()
     suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
     return suite_
 
 

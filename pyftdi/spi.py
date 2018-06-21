@@ -1,3 +1,5 @@
+"""SPI support for PyFdti"""
+
 # Copyright (c) 2010-2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
@@ -25,7 +27,8 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from array import array
-from pyftdi.ftdi import Ftdi
+from logging import getLogger
+from pyftdi.ftdi import Ftdi, FtdiError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 
@@ -33,7 +36,7 @@ from threading import Lock
 __all__ = ['SpiPort', 'SpiGpioPort', 'SpiController']
 
 
-class SpiIOError(IOError):
+class SpiIOError(FtdiError):
     """SPI I/O error"""
 
 
@@ -59,6 +62,7 @@ class SpiPort:
     """
 
     def __init__(self, controller, cs, cs_hold=3, spi_mode=0):
+        self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
         self._cpol = spi_mode & 0x1
         self._cpha = spi_mode & 0x2
@@ -188,6 +192,7 @@ class SpiGpioPort:
        SpiController.get_gpio() method to obtain the GPIO port.
     """
     def __init__(self, controller):
+        self.log = getLogger('pyftdi.spi.gpio')
         self._controller = controller
 
     @property
@@ -200,13 +205,14 @@ class SpiGpioPort:
         """Provide the FTDI GPIO direction"""
         return self._controller.direction
 
-    def read(self):
+    def read(self, with_output=False):
         """Read GPIO port.
 
+           :param bool with_output: set to unmask output pins
            :return: the GPIO port pins as a bitfield
            :rtype: int
         """
-        return self._controller.read_gpio()
+        return self._controller.read_gpio(with_output)
 
     def write(self, value):
         """Write GPIO port.
@@ -241,10 +247,12 @@ class SpiController:
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
     def __init__(self, silent_clock=False, cs_count=4, turbo=True):
+        self.log = getLogger('pyftdi.spi.ctrl')
         self._ftdi = Ftdi()
         self._lock = Lock()
         self._gpio_port = None
         self._gpio_dir = 0
+        self._gpio_mask = 0
         self._gpio_low = 0
         self._wide_port = False
         self._cs_count = cs_count
@@ -330,7 +338,7 @@ class SpiController:
                 raise SpiIOError("SPI mode 2 has no known workaround with "
                                  "FTDI devices")
             if not self._spi_ports[cs]:
-                freq = min(freq or self.frequency_max, self.frequency_max)
+                freq = min(freq or self._frequency, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
                 self._spi_ports[cs] = SpiPort(self, cs, cs_hold=hold,
                                               spi_mode=mode)
@@ -360,7 +368,7 @@ class SpiController:
     def gpio_pins(self):
         """Report the addressable GPIOs as a bitfield"""
         with self._lock:
-            return self._get_gpio_mask()
+            return self._gpio_mask
 
     def exchange(self, frequency, out, readlen,
                  cs_prolog=None, cs_epilog=None,
@@ -383,16 +391,19 @@ class SpiController:
                                                   cs_prolog, cs_epilog,
                                                   cpol, cpha)
 
-    def read_gpio(self):
+    def read_gpio(self, with_output=False):
         """Read GPIO port
 
+           :param bool with_output: set to unmask output pins
            :return: the GPIO port pins as a bitfield
            :rtype: int
         """
         with self._lock:
             data = self._read_raw(self._wide_port)
-        mask = self._get_gpio_mask()
-        return data & mask
+        value = data & self._gpio_mask
+        if not with_output:
+            value &= ~self._gpio_dir
+        return value
 
     def write_gpio(self, value):
         """Write GPIO port
@@ -400,14 +411,13 @@ class SpiController:
            :param int value: the GPIO port pins as a bitfield
         """
         with self._lock:
-            mask = self._get_gpio_mask()
-            if (value & mask) != value:
-                raise SpiIOError('No such GPIO pins: %04x/%04x' %
-                                 (mask, value))
+            if (value & self._gpio_dir) != value:
+                raise SpiIOError('No such GPO pins: %04x/%04x' %
+                                 (self._gpio_dir, value))
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
-            data &= ~mask
+            data &= ~self._gpio_mask
             data |= value
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._spi_mask
@@ -421,17 +431,14 @@ class SpiController:
         with self._lock:
             if pins & self._spi_mask:
                 raise SpiIOError('Cannot access SPI pins as GPIO')
-            mask = self._get_gpio_mask()
-            if (pins & mask) != pins:
+            gpio_width = self._wide_port and 16 or 8
+            gpio_mask = (1 << gpio_width) - 1
+            gpio_mask &= ~self._spi_mask
+            if (pins & gpio_mask) != pins:
                 raise SpiIOError('No such GPIO pin(s)')
             self._gpio_dir &= ~pins
             self._gpio_dir |= (pins & direction)
-
-    def _get_gpio_mask(self):
-        gpio_width = self._wide_port and 16 or 8
-        gpio_mask = (1 << gpio_width) - 1
-        gpio_mask &= ~self._spi_mask
-        return gpio_mask
+            self._gpio_mask = gpio_mask & pins
 
     def _read_raw(self, read_high):
         if read_high:
@@ -484,7 +491,7 @@ class SpiController:
             # store the requested value, not the actual one (best effort),
             # to avoid setting unavailable values on each call.
             self._frequency = frequency
-        direction = self.direction
+        direction = self.direction & 0xFF  # low bits only
         cmd = array('B')
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
@@ -561,7 +568,7 @@ class SpiController:
             # store the requested value, not the actual one (best effort),
             # to avoid setting unavailable values on each call.
             self._frequency = frequency
-        direction = self.direction
+        direction = self.direction & 0xFF  # low bits only
         cmd = array('B')
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask

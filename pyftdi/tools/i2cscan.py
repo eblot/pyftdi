@@ -1,5 +1,7 @@
-# Copyright (c) 2010-2018 Emmanuel Blot <emmanuel.blot@free.fr>
-# Copyright (c) 2010-2016, Neotion
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Copyright (c) 2018, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,36 +26,52 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.29.0'
-__title__ = 'PyFtdi'
-__description__ = 'FTDI device driver (pure Python)'
-__uri__ = 'http://github.com/eblot/pyftdi'
-__doc__ = __description__ + ' <' + __uri__ + '>'
-__author__ = 'Emmanuel Blot'
-# For all support requests, please open a new issue on GitHub
-__email__ = 'emmanuel.blot@free.fr'
-__license__ = 'LGPL v2'
-__copyright__ = 'Copyright (c) 2011-2018 Emmanuel Blot'
+from logging import ERROR, getLogger
+from os import environ
+from sys import modules, stdout
+from pyftdi.i2c import I2cController, I2cNackError
 
 
-from logging import WARNING, getLogger
+class I2cBusScanner(object):
+    """Scan I2C bus to find slave.
+
+       Emit the I2C address message, but no data. Detect any ACK on each valid
+       address.
+    """
+
+    def scan(self):
+        """Open an I2c connection to a slave"""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        i2c = I2cController()
+        slaves = []
+        getLogger('pyftdi.i2c').setLevel(ERROR)
+        try:
+            i2c.set_retry_count(1)
+            i2c.configure(url)
+            for addr in range(i2c.HIGHEST_I2C_ADDRESS+1):
+                port = i2c.get_port(addr)
+                try:
+                    port.read(0)
+                    slaves.append('X')
+                except I2cNackError:
+                    slaves.append('.')
+        finally:
+            i2c.terminate()
+        columns = 16
+        row = 0
+        print('   %s' % ''.join(' %01X ' % col for col in range(columns)))
+        while True:
+            chunk = slaves[row:row+columns]
+            if not chunk:
+                break
+            print(' %1X:' % (row//columns), '  '.join(chunk))
+            row += columns
 
 
-class FtdiLogger:
+def main():
+    scanner = I2cBusScanner()
+    scanner.scan()
 
-    log = getLogger('pyftdi')
-    log.setLevel(level=WARNING)
 
-    @classmethod
-    def set_formatter(cls, formatter):
-        handlers = list(cls.log.handlers)
-        for handler in handlers:
-            handler.setFormatter(formatter)
-
-    @classmethod
-    def get_level(cls):
-        return cls.log.getEffectiveLevel()
-
-    @classmethod
-    def set_level(cls, level):
-        cls.log.setLevel(level=level)
+if __name__ == '__main__':
+    main()

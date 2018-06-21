@@ -84,3 +84,7 @@ Contributors
  * sgoadhouse:
 
   * JTAG constant definitions debunking and engine instanciation fixes.
+
+ * tavip (Octavian Purdila):
+
+  * Allow simulatenous usage with kernel drivers (per FTDI port management)

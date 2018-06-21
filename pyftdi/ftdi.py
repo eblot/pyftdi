@@ -1,5 +1,11 @@
-# pyftdi - A pure Python FTDI driver
-# Copyright (C) 2010-2017 Emmanuel Blot <emmanuel.blot@free.fr>
+"""pyftdi - A pure Python FTDI driver on top of pyusb
+
+   Author:  Emmanuel Blot <emmanuel.blot@free.fr>
+   License: LGPL
+   Require: pyusb
+"""
+
+# Copyright (C) 2010-2018 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
@@ -18,25 +24,16 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""pyftdi - A pure Python FTDI driver on top of pyusb
-
-Author:  Emmanuel Blot <emmanuel.blot@free.fr>
-License: LGPL, originally based on libftdi C library
-Require: pyusb
-"""
-
 from array import array
 from binascii import hexlify
 from errno import ENODEV
 from logging import getLogger
-from pyftdi.usbtools import UsbTools
 from struct import unpack as sunpack
 from sys import platform
-from .misc import to_bool
-
 import usb.core
 import usb.util
-
+from .misc import to_bool
+from .usbtools import UsbTools
 
 __all__ = ['Ftdi', 'FtdiError']
 
@@ -78,8 +75,7 @@ class Ftdi:
              'ft2232h': 0x6010,
              'ft4232': 0x6011,
              'ft4232h': 0x6011,
-             'ft230x': 0x6015
-             }
+             'ft230x': 0x6015}
         }
     DEFAULT_VENDOR = FTDI_VENDOR
 
@@ -177,13 +173,13 @@ class Ftdi:
 
     # USB control requests
     REQ_OUT = usb.util.build_request_type(
-                  usb.util.CTRL_OUT,
-                  usb.util.CTRL_TYPE_VENDOR,
-                  usb.util.CTRL_RECIPIENT_DEVICE)
+        usb.util.CTRL_OUT,
+        usb.util.CTRL_TYPE_VENDOR,
+        usb.util.CTRL_RECIPIENT_DEVICE)
     REQ_IN = usb.util.build_request_type(
-                  usb.util.CTRL_IN,
-                  usb.util.CTRL_TYPE_VENDOR,
-                  usb.util.CTRL_RECIPIENT_DEVICE)
+        usb.util.CTRL_IN,
+        usb.util.CTRL_TYPE_VENDOR,
+        usb.util.CTRL_RECIPIENT_DEVICE)
 
     # Requests
     SIO_RESET = 0               # Reset the port
@@ -323,7 +319,7 @@ class Ftdi:
            :return: the USB device that match the specified URL
            :rtype: py:class:`usb.core.Device`
         """
-        vendor, product, index, serial, interface = cls.get_identifiers(url)
+        vendor, product, index, serial, _ = cls.get_identifiers(url)
         return UsbTools.get_device(vendor, product, index, serial)
 
     @classmethod
@@ -373,11 +369,11 @@ class Ftdi:
         """
         status = []
         for pos, (byte_, ebits) in enumerate(zip(value, cls.ERROR_BITS)):
-            for b, v in enumerate(cls.MODEM_STATUS[pos]):
+            for bit, _ in enumerate(cls.MODEM_STATUS[pos]):
                 if error_only:
                     byte_ &= ebits
-                if byte_ & (1 << b):
-                    status.append(cls.MODEM_STATUS[pos][b])
+                if byte_ & (1 << bit):
+                    status.append(cls.MODEM_STATUS[pos][bit])
         return tuple(status)
 
     @staticmethod
@@ -447,6 +443,12 @@ class Ftdi:
         if self.usb_dev:
             self.set_bitmode(0, Ftdi.BITMODE_RESET)
             self.set_latency_timer(self.LATENCY_MAX)
+            self.usb_dev._ctx.managed_release_interface(self.usb_dev,
+                                                        self.index - 1)
+            try:
+                self.usb_dev.attach_kernel_driver(self.index - 1)
+            except (NotImplementedError, usb.core.USBError):
+                pass
             UsbTools.release_device(self.usb_dev)
             self.usb_dev = None
 
@@ -695,8 +697,8 @@ class Ftdi:
            :rtype: bool
         """
         return self.bitmode not in (
-                Ftdi.BITMODE_RESET,
-                Ftdi.BITMODE_CBUS  # CBUS mode does not change base frequency
+            Ftdi.BITMODE_RESET,
+            Ftdi.BITMODE_CBUS  # CBUS mode does not change base frequency
         )
 
     @property
@@ -728,6 +730,19 @@ class Ftdi:
                  0x1000: (512, 512)}    # TX: 512, RX: 512
         return sizes.get(self.usb_dev.bcdDevice, (128, 128))  # default sizes
 
+    @property
+    def mpsse_bit_delay(self):
+        """Delay between execution of two MPSSE SET_BITS commands.
+
+           :return: minimum delay (actual value might be larger) in seconds
+           :rtype: float
+        """
+        # measured on FTDI2232H, not documented in datasheet, hence may vary
+        # from on FTDI model to another...
+        # left as a variable so it could be tweaked base on the FTDI bcd type,
+        # the frequency, or ... whatever else
+        return 0.5E-6  # seems to vary between 5 and 6.5 us
+
     def set_baudrate(self, baudrate):
         """Change the current UART baudrate.
 
@@ -757,12 +772,12 @@ class Ftdi:
                              (delta, baudrate, actual))
         try:
             if self.usb_dev.ctrl_transfer(
-                Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index, array('B'),
-                    self.usb_write_timeout):
+                    Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index,
+                    array('B'), self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
 
     def set_frequency(self, frequency):
         """Change the current MPSSE bus frequency
@@ -875,7 +890,7 @@ class Ftdi:
 
            :param int latency: latency (unspecified unit)
         """
-        if not (Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX):
+        if not Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX:
             raise ValueError("Latency out of range")
         if self._ctrl_transfer_out(Ftdi.SIO_SET_LATENCY_TIMER, latency):
             raise FtdiError('Unable to latency timer')
@@ -937,11 +952,11 @@ class Ftdi:
             raise ValueError('Unknown flow control: %s' % flowctrl)
         try:
             if self.usb_dev.ctrl_transfer(
-                Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, array('B'),
+                    Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, array('B'),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
 
     def set_dtr(self, state):
         """Set dtr line
@@ -1142,8 +1157,8 @@ class Ftdi:
                     raise FtdiError("Usb bulk write error")
                 offset += length
             return offset
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
 
     def read_data_bytes(self, size, attempt=1):
         """Read data from the FTDI interface
@@ -1218,7 +1233,7 @@ class Ftdi:
                         self.readbuffer = array('B')
                         self.readoffset = 0
                         srcoff = 2
-                        for i in range(chunks):
+                        for _ in range(chunks):
                             self.readbuffer += tempbuf[srcoff:srcoff+count]
                             srcoff += packet_size
                         length = len(self.readbuffer)
@@ -1263,8 +1278,8 @@ class Ftdi:
                                                 self.readoffset+part_size]
                         self.readoffset += part_size
                         return data
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
         # never reached
         raise FtdiError("Internal error")
 
@@ -1348,7 +1363,7 @@ class Ftdi:
             self.latency_threshold = None
         else:
             for lat in (lmin, lmax):
-                if not (self.LATENCY_MIN <= lat <= self.LATENCY_MAX):
+                if not self.LATENCY_MIN <= lat <= self.LATENCY_MAX:
                     raise ValueError("Latency out of range: %d" % lat)
             self.latency_min = lmin
             self.latency_max = lmax
@@ -1367,7 +1382,8 @@ class Ftdi:
         if (len(bytes_) >= 2) and (bytes_[0] == '\xfa'):
             raise FtdiError("Invalid command @ %d" % ord(bytes_[1]))
 
-    def get_error_string(self):
+    @classmethod
+    def get_error_string(cls):
         """Wrapper for libftdi compatibility.
 
            :return: a constant, meaningless string
@@ -1388,6 +1404,13 @@ class Ftdi:
         endpoints = sorted([ep.bEndpointAddress for ep in self.interface])
         self.in_ep, self.out_ep = endpoints[:2]
 
+        # detach kernel driver from the interface
+        try:
+            if self.usb_dev.is_kernel_driver_active(self.index - 1):
+                self.usb_dev.detach_kernel_driver(self.index - 1)
+        except (NotImplementedError, usb.core.USBError):
+            pass
+
     def _reset_device(self):
         """Reset the ftdi device"""
         if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
@@ -1404,8 +1427,8 @@ class Ftdi:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_OUT, reqtype, value, self.index,
                 array('B').frombytes(data), self.usb_write_timeout)
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
 
     def _ctrl_transfer_in(self, reqtype, length):
         """Request for a control message from the device"""
@@ -1413,8 +1436,8 @@ class Ftdi:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_IN, reqtype, 0, self.index, length,
                 self.usb_read_timeout)
-        except usb.core.USBError as e:
-            raise FtdiError('UsbError: %s' % str(e))
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
 
     def _write(self, data):
         """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
@@ -1457,8 +1480,8 @@ class Ftdi:
             raise ValueError('Invalid baudrate (too low)')
         if baudrate > self.BAUDRATE_REF_BASE:
             if not self.is_H_series or \
-               baudrate > self.BAUDRATE_REF_HIGH:
-                    raise ValueError('Invalid baudrate (too high)')
+                    baudrate > self.BAUDRATE_REF_HIGH:
+                raise ValueError('Invalid baudrate (too high)')
             refclock = self.BAUDRATE_REF_HIGH
             hispeed = True
         else:
@@ -1559,12 +1582,12 @@ class Ftdi:
         else:
             cmd = array('B')
         cmd.extend((Ftdi.SET_TCK_DIVISOR, divisor & 0xff,
-                   (divisor >> 8) & 0xff))
+                    (divisor >> 8) & 0xff))
         self.write_data(cmd)
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
-        self.log.debug('Bus frequency: %.3f MHz' % (actual_freq/1E6))
+        self.log.debug('Bus frequency: %.3f MHz', (actual_freq/1E6))
         return actual_freq
 
     def __get_timeouts(self):

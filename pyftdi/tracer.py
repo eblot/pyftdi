@@ -43,7 +43,7 @@ class FtdiMpsseTracer:
         self._clkdiv5 = False
         self._cmd_decoded = True
         self._resp_decoded = True
-        self._last_code = None
+        self._last_codes = deque()
         self._expect_resp = deque()
 
     def send(self, buffer):
@@ -53,7 +53,7 @@ class FtdiMpsseTracer:
                 code = self._trace_tx[0]
                 cmd = self.COMMANDS[code]
                 if cmd not in self.NO_RX:
-                    self._last_code = code
+                    self._last_codes.append(code)
                 if self._cmd_decoded:
                     self.log.debug("Command: %02X: %s", code, cmd)
                 cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
@@ -70,12 +70,15 @@ class FtdiMpsseTracer:
             # on error, flush all buffers
             self._trace_tx = array('B')
             self._trace_rx = array('B')
+            self._last_codes.clear()
 
     def receive(self, buffer):
         self._trace_rx.extend(buffer)
         while self._trace_rx:
+            code = None
             try:
-                cmd = self.COMMANDS[self._last_code]
+                code = self._last_codes.popleft()
+                cmd = self.COMMANDS[code]
                 resp_decoder = getattr(self, '_resp_%s' % cmd.lower())
                 self._resp_decoded = resp_decoder()
                 if self._resp_decoded:
@@ -83,12 +86,13 @@ class FtdiMpsseTracer:
             except IndexError:
                 self.log.warning('Empty buffer')
             except KeyError:
-                self.log.warning('Unknown command code: %02X', self._last_code)
+                self.log.warning('Unknown command code: %02X', code)
             except AttributeError:
                 self.log.warning('Decoder for response %s is not implemented',
                                  cmd)
             # on error, flush RX buffer
             self._trace_rx = array('B')
+            self._last_codes.clear()
 
     def _cmd_enable_clk_div5(self):
         self.log.info('Enable clock divisor /5')
@@ -138,7 +142,7 @@ class FtdiMpsseTracer:
         return True
 
     def _cmd_send_immediate(self):
-        self.log.info('Send immediate')
+        self.log.debug('Send immediate')
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
