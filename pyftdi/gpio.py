@@ -30,6 +30,7 @@ from array import array
 from pyftdi.ftdi import Ftdi
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
+from logging import getLogger
 
 
 __all__ = ['GpioController']
@@ -49,6 +50,7 @@ class GpioController:
 
     def __init__(self):
         self._ftdi = None
+        self.log = getLogger('pyftdi.gpio')
         self._direction = 0
         self._wide_port = False
         self._lock = Lock()
@@ -149,8 +151,11 @@ class GpioController:
         with self._lock:
             data = self._read_raw(self._wide_port)
         value = data & self._gpio_mask
-        #print('1: wide_port: 0x{:x}  data: 0x{:x}  mask: 0x{:x}  value: 0x{:x}'
-        #          .format(self._wide_port, data, self._gpio_mask, value))
+
+        dbg = ('read: wide: 0x{:x}  data: 0x{:x}  mask: 0x{:x}  value: 0x{:x}'
+                 .format(self._wide_port, data, self._gpio_mask, value))
+        self.log.debug(dbg)
+
         return value
     
     def write(self, value):
@@ -168,11 +173,17 @@ class GpioController:
             # perform read-modify-write
             use_high = self._wide_port and (self._direction & 0xff00)
             data = self._read_raw(use_high)
-            #print('1: use_high: 0x{:x}  data: 0x{:x}  mask: 0x{:x}'
-            #          .format(use_high, data, self._gpio_mask))
+
+            dbg = ('write: use_high: 0x{:x}  data: 0x{:x}  mask: 0x{:x}'
+                       .format(use_high, data, self._gpio_mask))
+            self.log.debug(dbg)
+            
             data &= ~self._gpio_mask
             data |= value
-            #print('2: use_high: 0x{:x}  data: 0x{:x}'.format(use_high, data))
+
+            dbg = 'write: use_high: 0x{:x}  data: 0x{:x}'.format(use_high, data)
+            self.log.debug(dbg)
+            
             self._write_raw(data, use_high)
         
     def _read_raw(self, read_high):
