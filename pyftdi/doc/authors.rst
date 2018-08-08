@@ -88,3 +88,8 @@ Contributors
  * tavip (Octavian Purdila):
 
   * Allow simulatenous usage with kernel drivers (per FTDI port management)
+
+ * Tim Legrand:
+
+  * Fix invalid package configuration
+

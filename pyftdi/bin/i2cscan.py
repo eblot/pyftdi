@@ -28,7 +28,7 @@
 
 from logging import ERROR, getLogger
 from os import environ
-from sys import modules, stdout
+from sys import modules, stderr, stdout
 from pyftdi.i2c import I2cController, I2cNackError
 
 
@@ -74,4 +74,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(str(exc), file=stderr)
