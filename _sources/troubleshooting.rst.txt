@@ -45,7 +45,7 @@ The system may already be using the device.
       sudo kextunload [-v] -bundle com.apple.driver.AppleUSBFTDI
 
   You may want to use an alias or a tiny script such as
-  ``pyftdi/tools/uphy.sh``
+  ``pyftdi/bin/uphy.sh``
 
   Please note that the system automatically reloads the driver, so it may be
   useful to move the kernel extension so that the system never loads it.
