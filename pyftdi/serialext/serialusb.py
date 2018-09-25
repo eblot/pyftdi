@@ -89,7 +89,7 @@ class UsbSerial(SerialBase):
                 ms = time.time()-start
                 if ms > self._timeout:
                     break
-            time.sleep(0.01)
+            time.sleep(0.0001)
         return data
 
     def write(self, data):
