@@ -64,16 +64,10 @@ class SpiPort:
     def __init__(self, controller, cs, cs_hold=3, spi_mode=0):
         self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
-        self._cpol = spi_mode & 0x1
-        self._cpha = spi_mode & 0x2
-        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
-                            SpiController.DO_BIT)
-        cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
-                             (int(not self._cpol) and SpiController.SCK_BIT) |
-                             SpiController.DO_BIT)
-        self._cs_prolog = bytes([cs_clock, cs_select])
-        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
+        self._cs = cs
+        self._cs_hold = cs_hold
+        self.set_mode(spi_mode)
 
     def exchange(self, out=b'', readlen=0, start=True, stop=True,
                  duplex=False):
@@ -161,6 +155,30 @@ class SpiPort:
     def frequency(self):
         """Return the current SPI bus block"""
         return self._frequency
+
+    def set_mode(self, mode):
+        """Changes the SPI mode
+
+           :param int mode: the new mode
+        """
+        if not (0 <= mode <= 3):
+                raise SpiIOError("Invalid SPI mode")
+
+        self._cpol = mode & 0x1
+        self._cpha = mode & 0x2
+        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
+                            SpiController.DO_BIT)
+        cs_select = 0xFF & ~((SpiController.CS_BIT << self._cs) |
+                             (int(not self._cpol) and SpiController.SCK_BIT) |
+                             SpiController.DO_BIT)
+        self._cs_prolog = bytes([cs_clock, cs_select])
+        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(self._cs_hold))
+        self._mode = mode
+
+    @property
+    def mode(self):
+        """Returns the current SPI mode"""
+        return self._mode
 
 
 class SpiGpioPort:
