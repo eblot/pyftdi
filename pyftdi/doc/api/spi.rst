@@ -12,7 +12,7 @@ Example: communication with a SPI data flash (half-duplex example)
 
 .. code-block:: python
 
-    # Instanciate a SPI controller
+    # Instantiate a SPI controller
     spi = SpiController()
 
     # Configure the first interface (IF/1) of the FTDI device as a SPI master
@@ -29,7 +29,7 @@ Example: communication with a remote SPI device using full-duplex mode
 
 .. code-block:: python
 
-    # Instanciate a SPI controller
+    # Instantiate a SPI controller
     spi = SpiController()
 
     # Configure the first interface (IF/1) of the FTDI device as a SPI master
@@ -48,8 +48,8 @@ Example: communication with a SPI device and an extra GPIO
 
 .. code-block:: python
 
-    # Instanciate a SPI controller
-    spi = SpiController()
+    # Instantiate a SPI controller with a single CS line
+    spi = SpiController(cs_count=1)
 
     # Configure the first interface (IF/1) of the first FTDI device as a
     # SPI master
