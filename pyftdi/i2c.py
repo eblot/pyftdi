@@ -325,7 +325,9 @@ class I2cController:
 
            Accepted options:
 
-           * ``frequency`` the I2C bus frequency in Hz
+           * ``frequency`` float value the I2C bus frequency in Hz
+           * ``clockstretching`` boolean value to enable clockstreching.
+             xD5 (GPIOL1) pin should be connected to xD0 (SCK)
         """
         for k in ('direction', 'initial'):
             if k in kwargs:
@@ -342,6 +344,11 @@ class I2cController:
             timings = self.I2C_100K
         else:
             timings = self.I2C_100K
+        if 'clockstretching' in kwargs:
+            clkstrch = bool(kwargs['clockstretching'])
+            del kwargs['clockstretching']
+        else:
+            clkstrch = False
         ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
         ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
         ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
@@ -358,7 +365,7 @@ class I2cController:
             url, direction=self._direction, initial=self.IDLE,
             frequency=frequency, **kwargs)
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
-        self._ftdi.enable_adaptive_clock(False)
+        self._ftdi.enable_adaptive_clock(clkstrch)
         self._ftdi.enable_3phase_clock(True)
         try:
             self._ftdi.enable_drivezero_mode(self.SCL_BIT |
