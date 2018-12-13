@@ -74,6 +74,19 @@ parameters (among others).
    v0.22.0, be sure to update your code.
 
 
+It is also possible to open a connection to a specific ``usb.core.Device``
+that may have been obtained elsewhere, by passing the USB device object to the
+Ftdi constructor.
+
+.. code-block:: python
+
+   # find a USB device matching the given vendor and product IDs
+   device = usb.core.find(idVendor = 0x0403, idProduct = 0x6011)
+
+   # open a connection to interface 1 of the given USB device
+   ftdi = Ftdi(device, 1)
+
+
 Supporting custom USB vendor and product IDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -258,9 +258,9 @@ class Ftdi:
     LATENCY_MIN = 12
     LATENCY_MAX = 255
 
-    def __init__(self):
+    def __init__(self, device = None, interface = 1):
         self.log = getLogger('pyftdi.ftdi')
-        self.usb_dev = None
+        self.usb_dev = device
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
