@@ -58,14 +58,14 @@ class UsbTools:
         devs = set()
         for v, p in vps:
             devs.update(UsbTools._find_devices(v, p, nocache))
-        devices = set()
+        devices = []
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = UsbTools.get_string(dev, dev.iSerialNumber)
             description = UsbTools.get_string(dev, dev.iProduct)
-            devices.add((dev.idVendor, dev.idProduct, sernum, ifcount,
-                         description))
-        return list(devices)
+            devices.append((dev.idVendor, dev.idProduct, sernum, ifcount,
+                            description))
+        return devices
 
     @classmethod
     def flush_cache(cls):
