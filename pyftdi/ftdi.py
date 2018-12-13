@@ -518,6 +518,33 @@ class Ftdi:
         """
         # Open an FTDI interface
         self.open(vendor, product, index, serial, interface)
+
+        return self.init_mpsse(interface, direction, initial, frequency,
+                               lacency, debug)
+
+    def init_mpsse(self, interface=1, direction=0x0, initial=0x0,
+                   frequency=6.0E6, latency=16, debug=False):
+        """Initialize an interface to the FTDI in MPSSE mode.
+
+           MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+           modes (vs. UART mode).
+
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H). The interface argument selects the FTDI port to use,
+           starting from 1 (not 0). Note that not all FTDI ports are MPSSE
+           capable.
+
+           :param str interface: FTDI interface/port
+           :param int direction: a bitfield specifying the FTDI GPIO direction,
+                where high level defines an output, and low level defines an
+                input
+           :param int initial: a bitfield specifying the initial output value
+           :param float frequency: serial interface clock in Hz
+           :param int latency: low-level latency in milliseconds. The shorter
+                the delay, the higher the host CPU load. Do not use shorter
+                values than the default, as it triggers data loss in FTDI.
+           :param bool debug: use a tracer to decode MPSSE protocol
+        """
         if not self.has_mpsse:
             self.close()
             raise FtdiMpsseError('This device does not support MPSSE')
