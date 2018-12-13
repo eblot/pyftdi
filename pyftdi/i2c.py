@@ -273,8 +273,12 @@ class I2cController:
     I2C_400K = I2CTimings(0.6E-6, 0.6E-6, 0.6E-6, 1.3E-6)
     I2C_1M = I2CTimings(0.26E-6, 0.26E-6, 0.26E-6, 0.5E-6)
 
-    def __init__(self):
-        self._ftdi = Ftdi()
+    def __init__(self, ftdi = None):
+        if not ftdi:
+            self._ftdi = Ftdi()
+        else:
+            self._ftdi = ftdi
+
         self.log = getLogger('pyftdi.i2c')
         self._slaves = {}
         self._retry_count = self.RETRY_COUNT
@@ -317,7 +321,7 @@ class I2cController:
             raise ValueError('Invalid retry count')
         self._retry_count = count
 
-    def configure(self, url, **kwargs):
+    def configure(self, **kwargs):
         """Configure the FTDI interface as a I2c master.
 
            :param str url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
@@ -330,6 +334,11 @@ class I2cController:
         for k in ('direction', 'initial'):
             if k in kwargs:
                 del kwargs[k]
+        if 'url' in kwargs:
+            url = kwargs['url']
+            del kwargs['url']
+        else:
+            url = None
         if 'frequency' in kwargs:
             frequency = kwargs['frequency']
             del kwargs['frequency']
@@ -354,9 +363,13 @@ class I2cController:
                       self._data_lo*ck_su_sto +
                       self._idle*ck_idle)
         frequency = (3.0*frequency)/2.0
-        self._frequency = self._ftdi.open_mpsse_from_url(
-            url, direction=self._direction, initial=self.IDLE,
-            frequency=frequency, **kwargs)
+        if url:
+            self._frequency = self._ftdi.open_mpsse_from_url(
+                url, direction=self._direction, initial=self.IDLE,
+                frequency=frequency, **kwargs)
+        else:
+            self._frequency = self._ftdi.init_mpsse(direction=self._direction,
+                    initial=self.IDLE, frequency=frequency, **kwargs)
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(False)
         self._ftdi.enable_3phase_clock(True)

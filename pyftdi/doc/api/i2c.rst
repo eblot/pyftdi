@@ -32,6 +32,19 @@ Example: communication with an |I2C| GPIO expander
     # Read a register from the I2C slave
     slave.read_from(0x00, 1)
 
+Example: creating an |I2C| controller from an existing FTDI device
+
+.. code-block:: python
+
+    # Open an FTDI device
+    ftdi = Ftdi.create_from_url('ftdi://ftdi:2232h/1')
+
+    # Instanciate an I2C controller from an existing FTDI device
+    i2c = I2cController(ftdi)
+
+    # Configure the FTDI device as an I2C master
+    i2c.configure()
+
 Example: mastering the |I2C| bus with a complex transaction
 
 .. code-block:: python
