@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2018 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.29.2'
+__version__ = '0.29.3'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
@@ -36,12 +36,13 @@ __license__ = 'LGPL v2'
 __copyright__ = 'Copyright (c) 2011-2018 Emmanuel Blot'
 
 
-from logging import WARNING, getLogger
+from logging import WARNING, NullHandler, getLogger
 
 
 class FtdiLogger:
 
     log = getLogger('pyftdi')
+    log.addHandler(NullHandler())
     log.setLevel(level=WARNING)
 
     @classmethod

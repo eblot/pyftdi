@@ -1,6 +1,6 @@
 """GPIO/BitBang support for PyFdti"""
 
-# Copyright (c) 2014-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -28,9 +28,6 @@
 
 from struct import pack as spack
 from pyftdi.ftdi import Ftdi
-
-
-__all__ = ['GpioController']
 
 
 class GpioException(IOError):

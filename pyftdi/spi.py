@@ -1,6 +1,6 @@
 """SPI support for PyFdti"""
 
-# Copyright (c) 2010-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -31,9 +31,6 @@ from logging import getLogger
 from pyftdi.ftdi import Ftdi, FtdiError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
-
-
-__all__ = ['SpiPort', 'SpiGpioPort', 'SpiController']
 
 
 class SpiIOError(FtdiError):
@@ -197,8 +194,23 @@ class SpiGpioPort:
 
     @property
     def pins(self):
-        """Report the addressable GPIOs as a bitfield."""
+        """Report the configured GPIOs as a bitfield."""
         return self._controller.gpio_pins
+
+    @property
+    def all_pins(self):
+        """Report the addressable GPIOs as a bitfield"""
+        return self._controller.gpio_all_pins
+
+    @property
+    def width(self):
+        """Report the FTDI count of addressable pins.
+
+           Note that all pins, including reserved SPI ones, are reported.
+
+           :return: the count of IO pins (including SPI ones).
+        """
+        return self._controller.width
 
     @property
     def direction(self):
@@ -366,9 +378,24 @@ class SpiController:
 
     @property
     def gpio_pins(self):
-        """Report the addressable GPIOs as a bitfield"""
+        """Report the configured GPIOs as a bitfield"""
         with self._lock:
             return self._gpio_mask
+
+    @property
+    def gpio_all_pins(self):
+        """Report the addressable GPIOs as a bitfield"""
+        mask = (1 << self.width) - 1
+        with self._lock:
+            return mask & ~self._spi_mask
+
+    @property
+    def width(self):
+        """Report the FTDI count of addressable pins.
+
+           :return: the count of IO pins (including SPI ones).
+        """
+        return 16 if self._wide_port else 8
 
     def exchange(self, frequency, out, readlen,
                  cs_prolog=None, cs_epilog=None,

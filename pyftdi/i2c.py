@@ -1,6 +1,6 @@
 """I2C support for PyFdti"""
 
-# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,6 @@ from pyftdi.ftdi import Ftdi, FtdiFeatureError
 # pylint: disable-msg=too-many-locals,too-many-instance-attributes
 # pylint: disable-msg=too-many-arguments
 # pylint: disable-msg=consider-using-ternary
-
-
-__all__ = ['I2cPort', 'I2cController']
 
 
 class I2cIOError(IOError):

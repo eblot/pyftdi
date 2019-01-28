@@ -5,7 +5,7 @@
    Require: pyusb
 """
 
-# Copyright (C) 2010-2018 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 #   Originally based on the C libftdi project
 #   http://www.intra2net.com/en/developer/libftdi/
@@ -34,8 +34,6 @@ import usb.core
 import usb.util
 from .misc import to_bool
 from .usbtools import UsbTools
-
-__all__ = ['Ftdi', 'FtdiError']
 
 
 class FtdiError(IOError):
@@ -526,6 +524,12 @@ class Ftdi:
         # Set chunk size
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
+        # Reset feature mode
+        self.set_bitmode(0, Ftdi.BITMODE_RESET)
+        # Enable MPSSE mode
+        self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
+        # Reset feature mode
+        self.set_bitmode(0, Ftdi.BITMODE_RESET)
         # Drain buffers
         self.purge_buffers()
         # Disable event and error characters
@@ -766,6 +770,7 @@ class Ftdi:
             baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
+        self.log.debug('Actual baudrate: %d %.1f%%', actual, delta)
         if delta > Ftdi.BAUDRATE_TOLERANCE:
             raise ValueError('Baudrate tolerance exceeded: %.02f%% '
                              '(wanted %d, achievable %d)' %
@@ -940,11 +945,43 @@ class Ftdi:
            Either hardware flow control through RTS/CTS UART lines,
            software or no flow control.
 
-           :param str flowctrl: one of 'hw', 'sw', ''
+           :param str flowctrl: one of 'hw', ''
            :raise ValueError: if the flow control argument is invalid
+
+           ..note:: How does RTS/CTS flow control work (from FTDI FAQ):
+
+                FTxxx RTS# pin is an output. It should be connected to the CTS#
+                input pin of the device at the other end of the UART link.
+
+                    * If RTS# is logic 0 it is indicating the FTxxx device can
+                      accept more data on the RXD pin.
+                    * If RTS# is logic 1 it is indicating the FTxxx device
+                      cannot accept more data.
+
+                RTS# changes state when the chip buffer reaches its last 32
+                bytes of space to allow time for the external device to stop
+                sending data to the FTxxx device.
+
+                FTxxx CTS# pin is an input. It should be connected to the RTS#
+                output pin of the device at the other end of the UART link.
+
+                  * If CTS# is logic 0 it is indicating the external device can
+                    accept more data, and the FTxxx will transmit on the TXD
+                    pin.
+                  * If CTS# is logic 1 it is indicating the external device
+                    cannot accept more data. the FTxxx will stop transmitting
+                    within 0~3 characters, depending on what is in the buffer.
+
+                    **This potential 3 character overrun does occasionally
+                    present problems.** Customers shoud be made aware the FTxxx
+                    is a USB device and not a "normal" RS232 device as seen on
+                    a PC. As such the device operates on a packet basis as
+                    opposed to a byte basis.
+
+                Word to the wise. Not only do RS232 level shifting devices
+                level shift, but they also invert the signal.
         """
         ctrl = {'hw': Ftdi.SIO_RTS_CTS_HS,
-                'sw': Ftdi.SIO_XON_XOFF_HS,
                 '': Ftdi.SIO_DISABLE_FLOW_CTRL}
         try:
             value = ctrl[flowctrl] | self.index
@@ -955,15 +992,15 @@ class Ftdi:
                     Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, array('B'),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
-        except usb.core.USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+        except usb.core.USBError as exc:
+            raise FtdiError('UsbError: %s' % str(exc))
 
     def set_dtr(self, state):
         """Set dtr line
 
            :param bool state: new DTR logical level
         """
-        value = state and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
+        value = Ftdi.SIO_SET_DTR_HIGH if state else Ftdi.SIO_SET_DTR_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set DTR line')
 
@@ -972,7 +1009,7 @@ class Ftdi:
 
            :param bool state: new RTS logical level
         """
-        value = state and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        value = Ftdi.SIO_SET_RTS_HIGH if state else Ftdi.SIO_SET_RTS_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set RTS line')
 
@@ -983,8 +1020,8 @@ class Ftdi:
            :param bool rts: new RTS logical level
         """
         value = 0
-        value |= dtr and Ftdi.SIO_SET_DTR_HIGH or Ftdi.SIO_SET_DTR_LOW
-        value |= rts and Ftdi.SIO_SET_RTS_HIGH or Ftdi.SIO_SET_RTS_LOW
+        value |= Ftdi.SIO_SET_DTR_HIGH if dtr else Ftdi.SIO_SET_DTR_LOW
+        value |= Ftdi.SIO_SET_RTS_HIGH if rts else Ftdi.SIO_SET_RTS_LOW
         if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 

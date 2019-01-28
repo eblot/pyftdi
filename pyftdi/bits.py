@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -32,7 +32,6 @@ from array import array
 from pyftdi.misc import is_iterable, xor
 
 
-__all__ = ['BitSequence', 'BitZSequence', 'BitSequenceError', 'BitField']
 
 
 class BitSequenceError(Exception):

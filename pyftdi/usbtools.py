@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (C) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -23,8 +23,6 @@ from string import printable as printablechars
 from sys import platform, stdout
 from urllib.parse import urlsplit
 from .misc import to_int
-
-__all__ = ['UsbTools']
 
 
 class UsbToolsError(Exception):

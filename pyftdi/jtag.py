@@ -24,9 +24,6 @@ from pyftdi.ftdi import Ftdi
 from pyftdi.bits import BitSequence
 
 
-__all__ = ['JtagEngine', 'JtagTool']
-
-
 class JtagError(Exception):
     """Generic JTAG error"""
 
