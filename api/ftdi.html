@@ -24,30 +24,20 @@
 
   
 
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="PyFtdi  documentation" href="../index.html"/>
-        <link rel="up" title="API documentation" href="index.html"/>
-        <link rel="next" title="gpio - GPIO API" href="gpio.html"/>
-        <link rel="prev" title="API documentation" href="index.html"/> 
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="gpio - GPIO API" href="gpio.html" />
+    <link rel="prev" title="API documentation" href="index.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
@@ -69,7 +59,7 @@
             
             
               <div class="version">
-                0.29.2
+                0.29.3
               </div>
             
           
@@ -130,7 +120,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">PyFtdi</a>
@@ -138,9 +128,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -390,7 +381,7 @@ purposes only. It does not support UART (TX to RX) mode.</p>
 
 <dl class="staticmethod">
 <dt id="pyftdi.ftdi.Ftdi.find_all">
-<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.find_all" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">find_all</code><span class="sig-paren">(</span><em>vps</em>, <em>nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.find_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all devices that match the vendor/product pairs of the vps
 list.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1166,12 +1157,49 @@ software or no flow control.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘sw’, ‘’</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘’</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if the flow control argument is invalid</td>
 </tr>
 </tbody>
 </table>
+<p>..note:: How does RTS/CTS flow control work (from FTDI FAQ):</p>
+<blockquote>
+<div><p>FTxxx RTS# pin is an output. It should be connected to the CTS#
+input pin of the device at the other end of the UART link.</p>
+<blockquote>
+<div><ul class="simple">
+<li>If RTS# is logic 0 it is indicating the FTxxx device can
+accept more data on the RXD pin.</li>
+<li>If RTS# is logic 1 it is indicating the FTxxx device
+cannot accept more data.</li>
+</ul>
+</div></blockquote>
+<p>RTS# changes state when the chip buffer reaches its last 32
+bytes of space to allow time for the external device to stop
+sending data to the FTxxx device.</p>
+<p>FTxxx CTS# pin is an input. It should be connected to the RTS#
+output pin of the device at the other end of the UART link.</p>
+<blockquote>
+<div><ul>
+<li><p class="first">If CTS# is logic 0 it is indicating the external device can
+accept more data, and the FTxxx will transmit on the TXD
+pin.</p>
+</li>
+<li><p class="first">If CTS# is logic 1 it is indicating the external device
+cannot accept more data. the FTxxx will stop transmitting
+within 0~3 characters, depending on what is in the buffer.</p>
+<p><strong>This potential 3 character overrun does occasionally
+present problems.</strong> Customers shoud be made aware the FTxxx
+is a USB device and not a “normal” RS232 device as seen on
+a PC. As such the device operates on a packet basis as
+opposed to a byte basis.</p>
+</li>
+</ul>
+</div></blockquote>
+<p>Word to the wise. Not only do RS232 level shifting devices
+level shift, but they also invert the signal.</p>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -1351,9 +1379,7 @@ be use for a regular usage.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -1371,11 +1397,11 @@ be use for a regular usage.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
+        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1390,35 +1416,24 @@ be use for a regular usage.</p>
 
   
 
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
 
   
 
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-   
+  </script> 
 
 </body>
 </html>
