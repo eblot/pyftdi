@@ -1614,15 +1614,12 @@ class Ftdi:
             divisor_hs = max(0, min(0xFFFF, int((Ftdi.BUS_CLOCK_HIGH+frequency/2)/frequency)-1))
             actual_freq_hs = Ftdi.BUS_CLOCK_HIGH/(divisor_hs+1)
             error_hs = (actual_freq_hs/frequency)-1
-            #self.log.debug('divisor %i, divisor_hs %i', divisor, divisor_hs)
-            #self.log.debug('error %+.3f, error_hs %+.3f', error*100, error_hs*100)
             # Enable if closer to desired frequency (percentually)
             if abs(error_hs) < abs(error):
                 divcode = Ftdi.DISABLE_CLK_DIV5
                 divisor = divisor_hs
                 actual_freq = actual_freq_hs
                 error = error_hs
-                #self.log.debug('Using high speed clock!')
 
         # FTDI expects little endian
         if self.is_H_series:
