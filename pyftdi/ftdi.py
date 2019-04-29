@@ -1601,18 +1601,29 @@ class Ftdi:
         """Convert a frequency value into a TCK divisor setting"""
         if frequency > self.frequency_max:
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
-        if frequency <= Ftdi.BUS_CLOCK_BASE:
-            divcode = Ftdi.ENABLE_CLK_DIV5
-            divisor = int((Ftdi.BUS_CLOCK_BASE+frequency-1)/frequency)-1
-            actual_freq = (Ftdi.BUS_CLOCK_BASE+divisor-1)/(divisor+1)
-        elif frequency <= Ftdi.BUS_CLOCK_HIGH:
-            # not supported on non-H device, however it seems that 2232D
-            # devices simply ignore the settings. Could be improved though
-            divcode = Ftdi.DISABLE_CLK_DIV5
-            divisor = int((Ftdi.BUS_CLOCK_HIGH+frequency-1)/frequency)-1
-            actual_freq = (Ftdi.BUS_CLOCK_HIGH+divisor-1)/(divisor+1)
-        else:
-            raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
+
+        # Calculate base speed clock divider
+        divcode = Ftdi.ENABLE_CLK_DIV5
+        divisor = max(0, min(0xFFFF, int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1))
+        actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
+        error = (actual_freq/frequency)-1
+
+        # Should we use high speed clock available in H series?
+        if self.is_H_series:
+            # Calculate high speed clock divider
+            divisor_hs = max(0, min(0xFFFF, int((Ftdi.BUS_CLOCK_HIGH+frequency/2)/frequency)-1))
+            actual_freq_hs = Ftdi.BUS_CLOCK_HIGH/(divisor_hs+1)
+            error_hs = (actual_freq_hs/frequency)-1
+            #self.log.debug('divisor %i, divisor_hs %i', divisor, divisor_hs)
+            #self.log.debug('error %+.3f, error_hs %+.3f', error*100, error_hs*100)
+            # Enable if closer to desired frequency (percentually)
+            if abs(error_hs) < abs(error):
+                divcode = Ftdi.DISABLE_CLK_DIV5
+                divisor = divisor_hs
+                actual_freq = actual_freq_hs
+                error = error_hs
+                #self.log.debug('Using high speed clock!')
+
         # FTDI expects little endian
         if self.is_H_series:
             cmd = array('B', (divcode,))
@@ -1624,7 +1635,7 @@ class Ftdi:
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
-        self.log.debug('Bus frequency: %.3f MHz', (actual_freq/1E6))
+        self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)', (actual_freq/1E6), error*100)
         return actual_freq
 
     def __get_timeouts(self):
