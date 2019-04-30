@@ -93,3 +93,7 @@ Contributors
 
   * Fix invalid package configuration
 
+ * vestom:
+
+  * Fix divisor calculation for frequency generation and improve frequency
+    selection.
