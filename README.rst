@@ -46,4 +46,4 @@ module to access USB-serial converters based on FTDI devices.
 Documentation
 -------------
 
-PyFtdi documentation is available from http://eblot.github.io/pyftdi/
+PyFtdi documentation is available from https://eblot.github.io/pyftdi/
