@@ -1601,14 +1601,12 @@ class Ftdi:
         """Convert a frequency value into a TCK divisor setting"""
         if frequency > self.frequency_max:
             raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
-
         # Calculate base speed clock divider
         divcode = Ftdi.ENABLE_CLK_DIV5
         divisor = int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1
         divisor = max(0, min(0xFFFF, divisor))
         actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
         error = (actual_freq/frequency)-1
-
         # Should we use high speed clock available in H series?
         if self.is_H_series:
             # Calculate high speed clock divider
@@ -1622,7 +1620,6 @@ class Ftdi:
                 divisor = divisor_hs
                 actual_freq = actual_freq_hs
                 error = error_hs
-
         # FTDI expects little endian
         if self.is_H_series:
             cmd = array('B', (divcode,))
@@ -1635,7 +1632,7 @@ class Ftdi:
         # Drain input buffer
         self.purge_rx_buffer()
         self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)',
-                        (actual_freq/1E6), error*100)
+                       (actual_freq/1E6), error*100)
         return actual_freq
 
     def __get_timeouts(self):

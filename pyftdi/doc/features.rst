@@ -63,6 +63,9 @@ GPIOs cannot be used while |I2C| mode is enabled (not yet implemented).
 The ``pyftdi/bin/i2cscan.py`` script helps to discover which I2C devices
 are connected to the FTDI I2C bus.
 
+Initial clock stretching support has been added and should be considered as
+experimental.
+
 JTAG
 ....
 
