@@ -1604,14 +1604,16 @@ class Ftdi:
 
         # Calculate base speed clock divider
         divcode = Ftdi.ENABLE_CLK_DIV5
-        divisor = max(0, min(0xFFFF, int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1))
+        divisor = int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1
+        divisor = max(0, min(0xFFFF, divisor))
         actual_freq = Ftdi.BUS_CLOCK_BASE/(divisor+1)
         error = (actual_freq/frequency)-1
 
         # Should we use high speed clock available in H series?
         if self.is_H_series:
             # Calculate high speed clock divider
-            divisor_hs = max(0, min(0xFFFF, int((Ftdi.BUS_CLOCK_HIGH+frequency/2)/frequency)-1))
+            divisor_hs = int((Ftdi.BUS_CLOCK_HIGH+frequency/2)/frequency)-1
+            divisor_hs = max(0, min(0xFFFF, divisor_hs))
             actual_freq_hs = Ftdi.BUS_CLOCK_HIGH/(divisor_hs+1)
             error_hs = (actual_freq_hs/frequency)-1
             # Enable if closer to desired frequency (percentually)
@@ -1632,7 +1634,8 @@ class Ftdi:
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
-        self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)', (actual_freq/1E6), error*100)
+        self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)',
+                        (actual_freq/1E6), error*100)
         return actual_freq
 
     def __get_timeouts(self):
