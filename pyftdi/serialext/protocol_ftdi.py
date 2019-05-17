@@ -24,6 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from array import array
 from io import RawIOBase
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbToolsError
@@ -71,7 +72,7 @@ class FtdiSerial(SerialBase):
         start = now()
         while True:
             buf = self.udev.read_data(size)
-            data += buf
+            data.extend(buf)
             size -= len(buf)
             if size <= 0:
                 break
@@ -82,7 +83,7 @@ class FtdiSerial(SerialBase):
                 if ms > self._timeout:
                     break
             sleep(0.01)
-        return data
+        return bytes(data)
 
     def write(self, data):
         """Output the given string over the serial port."""

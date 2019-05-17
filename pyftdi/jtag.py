@@ -188,7 +188,7 @@ class JtagController:
                           JtagController.TMS_BIT |
                           (self._trst and JtagController.TRST_BIT or 0))
         self._last = None  # Last deferred TDO bit
-        self._write_buff = array('B')
+        self._write_buff = bytearray()
 
     # Public API
     def configure(self, url):
@@ -196,7 +196,7 @@ class JtagController:
         self._ftdi.open_mpsse_from_url(
             url, direction=self.direction, frequency=self._frequency)
         # FTDI requires to initialize all GPIOs before MPSSE kicks in
-        cmd = array('B', (Ftdi.SET_BITS_LOW, 0x0, self.direction))
+        cmd = bytearray((Ftdi.SET_BITS_LOW, 0x0, self.direction))
         self._ftdi.write_data(cmd)
 
     def close(self):
@@ -219,12 +219,12 @@ class JtagController:
         if self._trst:
             # nTRST
             value = 0
-            cmd = array('B', (Ftdi.SET_BITS_LOW, value, self.direction))
+            cmd = bytearray((Ftdi.SET_BITS_LOW, value, self.direction))
             self._ftdi.write_data(cmd)
             time.sleep(0.1)
             # nTRST should be left to the high state
             value = JtagController.TRST_BIT
-            cmd = array('B', (Ftdi.SET_BITS_LOW, value, self.direction))
+            cmd = bytearray((Ftdi.SET_BITS_LOW, value, self.direction))
             self._ftdi.write_data(cmd)
             time.sleep(0.1)
         # TAP reset (even with HW reset, could be removed though)
@@ -237,7 +237,7 @@ class JtagController:
             raise JtagError("FTDI controller terminated")
         if self._write_buff:
             self._ftdi.write_data(self._write_buff)
-            self._write_buff = array('B')
+            self._write_buff = bytearray()
 
     def write_tms(self, tms):
         """Change the TAP controller state"""
@@ -253,7 +253,7 @@ class JtagController:
         # print("TMS", tms, (self._last is not None) and 'w/ Last' or '')
         # reset last bit
         self._last = None
-        cmd = array('B', (Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
+        cmd = bytearray((Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
         self._stack_cmd(cmd)
         self.sync()
 
@@ -312,7 +312,7 @@ class JtagController:
             # print("push %d bytes" % byte_count)
         if bit_count:
             # print("RW OUT %s" % out[pos:])
-            cmd = array('B', (Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1))
+            cmd = bytearray((Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1))
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
             # print("push %d bits" % bit_count)
@@ -357,7 +357,7 @@ class JtagController:
         """Read out bits from TDO"""
         if length > 8:
             raise JtagError("Cannot fit into FTDI fifo")
-        cmd = array('B', (Ftdi.READ_BITS_NVE_LSB, length-1))
+        cmd = bytearray((Ftdi.READ_BITS_NVE_LSB, length-1))
         self._stack_cmd(cmd)
         self.sync()
         data = self._ftdi.read_data_bytes(1, 4)
@@ -372,7 +372,7 @@ class JtagController:
         length = len(out)
         byte = out.tobyte()
         # print("WRITE BITS %s" % out)
-        cmd = array('B', (Ftdi.WRITE_BITS_NVE_LSB, length-1, byte))
+        cmd = bytearray((Ftdi.WRITE_BITS_NVE_LSB, length-1, byte))
         self._stack_cmd(cmd)
 
     def _read_bytes(self, length):
@@ -380,7 +380,7 @@ class JtagController:
         if length > JtagController.FTDI_PIPE_LEN:
             raise JtagError("Cannot fit into FTDI fifo")
         alen = length-1
-        cmd = array('B', (Ftdi.READ_BYTES_NVE_LSB, alen & 0xff,
+        cmd = bytearray((Ftdi.READ_BYTES_NVE_LSB, alen & 0xff,
                           (alen >> 8) & 0xff))
         self._stack_cmd(cmd)
         self.sync()
@@ -394,7 +394,7 @@ class JtagController:
         bytes_ = out.tobytes(msby=True)  # don't ask...
         olen = len(bytes_)-1
         # print("WRITE BYTES %s" % out)
-        cmd = array('B', (Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
+        cmd = bytearray((Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
                           (olen >> 8) & 0xff))
         cmd.extend(bytes_)
         self._stack_cmd(cmd)
@@ -402,7 +402,7 @@ class JtagController:
     def _write_bytes_raw(self, out):
         """Output bytes on TDI"""
         olen = len(out)-1
-        cmd = array('B', (Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
+        cmd = bytearray((Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
                           (olen >> 8) & 0xff))
         cmd.extend(out)
         self._stack_cmd(cmd)
@@ -414,7 +414,7 @@ class JtagEngine:
     def __init__(self, trst=False, frequency=3E06):
         self._ctrl = JtagController(trst, frequency)
         self._sm = JtagStateMachine()
-        self._seq = array('B')
+        self._seq = bytearray()
 
     def configure(self, url):
         """Configure the FTDI interface as a JTAG controller"""

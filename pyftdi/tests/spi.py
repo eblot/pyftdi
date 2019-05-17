@@ -52,7 +52,7 @@ class SpiDataFlashTest(object):
 
     def read_jedec_id(self):
         port = self._spi.get_port(0, freq=3E6, mode=0)
-        jedec_id = port.exchange([0x9f], 3).tobytes()
+        jedec_id = port.exchange([0x9f], 3)
         hex_jedec_id = hexlify(jedec_id).decode()
         print('JEDEC ID:', hex_jedec_id)
         return hex_jedec_id
@@ -77,7 +77,7 @@ class SpiAccelTest(object):
 
     def read_device_id(self):
         port = self._spi.get_port(1, freq=6E6, mode=3)
-        device_id = port.exchange([0x00], 1).tobytes()
+        device_id = port.exchange([0x00], 1)
         hex_device_id = hexlify(device_id).decode()
         print('DEVICE ID:', hex_device_id)
         return hex_device_id

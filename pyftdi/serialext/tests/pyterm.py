@@ -123,7 +123,7 @@ class MiniTerm:
                 self._rxe.clear()
                 break
         if not self._rxq:
-            return array('B')
+            return bytearray()
         return self._rxq.popleft()
 
     def _get_from_port(self):
@@ -135,7 +135,7 @@ class MiniTerm:
             interrupt_main()
         except Exception as ex:
             print(str(ex), file=stderr)
-            return array('B')
+            return bytearray()
 
     def _reader(self, loopback, getfunc):
         """Loop forever, processing received serial data in terminal mode"""
@@ -232,10 +232,10 @@ class MiniTerm:
         try:
             from serial import serial_for_url, VERSION as serialver
             version = tuple([int(x) for x in serialver.split('.')])
-            if version < (2, 6):
+            if version < (3, 0):
                 raise ValueError
         except (ValueError, IndexError, ImportError):
-            raise ImportError("pyserial 2.6+ is required")
+            raise ImportError("pyserial 3.0+ is required")
         # the following import enables serial protocol extensions
         if device.startswith('ftdi:'):
             try:

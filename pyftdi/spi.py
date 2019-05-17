@@ -402,7 +402,7 @@ class SpiController:
                  cpol=False, cpha=False, duplex=False):
         if duplex:
             if readlen > len(out):
-                tmp = array('B', out)
+                tmp = bytearray(out)
                 tmp.extend([0] * (readlen - len(out)))
                 out = tmp
             elif not readlen:
@@ -469,12 +469,12 @@ class SpiController:
 
     def _read_raw(self, read_high):
         if read_high:
-            cmd = array('B', [Ftdi.GET_BITS_LOW,
+            cmd = bytearray([Ftdi.GET_BITS_LOW,
                               Ftdi.GET_BITS_HIGH,
                               Ftdi.SEND_IMMEDIATE])
             fmt = '<H'
         else:
-            cmd = array('B', [Ftdi.GET_BITS_LOW,
+            cmd = bytearray([Ftdi.GET_BITS_LOW,
                               Ftdi.SEND_IMMEDIATE])
             fmt = 'B'
         self._ftdi.write_data(cmd)
@@ -492,10 +492,10 @@ class SpiController:
         if write_high:
             high_data = (data >> 8) & 0xFF
             high_dir = (direction >> 8) & 0xFF
-            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
+            cmd = bytearray([Ftdi.SET_BITS_LOW, low_data, low_dir,
                               Ftdi.SET_BITS_HIGH, high_data, high_dir])
         else:
-            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir])
+            cmd = bytearray([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
     def _exchange_half_duplex(self, frequency, out, readlen,
@@ -519,12 +519,12 @@ class SpiController:
             # to avoid setting unavailable values on each call.
             self._frequency = frequency
         direction = self.direction & 0xFF  # low bits only
-        cmd = array('B')
+        cmd = bytearray()
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
-        epilog = array('B')
+        epilog = bytearray()
         if cs_epilog:
             for ctrl in cs_epilog:
                 ctrl &= self._spi_mask
@@ -544,13 +544,13 @@ class SpiController:
             wcmd = (cpol ^ cpha) and \
                 Ftdi.WRITE_BYTES_PVE_MSB or Ftdi.WRITE_BYTES_NVE_MSB
             write_cmd = spack('<BH', wcmd, writelen-1)
-            cmd.frombytes(write_cmd)
+            cmd.append(write_cmd)
             cmd.extend(out)
         if readlen:
             rcmd = (cpol ^ cpha) and \
                 Ftdi.READ_BYTES_PVE_MSB or Ftdi.READ_BYTES_NVE_MSB
             read_cmd = spack('<BH', rcmd, readlen-1)
-            cmd.frombytes(read_cmd)
+            cmd.append(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 if epilog:
@@ -574,7 +574,7 @@ class SpiController:
                     self._ftdi.write_data(cmd)
                     if epilog:
                         self._ftdi.write_data(epilog)
-            data = array('B')
+            data = bytearray()
         return data
 
     def _exchange_full_duplex(self, frequency, out,
@@ -596,12 +596,12 @@ class SpiController:
             # to avoid setting unavailable values on each call.
             self._frequency = frequency
         direction = self.direction & 0xFF  # low bits only
-        cmd = array('B')
+        cmd = bytearray()
         for ctrl in cs_prolog or []:
             ctrl &= self._spi_mask
             ctrl |= self._gpio_low
             cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
-        epilog = array('B')
+        epilog = bytearray()
         if cs_epilog:
             for ctrl in cs_epilog:
                 ctrl &= self._spi_mask
@@ -620,7 +620,7 @@ class SpiController:
         wcmd = (cpol ^ cpha) and \
             Ftdi.RW_BYTES_NVE_PVE_MSB or Ftdi.RW_BYTES_PVE_NVE_MSB
         write_cmd = spack('<BH', wcmd, writelen-1)
-        cmd.frombytes(write_cmd)
+        cmd.extend(write_cmd)
         cmd.extend(out)
         cmd.extend(self._immediate)
         if self._turbo:

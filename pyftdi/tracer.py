@@ -65,8 +65,8 @@ class FtdiMpsseTracer:
 
     def __init__(self):
         self.log = getLogger('pyftdi.mpsse')
-        self._trace_tx = array('B')
-        self._trace_rx = array('B')
+        self._trace_tx = bytearray()
+        self._trace_rx = bytearray()
         self._state = self.ST_IDLE
         self._clkdiv5 = False
         self._cmd_decoded = True
@@ -96,8 +96,8 @@ class FtdiMpsseTracer:
                 self.log.warning('Decoder for command %s is not implemented',
                                  cmd)
             # on error, flush all buffers
-            self._trace_tx = array('B')
-            self._trace_rx = array('B')
+            self._trace_tx = bytearray()
+            self._trace_rx = bytearray()
             self._last_codes.clear()
 
     def receive(self, buffer):
@@ -119,7 +119,7 @@ class FtdiMpsseTracer:
                 self.log.warning('Decoder for response %s is not implemented',
                                  cmd)
             # on error, flush RX buffer
-            self._trace_rx = array('B')
+            self._trace_rx = bytearray()
             self._last_codes.clear()
 
     def _cmd_enable_clk_div5(self):
