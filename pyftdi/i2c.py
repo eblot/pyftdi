@@ -357,10 +357,12 @@ class I2cController:
         self._stop = (self._clk_lo_data_lo * ck_hd_sta +
                       self._data_lo*ck_su_sto +
                       self._idle*ck_idle)
-        frequency = (3.0*frequency)/2.0
-        self._frequency = self._ftdi.open_mpsse_from_url(
+        # as 3-phase clock frequency mode is required for I2C mode, the
+        # FTDI clock should be adapted to match the required frequency.
+        frequency = self._ftdi.open_mpsse_from_url(
             url, direction=self._direction, initial=self.IDLE,
-            frequency=frequency, **kwargs)
+            frequency=(3.0*frequency)/2.0, **kwargs)
+        self._frequency = (2.0*frequency)/3.0
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(clkstrch)
         self._ftdi.enable_3phase_clock(True)
