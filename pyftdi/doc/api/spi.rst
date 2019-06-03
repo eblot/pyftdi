@@ -30,7 +30,9 @@ Example: communication with a remote SPI device using full-duplex mode
 .. code-block:: python
 
     # Instanciate a SPI controller
-    spi = SpiController()
+    # We need want to use A*BUS4 for /CS, so at least 2 /CS lines should be
+    # reserved for SPI, the remaining IO are available as GPIOs.
+    spi = SpiController(cs_count=2)
 
     # Configure the first interface (IF/1) of the FTDI device as a SPI master
     spi.configure('ftdi://ftdi:2232h/1')
@@ -109,3 +111,17 @@ See :doc:`../pinout` for FTDI wiring.
    export FTDI_LOGLEVEL=DEBUG
    # be sure to connect the appropriate SPI slaves to the FTDI SPI bus and run
    PYTHONPATH=. python3 pyftdi/tests/spi.py
+
+Caveats
+~~~~~~~
+
+* Due to the MPSSE engine limitation, it is not possible to achieve
+  time-controlled request sequence. In other words, if the SPI slave needs to
+  receive command sequences at precise instants - for example ADC or DAC
+  devices - PyFtdi_ use is not recommended. This limitation is likely to apply
+  to any library that relies on FTDI device. The USB bus latency and the lack
+  of timestamped commands always add jitter and delays, with no easy known
+  workaround.
+
+* FTDI devices are documented to only support SPI mode 0 and mode 2. Mode 1
+  may work in some cases, but mode 3 is known to fail.
