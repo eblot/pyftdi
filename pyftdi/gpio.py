@@ -100,7 +100,7 @@ class GpioController:
             raise GpioException("Invalid direction mask")
         self._direction &= ~pins
         self._direction |= (pins & direction)
-        self._ftdi.set_bitmode(self.direction, Ftdi.BITMODE_BITBANG)
+        self._ftdi.set_bitmode(self._direction, Ftdi.BITMODE_BITBANG)
 
     def read(self):
         """Read the GPIO input pin electrical level.
