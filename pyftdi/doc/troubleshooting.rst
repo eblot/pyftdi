@@ -74,6 +74,16 @@ The system may already be using the device.
   out the :doc:`installation` section.
 
 
+"Bus error / Access violation"
+..............................
+
+PyFtdi does not use any native library, but relies on PyUSB_ and libusb_. The
+latter uses native code that may trigger OS error. Some early development
+versions of libusb_, for example 1.0.22-b…, have been reported to trigger
+such issues. Please ensure you use a stable/final versions of libusb_ if you
+experience this kind of fatal error.
+
+
 "serial.serialutil.SerialException: Unable to open USB port"
 ............................................................
 
