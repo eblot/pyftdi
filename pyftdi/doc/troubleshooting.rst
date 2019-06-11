@@ -50,6 +50,9 @@ The system may already be using the device.
   Please note that the system automatically reloads the driver, so it may be
   useful to move the kernel extension so that the system never loads it.
 
+  FTDI provides a `handy helper for macOS 10.11`_ and later, to prevent automatic claiming of the device as a serial port.
+  They have also included a `Installing D2xx drivers on macOS`_ video, on how to install the drivers and the helper.
+
 * On Linux: it may indicate a missing or invalid udev configuration. See
   the :doc:`installation` section.
 

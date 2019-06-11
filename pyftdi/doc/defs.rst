@@ -23,4 +23,5 @@
 .. _Zadig: http://zadig.akeo.ie/
 .. _FTDI macOS guide: http://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf
 .. _Libusb issue on macOs: https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152
-
+.. _handy helper for macOS 10.11: https://www.ftdichip.com/Drivers/D2XX.htm
+.. _Installing D2xx drivers on macOS: https://youtu.be/Ir2PVz1870E
