@@ -92,3 +92,17 @@ See :doc:`../pinout` for FTDI wiring.
    export FTDI_LOGLEVEL=DEBUG
    # be sure to connect the appropriate I2C slaves to the FTDI I2C bus and run
    PYTHONPATH=. python3 pyftdi/tests/i2c.py
+
+Caveats
+~~~~~~~
+
+* Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
+  slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
+  acknowledged by the peer, a I2C byte cannot be written to the slave before
+  the previous byte has been acknowledged by the slave and read back by the
+  I2C master, that is the host. This requires several USB transfer for each
+  byte, on top of each latency of the USB stack may add up. PyFtdi_ is
+  therefore not recommended if you need to achieve medium to high speed
+  communication with a slave (relative to the I2C clock...), nor than FTDI
+  devices are for this kind of usage.
+

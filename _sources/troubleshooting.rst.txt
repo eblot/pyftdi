@@ -35,10 +35,10 @@ libusb native library cannot be loaded. Try helping the dynamic loader:
 
 The system may already be using the device.
 
-* On macOS: starting with Mavericks (10.9+), OS X ships with a native FTDI
-  driver that preempts access to the FTDI device.
+* On macOS: starting with 10.9 "*Mavericks*", macOS ships with a native FTDI
+  kernel extension that preempts access to the FTDI device.
 
-  The driver can be unloaded this way:
+  Up to 10.13 "*High Sierra*", this driver can be unloaded this way:
 
   .. code-block:: shell
 
@@ -49,6 +49,14 @@ The system may already be using the device.
 
   Please note that the system automatically reloads the driver, so it may be
   useful to move the kernel extension so that the system never loads it.
+
+  .. warning::
+
+     From macOS 10.14 "*Mojave*", the Apple kernel extension peacefully
+     co-exists with libusb_ and PyFtdi_, so you no longer need - and **should
+     not attempt** - to unload the kernel extension. If you still experience
+     this error, please verify you have not installed another driver from FTDI,
+     such as FTDI's D2XX.
 
 * On Linux: it may indicate a missing or invalid udev configuration. See
   the :doc:`installation` section.

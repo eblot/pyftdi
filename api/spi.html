@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.29.4
+                0.29.5
               </div>
             
           
@@ -98,6 +98,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#caveats">Caveats</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
@@ -197,7 +198,9 @@
 </div>
 <p>Example: communication with a remote SPI device using full-duplex mode</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
-<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+<span class="c1"># We need want to use A*BUS4 for /CS, so at least 2 /CS lines should be</span>
+<span class="c1"># reserved for SPI, the remaining IO are available as GPIOs.</span>
+<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">(</span><span class="n">cs_count</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
 <span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
@@ -704,6 +707,20 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
 <span class="nv">PYTHONPATH</span><span class="o">=</span>. python3 pyftdi/tests/spi.py
 </pre></div>
 </div>
+</div>
+<div class="section" id="caveats">
+<h2>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Due to the MPSSE engine limitation, it is not possible to achieve
+time-controlled request sequence. In other words, if the SPI slave needs to
+receive command sequences at precise instants - for example ADC or DAC
+devices - <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> use is not recommended. This limitation is likely to apply
+to any library that relies on FTDI device. The USB bus latency and the lack
+of timestamped commands always add jitter and delays, with no easy known
+workaround.</li>
+<li>FTDI devices are documented to only support SPI mode 0 and mode 2. Mode 1
+may work in some cases, but mode 3 is known to fail.</li>
+</ul>
 </div>
 </div>
 

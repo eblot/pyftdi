@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.29.4
+                0.29.5
               </div>
             
           
@@ -196,9 +196,9 @@ library file</p>
 <h3>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Permalink to this headline">¶</a></h3>
 <p>The system may already be using the device.</p>
 <ul>
-<li><p class="first">On macOS: starting with Mavericks (10.9+), OS X ships with a native FTDI
-driver that preempts access to the FTDI device.</p>
-<p>The driver can be unloaded this way:</p>
+<li><p class="first">On macOS: starting with 10.9 “<em>Mavericks</em>”, macOS ships with a native FTDI
+kernel extension that preempts access to the FTDI device.</p>
+<p>Up to 10.13 “<em>High Sierra</em>”, this driver can be unloaded this way:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo kextunload <span class="o">[</span>-v<span class="o">]</span> -bundle com.apple.driver.AppleUSBFTDI
 </pre></div>
 </div>
@@ -206,6 +206,14 @@ driver that preempts access to the FTDI device.</p>
 <code class="docutils literal notranslate"><span class="pre">pyftdi/bin/uphy.sh</span></code></p>
 <p>Please note that the system automatically reloads the driver, so it may be
 useful to move the kernel extension so that the system never loads it.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">From macOS 10.14 “<em>Mojave</em>”, the Apple kernel extension peacefully
+co-exists with <a class="reference external" href="http://www.libusb.info/">libusb</a> and <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>, so you no longer need - and <strong>should
+not attempt</strong> - to unload the kernel extension. If you still experience
+this error, please verify you have not installed another driver from FTDI,
+such as FTDI’s D2XX.</p>
+</div>
 </li>
 <li><p class="first">On Linux: it may indicate a missing or invalid udev configuration. See
 the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p>
