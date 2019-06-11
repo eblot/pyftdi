@@ -251,6 +251,10 @@ class I2cController:
 
        It is not recommended to use I2cController :py:func:`read`,
        :py:func:`write` or :py:func:`exchange` directly.
+
+       * ``SCK`` should be connected to ``A*BUS0``, and ``A*BUS7`` if clock
+           stretching mode is enavbled
+       * ``SDA`` should be connected to ``A*BUS1`` **and** ``A*BUS2``
     """
 
     LOW = 0x00
@@ -324,7 +328,7 @@ class I2cController:
 
            * ``frequency`` float value the I2C bus frequency in Hz
            * ``clockstretching`` boolean value to enable clockstreching.
-             xD5 (GPIOL1) pin should be connected to xD0 (SCK)
+             xD7 (GPIO7) pin should be connected back to xD0 (SCK)
         """
         for k in ('direction', 'initial'):
             if k in kwargs:
@@ -679,7 +683,7 @@ class I2cController:
         if not ack:
             raise I2cIOError('No answer from FTDI')
         if ack[0] & self.BIT0:
-            self.log.warning('NACK')
+            self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
             raise I2cNackError('NACK from slave')
 
     def _do_epilog(self):
