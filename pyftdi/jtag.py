@@ -452,14 +452,16 @@ class JtagEngine:
 
     def change_state(self, statename, sync=True):
         """Advance the TAP controller to the defined state"""
-        # find the state machine path to move to the new instruction
-        path = self._sm.find_path(statename)
-        # convert the path into an event sequence
-        events = self._sm.get_events(path)
-        # update the remote device tap controller
-        self._ctrl.write_tms(events,sync)
-        # update the current state machine's state
-        self._sm.handle_events(events)
+        # do nothing if we are at the target state already
+        if str(statename) != str(self._sm.state()):
+            # find the state machine path to move to the new instruction
+            path = self._sm.find_path(statename)
+            # convert the path into an event sequence
+            events = self._sm.get_events(path)
+            # update the remote device tap controller
+            self._ctrl.write_tms(events,sync)
+            # update the current state machine's state
+            self._sm.handle_events(events)
 
     def go_idle(self):
         """Change the current TAP controller to the IDLE state"""
