@@ -239,7 +239,7 @@ class JtagController:
             self._ftdi.write_data(self._write_buff)
             self._write_buff = array('B')
 
-    def write_tms(self, tms):
+    def write_tms(self, tms, sync=True):
         """Change the TAP controller state"""
         if not isinstance(tms, BitSequence):
             raise JtagError('Expect a BitSequence')
@@ -255,7 +255,8 @@ class JtagController:
         self._last = None
         cmd = array('B', (Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
         self._stack_cmd(cmd)
-        self.sync()
+        if sync:
+            self.sync()
 
     def read(self, length):
         """Read out a sequence of bits from TDO"""
@@ -316,7 +317,7 @@ class JtagController:
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
             # print("push %d bits" % bit_count)
-        self.sync()
+        self.sync() # we cannot skip sync here, because we expect data to be returned from the MPSSE
         bs = BitSequence()
         byte_count = length//8
         pos = 8*byte_count
@@ -449,14 +450,14 @@ class JtagEngine:
         """Return a list of supported state name"""
         return [str(s) for s in self._sm.states]
 
-    def change_state(self, statename):
+    def change_state(self, statename, sync=True):
         """Advance the TAP controller to the defined state"""
         # find the state machine path to move to the new instruction
         path = self._sm.find_path(statename)
         # convert the path into an event sequence
         events = self._sm.get_events(path)
         # update the remote device tap controller
-        self._ctrl.write_tms(events)
+        self._ctrl.write_tms(events,sync)
         # update the current state machine's state
         self._sm.handle_events(events)
 
@@ -464,21 +465,21 @@ class JtagEngine:
         """Change the current TAP controller to the IDLE state"""
         self.change_state('run_test_idle')
 
-    def write_ir(self, instruction):
+    def write_ir(self, instruction, sync=True):
         """Change the current instruction of the TAP controller"""
-        self.change_state('shift_ir')
+        self.change_state('shift_ir', sync)
         self._ctrl.write(instruction)
-        self.change_state('update_ir')
+        self.change_state('update_ir',sync)
 
     def capture_ir(self):
         """Capture the current instruction from the TAP controller"""
         self.change_state('capture_ir')
 
-    def write_dr(self, data):
+    def write_dr(self, data, sync=True):
         """Change the data register of the TAP controller"""
-        self.change_state('shift_dr')
+        self.change_state('shift_dr',sync)
         self._ctrl.write(data)
-        self.change_state('update_dr')
+        self.change_state('update_dr',sync)
 
     def read_dr(self, length):
         """Read the data register from the TAP controller"""
