@@ -97,6 +97,7 @@ class JtagStateMachine:
         self['update_ir'].setx(self['run_test_idle'], self['select_dr_scan'])
 
         self.reset()
+        self.events_cache= {}
 
     def __getitem__(self, name):
         return self.states[name]
@@ -128,7 +129,7 @@ class JtagStateMachine:
                 return path+[state]
             # candidate paths
             paths = []
-            for n, x in enumerate(state.exits):
+            for x in state.exits:
                 # next state is self (loop around), kill the path
                 if x == state:
                     continue
@@ -157,6 +158,26 @@ class JtagStateMachine:
         if len(events) != len(path) - 1:
             raise JtagError("Invalid path")
         return BitSequence(events)
+
+    def get_events_from_target_state_and_cache(self, target_state):
+        """get tms events to advance TAP controllers state to target_state.
+           Results are cached in self.events_cache to speed up recurring
+           lookups."""
+        # get current and target state string representation for cache dictionary
+        cs = str(self.state())
+        ts = str(target_state)
+        # lookup if cache already contains this combination
+        if cs in self.events_cache and ts in self.events_cache[cs]:
+            events = self.events_cache[cs][ts]
+        else:
+            # find the state machine path to move to the new instruction
+            path = self.find_path(target_state)
+            # convert the path into an event sequence
+            events = self.get_events(path)
+            if not cs in self.events_cache:
+                self.events_cache[cs]={}
+            self.events_cache[cs][ts]=events
+        return events
 
     def handle_events(self, events):
         for event in events:
@@ -454,10 +475,7 @@ class JtagEngine:
         """Advance the TAP controller to the defined state"""
         # do nothing if we are at the target state already
         if str(statename) != str(self._sm.state()):
-            # find the state machine path to move to the new instruction
-            path = self._sm.find_path(statename)
-            # convert the path into an event sequence
-            events = self._sm.get_events(path)
+            events=self._sm.get_events_from_target_state_and_cache(statename)
             # update the remote device tap controller
             self._ctrl.write_tms(events,sync)
             # update the current state machine's state
