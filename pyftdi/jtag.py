@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
+import collections
 import time
 from array import array
 from pyftdi.ftdi import Ftdi
@@ -210,6 +210,7 @@ class JtagController:
                           (self._trst and JtagController.TRST_BIT or 0))
         self._last = None  # Last deferred TDO bit
         self._write_buff = array('B')
+        self.bits_in_read_queue = collections.deque()
 
     # Public API
     def configure(self, url):
@@ -241,12 +242,14 @@ class JtagController:
             # nTRST
             value = 0
             cmd = array('B', (Ftdi.SET_BITS_LOW, value, self.direction))
-            self._ftdi.write_data(cmd)
+            self._stack_cmd(cmd)
+            self.sync()
             time.sleep(0.1)
             # nTRST should be left to the high state
             value = JtagController.TRST_BIT
             cmd = array('B', (Ftdi.SET_BITS_LOW, value, self.direction))
-            self._ftdi.write_data(cmd)
+            self._stack_cmd(cmd)
+            self.sync()
             time.sleep(0.1)
         # TAP reset (even with HW reset, could be removed though)
         self.write_tms(BitSequence('11111'))
@@ -338,7 +341,7 @@ class JtagController:
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
             # print("push %d bits" % bit_count)
-        self.sync() # we cannot skip sync here, because we expect data to be returned from the MPSSE
+        self.sync() # we cannot skip sync here, because we expect data to be returned from MPSSE
         bs = BitSequence()
         byte_count = length//8
         pos = 8*byte_count
@@ -355,6 +358,7 @@ class JtagController:
             data = self._ftdi.read_data_bytes(1, 4)
             if not data:
                 raise JtagError('Unable to read data from FTDI')
+
             byte = data[0]
             # need to shift bits as they are shifted in from the MSB in FTDI
             byte >>= 8-bit_count
@@ -364,6 +368,66 @@ class JtagController:
         if len(bs) != length:
             raise ValueError("Internal error")
         return bs
+
+    def shift_register_no_data_fetch(self, out, use_last=False):
+        """Shift a BitSequence into the current register and retrieve the
+           register output but data is not read!"""
+        if not isinstance(out, BitSequence):
+            return JtagError('Expect a BitSequence')
+        length = len(out)
+        if use_last:
+            (out, self._last) = (out[:-1], int(out[-1]))
+        byte_count = len(out)//8
+        pos = 8*byte_count
+        bit_count = len(out)-pos
+        if not byte_count and not bit_count:
+            raise JtagError("Nothing to shift")
+        if byte_count:
+            blen = byte_count-1
+            # print("RW OUT %s" % out[:pos])
+            cmd = array('B',
+                        (Ftdi.RW_BYTES_PVE_NVE_LSB, blen, (blen >> 8) & 0xff))
+            cmd.extend(out[:pos].tobytes(msby=True))
+            self._stack_cmd(cmd)
+            # print("push %d bytes" % byte_count)
+        if bit_count:
+            # print("RW OUT %s" % out[pos:])
+            cmd = array('B', (Ftdi.RW_BITS_PVE_NVE_LSB, bit_count-1))
+            cmd.append(out[pos:].tobyte())
+            self._stack_cmd(cmd)
+            # print("push %d bits" % bit_count)
+        self.bits_in_read_queue.append(length)
+        return length
+
+    def fetch_data(self):
+        if len(self.bits_in_read_queue)>0:
+            length=self.bits_in_read_queue.popleft()
+            bs = BitSequence()
+            byte_count = length//8
+            pos = 8*byte_count
+            bit_count = length-pos
+            if byte_count:
+                data = self._ftdi.read_data_bytes(byte_count, 4)
+                if not data:
+                    raise JtagError('Unable to read data from FTDI')
+                byteseq = BitSequence(bytes_=data, length=8*byte_count)
+                # print("RW IN %s" % byteseq)
+                bs.append(byteseq)
+                # print("pop %d bytes" % byte_count)
+            if bit_count:
+                data = self._ftdi.read_data_bytes(1, 4)
+                if not data:
+                    raise JtagError('Unable to read data from FTDI')
+                byte = data[0]
+                # need to shift bits as they are shifted in from the MSB in FTDI
+                byte >>= 8-bit_count
+                bitseq = BitSequence(byte, length=bit_count)
+                bs.append(bitseq)
+                # print("pop %d bits" % bit_count)
+            if len(bs) != length:
+                raise ValueError("Internal error")
+            return bs
+        return None
 
     def _stack_cmd(self, cmd):
         if not isinstance(cmd, array):
