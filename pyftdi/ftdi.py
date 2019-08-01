@@ -397,6 +397,27 @@ class Ftdi:
         vendor, product, index, serial, interface = self.get_identifiers(url)
         self.open(vendor, product, index, serial, interface)
 
+    def open_from_device(self, device, interface=1):
+        """Open a new interface to the specified FTDI device.
+
+           :param usb.core.Device device: a raw usb.core Device
+        """
+        self.usb_dev = device
+        try:
+            self.usb_dev.set_configuration()
+        except usb.core.USBError:
+            pass
+        # detect invalid interface as early as possible
+        config = self.usb_dev.get_active_configuration()
+        if interface > config.bNumInterfaces:
+            raise FtdiError('No such FTDI port: %d' % interface)
+        self._set_interface(config, interface)
+        self.max_packet_size = self._get_max_packet_size()
+        # Drain input buffer
+        self.purge_buffers()
+        self._reset_device()
+        self.set_latency_timer(self.LATENCY_MIN)
+
     def open(self, vendor, product, index=0, serial=None, interface=1):
         """Open a new interface to the specified FTDI device.
 
@@ -420,21 +441,7 @@ class Ftdi:
                               by its serial number
            :param str interface: FTDI interface/port
         """
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
-        try:
-            self.usb_dev.set_configuration()
-        except usb.core.USBError:
-            pass
-        # detect invalid interface as early as possible
-        config = self.usb_dev.get_active_configuration()
-        if interface > config.bNumInterfaces:
-            raise FtdiError('No such FTDI port: %d' % interface)
-        self._set_interface(config, interface)
-        self.max_packet_size = self._get_max_packet_size()
-        # Drain input buffer
-        self.purge_buffers()
-        self._reset_device()
-        self.set_latency_timer(self.LATENCY_MIN)
+        self.open_from_device(UsbTools.get_device(vendor, product, index, serial), interface)
 
     def close(self):
         """Close the FTDI interface/port."""
