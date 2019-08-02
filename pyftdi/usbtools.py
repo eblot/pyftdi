@@ -16,9 +16,9 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import threading
 from string import printable as printablechars
 from sys import platform, stdout
+from threading import RLock
 from typing import (IO, List, Mapping, NamedTuple, Optional, Sequence, Set,
                     Tuple)
 from urllib.parse import urlsplit
@@ -69,7 +69,7 @@ class UsbTools:
     # USB device. The following dictionary used bus/address/vendor/product keys
     # to track (device, refcount) pairs
     Devices = {}
-    Lock = threading.RLock()
+    Lock = RLock()
     UsbDevices = {}
     UsbApi = None
 

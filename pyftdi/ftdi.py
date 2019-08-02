@@ -303,7 +303,7 @@ class Ftdi:
 
            :param str url: input URL to parse
         """
-        return UsbTools.parse_url(url, cls,
+        return UsbTools.parse_url(url,
                                   cls.SCHEME, cls.VENDOR_IDS, cls.PRODUCT_IDS,
                                   cls.DEFAULT_VENDOR)
 
