@@ -17,21 +17,45 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import threading
-import usb.core
-import usb.util
-from collections import namedtuple
 from string import printable as printablechars
 from sys import platform, stdout
-from typing import List, Mapping, Sequence, Tuple
+from typing import (IO, List, Mapping, NamedTuple, Optional, Sequence, Set,
+                    Tuple)
 from urllib.parse import urlsplit
+import usb.core
+import usb.util
 from .misc import to_int
 
 #pylint: disable-msg=broad-except
 #pylint: disable-msg=too-many-locals,too-many-branches,too-many-statements
+#pylint: disable-msg=too-many-arguments, too-many-nested-blocks
 
-UsbDeviceDescriptor = namedtuple('UsbDeviceDescriptor',
-                                 'vid pid bus address sn index description')
+UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
+                                 (('vid', int),
+                                  ('pid', int),
+                                  ('bus', Optional[int]),
+                                  ('address', Optional[int]),
+                                  ('sn', Optional[str]),
+                                  ('index', Optional[int]),
+                                  ('description', Optional[str])))
+"""USB Device descriptor are used to report known information about a FTDI
+   compatible device, and as a device selection filter
 
+   * vid: vendor identifier, 16-bit integer
+   * pid: product identifier, 16-bit integer
+   * bus: USB bus identifier, host dependent integer
+   * address: USB address identifier on a USB bus, host dependent integer
+   * sn: serial number, string
+   * index: integer, can be used to descriminate similar devices
+   * description: device description, as a string
+
+   To select a device, use None for unknown fields
+
+   .. note::
+
+     * Always prefer serial number to other identification methods if available
+     * Prefer bus/address selector over index
+"""
 
 class UsbToolsError(Exception):
     """UsbTools error"""
@@ -50,7 +74,7 @@ class UsbTools:
     UsbApi = None
 
     @staticmethod
-    def find_all(vps: Tuple[int, int], nocache: bool = False) -> \
+    def find_all(vps: Sequence[Tuple[int, int]], nocache: bool = False) -> \
             List[Tuple[UsbDeviceDescriptor, int]]:
         """Find all devices that match the specified vendor/product pairs.
 
@@ -90,7 +114,7 @@ class UsbTools:
         cls.Lock.release()
 
     @classmethod
-    def get_device(cls, devdesc: UsbDeviceDescriptor):
+    def get_device(cls, devdesc: UsbDeviceDescriptor) -> usb.core.Device:
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it.
 
@@ -106,15 +130,9 @@ class UsbTools:
            and FT4232H). The interface argument selects the FTDI port to use,
            starting from 1 (not 0).
 
-           :param int vendor: USB vendor id
-           :param int product: USB product id
-           :param int index: optional selector, specified the n-th matching
-                             FTDI enumerated USB device on the host
-           :param str serial: optional selector, specified the FTDI device
-                              by its serial number
-           :param str interface: FTDI interface/port
+           :param devdesc: Device descriptor that identifies the device by
+                           constraints.
            :return: PyUSB device instance
-           :rtype: usb.core.Device
         """
         cls.Lock.acquire()
         try:
@@ -145,7 +163,7 @@ class UsbTools:
                     raise IOError("No such device")
             else:
                 devs = cls._find_devices(devdesc.vid, devdesc.pid)
-                dev = devs and list(devs)[0] or None
+                dev = list(devs)[0] if devs else None
             if not dev:
                 raise IOError('Device not found')
             try:
@@ -177,11 +195,10 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
-    def release_device(cls, usb_dev):
+    def release_device(cls, usb_dev: usb.core.Device):
         """Release a previously open device, if it not used anymore.
 
-           :param usb_dev: a previously instanciated Usb device instance
-           :type usb_deb: usb.core.Device
+           :param usb_dev: a previously instanciated USB device instance
         """
         # Lookup for ourselves in the class dictionary
         cls.Lock.acquire()
@@ -202,7 +219,8 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
-    def _find_devices(cls, vendor, product, nocache=False):
+    def _find_devices(cls, vendor: int, product: int,
+                      nocache: bool = False) -> Set[usb.core.Device]:
         """Find a USB device and return it.
 
            This code re-implements the usb.core.find() method using a local
@@ -214,34 +232,32 @@ class UsbTools:
            Hopefully, this kludge is temporary and replaced with a better
            implementation from PyUSB at some point.
 
-           :param int vendor: USB vendor id
-           :param int product: USB product id
+           :param vendor: USB vendor id
+           :param product: USB product id
            :param bool nocache: bypass cache to re-enumerate USB devices on
                                 the host
            :return: a set of USB device matching the vendor/product identifier
                     pair
-           :rtype: set(usb.core.Device)
-
         """
         cls.Lock.acquire()
         try:
             backend = None
             candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01',
                           'openusb')
-            um = __import__('usb.backend', globals(), locals(),
-                            candidates, 0)
-            for c in candidates:
+            usbmod = __import__('usb.backend', globals(), locals(),
+                                candidates, 0)
+            for candidate in candidates:
                 try:
-                    m = getattr(um, c)
+                    mod = getattr(usbmod, candidate)
                 except AttributeError:
                     continue
-                backend = m.get_backend()
+                backend = mod.get_backend()
                 if backend is not None:
                     break
             else:
                 raise ValueError('No backend available')
-            vp = (vendor, product)
-            if nocache or (vp not in cls.UsbDevices):
+            vidpid = (vendor, product)
+            if nocache or (vidpid not in cls.UsbDevices):
                 # not freed until Python runtime completion
                 # enumerate_devices returns a generator, so back up the
                 # generated device into a list. To save memory, we only
@@ -269,8 +285,8 @@ class UsbTools:
                         vid = dev.idVendor
                         pid = dev.idProduct
                         ifc = max([cfg.bNumInterfaces for cfg in dev])
-                        sn = UsbTools.get_string(dev, dev.iSerialNumber)
-                        k = (vid, pid, sn)
+                        sernum = UsbTools.get_string(dev, dev.iSerialNumber)
+                        k = (vid, pid, sernum)
                         if k not in filtered_devs:
                             filtered_devs[k] = dev
                         else:
@@ -279,22 +295,23 @@ class UsbTools:
                             if fifc < ifc:
                                 filtered_devs[k] = dev
                     devs = set(filtered_devs.values())
-                cls.UsbDevices[vp] = devs
-            return cls.UsbDevices[vp]
+                cls.UsbDevices[vidpid] = devs
+            return cls.UsbDevices[vidpid]
         finally:
             cls.Lock.release()
 
-    @staticmethod
-    def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor) -> \
-            Tuple[UsbDeviceDescriptor, int]:
+    @classmethod
+    def parse_url(cls, urlstr: str, scheme: str,
+                  vdict: Mapping[str, int],
+                  pdict: Mapping[int, Mapping[str, int]],
+                  default_vendor: int) -> Tuple[UsbDeviceDescriptor, int]:
         """Parse a device specifier URL.
 
-           :param str url: the URL to parse
-           :param devclass: class that implements the scheme
+           :param url: the URL to parse
            :param scheme: scheme to match in the URL string (scheme://...)
-           :param dict vdict: vendor name map of USB vendor ids
-           :param dict pdict: vendor id map of product name map of product ids
-           :param int default_vendor: default vendor id
+           :param vdict: vendor name map of USB vendor ids
+           :param pdict: vendor id map of product name map of product ids
+           :param default_vendor: default vendor id
            :return: UsbDeviceDescriptor, interface)
         """
         urlparts = urlsplit(urlstr)
@@ -362,7 +379,7 @@ class UsbTools:
             products = pdict.get(vid, [])
             for pid in products:
                 vps.add((vid, products[pid]))
-        devices = devclass.find_all(vps)
+        devices = cls.find_all(vps)
         if sernum:
             if sernum not in [dev.sn for dev, _ in devices]:
                 raise UsbToolsError("No USB device with S/N %s" % sernum)
@@ -412,26 +429,31 @@ class UsbTools:
                                       desc.sn, idx, desc.description)
         return devdesc, interface
 
-    @staticmethod
-    def show_devices(scheme, vdict, pdict, candidates, out=None):
+    @classmethod
+    def show_devices(cls, scheme: str,
+                     vdict: Mapping[str, int],
+                     pdict: Mapping[int, Mapping[str, int]],
+                     candidates: Sequence[Tuple[UsbDeviceDescriptor, int]],
+                     out: Optional[IO] = None):
         """Show supported devices. When the joker url ``scheme://*/?`` is
            specified as an URL, it generates a list of connected USB devices
            that match the supported USB devices. It can be used to provide the
            end-user with a list of valid URL schemes.
 
-           :param dict vdict: vendor name map of USB vendor ids
-           :param dict pdict: vendor id map of product name map of product ids
+           :param scheme: scheme to match in the URL string (scheme://...)
+           :param vdict: vendor name map of USB vendor ids
+           :param pdict: vendor id map of product name map of product ids
            :param candidates: candidate devices
            :param out: output stream, none for stdout
-           :type out: file object or None
         """
         if not candidates:
             return
         if not out:
             out = stdout
         indices = {}
-        interfaces = []
         print("Available interfaces:", file=out)
+        serial_ifaces = []
+        max_url_len = 0
         for desc, ifcount in sorted(candidates):
             ikey = (desc.vid, desc.pid)
             indices[ikey] = indices.get(ikey, 0) + 1
@@ -451,16 +473,14 @@ class UsbTools:
             try:
                 products = []
                 productids = pdict[desc.vid]
-                for pc in productids:
-                    if productids[pc] == desc.pid:
-                        products.append(pc)
+                for prdc in productids:
+                    if productids[prdc] == desc.pid:
+                        products.append(prdc)
                 if products:
                     products.sort(key=len)
                     product = products[0]
             except KeyError:
                 pass
-            serial_ifaces = []
-            max_url_len = 0
             for port in range(1, ifcount+1):
                 fmt = '%s://%s/%d'
                 parts = [vendor, product]
@@ -471,8 +491,8 @@ class UsbTools:
                     serial = '%d' % indices[ikey]
                 else:
                     serial = sernum
-                if sernum:
-                    parts.append(sernum)
+                if serial:
+                    parts.append(serial)
                 elif desc.bus is not None and desc.address is not None:
                     parts.append('%x' % desc.bus)
                     parts.append('%x' % desc.address)
@@ -486,28 +506,26 @@ class UsbTools:
                                         port)
                 try:
                     serial_desc = '(%s)' % desc.description \
-                        if desc.secription else ''
+                        if desc.description else ''
                 except Exception:
                     serial_desc = ''
                 max_url_len = max(max_url_len, len(serial_url))
                 serial_ifaces.append((serial_url, serial_desc))
-            for iface in serial_ifaces:
-                print(('  %%-%ds   %%s' % max_url_len) % iface, file=out)
+        for iface in serial_ifaces:
+            print(('  %%-%ds   %%s' % max_url_len) % iface, file=out)
         print('', file=out)
 
     @classmethod
-    def get_string(cls, device, strname):
+    def get_string(cls, device: usb.core.Device, strname: str) -> str:
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
 
            :param device: USB device instance
-           :type device: usb.core.Device
-           :param str strname: the string identifier
+           :param strname: the string identifier
            :return: the string read from the USB device
-           :rtype: str
         """
         if cls.UsbApi is None:
             import inspect
-            args, varargs, varkw, defaults = \
+            args, _, _, _ = \
                 inspect.signature(usb.core.Device.read).parameters
             if (len(args) >= 3) and args[1] == 'length':
                 cls.UsbApi = 1
@@ -515,5 +533,4 @@ class UsbTools:
                 cls.UsbApi = 2
         if cls.UsbApi == 2:
             return usb.util.get_string(device, strname)
-        else:
-            return usb.util.get_string(device, 64, strname)
+        return usb.util.get_string(device, 64, strname)
