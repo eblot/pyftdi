@@ -30,10 +30,11 @@ from errno import ENODEV
 from logging import getLogger
 from struct import unpack as sunpack
 from sys import platform
+from typing import Tuple
 import usb.core
 import usb.util
 from .misc import to_bool
-from .usbtools import UsbTools
+from .usbtools import UsbDeviceDescriptor, UsbTools
 
 
 class FtdiError(IOError):
@@ -297,17 +298,14 @@ class Ftdi:
         return device
 
     @classmethod
-    def get_identifiers(cls, url):
+    def get_identifiers(cls, url) -> Tuple[UsbDeviceDescriptor, int]:
         """Extract the identifiers of an FTDI device from URL, if any
 
            :param str url: input URL to parse
-           :return: (vendor, product, index, sernum, interface)
-           :rtype: tuple
         """
-        ids = UsbTools.parse_url(
-            url, cls,
-            cls.SCHEME, cls.VENDOR_IDS, cls.PRODUCT_IDS, cls.DEFAULT_VENDOR)
-        return ids
+        return UsbTools.parse_url(url, cls,
+                                  cls.SCHEME, cls.VENDOR_IDS, cls.PRODUCT_IDS,
+                                  cls.DEFAULT_VENDOR)
 
     @classmethod
     def get_device(cls, url):
@@ -317,8 +315,8 @@ class Ftdi:
            :return: the USB device that match the specified URL
            :rtype: py:class:`usb.core.Device`
         """
-        vendor, product, index, serial, _ = cls.get_identifiers(url)
-        return UsbTools.get_device(vendor, product, index, serial)
+        devdesc, _ = cls.get_identifiers(url)
+        return UsbTools.get_device(devdesc)
 
     @classmethod
     def add_custom_vendor(cls, vid, vidname=''):
@@ -394,10 +392,12 @@ class Ftdi:
 
            :param str url: a FTDI URL selector
         """
-        vendor, product, index, serial, interface = self.get_identifiers(url)
-        self.open(vendor, product, index, serial, interface)
+        devdesc, interface = self.get_identifiers(url)
+        device = UsbTools.get_device(devdesc)
+        self.open_from_device(device, interface)
 
-    def open(self, vendor, product, index=0, serial=None, interface=1):
+    def open(self, vendor, product, bus=None, address=None, index=0,
+             serial=None, interface=1):
         """Open a new interface to the specified FTDI device.
 
            If several FTDI devices of the same kind (vid, pid) are connected
@@ -414,13 +414,21 @@ class Ftdi:
 
            :param int vendor: USB vendor id
            :param int product: USB product id
+           :param int bus: optional selector,  USB bus
+           :param int address: optional selector, USB address on bus
            :param int index: optional selector, specified the n-th matching
                              FTDI enumerated USB device on the host
            :param str serial: optional selector, specified the FTDI device
                               by its serial number
            :param str interface: FTDI interface/port
         """
-        self.usb_dev = UsbTools.get_device(vendor, product, index, serial)
+        devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
+                                      index, None)
+        device = UsbTools.get_device(devdesc)
+        self.open_from_device(device, interface)
+
+    def open_from_device(self, device, interface=1):
+        self.usb_dev = device
         try:
             self.usb_dev.set_configuration()
         except usb.core.USBError:
@@ -468,13 +476,18 @@ class Ftdi:
                 values than the default, as it triggers data loss in FTDI.
            :param bool debug: use a tracer to decode MPSSE protocol
         """
-        vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open_mpsse(vendor, product, index, serial, interface,
-                               direction, initial, frequency, latency, debug)
+        devdesc, interface = self.get_identifiers(url)
+        device = UsbTools.get_device(devdesc)
+        return self.open_mpsse_from_device(device, interface,
+                                           direction=direction,
+                                           initial=initial,
+                                           frequency=frequency,
+                                           latency=latency,
+                                           debug=debug)
 
-    def open_mpsse(self, vendor, product, index=0, serial=None, interface=1,
-                   direction=0x0, initial=0x0, frequency=6.0E6, latency=16,
-                   debug=False):
+    def open_mpsse(self, vendor, product, bus=None, address=None, index=0,
+                   serial=None, interface=1, direction=0x0, initial=0x0,
+                   frequency=6.0E6, latency=16, debug=False):
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -495,6 +508,8 @@ class Ftdi:
 
            :param int vendor: USB vendor id
            :param int product: USB product id
+           :param int bus: optional selector,  USB bus
+           :param int address: optional selector, USB address on bus
            :param int index: optional selector, specified the n-th matching
                              FTDI enumerated USB device on the host
            :param str serial: optional selector, specified the FTDI device
@@ -511,7 +526,20 @@ class Ftdi:
            :param bool debug: use a tracer to decode MPSSE protocol
         """
         # Open an FTDI interface
-        self.open(vendor, product, index, serial, interface)
+        devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
+                                      index, None)
+        device = UsbTools.get_device(devdesc)
+        return self.open_mpsse_from_device(device, interface,
+                                           direction=direction,
+                                           initial=initial,
+                                           frequency=frequency,
+                                           latency=latency,
+                                           debug=debug)
+
+    def open_mpsse_from_device(self, device, interface=1, direction=0x0,
+                               initial=0x0, frequency=6.0E6, latency=16,
+                               debug=False):
+        self.open_from_device(device, interface)
         if not self.has_mpsse:
             self.close()
             raise FtdiMpsseError('This device does not support MPSSE')
@@ -561,12 +589,13 @@ class Ftdi:
            :param int latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
         """
-        vendor, product, index, serial, interface = self.get_identifiers(url)
-        return self.open_bitbang(vendor, product, index, serial, interface,
-                                 direction, latency)
+        devdesc, interface = self.get_identifiers(url)
+        device = UsbTools.get_device(devdesc)
+        self.open_bitbang_from_device(device, interface, direction=direction,
+                                      latency=latency)
 
-    def open_bitbang(self, vendor, product, index=0, serial=None, interface=1,
-                     direction=0x0, latency=16):
+    def open_bitbang(self, vendor, product, bus=None, address=None, index=0,
+                     serial=None, interface=1, direction=0x0, latency=16):
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -584,8 +613,15 @@ class Ftdi:
            :param int latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
         """
-        # Open an FTDI interface
-        self.open(vendor, product, index, serial, interface)
+        devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
+                                      index, None)
+        device = UsbTools.get_device(devdesc)
+        self.open_bitbang_from_device(device, interface, direction=direction,
+                                      latency=latency)
+
+    def open_bitbang_from_device(self, device, interface=1,
+                                 direction=0x0, latency=16):
+        self.open_from_device(device, interface)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size

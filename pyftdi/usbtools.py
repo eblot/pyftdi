@@ -19,10 +19,18 @@
 import threading
 import usb.core
 import usb.util
+from collections import namedtuple
 from string import printable as printablechars
 from sys import platform, stdout
+from typing import List, Mapping, Sequence, Tuple
 from urllib.parse import urlsplit
 from .misc import to_int
+
+#pylint: disable-msg=broad-except
+#pylint: disable-msg=too-many-locals,too-many-branches,too-many-statements
+
+UsbDeviceDescriptor = namedtuple('UsbDeviceDescriptor',
+                                 'vid pid bus address sn index description')
 
 
 class UsbToolsError(Exception):
@@ -42,27 +50,27 @@ class UsbTools:
     UsbApi = None
 
     @staticmethod
-    def find_all(vps, nocache=False):
+    def find_all(vps: Tuple[int, int], nocache: bool = False) -> \
+            List[Tuple[UsbDeviceDescriptor, int]]:
         """Find all devices that match the specified vendor/product pairs.
 
            :param vps: a sequence of 2-tuple (vid, pid) pairs
-           :type vps: tuple(int, int)
            :param bool nocache: bypass cache to re-enumerate USB devices on
                                 the host
-           :return: a list of 5-tuple (vid, pid, sernum, iface, description)
-                    device descriptors
-           :rtype: list(tuple(int,int,str,int,str))
+           :return: a list of 2-tuple (UsbDeviceDescriptor, interface count)
         """
         devs = set()
-        for v, p in vps:
-            devs.update(UsbTools._find_devices(v, p, nocache))
+        for vid, pid in vps:
+            devs.update(UsbTools._find_devices(vid, pid, nocache))
         devices = set()
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
             sernum = UsbTools.get_string(dev, dev.iSerialNumber)
             description = UsbTools.get_string(dev, dev.iProduct)
-            devices.add((dev.idVendor, dev.idProduct, sernum, ifcount,
-                         description))
+            descriptor = UsbDeviceDescriptor(dev.idVendor, dev.idProduct,
+                                             dev.bus, dev.address,
+                                             sernum, None, description)
+            devices.add((descriptor, ifcount))
         return list(devices)
 
     @classmethod
@@ -82,8 +90,7 @@ class UsbTools:
         cls.Lock.release()
 
     @classmethod
-    def get_device(cls, vendor, product, index=0, serial=None,
-                   description=None):
+    def get_device(cls, devdesc: UsbDeviceDescriptor):
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it.
 
@@ -111,39 +118,43 @@ class UsbTools:
         """
         cls.Lock.acquire()
         try:
-            if index or serial or description:
+            if devdesc.index or devdesc.sn or devdesc.description:
                 dev = None
-                if not vendor:
+                if not devdesc.vid:
                     raise ValueError('Vendor identifier is required')
-                devs = cls._find_devices(vendor, product)
-                if description:
+                devs = cls._find_devices(devdesc.vid, devdesc.pid)
+                if devdesc.description:
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iProduct) ==
-                            description]
-                if serial:
+                            devdesc.description]
+                if devdesc.sn:
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iSerialNumber) ==
-                            serial]
+                            devdesc.sn]
+                if devdesc.bus is not None and devdesc.address is not None:
+                    devs = [dev for dev in devs if
+                            (devdesc.bus == dev.bus and
+                             devdesc.address == dev.address)]
                 if isinstance(devs, set):
                     # there is no guarantee the same index with lead to the
                     # same device. Indexing should be reworked
                     devs = list(devs)
                 try:
-                    dev = devs[index]
+                    dev = devs[devdesc.index]
                 except IndexError:
                     raise IOError("No such device")
             else:
-                devs = cls._find_devices(vendor, product)
+                devs = cls._find_devices(devdesc.vid, devdesc.pid)
                 dev = devs and list(devs)[0] or None
             if not dev:
                 raise IOError('Device not found')
             try:
-                devkey = (dev.bus, dev.address, vendor, product)
+                devkey = (dev.bus, dev.address, devdesc.vid, devdesc.pid)
                 if None in devkey[0:2]:
                     raise AttributeError('USB backend does not support bus '
                                          'enumeration')
             except AttributeError:
-                devkey = (vendor, product)
+                devkey = (devdesc.vid, devdesc.pid)
             if devkey not in cls.Devices:
                 # only change the active configuration if the active one is
                 # not the first. This allows other libusb sessions running
@@ -274,7 +285,8 @@ class UsbTools:
             cls.Lock.release()
 
     @staticmethod
-    def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor):
+    def parse_url(urlstr, devclass, scheme, vdict, pdict, default_vendor) -> \
+            Tuple[UsbDeviceDescriptor, int]:
         """Parse a device specifier URL.
 
            :param str url: the URL to parse
@@ -283,15 +295,15 @@ class UsbTools:
            :param dict vdict: vendor name map of USB vendor ids
            :param dict pdict: vendor id map of product name map of product ids
            :param int default_vendor: default vendor id
-           :return: a list of 5-tuple (vid, pid, sernum, iface, description)
-                    device descriptors
-           :rtype: list(tuple(int,int,str,int,str))
+           :return: UsbDeviceDescriptor, interface)
         """
         urlparts = urlsplit(urlstr)
         if scheme != urlparts.scheme:
             raise UsbToolsError("Invalid URL: %s" % urlstr)
-        # general syntax: protocol://vendor:product[:index|:serial]/interface
-        plcomps = urlparts.netloc.split(':') + [''] * 2
+        # general syntax:
+        #   protocol://vendor:product[:serial|:index|:bus:addr]/interface
+        specifiers = urlparts.netloc.split(':')
+        plcomps = specifiers + [''] * 2
         try:
             plcomps[0] = vdict.get(plcomps[0], plcomps[0])
             if plcomps[0]:
@@ -322,42 +334,49 @@ class UsbTools:
             raise UsbToolsError('Invalid device URL: %s' % urlstr)
         sernum = None
         idx = None
-        if plcomps[2]:
+        bus = None
+        address = None
+        locators = specifiers[2:]
+        if len(locators) > 1:
             try:
-                devidx = to_int(plcomps[2])
-                if devidx > 255:
-                    raise ValueError()
-                idx = devidx
-                if idx:
-                    idx = devidx-1
+                bus = int(locators[0], 16)
+                address = int(locators[1], 16)
             except ValueError:
-                sernum = plcomps[2]
+                raise UsbToolsError('Invalid bus/address: %s' %
+                                    ':'.join(locators))
+        else:
+            if locators and locators[0]:
+                try:
+                    devidx = to_int(locators[0])
+                    if devidx > 255:
+                        raise ValueError()
+                    idx = devidx
+                    if idx:
+                        idx = devidx-1
+                except ValueError:
+                    sernum = locators[0]
         candidates = []
-        vendors = vendor and [vendor] or set(vdict.values())
+        vendors = [vendor] if vendor else set(vdict.values())
         vps = set()
-        for v in vendors:
-            products = pdict.get(v, [])
-            for p in products:
-                vps.add((v, products[p]))
+        for vid in vendors:
+            products = pdict.get(vid, [])
+            for pid in products:
+                vps.add((vid, products[pid]))
         devices = devclass.find_all(vps)
         if sernum:
-            if sernum not in [dev[2] for dev in devices]:
+            if sernum not in [dev.sn for dev, _ in devices]:
                 raise UsbToolsError("No USB device with S/N %s" % sernum)
-            for v, p, s, i, d in devices:
-                if s != sernum:
+        for desc, ifcount in devices:
+            if vendor and vendor != desc.vid:
+                continue
+            if product and product != desc.pid:
+                continue
+            if sernum and sernum != desc.sn:
+                continue
+            if bus is not None:
+                if bus != desc.bus or address != desc.address:
                     continue
-                if vendor and vendor != v:
-                    continue
-                if product and product != p:
-                    continue
-                candidates.append((v, p, s, i, d))
-        else:
-            for v, p, s, i, d in devices:
-                if vendor and vendor != v:
-                    continue
-                if product and product != p:
-                    continue
-                candidates.append((v, p, s, i, d))
+            candidates.append((desc, ifcount))
         if show_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
             raise SystemExit(candidates and
@@ -369,27 +388,29 @@ class UsbTools:
                                     len(candidates))
             idx = 0
         try:
-            vendor, product, ifport, ifcount, description = \
-                candidates[idx]
+            desc, _ = candidates[idx]
+            vendor, product = desc[:2]
         except IndexError:
             raise UsbToolsError('No USB device matches URL %s' %
                                 urlstr)
         if not vendor:
-            cvendors = set([candidate[0] for candidate in candidates])
+            cvendors = {candidate[0] for candidate in candidates}
             if len(cvendors) == 1:
                 vendor = cvendors.pop()
         if vendor not in pdict:
             raise UsbToolsError('Vendor ID %s not supported' %
                                 (vendor and '0x%04x' % vendor))
         if not product:
-            cproducts = set([candidate[1] for candidate in candidates
-                            if candidate[0] == vendor])
+            cproducts = {candidate[1] for candidate in candidates
+                         if candidate[0] == vendor}
             if len(cproducts) == 1:
                 product = cproducts.pop()
         if product not in pdict[vendor].values():
             raise UsbToolsError('Product ID %s not supported' %
                                 (product and '0x%04x' % product))
-        return vendor, product, idx or 0, sernum, interface
+        devdesc = UsbDeviceDescriptor(vendor, product, desc.bus, desc.address,
+                                      desc.sn, idx, desc.description)
+        return devdesc, interface
 
     @staticmethod
     def show_devices(scheme, vdict, pdict, candidates, out=None):
@@ -401,80 +422,78 @@ class UsbTools:
            :param dict vdict: vendor name map of USB vendor ids
            :param dict pdict: vendor id map of product name map of product ids
            :param candidates: candidate devices
-           :type candidates: list(tuple(int,int,str,int,str))
            :param out: output stream, none for stdout
            :type out: file object or None
         """
+        if not candidates:
+            return
         if not out:
             out = stdout
         indices = {}
         interfaces = []
-        for (v, p, s, i, d) in candidates:
-            ikey = (v, p)
+        print("Available interfaces:", file=out)
+        for desc, ifcount in sorted(candidates):
+            ikey = (desc.vid, desc.pid)
             indices[ikey] = indices.get(ikey, 0) + 1
             # try to find a matching string for the current vendor
             vendors = []
             # fallback if no matching string for the current vendor is found
-            vendor = '%04x' % v
-            for vc in vdict:
-                if vdict[vc] == v:
-                    vendors.append(vc)
+            vendor = '%04x' % desc.vid
+            for vidc in vdict:
+                if vdict[vidc] == desc.vid:
+                    vendors.append(vidc)
             if vendors:
                 vendors.sort(key=len)
                 vendor = vendors[0]
             # try to find a matching string for the current vendor
             # fallback if no matching string for the current product is found
-            product = '%04x' % p
+            product = '%04x' % desc.pid
             try:
                 products = []
-                productids = pdict[v]
+                productids = pdict[desc.vid]
                 for pc in productids:
-                    if productids[pc] == p:
+                    if productids[pc] == desc.pid:
                         products.append(pc)
                 if products:
                     products.sort(key=len)
                     product = products[0]
             except KeyError:
                 pass
-            # if the serial number is an ASCII char, use it, or use the index
-            # value
-            if not s:
-                s = ''
-            if [c for c in s if c not in printablechars or c == '?']:
-                serial = '%d' % indices[ikey]
-            else:
-                serial = s
-            # Now print out the prettiest URL syntax
-            for j in range(1, i+1):
-                # On most configurations, low interfaces are used for MPSSE,
-                # high interfaces are dedicated to UARTs
-                interfaces.append((scheme, vendor, product, serial, j, d))
-        if interfaces:
-            print("Available interfaces:", file=out)
             serial_ifaces = []
             max_url_len = 0
-            for scheme, vendor, product, serial, j, d in interfaces:
+            for port in range(1, ifcount+1):
                 fmt = '%s://%s/%d'
                 parts = [vendor, product]
-                if serial:
-                    parts.append(serial)
-                desc = d and '(%s)' % d
+                sernum = desc.sn
+                if not sernum:
+                    sernum = ''
+                if [c for c in sernum if c not in printablechars or c == '?']:
+                    serial = '%d' % indices[ikey]
+                else:
+                    serial = sernum
+                if sernum:
+                    parts.append(sernum)
+                elif desc.bus is not None and desc.address is not None:
+                    parts.append('%x' % desc.bus)
+                    parts.append('%x' % desc.address)
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format
                 try:
-                    serial_url = fmt % (scheme, ':'.join(parts), j)
+                    serial_url = fmt % (scheme, ':'.join(parts), port)
                 except Exception:
                     serial_url = fmt % (scheme,
-                                        ':'.join([vendor, product, '???']), j)
+                                        ':'.join([vendor, product, '???']),
+                                        port)
                 try:
-                    serial_desc = desc or ''
+                    serial_desc = '(%s)' % desc.description \
+                        if desc.secription else ''
                 except Exception:
                     serial_desc = ''
                 max_url_len = max(max_url_len, len(serial_url))
                 serial_ifaces.append((serial_url, serial_desc))
             for iface in serial_ifaces:
                 print(('  %%-%ds   %%s' % max_url_len) % iface, file=out)
-            print('', file=out)
+        print('', file=out)
 
     @classmethod
     def get_string(cls, device, strname):
