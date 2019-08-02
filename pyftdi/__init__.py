@@ -32,7 +32,7 @@ __doc__ = __description__ + ' <' + __uri__ + '>'
 __author__ = 'Emmanuel Blot'
 # For all support requests, please open a new issue on GitHub
 __email__ = 'emmanuel.blot@free.fr'
-__license__ = 'LGPL v2'
+__license__ = 'Modified BSD'
 __copyright__ = 'Copyright (c) 2011-2019 Emmanuel Blot'
 
 

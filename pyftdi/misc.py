@@ -30,7 +30,6 @@ from array import array
 from re import match
 
 
-
 # String values evaluated as true boolean values
 TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
 # String values evaluated as false boolean values

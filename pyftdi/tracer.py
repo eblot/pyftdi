@@ -1,5 +1,3 @@
-"""MPSSE command debug tracer."""
-
 # Copyright (c) 2017-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
@@ -24,6 +22,8 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""MPSSE command debug tracer."""
 
 
 from array import array
