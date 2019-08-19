@@ -4,51 +4,17 @@ Licenses
 .. include:: defs.rst
 
 For historical reasons (PyFtdi has been initially developed as a compatibility
-layer with libftdi_), the main ``ftdi.py`` file has been license under the same
-license as the libftdi_ project, the GNU Lesser General Public License LGPL v2
-license. It does not share code from this project anymore, but implements some
-parts of the same API.
-
-It's really hard to figure out what implies this license with the Python
-language. If you can, let me know :-) It is also quite complex to change the
-license now, so PyFtdi has to live with it.
-
-Anyway wherease the ``ftdi.py`` file has been kept under the LGPL v2 license,
-all other files are released under a less controversial and less
-nearly-impossible-to-understand licensing scheme: the MIT license.
+layer with libftdi_), the main ``ftdi.py`` file had originally been licensed
+under the same license as the libftdi_ project, the GNU Lesser General Public
+License LGPL v2 license. It does not share code from this project anymore, but
+implements a similar API.
 
 From my perspective, you may use it freely in open source or close source, free
-or commercial projects as long as you comply with the MIT license. However,
-I'm not a lawyer so I can't help you with the implications of the LGPL v2
-license in a Python-based close-source project, check out for yourself to be
-sure you comply with the ``ftdi.py`` file license, which is always required
-whatever the actual use of PyFtdi_.
-
-LGPL v2
-~~~~~~~
-
-.. code-block:: none
-
-  Copyright (c) 2008-2017 Emmanuel Blot <emmanuel.blot@free.fr>
-  All Rights Reserved.
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+or commercial projects as long as you comply with the BSD 3-clause license.
 
 
-MIT
-~~~
+BSD 3-clause
+~~~~~~~~~~~~
 
 .. code-block:: none
 

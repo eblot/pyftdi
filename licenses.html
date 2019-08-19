@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Authors" href="authors.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -58,7 +60,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -92,8 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Licenses</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#lgpl-v2">LGPL v2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mit">MIT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bsd-3-clause">BSD 3-clause</a></li>
 </ul>
 </li>
 </ul>
@@ -163,45 +164,14 @@
   <div class="section" id="licenses">
 <h1>Licenses<a class="headerlink" href="#licenses" title="Permalink to this headline">¶</a></h1>
 <p>For historical reasons (PyFtdi has been initially developed as a compatibility
-layer with <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a>), the main <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file has been license under the same
-license as the <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a> project, the GNU Lesser General Public License LGPL v2
-license. It does not share code from this project anymore, but implements some
-parts of the same API.</p>
-<p>It’s really hard to figure out what implies this license with the Python
-language. If you can, let me know :-) It is also quite complex to change the
-license now, so PyFtdi has to live with it.</p>
-<p>Anyway wherease the <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file has been kept under the LGPL v2 license,
-all other files are released under a less controversial and less
-nearly-impossible-to-understand licensing scheme: the MIT license.</p>
+layer with <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a>), the main <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file had originally been licensed
+under the same license as the <a class="reference external" href="https://www.intra2net.com/en/developer/libftdi/">libftdi</a> project, the GNU Lesser General Public
+License LGPL v2 license. It does not share code from this project anymore, but
+implements a similar API.</p>
 <p>From my perspective, you may use it freely in open source or close source, free
-or commercial projects as long as you comply with the MIT license. However,
-I’m not a lawyer so I can’t help you with the implications of the LGPL v2
-license in a Python-based close-source project, check out for yourself to be
-sure you comply with the <code class="docutils literal notranslate"><span class="pre">ftdi.py</span></code> file license, which is always required
-whatever the actual use of <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>.</p>
-<div class="section" id="lgpl-v2">
-<h2>LGPL v2<a class="headerlink" href="#lgpl-v2" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
-All Rights Reserved.
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-</pre></div>
-</div>
-</div>
-<div class="section" id="mit">
-<h2>MIT<a class="headerlink" href="#mit" title="Permalink to this headline">¶</a></h2>
+or commercial projects as long as you comply with the BSD 3-clause license.</p>
+<div class="section" id="bsd-3-clause">
+<h2>BSD 3-clause<a class="headerlink" href="#bsd-3-clause" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Copyright (c) 2008-2017 Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 All Rights Reserved.
 
@@ -240,7 +210,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="authors.html" class="btn btn-neutral" title="Authors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="authors.html" class="btn btn-neutral float-left" title="Authors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -266,26 +236,16 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

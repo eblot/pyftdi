@@ -17,13 +17,20 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
@@ -31,21 +38,16 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
     <link rel="prev" title="Features" href="features.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -166,27 +168,27 @@
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
 libraries:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.libusb.info/">libusb</a>, currently tested with 1.0.21</li>
+<li><p><a class="reference external" href="http://www.libusb.info/">libusb</a>, currently tested with 1.0.21</p></li>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not depend on any other native library, and only uses standard
 Python modules along with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</li>
+<li><p><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</p></li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
+<p class="admonition-title">Note</p>
 <p>Note about previous releases</p>
 <p>If you have no choice but using previous releases of software, such as</p>
 <ul class="simple">
-<li><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3+),</li>
-<li>other <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</li>
-<li><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</li>
-<li><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</li>
+<li><p><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3+),</p></li>
+<li><p>other <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</p></li>
+<li><p><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</p></li>
+<li><p><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</p></li>
 </ul>
-<p class="last">please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
+<p>please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
 for these deprecated environmement, but is no longer actively maintained.</p>
 </div>
 <div class="section" id="development">
@@ -211,7 +213,7 @@ with Windows 7 for example. Your mileage may vary.</p>
         <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="features.html" class="btn btn-neutral" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="features.html" class="btn btn-neutral float-left" title="Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -237,26 +239,16 @@ with Windows 7 for example. Your mileage may vary.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

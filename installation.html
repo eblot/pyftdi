@@ -17,13 +17,20 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
@@ -31,21 +38,16 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="URL Scheme" href="urlscheme.html" />
     <link rel="prev" title="Requirements" href="requirements.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -198,7 +200,8 @@ created so that <cite>udev</cite> loads the rules for the matching device.</p>
 <p>With this setup, be sure to add users that want to run <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> to the
 <cite>plugdev</cite> group, <em>e.g.</em></p>
 <blockquote>
-<div>sudo adduser $USER plugdev</div></blockquote>
+<div><p>sudo adduser $USER plugdev</p>
+</div></blockquote>
 <p>Remember that you need to log out / log in to get the above command
 effective.</p>
 </div>
@@ -220,14 +223,15 @@ backend:</p>
 <h3>Libusb-devel-filter<a class="headerlink" href="#libusb-devel-filter" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li>install Libusb-win32-devel-filter from <a class="reference external" href="https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/">Libusb win32</a></li>
-<li>before using it, install the so called “filter” so that libusb can coexist
-with specific peripherals usb drivers:<ul>
-<li>go into the Libusb-Win32 menu (it should be something like
+<li><p>install Libusb-win32-devel-filter from <a class="reference external" href="https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/">Libusb win32</a></p></li>
+<li><p>before using it, install the so called “filter” so that libusb can coexist
+with specific peripherals usb drivers:</p>
+<ul>
+<li><p>go into the Libusb-Win32 menu (it should be something like
 <code class="docutils literal notranslate"><span class="pre">C:\ProgramData\Microsoft\Windows\Start</span> <span class="pre">Menu\Programs\LibUSB-Win32</span></code>) and
 into the folder Class Filter launch the installation of the filter for all
 the usb devices <cite>i.e.</cite> Install all class filters. Once done libusb can be
-used “in parallel” with original drivers.</li>
+used “in parallel” with original drivers.</p></li>
 </ul>
 </li>
 </ul>
@@ -243,8 +247,8 @@ used “in parallel” with original drivers.</li>
 <h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li>pyusb &gt;= 1.0.0</li>
-<li>pyserial &gt;= 3.0</li>
+<li><p>pyusb &gt;= 1.0.0</p></li>
+<li><p>pyserial &gt;= 3.0</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -280,7 +284,7 @@ python3 setup.py ...
         <a href="urlscheme.html" class="btn btn-neutral float-right" title="URL Scheme" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="requirements.html" class="btn btn-neutral" title="Requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="requirements.html" class="btn btn-neutral float-left" title="Requirements" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -306,26 +310,16 @@ python3 setup.py ...
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

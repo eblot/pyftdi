@@ -17,34 +17,36 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Features" href="features.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -58,7 +60,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -164,16 +166,18 @@
 implemented in pure Python language.</p>
 <p>Modern <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices include:</p>
 <ul class="simple">
-<li>UART-only bridges<ul>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232R.htm">FT232R</a> (single port, clock up to 6 MHz, 3Mbps)</li>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT230X.html">FT230X</a> (single port, clock up to 48 Mhz, 3Mbps)</li>
+<li><p>UART-only bridges</p>
+<ul>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232R.htm">FT232R</a> (single port, clock up to 6 MHz, 3Mbps)</p></li>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT230X.html">FT230X</a> (single port, clock up to 48 Mhz, 3Mbps)</p></li>
 </ul>
 </li>
-<li>UART and multi-serial protocols (SPI, I<sup>2</sup>C, JTAG) bridges<ul>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232D.htm">FT2232D</a> (dual port, clock up to 6 MHz)</li>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> (single port, clock up to 30 MHz)</li>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> (dual port, clock up to 30 MHz)</li>
-<li><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> (quad port, clock up to 30 MHz)</li>
+<li><p>UART and multi-serial protocols (SPI, I<sup>2</sup>C, JTAG) bridges</p>
+<ul>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232D.htm">FT2232D</a> (dual port, clock up to 6 MHz)</p></li>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> (single port, clock up to 30 MHz)</p></li>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> (dual port, clock up to 30 MHz)</p></li>
+<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> (quad port, clock up to 30 MHz)</p></li>
 </ul>
 </li>
 </ul>
@@ -185,12 +189,12 @@ not been tested with <a class="reference external" href="https://www.github.com/
 <h2>Primary goals<a class="headerlink" href="#primary-goals" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> currently supports the following features:</p>
 <ul class="simple">
-<li>UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
-capability)</li>
-<li>Bitbang/GPIO support</li>
-<li>SPI master</li>
-<li>I<sup>2</sup>C master</li>
-<li>(JTAG master)</li>
+<li><p>UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
+capability)</p></li>
+<li><p>Bitbang/GPIO support</p></li>
+<li><p>SPI master</p></li>
+<li><p>I<sup>2</sup>C master</p></li>
+<li><p>(JTAG master)</p></li>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> provides a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices.</p>
@@ -248,26 +252,16 @@ module to access USB-serial converters based on <a class="reference external" hr
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

@@ -17,13 +17,20 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
@@ -31,21 +38,16 @@
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="FTDI device pinout" href="../pinout.html" />
     <link rel="prev" title="usbtools - USB tools" href="usbtools.html" /> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -90,13 +92,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
-<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#module-pyftdi.misc">Functions</a></li>
 </ul>
 </li>
@@ -155,7 +157,7 @@
         
           <li><a href="index.html">API documentation</a> &raquo;</li>
         
-      <li><code class="docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -181,168 +183,148 @@
 <p>Miscelleanous helpers</p>
 <dl class="function">
 <dt id="pyftdi.misc.hexdump">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">hexdump</code><span class="sig-paren">(</span><em>data</em>, <em>full=False</em>, <em>abbreviate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexdump" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">hexdump</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">full=False</em>, <em class="sig-param">abbreviate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexdump" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a binary buffer into a hexadecimal representation.</p>
 <p>Return a multi-line strings with hexadecimal values and ASCII
 representation of the buffer data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</li>
-<li><strong>full</strong> (<em>bool</em>) – use <cite>hexdump -Cv</cite> format</li>
-<li><strong>abbreviate</strong> (<em>bool</em>) – replace identical lines with ‘*’</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</p></li>
+<li><p><strong>full</strong> (<em>bool</em>) – use <cite>hexdump -Cv</cite> format</p></li>
+<li><p><strong>abbreviate</strong> (<em>bool</em>) – replace identical lines with ‘*’</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.hexline">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">hexline</code><span class="sig-paren">(</span><em>data</em>, <em>sep=' '</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexline" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">hexline</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">sep=' '</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a binary buffer into a hexadecimal representation.</p>
 <p>Return a string with hexadecimal values and ASCII representation
 of the buffer data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.is_iterable">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">is_iterable</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.is_iterable" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">is_iterable</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.is_iterable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tells whether an instance is iterable or not.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>object</em>) – the instance to test</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the object is iterable</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>object</em>) – the instance to test</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the object is iterable</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.pretty_size">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">pretty_size</code><span class="sig-paren">(</span><em>size</em>, <em>sep=' '</em>, <em>lim_k=1024</em>, <em>lim_m=10485760</em>, <em>plural=True</em>, <em>floor=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.pretty_size" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">pretty_size</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">sep=' '</em>, <em class="sig-param">lim_k=1024</em>, <em class="sig-param">lim_m=10485760</em>, <em class="sig-param">plural=True</em>, <em class="sig-param">floor=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.pretty_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a size into a more readable unit-indexed size (KiB, MiB)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>size</strong> (<em>int</em>) – integral value to convert</li>
-<li><strong>sep</strong> (<em>str</em>) – the separator character between the integral value and
-the unit specifier</li>
-<li><strong>lim_k</strong> (<em>int</em>) – any value above this limit is a candidate for KiB
-conversion.</li>
-<li><strong>lim_m</strong> (<em>int</em>) – any value above this limit is a candidate for MiB
-conversion.</li>
-<li><strong>plural</strong> (<em>bool</em>) – whether to append a final ‘s’ to byte(s)</li>
-<li><strong>floor</strong> (<em>bool</em>) – how to behave when exact conversion cannot be
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>size</strong> (<em>int</em>) – integral value to convert</p></li>
+<li><p><strong>sep</strong> (<em>str</em>) – the separator character between the integral value and
+the unit specifier</p></li>
+<li><p><strong>lim_k</strong> (<em>int</em>) – any value above this limit is a candidate for KiB
+conversion.</p></li>
+<li><p><strong>lim_m</strong> (<em>int</em>) – any value above this limit is a candidate for MiB
+conversion.</p></li>
+<li><p><strong>plural</strong> (<em>bool</em>) – whether to append a final ‘s’ to byte(s)</p></li>
+<li><p><strong>floor</strong> (<em>bool</em>) – how to behave when exact conversion cannot be
 achieved: take the closest, smaller value or fallback to the next
-unit that allows the exact representation of the input value</li>
+unit that allows the exact representation of the input value</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the prettyfied size</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the prettyfied size</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.to_bool">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">to_bool</code><span class="sig-paren">(</span><em>value</em>, <em>permissive=True</em>, <em>allow_int=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bool" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">to_bool</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">permissive=True</em>, <em class="sig-param">allow_int=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a string and convert it into a boolean value if possible.</p>
 <p>Input value may be:
 - a string with an integer value, if <cite>allow_int</cite> is enabled
 - a boolean value
 - a string with a common boolean definition</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>value</strong> (<em>str</em><em> or </em><em>int</em><em> or </em><em>bool</em>) – the value to parse and convert</li>
-<li><strong>permissive</strong> (<em>bool</em>) – default to the False value if parsing fails</li>
-<li><strong>allow_int</strong> (<em>bool</em>) – allow an integral type as the input value</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>str</em><em> or </em><em>int</em><em> or </em><em>bool</em>) – the value to parse and convert</p></li>
+<li><p><strong>permissive</strong> (<em>bool</em>) – default to the False value if parsing fails</p></li>
+<li><p><strong>allow_int</strong> (<em>bool</em>) – allow an integral type as the input value</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>ValueError</strong> – if the input value cannot be converted into an bool</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – if the input value cannot be converted into an bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.to_int">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">to_int</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_int" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">to_int</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_int" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a value and convert it into an integer value if possible.</p>
 <p>Input value may be:
 - a string with an integer coded as a decimal value
 - a string with an integer coded as a hexadecimal value
 - a integral value
 - a integral value with a unit specifier (kilo or mega)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> (<em>str</em><em> or </em><em>int</em>) – input value to convert to an integer</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the value as an integer</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>ValueError</strong> – if the input value cannot be converted into an int</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em><em> or </em><em>int</em>) – input value to convert to an integer</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the value as an integer</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if the input value cannot be converted into an int</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
 <dt id="pyftdi.misc.xor">
-<code class="descclassname">pyftdi.misc.</code><code class="descname">xor</code><span class="sig-paren">(</span><em>_a_</em>, <em>_b_</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.xor" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">xor</code><span class="sig-paren">(</span><em class="sig-param">_a_</em>, <em class="sig-param">_b_</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.xor" title="Permalink to this definition">¶</a></dt>
 <dd><p>XOR logical operation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>_a_</strong> – first argument</li>
-<li><strong>_b_</strong> – second argument</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_a_</strong> – first argument</p></li>
+<li><p><strong>_b_</strong> – second argument</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">xor-ed value</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>xor-ed value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -359,7 +341,7 @@ unit that allows the exact representation of the input value</li>
         <a href="../pinout.html" class="btn btn-neutral float-right" title="FTDI device pinout" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="usbtools.html" class="btn btn-neutral" title="usbtools - USB tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="usbtools.html" class="btn btn-neutral float-left" title="usbtools - USB tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -385,26 +367,16 @@ unit that allows the exact representation of the input value</li>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="../_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

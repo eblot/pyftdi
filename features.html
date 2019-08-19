@@ -17,13 +17,20 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
@@ -31,21 +38,16 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Requirements" href="requirements.html" />
     <link rel="prev" title="PyFtdi" href="index.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -173,13 +175,14 @@
 <div class="section" id="devices">
 <h2>Devices<a class="headerlink" href="#devices" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>All FTDI device ports (UART, MPSSE) can be used simultaneously.<ul>
-<li>However, it is not yet possible to use both GPIO and MPSSE modes on the
-same port at once</li>
+<li><p>All FTDI device ports (UART, MPSSE) can be used simultaneously.</p>
+<ul>
+<li><p>However, it is not yet possible to use both GPIO and MPSSE modes on the
+same port at once</p></li>
 </ul>
 </li>
-<li>Several FTDI adapters can be accessed simultaneously from the same Python
-runtime instance.</li>
+<li><p>Several FTDI adapters can be accessed simultaneously from the same Python
+runtime instance.</p></li>
 </ul>
 </div>
 <div class="section" id="supported-features">
@@ -196,40 +199,40 @@ name.</p>
 <div class="section" id="spi-master">
 <h3>SPI master<a class="headerlink" href="#spi-master" title="Permalink to this headline">¶</a></h3>
 <p>Supported devices:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="7%" />
-<col width="7%" />
-<col width="9%" />
-<col width="76%" />
+<col style="width: 7%" />
+<col style="width: 7%" />
+<col style="width: 9%" />
+<col style="width: 76%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Mode</th>
-<th class="head">CPol</th>
-<th class="head">CPha</th>
-<th class="head">Status</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>CPol</p></th>
+<th class="head"><p>CPha</p></th>
+<th class="head"><p>Status</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>0</td>
-<td>0</td>
-<td>0</td>
-<td>Supported on all MPSSE devices</td>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>Supported on all MPSSE devices</p></td>
 </tr>
-<tr class="row-odd"><td>1</td>
-<td>0</td>
-<td>1</td>
-<td>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</td>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</p></td>
 </tr>
-<tr class="row-even"><td>2</td>
-<td>1</td>
-<td>0</td>
-<td>Not supported (FTDI HW limitation)</td>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>Not supported (FTDI HW limitation)</p></td>
 </tr>
-<tr class="row-odd"><td>3</td>
-<td>1</td>
-<td>1</td>
-<td>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</td>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>Supported on -H series (<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>/<a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>)</p></td>
 </tr>
 </tbody>
 </table>
@@ -276,7 +279,7 @@ solution.</p>
         <a href="requirements.html" class="btn btn-neutral float-right" title="Requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="PyFtdi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="PyFtdi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -302,26 +305,16 @@ solution.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>

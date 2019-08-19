@@ -17,13 +17,20 @@
   
 
   
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
@@ -31,21 +38,16 @@
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Authors" href="authors.html" />
     <link rel="prev" title="FTDI device pinout" href="pinout.html" /> 
-
-  
-  <script src="_static/js/modernizr.min.js"></script>
-
 </head>
 
 <body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -59,7 +61,7 @@
             
             
               <div class="version">
-                0.29.5
+                0.29.6
               </div>
             
           
@@ -96,6 +98,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#error-no-backend-available">“Error: No backend available”</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#error-access-denied-insufficient-permissions">“Error: Access denied (insufficient permissions)”</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#error-the-device-has-no-langid">“Error: The device has no langid”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bus-error-access-violation">“Bus error / Access violation”</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#serial-serialutil-serialexception-unable-to-open-usb-port">“serial.serialutil.SerialException: Unable to open USB port”</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#slow-initialisation-on-os-x-el-capitan">Slow initialisation on OS X El Capitan</a></li>
 </ul>
@@ -182,11 +185,11 @@ at ERROR level.</p>
 <h3>“Error: No backend available”<a class="headerlink" href="#error-no-backend-available" title="Permalink to this headline">¶</a></h3>
 <p>libusb native library cannot be loaded. Try helping the dynamic loader:</p>
 <ul>
-<li><p class="first">On Linux: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">LD_LIBRARY_PATH=&lt;path&gt;</span></code></p>
+<li><p>On Linux: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">LD_LIBRARY_PATH=&lt;path&gt;</span></code></p>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal notranslate"><span class="pre">libusb-1.*.so</span></code>
 library file</p>
 </li>
-<li><p class="first">On macOS: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">DYLD_LIBRARY_PATH=.../lib</span></code></p>
+<li><p>On macOS: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">DYLD_LIBRARY_PATH=.../lib</span></code></p>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal notranslate"><span class="pre">libusb-1.*.dylib</span></code>
 library file</p>
 </li>
@@ -196,7 +199,7 @@ library file</p>
 <h3>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Permalink to this headline">¶</a></h3>
 <p>The system may already be using the device.</p>
 <ul>
-<li><p class="first">On macOS: starting with 10.9 “<em>Mavericks</em>”, macOS ships with a native FTDI
+<li><p>On macOS: starting with 10.9 “<em>Mavericks</em>”, macOS ships with a native FTDI
 kernel extension that preempts access to the FTDI device.</p>
 <p>Up to 10.13 “<em>High Sierra</em>”, this driver can be unloaded this way:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo kextunload <span class="o">[</span>-v<span class="o">]</span> -bundle com.apple.driver.AppleUSBFTDI
@@ -207,30 +210,36 @@ kernel extension that preempts access to the FTDI device.</p>
 <p>Please note that the system automatically reloads the driver, so it may be
 useful to move the kernel extension so that the system never loads it.</p>
 <div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">From macOS 10.14 “<em>Mojave</em>”, the Apple kernel extension peacefully
+<p class="admonition-title">Warning</p>
+<p>From macOS 10.14 “<em>Mojave</em>”, the Apple kernel extension peacefully
 co-exists with <a class="reference external" href="http://www.libusb.info/">libusb</a> and <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>, so you no longer need - and <strong>should
 not attempt</strong> - to unload the kernel extension. If you still experience
 this error, please verify you have not installed another driver from FTDI,
 such as FTDI’s D2XX.</p>
 </div>
 </li>
-<li><p class="first">On Linux: it may indicate a missing or invalid udev configuration. See
-the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p>
-</li>
-<li><p class="first">This error message may also be triggered whenever the communication port is
-already in use.</p>
-</li>
+<li><p>On Linux: it may indicate a missing or invalid udev configuration. See
+the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p></li>
+<li><p>This error message may also be triggered whenever the communication port is
+already in use.</p></li>
 </ul>
 </div>
 <div class="section" id="error-the-device-has-no-langid">
 <h3>“Error: The device has no langid”<a class="headerlink" href="#error-the-device-has-no-langid" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li>On Linux, it usually comes from the same installation issue as the
+<li><p>On Linux, it usually comes from the same installation issue as the
 <code class="docutils literal notranslate"><span class="pre">Access</span> <span class="pre">denied</span></code> error: the current user is not granted the permissions to
 access the FTDI device, therefore pyusb cannot read the FTDI registers. Check
-out the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</li>
+out the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p></li>
 </ul>
+</div>
+<div class="section" id="bus-error-access-violation">
+<h3>“Bus error / Access violation”<a class="headerlink" href="#bus-error-access-violation" title="Permalink to this headline">¶</a></h3>
+<p>PyFtdi does not use any native library, but relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="http://www.libusb.info/">libusb</a>. The
+latter uses native code that may trigger OS error. Some early development
+versions of <a class="reference external" href="http://www.libusb.info/">libusb</a>, for example 1.0.22-b…, have been reported to trigger
+such issues. Please ensure you use a stable/final versions of <a class="reference external" href="http://www.libusb.info/">libusb</a> if you
+experience this kind of fatal error.</p>
 </div>
 <div class="section" id="serial-serialutil-serialexception-unable-to-open-usb-port">
 <h3>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Permalink to this headline">¶</a></h3>
@@ -257,7 +266,7 @@ with OS X 10.11+.</p>
         <a href="authors.html" class="btn btn-neutral float-right" title="Authors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="pinout.html" class="btn btn-neutral" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pinout.html" class="btn btn-neutral float-left" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -283,26 +292,16 @@ with OS X 10.11+.</p>
   
 
 
-  
-
-    
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-    
-
-  
-
-  <script type="text/javascript" src="_static/js/theme.js"></script>
-
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+
+  
+  
+    
+   
 
 </body>
 </html>
