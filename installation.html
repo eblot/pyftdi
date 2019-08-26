@@ -92,11 +92,13 @@
 <li class="toctree-l2"><a class="reference internal" href="#native-dependencies">Native dependencies</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#debian-ubuntu-linux">Debian/Ubuntu Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#homebrew-macos">Homebrew macOS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#libusb-devel-filter">Libusb-devel-filter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Zadig</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Zadig</a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#post-installation-sanity-check">Post-installation sanity check</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-with-pip">Installing with PIP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-from-source">Installing from source</a></li>
@@ -216,35 +218,73 @@ effective.</p>
 <p>Windows is not officially supported (<em>i.e.</em> not tested) but some users have
 reported successful installations. Windows requires a specific libusb backend
 installation.</p>
-<p>Here is a brief setup guide from Andrea Concil for use with the libusb-0.1
-backend:</p>
-</div>
-<div class="section" id="libusb-devel-filter">
-<h3>Libusb-devel-filter<a class="headerlink" href="#libusb-devel-filter" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h4>Zadig<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>The probably easiest way to deal with libusb on Windows is to use <a class="reference external" href="http://zadig.akeo.ie/">Zadig</a></p>
+<ol class="arabic simple">
+<li><p>Start up the Zadig utility</p></li>
+<li><p>Select <code class="docutils literal notranslate"><span class="pre">Options/List</span> <span class="pre">All</span> <span class="pre">Devices</span></code>, then select the FTDI devices you want
+to communicate with. Its names depends on your hardware, <em>i.e.</em> the name
+stored in the FTDI EEPROM.</p></li>
+</ol>
 <blockquote>
 <div><ul class="simple">
-<li><p>install Libusb-win32-devel-filter from <a class="reference external" href="https://sourceforge.net/projects/libusb-win32/files/libusb-win32-releases/">Libusb win32</a></p></li>
-<li><p>before using it, install the so called “filter” so that libusb can coexist
-with specific peripherals usb drivers:</p>
+<li><p>With FTDI devices with multiple channels, such as FT2232 (2 channels) and
+FT4232 (4 channels), you <strong>must</strong> install the driver for the composite
+parent, <strong>not</strong> for the individual interfaces. If you install the driver
+for each interface, each interface will be presented as a unique FTDI
+device and you may have difficulties to select a specific FTDI device port
+once the installation is completed. To make the composite parents to appear
+in the device list, uncheck the <code class="docutils literal notranslate"><span class="pre">Options/Ignore</span> <span class="pre">Hubs</span> <span class="pre">or</span> <span class="pre">Composite</span> <span class="pre">Parents</span></code>
+menu item.</p></li>
+<li><p>Be sure to select the parent device, <em>i.e.</em> the device name should not end
+with <em>(Interface N)</em>, where <em>N</em> is the channel number.</p>
 <ul>
-<li><p>go into the Libusb-Win32 menu (it should be something like
-<code class="docutils literal notranslate"><span class="pre">C:\ProgramData\Microsoft\Windows\Start</span> <span class="pre">Menu\Programs\LibUSB-Win32</span></code>) and
-into the folder Class Filter launch the installation of the filter for all
-the usb devices <cite>i.e.</cite> Install all class filters. Once done libusb can be
-used “in parallel” with original drivers.</p></li>
+<li><p>for example <em>Dual RS232-HS</em> represents the composite parent, while
+<em>Dual RS232-HS (Interface 0)</em> represents a single channel of the FTDI
+device. Always select the former.</p></li>
 </ul>
 </li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="id1">
-<h3>Zadig<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<p>Another libusb backend implementation can be installed with <a class="reference external" href="http://zadig.akeo.ie/">Zadig</a></p>
+<ol class="arabic simple" start="3">
+<li><p>Select <code class="docutils literal notranslate"><span class="pre">libusb-win32</span></code> (not <code class="docutils literal notranslate"><span class="pre">WinUSB</span></code>) in the driver list.</p></li>
+<li><p>Click on <code class="docutils literal notranslate"><span class="pre">Replace</span> <span class="pre">Driver</span></code></p></li>
+</ol>
 <p>See also <a class="reference external" href="https://github.com/libusb/libusb/wiki/Windows">Libusb on Windows</a></p>
 </div>
 </div>
+</div>
+<div class="section" id="post-installation-sanity-check">
+<h2>Post-installation sanity check<a class="headerlink" href="#post-installation-sanity-check" title="Permalink to this headline">¶</a></h2>
+<p>Open a <em>shell</em>, or a <em>CMD</em> on Windows</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3  <span class="c1"># or &#39;python&#39; on Windows</span>
+from pyftdi.ftdi import Ftdi
+Ftdi<span class="o">()</span>.open_from_url<span class="o">(</span><span class="s1">&#39;ftdi:///?&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>should list all the FTDI devices available on your host.</p>
+<blockquote>
+<div><ul>
+<li><p>Example with 1 FT232H device with a serial number and 1 FT2232 device
+with no serial number, connected to the host:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Available</span> <span class="n">interfaces</span><span class="p">:</span>
+  <span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="n">ftdi</span><span class="p">:</span><span class="mi">232</span><span class="n">h</span><span class="p">:</span><span class="n">FT1PWZ0Q</span><span class="o">/</span><span class="mi">1</span>   <span class="p">(</span><span class="n">C232HD</span><span class="o">-</span><span class="n">DDHSP</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span>
+  <span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="n">ftdi</span><span class="p">:</span><span class="mi">2232</span><span class="o">/</span><span class="mi">1</span>            <span class="p">(</span><span class="n">Dual</span> <span class="n">RS232</span><span class="o">-</span><span class="n">HS</span><span class="p">)</span>
+  <span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="n">ftdi</span><span class="p">:</span><span class="mi">2232</span><span class="o">/</span><span class="mi">2</span>            <span class="p">(</span><span class="n">Dual</span> <span class="n">RS232</span><span class="o">-</span><span class="n">HS</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>Note that FTDI devices with custom VID/PID are not listed with this simple
+command, please refer to the PyFTDI API to add custom identifiers, <em>i.e.</em> see
+<a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_vendor" title="pyftdi.ftdi.Ftdi.add_custom_vendor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_vendor()</span></code></a> and
+<a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_product" title="pyftdi.ftdi.Ftdi.add_custom_product"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_product()</span></code></a> APIs.</p>
+</div>
 <div class="section" id="python-dependencies">
 <h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Dependencies should be automatically installed with PIP.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>pyusb &gt;= 1.0.0</p></li>

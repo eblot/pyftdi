@@ -56,32 +56,73 @@ Windows is not officially supported (*i.e.* not tested) but some users have
 reported successful installations. Windows requires a specific libusb backend
 installation.
 
-Here is a brief setup guide from Andrea Concil for use with the libusb-0.1
-backend:
-
-Libusb-devel-filter
-...................
-
- * install Libusb-win32-devel-filter from `Libusb win32`_
- * before using it, install the so called "filter" so that libusb can coexist
-   with specific peripherals usb drivers:
-
-   * go into the Libusb-Win32 menu (it should be something like
-     ``C:\ProgramData\Microsoft\Windows\Start Menu\Programs\LibUSB-Win32``) and
-     into the folder Class Filter launch the installation of the filter for all
-     the usb devices `i.e.` Install all class filters. Once done libusb can be
-     used "in parallel" with original drivers.
-
 Zadig
-.....
+'''''
 
-Another libusb backend implementation can be installed with Zadig_
+The probably easiest way to deal with libusb on Windows is to use Zadig_
+
+1. Start up the Zadig utility
+
+2. Select ``Options/List All Devices``, then select the FTDI devices you want
+   to communicate with. Its names depends on your hardware, *i.e.* the name
+   stored in the FTDI EEPROM.
+
+  * With FTDI devices with multiple channels, such as FT2232 (2 channels) and
+    FT4232 (4 channels), you **must** install the driver for the composite
+    parent, **not** for the individual interfaces. If you install the driver
+    for each interface, each interface will be presented as a unique FTDI
+    device and you may have difficulties to select a specific FTDI device port
+    once the installation is completed. To make the composite parents to appear
+    in the device list, uncheck the ``Options/Ignore Hubs or Composite Parents``
+    menu item.
+
+  * Be sure to select the parent device, *i.e.* the device name should not end
+    with *(Interface N)*, where *N* is the channel number.
+
+    * for example *Dual RS232-HS* represents the composite parent, while
+      *Dual RS232-HS (Interface 0)* represents a single channel of the FTDI
+      device. Always select the former.
+
+3. Select ``libusb-win32`` (not ``WinUSB``) in the driver list.
+
+4. Click on ``Replace Driver``
 
 See also `Libusb on Windows`_
 
 
+Post-installation sanity check
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Open a *shell*, or a *CMD* on Windows
+
+.. code-block:: shell
+
+    python3  # or 'python' on Windows
+    from pyftdi.ftdi import Ftdi
+    Ftdi().open_from_url('ftdi:///?')
+
+should list all the FTDI devices available on your host.
+
+  * Example with 1 FT232H device with a serial number and 1 FT2232 device
+    with no serial number, connected to the host:
+
+    .. code-block::
+
+        Available interfaces:
+          ftdi://ftdi:232h:FT1PWZ0Q/1   (C232HD-DDHSP-0)
+          ftdi://ftdi:2232/1            (Dual RS232-HS)
+          ftdi://ftdi:2232/2            (Dual RS232-HS)
+
+
+Note that FTDI devices with custom VID/PID are not listed with this simple
+command, please refer to the PyFTDI API to add custom identifiers, *i.e.* see
+:py:meth:`pyftdi.ftdi.Ftdi.add_custom_vendor` and
+:py:meth:`pyftdi.ftdi.Ftdi.add_custom_product` APIs.
+
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~
+
+Dependencies should be automatically installed with PIP.
 
   * pyusb >= 1.0.0
   * pyserial >= 3.0
