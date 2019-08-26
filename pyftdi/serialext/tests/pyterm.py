@@ -3,7 +3,7 @@
 """Simple Python serial terminal
 """
 
-# Copyright (c) 2010-2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -35,7 +35,7 @@ from array import array
 from atexit import register
 from collections import deque
 from logging import Formatter, DEBUG, ERROR
-from os import linesep, name as osname, stat, uname
+from os import linesep, stat
 from pyftdi import FtdiLogger
 from pyftdi.misc import to_int
 from sys import modules, platform, stderr, stdin, stdout
@@ -262,20 +262,18 @@ class MiniTerm:
 
 
 def get_default_device():
-    if osname == 'nt':
+    if platform == 'win32':
         device = 'COM1'
-    elif osname == 'posix':
-        (system, _, _, _, _) = uname()
-        if system.lower() == 'darwin':
+    elif platform == 'darwin':
             device = '/dev/cu.usbserial'
-        else:
-            device = '/dev/ttyS0'
-        try:
-            stat(device)
-        except OSError:
-            device = 'ftdi:///1'
+    elif platform == 'linux':
+        device = '/dev/ttyS0'
     else:
-        device = None
+        device = ''
+    try:
+        stat(device)
+    except OSError:
+        device = 'ftdi:///1'
     return device
 
 
@@ -285,7 +283,7 @@ def main():
     try:
         default_device = get_default_device()
         argparser = ArgumentParser(description=modules[__name__].__doc__)
-        if osname in ('posix', ):
+        if platform != 'win32':
             argparser.add_argument('-f', '--fullmode', dest='fullmode',
                                    action='store_true',
                                    help='use full terminal mode, exit with '
