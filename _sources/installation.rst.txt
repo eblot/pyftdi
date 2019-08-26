@@ -3,10 +3,10 @@
 Installation
 ------------
 
-Native dependencies
-~~~~~~~~~~~~~~~~~~~
+Prerequisites
+~~~~~~~~~~~~~
 
-Install native dependency: libusb 1.x.
+PyFTDI_ relies on PyUSB_, which requires a native dependency: libusb 1.x.
 
 The actual command to install depends on your OS and/or your distribution,
 see below
@@ -32,15 +32,28 @@ configure `udev`, here is a typical setup:
     SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0666"
 
 You need to unplug / plug back the FTDI device once this file has been
-created so that `udev` loads the rules for the matching device.
+created so that `udev` loads the rules for the matching device, or
+alternatively, inform the ``udev`` daemon about the changes:
+
+.. code-block:: shell
+
+   sudo udevadm control --reload-rules
+   sudo udevadm trigger
 
 With this setup, be sure to add users that want to run PyFtdi_ to the
 `plugdev` group, *e.g.*
 
-  sudo adduser $USER plugdev
+.. code-block:: shell
+
+    sudo adduser $USER plugdev
 
 Remember that you need to log out / log in to get the above command
-effective.
+effective, or start a subshell to try testing PyFtdi_:
+
+.. code-block:: shell
+
+    newgrp plugdev
+
 
 Homebrew macOS
 ..............
@@ -115,9 +128,10 @@ should list all the FTDI devices available on your host.
 
 
 Note that FTDI devices with custom VID/PID are not listed with this simple
-command, please refer to the PyFTDI API to add custom identifiers, *i.e.* see
+command, please refer to the PyFtdi_ API to add custom identifiers, *i.e.* see
 :py:meth:`pyftdi.ftdi.Ftdi.add_custom_vendor` and
 :py:meth:`pyftdi.ftdi.Ftdi.add_custom_product` APIs.
+
 
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~

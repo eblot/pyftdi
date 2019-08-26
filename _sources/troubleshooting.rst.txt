@@ -98,3 +98,11 @@ It may take several seconds to open or enumerate FTDI devices.
 
 If you run libusb <= v1.0.20, be sure to read the `Libusb issue on macOS`_
 with OS X 10.11+.
+
+
+Reporting a bug
+~~~~~~~~~~~~~~~
+
+Please do not contact the author by email.
+
+Fill in an issue on `GitHub <https://github.com/eblot/pyftdi/issues>`_.

@@ -89,7 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#native-dependencies">Native dependencies</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#debian-ubuntu-linux">Debian/Ubuntu Linux</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#homebrew-macos">Homebrew macOS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a><ul>
@@ -176,9 +176,9 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="native-dependencies">
-<h2>Native dependencies<a class="headerlink" href="#native-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>Install native dependency: libusb 1.x.</p>
+<div class="section" id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFTDI</a> relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a>, which requires a native dependency: libusb 1.x.</p>
 <p>The actual command to install depends on your OS and/or your distribution,
 see below</p>
 <div class="section" id="debian-ubuntu-linux">
@@ -198,14 +198,22 @@ configure <cite>udev</cite>, here is a typical setup:</p>
 </pre></div>
 </div>
 <p>You need to unplug / plug back the FTDI device once this file has been
-created so that <cite>udev</cite> loads the rules for the matching device.</p>
+created so that <cite>udev</cite> loads the rules for the matching device, or
+alternatively, inform the <code class="docutils literal notranslate"><span class="pre">udev</span></code> daemon about the changes:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo udevadm control --reload-rules
+sudo udevadm trigger
+</pre></div>
+</div>
 <p>With this setup, be sure to add users that want to run <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> to the
 <cite>plugdev</cite> group, <em>e.g.</em></p>
-<blockquote>
-<div><p>sudo adduser $USER plugdev</p>
-</div></blockquote>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo adduser <span class="nv">$USER</span> plugdev
+</pre></div>
+</div>
 <p>Remember that you need to log out / log in to get the above command
-effective.</p>
+effective, or start a subshell to try testing <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>newgrp plugdev
+</pre></div>
+</div>
 </div>
 <div class="section" id="homebrew-macos">
 <h3>Homebrew macOS<a class="headerlink" href="#homebrew-macos" title="Permalink to this headline">¶</a></h3>
@@ -278,7 +286,7 @@ with no serial number, connected to the host:</p>
 </ul>
 </div></blockquote>
 <p>Note that FTDI devices with custom VID/PID are not listed with this simple
-command, please refer to the PyFTDI API to add custom identifiers, <em>i.e.</em> see
+command, please refer to the <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> API to add custom identifiers, <em>i.e.</em> see
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_vendor" title="pyftdi.ftdi.Ftdi.add_custom_vendor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_vendor()</span></code></a> and
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_product" title="pyftdi.ftdi.Ftdi.add_custom_product"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_product()</span></code></a> APIs.</p>
 </div>
@@ -333,7 +341,7 @@ python3 setup.py ...
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+        &copy; Copyright 2019, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
