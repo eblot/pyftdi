@@ -27,7 +27,7 @@
 """GPIO/BitBang support for PyFdti"""
 
 from struct import pack as spack
-from pyftdi.ftdi import Ftdi
+from .ftdi import Ftdi
 
 
 class GpioException(IOError):
