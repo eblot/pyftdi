@@ -65,6 +65,9 @@ Classes
 .. autoclass :: I2cPort
  :members:
 
+.. autoclass :: I2cGpioPort
+ :members:
+
 
 Exceptions
 ~~~~~~~~~~
