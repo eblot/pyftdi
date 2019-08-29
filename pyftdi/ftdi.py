@@ -1633,8 +1633,12 @@ class Ftdi:
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
-        self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)',
-                       (actual_freq/1E6), error*100)
+        if actual_freq > 1E6:
+            self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)',
+                           (actual_freq/1E6), error*100)
+        else:
+            self.log.debug('Bus frequency: %.3f KHz (error: %+.1f %%)',
+                           (actual_freq/1E3), error*100)
         return actual_freq
 
     def __get_timeouts(self):

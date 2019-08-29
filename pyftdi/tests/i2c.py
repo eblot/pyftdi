@@ -100,8 +100,11 @@ class I2cReadTest(object):
         self._i2c.configure(url)
 
     def read(self):
-        port = self._i2c.get_port(0x36)
-        print(hexlify(port.read(32)).decode())
+        address = environ.get('I2C_ADDRESS', '0x36').lower()
+        addr = int(address, 16 if address.startswith('0x') else 10)
+        port = self._i2c.get_port(addr)
+        data = port.read(32).tobytes()
+        print(hexlify(data).decode(), data.decode('utf8', errors='replace'))
 
     def close(self):
         """Close the I2C connection"""
