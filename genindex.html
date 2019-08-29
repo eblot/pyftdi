@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.29.6
+                0.30.0
               </div>
             
           
@@ -186,12 +186,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_product">add_custom_product() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_vendor">add_custom_vendor() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
-      <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.all_pins">all_pins() (pyftdi.spi.SpiGpioPort property)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.all_pins">all_pins() (pyftdi.i2c.I2cGpioPort property)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.all_pins">(pyftdi.spi.SpiGpioPort property)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -239,6 +243,10 @@
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.direction">direction() (pyftdi.gpio.GpioController property)</a>
 
       <ul>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cController.direction">(pyftdi.i2c.I2cController property)</a>
+</li>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.direction">(pyftdi.i2c.I2cGpioPort property)</a>
+</li>
         <li><a href="api/spi.html#pyftdi.spi.SpiController.direction">(pyftdi.spi.SpiController property)</a>
 </li>
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.direction">(pyftdi.spi.SpiGpioPort property)</a>
@@ -340,6 +348,8 @@
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_error_string">get_error_string() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.get_gpio">get_gpio() (pyftdi.i2c.I2cController method)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_identifiers">get_identifiers() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_latency_timer">get_latency_timer() (pyftdi.ftdi.Ftdi method)</a>
@@ -356,10 +366,18 @@
 </li>
       <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.get_string">get_string() (pyftdi.usbtools.UsbTools class method)</a>
 </li>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.gpio_all_pins">gpio_all_pins() (pyftdi.spi.SpiController property)</a>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.gpio_all_pins">gpio_all_pins() (pyftdi.i2c.I2cController property)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.gpio_all_pins">(pyftdi.spi.SpiController property)</a>
 </li>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.gpio_pins">gpio_pins() (pyftdi.spi.SpiController property)</a>
+      </ul></li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.gpio_pins">gpio_pins() (pyftdi.i2c.I2cController property)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.gpio_pins">(pyftdi.spi.SpiController property)</a>
 </li>
+      </ul></li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController">GpioController (class in pyftdi.gpio)</a>
 </li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioException">GpioException</a>
@@ -390,16 +408,18 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController">I2cController (class in pyftdi.i2c)</a>
 </li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort">I2cGpioPort (class in pyftdi.i2c)</a>
+</li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cIOError">I2cIOError</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cNackError">I2cNackError</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort">I2cPort (class in pyftdi.i2c)</a>
 </li>
-      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.ic_name">ic_name() (pyftdi.ftdi.Ftdi property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.ic_name">ic_name() (pyftdi.ftdi.Ftdi property)</a>
+</li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.is_connected">is_connected() (pyftdi.gpio.GpioController property)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.is_H_series">is_H_series() (pyftdi.ftdi.Ftdi property)</a>
@@ -457,6 +477,8 @@
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.pins">pins() (pyftdi.gpio.GpioController property)</a>
 
       <ul>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.pins">(pyftdi.i2c.I2cGpioPort property)</a>
+</li>
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.pins">(pyftdi.spi.SpiGpioPort property)</a>
 </li>
       </ul></li>
@@ -474,10 +496,10 @@
       </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.poll_modem_status">poll_modem_status() (pyftdi.ftdi.Ftdi method)</a>
 </li>
-      <li><a href="api/misc.html#pyftdi.misc.pretty_size">pretty_size() (in module pyftdi.misc)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/misc.html#pyftdi.misc.pretty_size">pretty_size() (in module pyftdi.misc)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_buffers">purge_buffers() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_rx_buffer">purge_rx_buffer() (pyftdi.ftdi.Ftdi method)</a>
@@ -507,6 +529,8 @@
       <ul>
         <li><a href="api/i2c.html#pyftdi.i2c.I2cController.read">(pyftdi.i2c.I2cController method)</a>
 </li>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.read">(pyftdi.i2c.I2cGpioPort method)</a>
+</li>
         <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.read">(pyftdi.i2c.I2cPort method)</a>
 </li>
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.read">(pyftdi.spi.SpiGpioPort method)</a>
@@ -526,8 +550,12 @@
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.read_from">read_from() (pyftdi.i2c.I2cPort method)</a>
 </li>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.read_gpio">read_gpio() (pyftdi.spi.SpiController method)</a>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.read_gpio">read_gpio() (pyftdi.i2c.I2cController method)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.read_gpio">(pyftdi.spi.SpiController method)</a>
 </li>
+      </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.read_pins">read_pins() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.read_port">read_port() (pyftdi.gpio.GpioController method)</a>
@@ -549,6 +577,8 @@
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.set_direction">set_direction() (pyftdi.gpio.GpioController method)</a>
 
       <ul>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.set_direction">(pyftdi.i2c.I2cGpioPort method)</a>
+</li>
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.set_direction">(pyftdi.spi.SpiGpioPort method)</a>
 </li>
       </ul></li>
@@ -572,8 +602,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.set_gpio_direction">set_gpio_direction() (pyftdi.spi.SpiController method)</a>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.set_gpio_direction">set_gpio_direction() (pyftdi.i2c.I2cController method)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.set_gpio_direction">(pyftdi.spi.SpiController method)</a>
 </li>
+      </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_latency_timer">set_latency_timer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_line_property">set_line_property() (pyftdi.ftdi.Ftdi method)</a>
@@ -642,9 +676,13 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.width">width() (pyftdi.spi.SpiController property)</a>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.width">width() (pyftdi.i2c.I2cController property)</a>
 
       <ul>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.width">(pyftdi.i2c.I2cGpioPort property)</a>
+</li>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.width">(pyftdi.spi.SpiController property)</a>
+</li>
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.width">(pyftdi.spi.SpiGpioPort property)</a>
 </li>
       </ul></li>
@@ -652,6 +690,8 @@
 
       <ul>
         <li><a href="api/i2c.html#pyftdi.i2c.I2cController.write">(pyftdi.i2c.I2cController method)</a>
+</li>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cGpioPort.write">(pyftdi.i2c.I2cGpioPort method)</a>
 </li>
         <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.write">(pyftdi.i2c.I2cPort method)</a>
 </li>
@@ -668,8 +708,12 @@
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.write_data_set_chunksize">write_data_set_chunksize() (pyftdi.ftdi.Ftdi method)</a>
 </li>
-      <li><a href="api/spi.html#pyftdi.spi.SpiController.write_gpio">write_gpio() (pyftdi.spi.SpiController method)</a>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.write_gpio">write_gpio() (pyftdi.i2c.I2cController method)</a>
+
+      <ul>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.write_gpio">(pyftdi.spi.SpiController method)</a>
 </li>
+      </ul></li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.write_port">write_port() (pyftdi.gpio.GpioController method)</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.write_to">write_to() (pyftdi.i2c.I2cPort method)</a>

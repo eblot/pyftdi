@@ -97,3 +97,7 @@ Contributors
 
   * Fix divisor calculation for frequency generation and improve frequency
     selection.
+
+ * meierphil:
+
+  * Initial version of GPIO support for I2C mode

@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.29.6
+                0.30.0
               </div>
             
           
@@ -112,7 +112,6 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html#reporting-a-bug">Reporting a bug</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../licenses.html">Licenses</a></li>
 </ul>
@@ -279,6 +278,12 @@ xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.i2c.I2cController.direction">
+<em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.i2c.I2cController.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the FTDI GPIO direction</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cController.exchange">
 <code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">readlen=0</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Send a byte sequence to a remote slave followed with
@@ -335,6 +340,13 @@ are invalid</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.i2c.I2cController.get_gpio">
+<code class="sig-name descname">get_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the GPIO port.</p>
+<p>:return GPIO port</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cController.get_port">
 <code class="sig-name descname">get_port</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Obtain an I2cPort to drive an I2c slave.</p>
@@ -349,6 +361,18 @@ are invalid</p>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.i2c.I2cPort" title="pyftdi.i2c.I2cPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cPort</span></code></a></p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.gpio_all_pins">
+<em class="property">property </em><code class="sig-name descname">gpio_all_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_all_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.gpio_pins">
+<em class="property">property </em><code class="sig-name descname">gpio_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the configured GPIOs as a bitfield</p>
 </dd></dl>
 
 <dl class="method">
@@ -430,6 +454,37 @@ check out the exchange() method.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.i2c.I2cController.read_gpio">
+<code class="sig-name descname">read_gpio</code><span class="sig-paren">(</span><em class="sig-param">with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GPIO port</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the GPIO port pins as a bitfield</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.set_gpio_direction">
+<code class="sig-name descname">set_gpio_direction</code><span class="sig-paren">(</span><em class="sig-param">pins</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_gpio_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the direction of the GPIO pins</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</p></li>
+<li><p><strong>direction</strong> (<em>int</em>) – direction bitfield (on for output)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cController.set_retry_count">
 <code class="sig-name descname">set_retry_count</code><span class="sig-paren">(</span><em class="sig-param">count</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_retry_count" title="Permalink to this definition">¶</a></dt>
 <dd><p>Change the default retry count when a communication error occurs,
@@ -459,6 +514,17 @@ None is a special bypass address.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.i2c.I2cController.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.i2c.I2cController.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the FTDI count of addressable pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the count of IO pins (including I2C ones).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cController.write">
 <code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write one or more bytes to a remote slave</p>
@@ -480,6 +546,17 @@ are invalid</p>
 be added as the first (byte)s of the output buffer.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.write_gpio">
+<code class="sig-name descname">write_gpio</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write GPIO port</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -488,10 +565,10 @@ be added as the first (byte)s of the output buffer.</p>
 <dd><p>I2C port.</p>
 <p>An I2C port is never instanciated directly: use I2cController.get_port()
 method to obtain an I2C port.</p>
-<p><code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter may be used to prevent the master from releasing
-the I2C bus, if some further data should be exchanged with the slave
-device. Note that in case of any error, the I2C bus is released and
-the <code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter is ignored in such an event.</p>
+<p><code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter in I2cPort methods may be used to prevent the master
+from releasing the I2C bus, if some further data should be exchanged
+with the slave device. Note that in case of any error, the I2C bus is
+released and the <code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter is ignored in such an event.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
@@ -699,6 +776,102 @@ are invalid</p>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
 are invalid</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.i2c.I2cGpioPort">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cGpioPort</code><span class="sig-paren">(</span><em class="sig-param">controller</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO port</p>
+<p>A I2cGpioPort instance enables to drive GPIOs wich are not reserved for
+I2c feature as regular GPIOs.</p>
+<p>GPIO are managed as a bitfield. The LSBs are reserved for the I2c
+feature, which means that the lowest pin that can be used as a GPIO is
+b4:</p>
+<ul class="simple">
+<li><p>b0: I2C SCL</p></li>
+<li><p>b1: I2C SDA_O</p></li>
+<li><p>b2: I2C SDA_I</p></li>
+<li><p>b3: first GPIO</p></li>
+<li><p>b7: reserved for I2C clock stretching if this mode is enabled</p></li>
+</ul>
+<p>There is no offset bias in GPIO bit position, <em>i.e.</em> the first available
+GPIO can be reached from as <code class="docutils literal notranslate"><span class="pre">0x08</span></code>.</p>
+<p>Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
+ports, while 232H and 2232H series use wide 16-bit ports.</p>
+<p>An I2cGpio port is never instanciated directly: use
+I2cController.get_gpio() method to obtain the GPIO port.</p>
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.all_pins">
+<em class="property">property </em><code class="sig-name descname">all_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.all_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.direction">
+<em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the FTDI GPIO direction</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.pins">
+<em class="property">property </em><code class="sig-name descname">pins</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the configured GPIOs as a bitfield.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GPIO port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the GPIO port pins as a bitfield</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.set_direction">
+<code class="sig-name descname">set_direction</code><span class="sig-paren">(</span><em class="sig-param">pins</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.set_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the direction of the GPIO pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</p></li>
+<li><p><strong>direction</strong> (<em>int</em>) – direction bitfield (high level for output)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the FTDI count of addressable pins.</p>
+<p>Note that all pins, including reserved I2C ones, are reported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the count of IO pins (including I2C ones).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cGpioPort.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write GPIO port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</p>
 </dd>
 </dl>
 </dd></dl>

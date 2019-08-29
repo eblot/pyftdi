@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.29.6
+                0.30.0
               </div>
             
           
@@ -90,6 +90,7 @@
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">URL Scheme</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tools">Tools</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#custom-pid">Custom PID</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#custom-vid">Custom VID</a></li>
@@ -100,7 +101,6 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
-<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html#reporting-a-bug">Reporting a bug</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
 </ul>
@@ -233,6 +233,12 @@ parameters (among others).</p>
 <p>API break
 <code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">open_mpsse()</span></code> and <code class="docutils literal notranslate"><span class="pre">open_bitbang</span></code> arguments have changed in
 v0.22.0, be sure to update your code.</p>
+</div>
+<div class="section" id="tools">
+<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory contains a tiny script <code class="docutils literal notranslate"><span class="pre">ftdu_urls.py</span></code> to list the
+available FTDIs connected to the host, and the URLs than can be used to open a
+<code class="docutils literal notranslate"><span class="pre">Fdti()</span></code> instance with the <code class="docutils literal notranslate"><span class="pre">Ftdi.open_from_url()</span></code> method.</p>
 </div>
 <div class="section" id="supporting-custom-usb-vendor-and-product-ids">
 <h2>Supporting custom USB vendor and product IDs<a class="headerlink" href="#supporting-custom-usb-vendor-and-product-ids" title="Permalink to this headline">¶</a></h2>
