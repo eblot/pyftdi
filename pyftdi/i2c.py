@@ -548,7 +548,7 @@ class I2cController:
     def width(self):
         """Report the FTDI count of addressable pins.
 
-           :return: the count of IO pins (including SPI ones).
+           :return: the count of IO pins (including I2C ones).
         """
         return 16 if self._wide_port else 8
 
@@ -824,7 +824,7 @@ class I2cController:
         """
         with self._lock:
             if pins & self._i2c_mask:
-                raise I2cIOError('Cannot access SPI pins as GPIO')
+                raise I2cIOError('Cannot access I2C pins as GPIO')
             gpio_width = self._wide_port and 16 or 8
             gpio_mask = (1 << gpio_width) - 1
             gpio_mask &= ~self._i2c_mask
@@ -838,25 +838,25 @@ class I2cController:
     def _data_lo(self):
         return (Ftdi.SET_BITS_LOW,
                 self.SCL_BIT | self._gpio_low,
-                self.I2C_DIR | self._gpio_dir)
+                self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
     def _clk_lo_data_hi(self):
         return (Ftdi.SET_BITS_LOW,
                 self.SDA_O_BIT | self._gpio_low,
-                self.I2C_DIR | self._gpio_dir)
+                self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
     def _clk_lo_data_lo(self):
         return (Ftdi.SET_BITS_LOW,
                 self._gpio_low,
-                self.I2C_DIR | self._gpio_dir)
+                self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
     def _idle(self):
         return (Ftdi.SET_BITS_LOW,
                 self.I2C_DIR | self._gpio_low,
-                self.I2C_DIR | self._gpio_dir)
+                self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
     def _start(self):
@@ -926,7 +926,6 @@ class I2cController:
         ack = self._ftdi.read_data_bytes(1, 4)
         if not ack:
             raise I2cIOError('No answer from FTDI')
-        print(ack)
         if ack[0] & self.BIT0:
             self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
             raise I2cNackError('NACK from slave')
