@@ -163,7 +163,7 @@ class SpiPort:
 class SpiGpioPort:
     """GPIO port
 
-       A SpiGpioPort instance enables to drive GPIOs wich are not reseerved for
+       A SpiGpioPort instance enables to drive GPIOs wich are not reserved for
        SPI feature as regular GPIOs.
 
        GPIO are managed as a bitfield. The LSBs are reserved for the SPI
@@ -273,11 +273,6 @@ class SpiController:
         self._frequency = 0.0
         self._clock_phase = False
 
-    @property
-    def direction(self):
-        """Provide the FTDI GPIO direction"""
-        return self._spi_dir | self._gpio_dir
-
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master
 
@@ -375,6 +370,11 @@ class SpiController:
     def frequency(self):
         """Returns the current SPI clock"""
         return self._frequency
+
+    @property
+    def direction(self):
+        """Provide the FTDI GPIO direction"""
+        return self._spi_dir | self._gpio_dir
 
     @property
     def gpio_pins(self):
