@@ -56,10 +56,10 @@ class I2cPort:
        An I2C port is never instanciated directly: use I2cController.get_port()
        method to obtain an I2C port.
 
-       ``relax`` parameter may be used to prevent the master from releasing
-       the I2C bus, if some further data should be exchanged with the slave
-       device. Note that in case of any error, the I2C bus is released and
-       the ``relax`` parameter is ignored in such an event.
+       ``relax`` parameter in I2cPort methods may be used to prevent the master
+       from releasing the I2C bus, if some further data should be exchanged
+       with the slave device. Note that in case of any error, the I2C bus is
+       released and the ``relax`` parameter is ignored in such an event.
 
        Example:
 
