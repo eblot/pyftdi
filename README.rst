@@ -1,6 +1,11 @@
 PyFtdi
 ======
 
+Documentation
+-------------
+
+PyFtdi documentation is available from https://eblot.github.io/pyftdi/
+
 Overview
 --------
 
@@ -42,8 +47,16 @@ PyFtdi currently supports the following features:
 PyFtdi provides a pyserial compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI devices.
 
+Warning
+-------
 
-Documentation
--------------
+Starting with version *v0.40.0*, several API changes are being introduced.
+While PyFtdi tries to maintain backward compatibility with previous versions,
+so of these changes may require existing clients to update calls to PyFtdi.
 
-PyFtdi documentation is available from https://eblot.github.io/pyftdi/
+Do not upgrade to *v0.40.0* or above without testing your client against the
+new PyFtdi releases. PyFtdi versions up to *v0.39.9* keep a stable API
+with *v0.22+* series.
+
+See the *Major Changes* section on the online documentation for details about
+potential API breaks.
