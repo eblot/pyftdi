@@ -74,6 +74,14 @@ parameters (among others).
    v0.22.0, be sure to update your code.
 
 
+Tools
+~~~~~
+
+The ``bin/`` directory contains a tiny script ``ftdu_urls.py`` to list the
+available FTDIs connected to the host, and the URLs than can be used to open a
+``Fdti()`` instance with the ``Ftdi.open_from_url()`` method.
+
+
 Supporting custom USB vendor and product IDs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
