@@ -88,7 +88,7 @@ class I2cAccelTest(object):
 
 
 class I2cReadTest(object):
-    """Simple test to read a sequence of bytes I2C bus @ address 0x21
+    """Simple test to read a sequence of bytes I2C bus @ address 0x36
     """
 
     def __init__(self):
@@ -109,6 +109,74 @@ class I2cReadTest(object):
     def close(self):
         """Close the I2C connection"""
         self._i2c.terminate()
+
+
+class I2cReadGpioTest(object):
+    """Simple test to exercise I2C + GPIO mode.
+
+       A slave device (such as EEPROM) should be connected to the I2C bus
+       at either the default 0x36 address or defined with the I2C_ADDRESS
+       ebvironment variable.
+
+       AD0: SCL, AD1+AD2: SDA, AD3 connected to AC0, AD4 connected to AC1
+
+       I2C EEPROM is read, and values are written to AD3:AD4 and read back
+       from AC0:AC1.
+    """
+
+    GPIO_WIDTH = 2  # use 2 GPIOs for output, 2 GPIOs for input (loopback)
+    GPIO_OUT_OFFSET = 3  # GPIO output are b3..b4
+    GPIO_IN_OFFSET = 8  # GPIO input are b8..b9
+
+    def __init__(self):
+        self._i2c = I2cController()
+        self._port = None
+        self._gpio = None
+
+    def open(self):
+        """Open an I2c connection to a slave"""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._i2c.configure(url)
+        address = environ.get('I2C_ADDRESS', '0x36').lower()
+        addr = int(address, 16 if address.startswith('0x') else 10)
+        self._port = self._i2c.get_port(addr)
+        self._gpio = self._i2c.get_gpio()
+        mask = (1 << self.GPIO_WIDTH) - 1
+        self._gpio.set_direction(mask << self.GPIO_OUT_OFFSET |
+                                 mask << self.GPIO_IN_OFFSET,
+                                 mask << self.GPIO_OUT_OFFSET)
+
+    def execute_sequence(self):
+        self._port.write(b'\x00\x00')
+        data = self._port.read(32).tobytes()
+        for dout in range(1 << self.GPIO_WIDTH):
+            self._gpio.write(dout << self.GPIO_OUT_OFFSET)
+            din = self._gpio.read() >> self.GPIO_IN_OFFSET
+            if dout != din:
+               raise AssertionError("GPIO mismatch 0x%04x != 0x%04x",
+                                    din, dout)
+        self._gpio.write(0)
+
+    def execute_interleave(self):
+        self._port.write(b'\x00\x00')
+        ref = self._port.read(32).tobytes()
+        for dout in range(1 << self.GPIO_WIDTH):
+            self._gpio.write(dout << self.GPIO_OUT_OFFSET)
+            data = self._port.read(32).tobytes()
+            din = self._gpio.read() >> self.GPIO_IN_OFFSET
+            if data != ref:
+               raise AssertionError("I2C data mismatch")
+            if dout != din:
+               raise AssertionError("GPIO mismatch 0x%04x != 0x%04x",
+                                    din, dout)
+        self._gpio.write(0)
+
+    def close(self):
+        """Close the I2C connection"""
+        self._gpio = None
+        self._port = None
+        self._i2c.terminate()
+
 
 
 class I2cTestCase(unittest.TestCase):
@@ -141,6 +209,13 @@ class I2cTestCase(unittest.TestCase):
         i2c = I2cReadTest()
         i2c.open()
         i2c.read()
+        i2c.close()
+
+    def test_i2c4(self):
+        i2c = I2cReadGpioTest()
+        i2c.open()
+        i2c.execute_sequence()
+        i2c.execute_interleave()
         i2c.close()
 
 
