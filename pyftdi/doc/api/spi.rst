@@ -22,7 +22,7 @@ Example: communication with a SPI data flash (half-duplex example)
     slave = spi.get_port(cs=0, freq=12E6, mode=0)
 
     # Request the JEDEC ID from the SPI slave
-    jedec_id = slave.exchange([0x9f], 3).tobytes()
+    jedec_id = slave.exchange([0x9f], 3)
 
 
 Example: communication with a remote SPI device using full-duplex mode
@@ -42,7 +42,7 @@ Example: communication with a remote SPI device using full-duplex mode
 
     # Synchronous exchange with the remote SPI slave
     write_buf = b'\x01\x02\x03'
-    read_buf = slave.exchange(write_buf, duplex=True).tobytes()
+    read_buf = slave.exchange(write_buf, duplex=True)
 
 See also pyspiflash_ module and `tests/spi.py`_
 

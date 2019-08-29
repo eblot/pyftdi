@@ -228,11 +228,11 @@ class I2cPort:
         return self._controller.frequency
 
     def _make_buffer(self, regaddr, out=None):
-        data = array('B')
+        data = bytearray()
         data.extend(spack('%s%s' % (self._endian, self._format), regaddr))
         if out:
             data.extend(out)
-        return data.tobytes()
+        return bytes(data)
 
 
 class I2cGpioPort:
@@ -910,7 +910,7 @@ class I2cController:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
-        cmd = array('B', self._idle)
+        cmd = bytearray(self._idle)
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
@@ -932,7 +932,7 @@ class I2cController:
 
     def _do_epilog(self):
         self.log.debug('   epilog')
-        cmd = array('B', self._stop)
+        cmd = bytearray(self._stop)
         self._ftdi.write_data(cmd)
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
@@ -941,11 +941,11 @@ class I2cController:
         self.log.debug('- read %d byte(s)', readlen)
         if not readlen:
             # force a real read request on device, but discard any result
-            cmd = array('B')
+            cmd = bytearray()
             cmd.extend(self._immediate)
             self._ftdi.write_data(cmd)
             self._ftdi.read_data_bytes(0, 4)
-            return array('B')
+            return bytearray()
         if self._tristate:
             read_byte = self._tristate + \
                         self._read_byte + \
@@ -974,11 +974,11 @@ class I2cController:
         while rem:
             if rem > chunk_size:
                 if not cmd:
-                    cmd = array('B')
+                    cmd = bytearray()
                     cmd.extend(read_not_last * chunk_size)
                     size = chunk_size
             else:
-                cmd = array('B')
+                cmd = bytearray()
                 cmd.extend(read_not_last * (rem-1))
                 cmd.extend(read_last)
                 cmd.extend(self._immediate)
@@ -989,17 +989,17 @@ class I2cController:
                            len(buf), hexlify(buf).decode())
             chunks.append(buf)
             rem -= size
-        return array('B', b''.join(chunks))
+        return bytearray(b''.join(chunks))
 
     def _do_write(self, out):
         if not isinstance(out, array):
-            out = array('B', out)
+            out = bytearray(out)
         if not out:
             return
         self.log.debug('- write %d byte(s): %s',
                        len(out), hexlify(out).decode())
         for byte in out:
-            cmd = array('B', self._write_byte)
+            cmd = bytearray(self._write_byte)
             cmd.append(byte)
             if self._tristate:
                 cmd.extend(self._tristate)

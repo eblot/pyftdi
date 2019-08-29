@@ -87,7 +87,7 @@ class I2cAccelTest(TestCase):
 
     def _read_device_id(self):
         port = self._i2c.get_port(0x53)
-        device_id = port.exchange([0x00], 1).tobytes()
+        device_id = port.exchange([0x00], 1)
         hex_device_id = hexlify(device_id).decode()
         print('DEVICE ID:', hex_device_id)
         return hex_device_id

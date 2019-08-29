@@ -26,7 +26,6 @@
 
 """FTDI core driver."""
 
-from array import array
 from binascii import hexlify
 from errno import ENODEV
 from logging import getLogger
@@ -264,7 +263,7 @@ class Ftdi:
         self.usb_read_timeout = 5000
         self.usb_write_timeout = 5000
         self.baudrate = -1
-        self.readbuffer = array('B')
+        self.readbuffer = bytearray()
         self.readoffset = 0
         self.readbuffer_chunksize = 4 << 10  # 4KiB
         self.writebuffer_chunksize = 4 << 10  # 4KiB
@@ -542,9 +541,9 @@ class Ftdi:
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
-        self.write_data(array('B', (Ftdi.SET_BITS_LOW, initial, direction)))
+        self.write_data(bytearray((Ftdi.SET_BITS_LOW, initial, direction)))
         # Disable loopback
-        self.write_data(array('B', (Ftdi.LOOPBACK_END,)))
+        self.write_data(bytearray((Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
         # Return the actual frequency
         return frequency
@@ -594,7 +593,7 @@ class Ftdi:
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Disable loopback
-        self.write_data(array('B', (Ftdi.LOOPBACK_END,)))
+        self.write_data(bytearray((Ftdi.LOOPBACK_END,)))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Drain input buffer
@@ -780,7 +779,7 @@ class Ftdi:
         try:
             if self.usb_dev.ctrl_transfer(
                     Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index,
-                    array('B'), self.usb_write_timeout):
+                    bytearray(), self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
         except usb.core.USBError as ex:
@@ -808,7 +807,7 @@ class Ftdi:
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = array('B')
+        self.readbuffer = bytearray()
 
     def purge_tx_buffer(self):
         """Clear the write buffer on the chip."""
@@ -848,7 +847,7 @@ class Ftdi:
         """
         # Invalidate all remaining data
         self.readoffset = 0
-        self.readbuffer = array('B')
+        self.readbuffer = bytearray()
         if platform == 'linux':
             if chunksize > 16384:
                 chunksize = 16384
@@ -991,7 +990,7 @@ class Ftdi:
             raise ValueError('Unknown flow control: %s' % flowctrl)
         try:
             if self.usb_dev.ctrl_transfer(
-                    Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, array('B'),
+                    Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, bytearray(),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except usb.core.USBError as exc:
@@ -1119,7 +1118,7 @@ class Ftdi:
         if not self.is_mpsse:
             raise FtdiMpsseError('Setting adaptive clock mode is only '
                                  'available from MPSSE mode')
-        self.write_data(array('B', [enable and Ftdi.ENABLE_CLK_ADAPTIVE or
+        self.write_data(bytearray([enable and Ftdi.ENABLE_CLK_ADAPTIVE or
                                     Ftdi.DISABLE_CLK_ADAPTIVE]))
 
     def enable_3phase_clock(self, enable=True):
@@ -1138,7 +1137,7 @@ class Ftdi:
         if not self.is_H_series:
             raise FtdiFeatureError('This device does not support 3-phase '
                                    'clock')
-        self.write_data(array('B', [enable and Ftdi.ENABLE_CLK_3PHASE or
+        self.write_data(bytearray([enable and Ftdi.ENABLE_CLK_3PHASE or
                                     Ftdi.DISABLE_CLK_3PHASE]))
 
     def enable_drivezero_mode(self, lines):
@@ -1157,7 +1156,7 @@ class Ftdi:
         if not self.has_drivezero:
             raise FtdiFeatureError('This device does not support drive-zero '
                                    'mode')
-        self.write_data(array('B', [Ftdi.DRIVE_ZERO, lines & 0xff,
+        self.write_data(bytearray([Ftdi.DRIVE_ZERO, lines & 0xff,
                                     (lines >> 8) & 0xff]))
 
     def enable_loopback_mode(self, loopback=False):
@@ -1166,7 +1165,7 @@ class Ftdi:
 
            :param bool loopback: whether to enable or disable this mode
         """
-        self.write_data(array('B', (loopback and Ftdi.LOOPBACK_START or
+        self.write_data(bytearray((loopback and Ftdi.LOOPBACK_START or
                                     Ftdi.LOOPBACK_END,)))
 
     def write_data(self, data):
@@ -1231,7 +1230,7 @@ class Ftdi:
             raise FtdiError("max_packet_size is bogus")
         packet_size = self.max_packet_size
         length = 1  # initial condition to enter the usb_read loop
-        data = array('B')
+        data = bytearray()
         # everything we want is still in the cache?
         if size <= len(self.readbuffer)-self.readoffset:
             data = self.readbuffer[self.readoffset:self.readoffset+size]
@@ -1269,7 +1268,7 @@ class Ftdi:
                                 status[0], status[1], (' '.join(
                                     self.decode_modem_status(status,
                                                              True)).title()))
-                        self.readbuffer = array('B')
+                        self.readbuffer = bytearray()
                         self.readoffset = 0
                         srcoff = 2
                         for _ in range(chunks):
@@ -1283,7 +1282,7 @@ class Ftdi:
                         if attempt > 0:
                             continue
                         # no actual data
-                        self.readbuffer = array('B')
+                        self.readbuffer = bytearray()
                         self.readoffset = 0
                         if self.latency_threshold:
                             self.latency_count += 1
@@ -1332,7 +1331,7 @@ class Ftdi:
            :return: payload bytes
            :rtype: bytes
         """
-        return self.read_data_bytes(size).tobytes()
+        return bytes(self.read_data_bytes(size))
 
     def get_cts(self):
         """Read terminal status line: Clear To Send
@@ -1458,14 +1457,14 @@ class Ftdi:
         self.set_bitmode(0, Ftdi.BITMODE_RESET)
         # Invalidate data in the readbuffer
         self.readoffset = 0
-        self.readbuffer = array('B')
+        self.readbuffer = bytearray()
 
     def _ctrl_transfer_out(self, reqtype, value, data=b''):
         """Send a control message to the device"""
         try:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_OUT, reqtype, value, self.index,
-                array('B').frombytes(data), self.usb_write_timeout)
+                bytearray(data), self.usb_write_timeout)
         except usb.core.USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
@@ -1624,9 +1623,9 @@ class Ftdi:
                 error = error_hs
         # FTDI expects little endian
         if self.is_H_series:
-            cmd = array('B', (divcode,))
+            cmd = bytearray((divcode,))
         else:
-            cmd = array('B')
+            cmd = bytearray()
         cmd.extend((Ftdi.SET_TCK_DIVISOR, divisor & 0xff,
                     (divisor >> 8) & 0xff))
         self.write_data(cmd)
