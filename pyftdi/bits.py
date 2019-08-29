@@ -27,7 +27,7 @@
 """Bit field and sequence management."""
 
 from array import array
-from pyftdi.misc import is_iterable, xor
+from .misc import is_iterable, xor
 
 
 
@@ -37,7 +37,7 @@ class BitSequenceError(Exception):
     pass
 
 
-class BitSequence(object):
+class BitSequence:
     """Bit sequence.
 
        Support most of the common bit operations: or, and, shift, comparison,
@@ -54,8 +54,6 @@ class BitSequence(object):
        :param bytes_: initial value specified as a sequence of bytes
        :param msby:   most significant byte first or not
     """
-
-    __slots__ = ['_seq']
 
     def __init__(self, value=None, msb=False, length=0, bytes_=None,
                  msby=True):
@@ -488,7 +486,7 @@ class BitZSequence(BitSequence):
         return self.__class__(value=other) + self
 
 
-class BitField(object):
+class BitField:
     """Bit field class to access and modify an integral value
 
        Beware the slices does not behave as regular Python slices:
