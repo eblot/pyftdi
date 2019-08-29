@@ -10,11 +10,10 @@ using a URL. The URL scheme is defined as:
 
 ::
 
-    protocol://[vendor][:[product][:index|:serial]]/interface
+    ftdi://[vendor][:[product][:serial|:bus:address|:index]]/interface
 
 where:
 
-* protocol: always ``ftdi``
 * vendor: the USB vendor ID of the manufacturer
 
   * ex: ``ftdi`` or ``0x403``
@@ -28,26 +27,46 @@ where:
     * ``232``, ``232r``, ``232h``, ``2232d``, ``2232h``, ``4232h``, ``230x``
     * ``ft`` prefix for all aliases is also accepted, as for example ``ft232h``
 
-* serial: the serial number as a string
-* index: an integer (not particularly useful, as it depends on the enumeration
-  order on the USB buses)
-* interface: the interface of FTDI device, starting from 1
+* ``serial``: the serial number as a string. This is the preferred method to
+  uniquely identify a specific FTDI device. However, some FTDI device are not
+  fitted with an EEPROM, or the EEPROM is either corrupted or erased. In this
+  case, FTDI devices report no serial number
 
-  * ex: ``1`` for 232\*, ``1`` or ``2`` for 2232\*, ``1``-``4`` for 4232\* devices
+  Examples:
+     * ``ftdi://ftdi:232h:FT0FMF6V/1``
+     * ``ftdi://:232h:FT0FMF6V/1``
+     * ``ftdi://::FT0FMF6V/1``
+
+* ``bus:addess``: it is possible to select a FTDI device through a bus:address
+  pair, specified as *hexadecimal* integer values.
+
+  Examples:
+     * ``ftdi://ftdi:232h:10:22/1``
+     * ``ftdi://ftdi:232h:10:22/1``
+     * ``ftdi://::10:22/1``
+
+  Here, bus ``(0x)10`` = 16 (decimal) and address ``(0x)22`` = 34 (decimal)
+
+* ``index``: an integer - not particularly useful, as it depends on the
+  enumeration order on the USB buses, and may vary from on session to another.
+
+* ``interface``: the interface of FTDI device, starting from 1
+
+  * ``1`` for 230x and 232\* devices,
+  * ``1`` or ``2`` for 2232\* devices,
+  * ``1``, ``2``, ``3`` or ``4`` for 4232\* devices
 
 All parameters but the interface are optional, PyFtdi tries to find the best
 match. Therefore, if you have a single FTDI device connected to your system,
 ``ftdi:///1`` should be enough.
 
 You can also ask PyFtdi to enumerate all the compatible devices with the
-special ``ftdi:///?`` syntax.
+special ``ftdi:///?`` syntax. This syntax is useful to retrieve the available
+FTDI URLs with serial number and/or bus:address selectors.
 
 Note that if there's only one FTDI device connected to the host, the FTDI URL
 can be as simple as ``ftdi:///n``, where n is the FTDI port to use, starting
 from 1.
-
-You may also select a FTDI device by its sole serial number, *e.g.*
-`ftdi://::serial/1`.
 
 URL-based methods to open a connection:
 
@@ -56,7 +75,6 @@ URL-based methods to open a connection:
    open_from_url()
    open_mpsse_from_url()
    open_bitbang_from_url()
-
 
 The old, deprecated method to open a connection is to use the ``open()``
 methods without the ``_from_url`` suffix, which accept VID, PID, and serial
@@ -68,11 +86,8 @@ parameters (among others).
    open_mpsse()
    open_bitbang()
 
-
-.. warning:: API break
-   ``open()``, ``open_mpsse()`` and ``open_bitbang`` arguments have changed in
-   v0.22.0, be sure to update your code.
-
+You may also open an Ftdi device from an existing PyUSB_ device, with the help
+of the ``open_from_device()`` helper method.
 
 Tools
 ~~~~~
@@ -92,6 +107,7 @@ PyFtdi to support those custom USB identifiers.
 
 Custom PID
 ..........
+
 To support a custom product ID (16-bit integer) with the official FTDI ID, add
 the following code **before** any call to an FTDI ``open()`` method.
 
@@ -103,6 +119,7 @@ the following code **before** any call to an FTDI ``open()`` method.
 
 Custom VID
 ..........
+
 To support a custom vendor ID and product ID (16-bit integers), add the
 following code **before** any call to an FTDI ``open()`` method.
 
