@@ -341,10 +341,10 @@ class I2cController:
     HIGH = 0xff
     BIT0 = 0x01
     IDLE = HIGH
-    SCL_BIT = 0x01
-    SDA_O_BIT = 0x02
-    SDA_I_BIT = 0x04
-    SCL_FB_BIT = 0x07
+    SCL_BIT = 0x01  #AD0
+    SDA_O_BIT = 0x02  #AD1
+    SDA_I_BIT = 0x04  #AD2
+    SCL_FB_BIT = 0x80  #AD7
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
     HIGHEST_I2C_ADDRESS = 0x78
     DEFAULT_BUS_FREQUENCY = 100000.0
@@ -436,7 +436,7 @@ class I2cController:
         # as 3-phase clock frequency mode is required for I2C mode, the
         # FTDI clock should be adapted to match the required frequency.
         frequency = self._ftdi.open_mpsse_from_url(
-            url, direction=I2cController.I2C_DIR, initial=self.IDLE,
+            url, direction=self.I2C_DIR, initial=self.IDLE,
             frequency=(3.0*frequency)/2.0, **kwargs)
         self._frequency = (2.0*frequency)/3.0
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
@@ -450,9 +450,9 @@ class I2cController:
             self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
         self._wide_port = self._ftdi.has_wide_port
         if clkstrch:
-            self._i2c_mask = I2cController.I2C_MASK_CS
+            self._i2c_mask = self.I2C_MASK_CS
         else:
-            self._i2c_mask = I2cController.I2C_MASK
+            self._i2c_mask = self.I2C_MASK
 
 
     def terminate(self):
@@ -529,7 +529,7 @@ class I2cController:
     @property
     def direction(self):
         """Provide the FTDI GPIO direction"""
-        return I2cController.I2C_DIR | self._gpio_dir
+        return self.I2C_DIR | self._gpio_dir
 
     @property
     def gpio_pins(self):
@@ -661,7 +661,7 @@ class I2cController:
         self.validate_address(address)
         if readlen < 1:
             raise I2cIOError('Nothing to read')
-        if readlen > (I2cController.PAYLOAD_MAX_LENGTH/3-1):
+        if readlen > (self.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
         if address is None:
             i2caddress = None
