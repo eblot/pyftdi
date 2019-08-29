@@ -258,7 +258,7 @@ class SpiController:
     SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
     PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
 
-    def __init__(self, silent_clock=False, cs_count=4, turbo=True):
+    def __init__(self, silent_clock=False, cs_count=1, turbo=True):
         self.log = getLogger('pyftdi.spi.ctrl')
         self._ftdi = Ftdi()
         self._lock = Lock()
@@ -285,7 +285,7 @@ class SpiController:
                           may reconfigure the SPI bus with a specialized
                           frequency.
            * ``cs_count`` count of chip select signals dedicated to select
-                          SPI slave devices
+                          SPI slave devices, starting from A*BUS3 pin
            * ``turbo`` whether to enable or disable turbo mode
            * ``debug`` for extra debug output
         """
@@ -335,7 +335,10 @@ class SpiController:
             if not self._ftdi:
                 raise SpiIOError("FTDI controller not initialized")
             if cs >= len(self._spi_ports):
-                raise SpiIOError("No such SPI port")
+                if cs < 5:
+                    # increase cs_count (up to 4) to reserve more /CS channels
+                    raise SpiIOError("/CS pin %d not reserved for SPI" % cs)
+                raise SpiIOError("No such SPI port: %d" % cs)
             if not (0 <= mode <= 3):
                 raise SpiIOError("Invalid SPI mode")
             if (mode & 0x2) and not self._ftdi.is_H_series:
