@@ -52,7 +52,7 @@ Warning
 
 Starting with version *v0.40.0*, several API changes are being introduced.
 While PyFtdi tries to maintain backward compatibility with previous versions,
-so of these changes may require existing clients to update calls to PyFtdi.
+some of these changes may require existing clients to update calls to PyFtdi.
 
 Do not upgrade to *v0.40.0* or above without testing your client against the
 new PyFtdi releases. PyFtdi versions up to *v0.39.9* keep a stable API
