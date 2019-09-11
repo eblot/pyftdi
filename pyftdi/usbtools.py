@@ -146,15 +146,11 @@ class UsbTools:
         """
         cls.Lock.acquire()
         try:
-            if devdesc.index or devdesc.sn or devdesc.description:
+            if devdesc.index or devdesc.sn:
                 dev = None
                 if not devdesc.vid:
                     raise ValueError('Vendor identifier is required')
                 devs = cls._find_devices(devdesc.vid, devdesc.pid)
-                if devdesc.description:
-                    devs = [dev for dev in devs if
-                            UsbTools.get_string(dev, dev.iProduct) ==
-                            devdesc.description]
                 if devdesc.sn:
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iSerialNumber) ==
