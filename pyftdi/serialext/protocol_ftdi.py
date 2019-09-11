@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -31,8 +31,6 @@ from pyftdi.usbtools import UsbToolsError
 from serial import SerialBase, SerialException, VERSION as pyserialver
 from time import sleep, time as now
 
-__all__ = ['Serial']
-
 
 class FtdiSerial(SerialBase):
     """Base class for Serial port implementation compatible with pyserial API
@@ -61,8 +59,9 @@ class FtdiSerial(SerialBase):
     def close(self):
         """Close the open port"""
         self._set_open_state(False)
-        self.udev.close()
-        self.udev = None
+        if self.udev:
+            self.udev.close()
+            self.udev = None
 
     def read(self, size=1):
         """Read size bytes from the serial port. If a timeout is set it may

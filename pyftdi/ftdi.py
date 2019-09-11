@@ -448,16 +448,24 @@ class Ftdi:
     def close(self):
         """Close the FTDI interface/port."""
         if self.usb_dev:
-            self.set_bitmode(0, Ftdi.BITMODE_RESET)
-            self.set_latency_timer(self.LATENCY_MAX)
-            self.usb_dev._ctx.managed_release_interface(self.usb_dev,
-                                                        self.index - 1)
+            dev = self.usb_dev
+            self.usb_dev = None
+            # Unfortunately, we need to access pyusb ResourceManager
+            # and there is no public API for this.
+            ctx = dev._ctx
+            if ctx.handle:
+                # Do not attempt to execute the following calls if the
+                # device has been closed: the ResourceManager may attempt
+                # to re-open the device that has been already closed, and
+                # this may lead to a (native) crash in libusb.
+                self.set_bitmode(0, Ftdi.BITMODE_RESET)
+                self.set_latency_timer(self.LATENCY_MAX)
+                ctx.managed_release_interface(dev, self.index - 1)
             try:
                 self.usb_dev.attach_kernel_driver(self.index - 1)
             except (NotImplementedError, usb.core.USBError):
                 pass
-            UsbTools.release_device(self.usb_dev)
-            self.usb_dev = None
+            UsbTools.release_device(dev)
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
                             frequency=6.0E6, latency=16, debug=False):
