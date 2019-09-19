@@ -460,10 +460,10 @@ class Ftdi:
                 self.set_bitmode(0, Ftdi.BITMODE_RESET)
                 self.set_latency_timer(self.LATENCY_MAX)
                 ctx.managed_release_interface(dev, self.index - 1)
-            try:
-                self.usb_dev.attach_kernel_driver(self.index - 1)
-            except (NotImplementedError, usb.core.USBError):
-                pass
+                try:
+                    self.usb_dev.attach_kernel_driver(self.index - 1)
+                except (NotImplementedError, usb.core.USBError):
+                    pass
             self.usb_dev = None
             UsbTools.release_device(dev)
 
