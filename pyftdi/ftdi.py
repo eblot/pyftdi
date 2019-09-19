@@ -442,7 +442,6 @@ class Ftdi:
         """Close the FTDI interface/port."""
         if self.usb_dev:
             dev = self.usb_dev
-            self.usb_dev = None
             # Unfortunately, we need to access pyusb ResourceManager
             # and there is no public API for this.
             ctx = dev._ctx
@@ -458,6 +457,7 @@ class Ftdi:
                 self.usb_dev.attach_kernel_driver(self.index - 1)
             except (NotImplementedError, usb.core.USBError):
                 pass
+            self.usb_dev = None
             UsbTools.release_device(dev)
 
     def open_mpsse_from_url(self, url, direction=0x0, initial=0x0,
