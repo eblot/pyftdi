@@ -326,14 +326,14 @@ class I2cController:
        supports MPSSE (one or two ports, depending on the FTDI device).
 
        Once configured, :py:func:`get_port` should be invoked to obtain an I2c
-       port for each I2c slave to drive. I2cport should handle all I/O requests
+       port for each I2c slave to drive. I2c port should handle all I/O requests
        for its associated HW slave.
 
        It is not recommended to use I2cController :py:func:`read`,
        :py:func:`write` or :py:func:`exchange` directly.
 
        * ``SCK`` should be connected to ``A*BUS0``, and ``A*BUS7`` if clock
-           stretching mode is enavbled
+           stretching mode is enabled
        * ``SDA`` should be connected to ``A*BUS1`` **and** ``A*BUS2``
     """
 
