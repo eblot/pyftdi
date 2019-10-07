@@ -13,8 +13,18 @@ Application Node 114: *It is recommended that designers review the SPI Slave
 data sheet to determine the SPI mode implementation. **FTDI device can only
 support mode 0 and mode 2 due to the limitation of MPSSE engine.** *
 
-Support for mode 1 and mode 3 is implemented with some workarounds on *232H
-devices - only, but generated signals may not be reliable: YMMV.
+Mode 1 & Mode 3
+...............
+
+Support for mode 1 and mode 3 is implemented with some workarounds, but
+generated signals may not be reliable: YMMV. It is only available with -H
+series (232H, 2232H, 4232H).
+
+The 3-clock phase mode which has initially be designed to cope with |I2C|
+signalling is used to delay the data lines from the clock signals. A direct
+consequence of this workaround is that SCLK duty cycle is not longer 50% but
+25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
+considered as a kludge, you've been warned.
 
 Quickstart
 ~~~~~~~~~~
