@@ -61,8 +61,8 @@ class SpiPort:
     def __init__(self, controller, cs, cs_hold=3, spi_mode=0):
         self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
-        self._cpol = spi_mode & 0x1
-        self._cpha = spi_mode & 0x2
+        self._cpol = spi_mode & 0x2
+        self._cpha = spi_mode & 0x1
         cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
                             SpiController.DO_BIT)
         cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
@@ -324,11 +324,11 @@ class SpiController:
     def get_port(self, cs, freq=None, mode=0):
         """Obtain a SPI port to drive a SPI device selected by Chip Select.
 
-           :note: SPI mode 2 is not supported.
+           :note: SPI mode 1 and 3 are not officially supported.
 
            :param int cs: chip select slot, starting from 0
            :param float freq: SPI bus frequency for this slave in Hz
-           :param int mode: SPI mode [0,1,3]
+           :param int mode: SPI mode [0, 1, 2, 3]
            :rtype: SpiPort
         """
         with self._lock:
@@ -344,9 +344,6 @@ class SpiController:
             if (mode & 0x2) and not self._ftdi.is_H_series:
                 raise SpiIOError("SPI with CPHA high is not supported by "
                                  "this FTDI device")
-            if mode == 2:
-                raise SpiIOError("SPI mode 2 has no known workaround with "
-                                 "FTDI devices")
             if not self._spi_ports[cs]:
                 freq = min(freq or self._frequency, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
@@ -544,14 +541,14 @@ class SpiController:
             self._ftdi.enable_3phase_clock(cpha)
             self._clock_phase = cpha
         if writelen:
-            wcmd = (cpol ^ cpha) and \
-                Ftdi.WRITE_BYTES_PVE_MSB or Ftdi.WRITE_BYTES_NVE_MSB
+            wcmd = (Ftdi.WRITE_BYTES_NVE_MSB if not cpol else
+                    Ftdi.WRITE_BYTES_PVE_MSB)
             write_cmd = spack('<BH', wcmd, writelen-1)
             cmd.append(write_cmd)
             cmd.extend(out)
         if readlen:
-            rcmd = (cpol ^ cpha) and \
-                Ftdi.READ_BYTES_PVE_MSB or Ftdi.READ_BYTES_NVE_MSB
+            rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
+                    Ftdi.READ_BYTES_PVE_MSB)
             read_cmd = spack('<BH', rcmd, readlen-1)
             cmd.append(read_cmd)
             cmd.extend(self._immediate)
@@ -620,8 +617,8 @@ class SpiController:
         if self._clock_phase != cpha:
             self._ftdi.enable_3phase_clock(cpha)
             self._clock_phase = cpha
-        wcmd = (cpol ^ cpha) and \
-            Ftdi.RW_BYTES_NVE_PVE_MSB or Ftdi.RW_BYTES_PVE_NVE_MSB
+        wcmd = (Ftdi.RW_BYTES_PVE_NVE_MSB if not cpol else
+                Ftdi.RW_BYTES_NVE_PVE_MSB)
         write_cmd = spack('<BH', wcmd, writelen-1)
         cmd.extend(write_cmd)
         cmd.extend(out)
