@@ -5,6 +5,17 @@
 
 .. module :: pyftdi.spi
 
+Limitations
+~~~~~~~~~~~
+
+FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
+Application Node 114: *It is recommended that designers review the SPI Slave
+data sheet to determine the SPI mode implementation. **FTDI device can only
+support mode 0 and mode 2 due to the limitation of MPSSE engine.** *
+
+Support for mode 1 and mode 3 is implemented with some workarounds on *232H
+devices - only, but generated signals may not be reliable: YMMV.
+
 Quickstart
 ~~~~~~~~~~
 
@@ -37,8 +48,8 @@ Example: communication with a remote SPI device using full-duplex mode
     # Configure the first interface (IF/1) of the FTDI device as a SPI master
     spi.configure('ftdi://ftdi:2232h/1')
 
-    # Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 3 @ 10MHz
-    slave = spi.get_port(cs=1, freq=10E6, mode=3)
+    # Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 2 @ 10MHz
+    slave = spi.get_port(cs=1, freq=10E6, mode=2)
 
     # Synchronous exchange with the remote SPI slave
     write_buf = b'\x01\x02\x03'
@@ -96,7 +107,7 @@ Tests
 
 SPI sample tests expect:
   * MX25L1606E device on /CS 0, SPI mode 0
-  * ADXL345 device on /CS 1, SPI mode 3
+  * ADXL345 device on /CS 1, SPI mode 2
   * RFDA2125 device on /CS 2, SPI mode 0
 
 Checkout a fresh copy from PyFtdi_ github repository.
