@@ -429,6 +429,11 @@ class Ftdi:
         self.open_from_device(device, interface)
 
     def open_from_device(self, device, interface=1):
+        """Open a new interface from an existing USB device.
+        
+           :param device: FTDI USB device
+           :param interface: FTDI interface to use 
+        """
         self.usb_dev = device
         try:
             self.usb_dev.set_configuration()

@@ -25,7 +25,6 @@
 
 """I2C support for PyFdti"""
 
-from array import array
 from binascii import hexlify
 from collections import namedtuple
 from logging import getLogger

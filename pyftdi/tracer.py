@@ -25,7 +25,6 @@
 
 """MPSSE command debug tracer."""
 
-
 from array import array
 from binascii import hexlify
 from collections import deque

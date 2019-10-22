@@ -31,6 +31,7 @@ from logging import getLogger
 from pyftdi.ftdi import Ftdi, FtdiError
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
+from typing import Set
 
 
 class SpiIOError(FtdiError):
@@ -272,6 +273,10 @@ class SpiController:
         self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
+        self._cs_bits = 0
+        self._spi_ports = []
+        self._spi_dir = 0
+        self._spi_mask = self.SPI_BITS
 
     def configure(self, url, **kwargs):
         """Configure the FTDI interface as a SPI master
@@ -293,7 +298,7 @@ class SpiController:
         # API where these parameters are specified at instanciation has been
         # preserved
         self._cs_count = int(kwargs.get('cs_count', self._cs_count))
-        if not (1 <= self._cs_count <= 5):
+        if not 1 <= self._cs_count <= 5:
             raise ValueError('Unsupported CS line count: %d' % self._cs_count)
         self._turbo = bool(kwargs.get('turbo', self._turbo))
         for k in ('direction', 'initial', 'cs_count', 'turbo'):
@@ -339,7 +344,7 @@ class SpiController:
                     # increase cs_count (up to 4) to reserve more /CS channels
                     raise SpiIOError("/CS pin %d not reserved for SPI" % cs)
                 raise SpiIOError("No such SPI port: %d" % cs)
-            if not (0 <= mode <= 3):
+            if not 0 <= mode <= 3:
                 raise SpiIOError("Invalid SPI mode")
             if (mode & 0x2) and not self._ftdi.is_H_series:
                 raise SpiIOError("SPI with CPHA high is not supported by "
@@ -375,6 +380,16 @@ class SpiController:
     def direction(self):
         """Provide the FTDI GPIO direction"""
         return self._spi_dir | self._gpio_dir
+
+    @property
+    def channels(self) -> int:
+        """Provide the maximum count of slaves."""
+        return self._cs_count
+
+    @property
+    def active_channels(self) -> Set[int]:
+        """Provide the count of configured slaves."""
+        return {port[0] for port in enumerate(self._spi_ports) if port[1]}
 
     @property
     def gpio_pins(self):
@@ -544,13 +559,13 @@ class SpiController:
             wcmd = (Ftdi.WRITE_BYTES_NVE_MSB if not cpol else
                     Ftdi.WRITE_BYTES_PVE_MSB)
             write_cmd = spack('<BH', wcmd, writelen-1)
-            cmd.append(write_cmd)
+            cmd.extend(write_cmd)
             cmd.extend(out)
         if readlen:
             rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
                     Ftdi.READ_BYTES_PVE_MSB)
             read_cmd = spack('<BH', rcmd, readlen-1)
-            cmd.append(read_cmd)
+            cmd.extend(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
                 if epilog:
