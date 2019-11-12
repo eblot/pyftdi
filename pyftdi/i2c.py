@@ -463,41 +463,51 @@ class I2cController:
             del kwargs['initial']
         else:
             io_out = 0
-        self._ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
-        self._ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
-        ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
-        ck_buf = self._compute_delay_cycles(timings.t_buf)
-        self._ck_idle = max(ck_su_sta, ck_buf)
-        self._ck_delay = ck_buf
-        if clkstrch:
-            self._i2c_mask = self.I2C_MASK_CS
+        if 'interface' in kwargs:
+            if isinstance(url, str):
+                raise I2cIOError('url and interface are mutually exclusive')
+            interface = int(kwargs['interface'])
+            del kwargs['interface']
         else:
-            self._i2c_mask = self.I2C_MASK
-        # until the device is open, there is no way to tell if it has a
-        # wide (16) or narrow port (8). Lower API can deal with any, so
-        # delay any truncation till the device is actually open
-        self._set_gpio_direction(16, io_out, io_dir)
-        # as 3-phase clock frequency mode is required for I2C mode, the
-        # FTDI clock should be adapted to match the required frequency.
-        frequency = self._ftdi.open_mpsse_from_url(
-            url,
-            direction=self.I2C_DIR | self._gpio_dir,
-            initial=self.IDLE | (io_out & self._gpio_mask),
-            frequency=(3.0*frequency)/2.0,
-            **kwargs)
-        self._frequency = (2.0*frequency)/3.0
-        self._tx_size, self._rx_size = self._ftdi.fifo_sizes
-        self._ftdi.enable_adaptive_clock(clkstrch)
-        self._ftdi.enable_3phase_clock(True)
-        try:
-            self._ftdi.enable_drivezero_mode(self.SCL_BIT |
-                                             self.SDA_O_BIT |
-                                             self.SDA_I_BIT)
-        except FtdiFeatureError:
-            self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
-        self._wide_port = self._ftdi.has_wide_port
-        if not self._wide_port:
-            self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
+            interface = 1
+        with self._lock:
+            self._ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
+            self._ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
+            ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
+            ck_buf = self._compute_delay_cycles(timings.t_buf)
+            self._ck_idle = max(ck_su_sta, ck_buf)
+            self._ck_delay = ck_buf
+            if clkstrch:
+                self._i2c_mask = self.I2C_MASK_CS
+            else:
+                self._i2c_mask = self.I2C_MASK
+            # until the device is open, there is no way to tell if it has a
+            # wide (16) or narrow port (8). Lower API can deal with any, so
+            # delay any truncation till the device is actually open
+            self._set_gpio_direction(16, io_out, io_dir)
+            # as 3-phase clock frequency mode is required for I2C mode, the
+            # FTDI clock should be adapted to match the required frequency.
+            kwargs['direction'] = self.I2C_DIR | self._gpio_dir
+            kwargs['initial'] = self.IDLE | (io_out & self._gpio_mask)
+            kwargs['frequency'] = (3.0*frequency)/2.0
+            if not isinstance(url, str):
+                frequency = self._ftdi.open_mpsse_from_device(
+                    url, interface=interface, **kwargs)
+            else:
+                frequency = self._ftdi.open_mpsse_from_url(url, **kwargs)
+            self._frequency = (2.0*frequency)/3.0
+            self._tx_size, self._rx_size = self._ftdi.fifo_sizes
+            self._ftdi.enable_adaptive_clock(clkstrch)
+            self._ftdi.enable_3phase_clock(True)
+            try:
+                self._ftdi.enable_drivezero_mode(self.SCL_BIT |
+                                                 self.SDA_O_BIT |
+                                                 self.SDA_I_BIT)
+            except FtdiFeatureError:
+                self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
+            self._wide_port = self._ftdi.has_wide_port
+            if not self._wide_port:
+                self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
 
     def terminate(self) -> None:
         """Close the FTDI interface.

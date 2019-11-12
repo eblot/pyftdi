@@ -444,9 +444,11 @@ class Ftdi:
                          interface: int = 1) -> None:
         """Open a new interface from an existing USB device.
 
-           :param device: FTDI USB device
-           :param interface: FTDI interface to use
+           :param device: FTDI USB device (PyUSB instance)
+           :param interface: FTDI interface to use (integer starting from 1)
         """
+        if not isinstance(device, usb.core.Device):
+            raise FtdiError("Device '%s' is not a PyUSB device" % device)
         self.usb_dev = device
         try:
             self.usb_dev.set_configuration()

@@ -340,6 +340,13 @@ class SpiController:
             del kwargs['initial']
         else:
             io_out = 0
+        if 'interface' in kwargs:
+            if isinstance(url, str):
+                raise I2cIOError('url and interface are mutually exclusive')
+            interface = int(kwargs['interface'])
+            del kwargs['interface']
+        else:
+            interface = 1
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
@@ -354,11 +361,13 @@ class SpiController:
             # wide (16) or narrow port (8). Lower API can deal with any, so
             # delay any truncation till the device is actually open
             self._set_gpio_direction(16, (~self._spi_mask) & 0xFFFF, io_dir)
-            self._frequency = self._ftdi.open_mpsse_from_url(
-                url,
-                direction=self._spi_dir | self._gpio_dir,
-                initial=self._cs_bits | (io_out & self._gpio_mask),
-                **kwargs)
+            kwargs['direction'] = self._spi_dir | self._gpio_dir
+            kwargs['initial'] = self._cs_bits | (io_out & self._gpio_mask)
+            if not isinstance(url, str):
+                self._frequency = self._ftdi.open_mpsse_from_device(
+                    url, interface=interface, **kwargs)
+            else:
+                self._frequency = self._ftdi.open_mpsse_from_url(url, **kwargs)
             self._ftdi.enable_adaptive_clock(False)
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
