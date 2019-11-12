@@ -633,7 +633,12 @@ class Ftdi:
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
-        self.write_data(bytearray((Ftdi.SET_BITS_LOW, initial, direction)))
+        cmd = bytearray((Ftdi.SET_BITS_LOW, initial & 0xFF, direction & 0xFF))
+        if self.has_wide_port:
+            initial >>= 8
+            direction >>= 8
+            cmd.extend((Ftdi.SET_BITS_HIGH, initial & 0xFF, direction & 0xFF))
+        self.write_data(cmd)
         # Disable loopback
         self.write_data(bytearray((Ftdi.LOOPBACK_END,)))
         self.validate_mpsse()
