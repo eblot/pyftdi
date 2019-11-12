@@ -402,13 +402,18 @@ class I2cController:
 
            Accepted options:
 
+           * ``direction`` a bitfield specifying the FTDI GPIO direction,
+              where high level defines an output, and low level defines an
+              input. Only useful to setup default IOs at start up, use
+              :py:class:`I2cGpioPort` to drive GPIOs. Note that pins reserved
+              for I2C feature take precedence over any this setting.
+           * ``initial`` a bitfield specifying the initial output value. Only
+              useful to setup default IOs at start up, use
+              :py:class:`I2cGpioPort` to drive GPIOs.
            * ``frequency`` float value the I2C bus frequency in Hz
            * ``clockstretching`` boolean value to enable clockstreching.
              xD7 (GPIO7) pin should be connected back to xD0 (SCK)
         """
-        for k in ('direction', 'initial'):
-            if k in kwargs:
-                del kwargs[k]
         if 'frequency' in kwargs:
             frequency = kwargs['frequency']
             del kwargs['frequency']
@@ -426,17 +431,38 @@ class I2cController:
             del kwargs['clockstretching']
         else:
             clkstrch = False
+        if 'direction' in kwargs:
+            io_dir = int(kwargs['direction'])
+            del kwargs['direction']
+        else:
+            io_dir = 0
+        if 'initial' in kwargs:
+            io_out = int(kwargs['initial'])
+            del kwargs['initial']
+        else:
+            io_out = 0
         self._ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
         self._ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
         ck_su_sta = self._compute_delay_cycles(timings.t_su_sta)
         ck_buf = self._compute_delay_cycles(timings.t_buf)
         self._ck_idle = max(ck_su_sta, ck_buf)
         self._ck_delay = ck_buf
+        if clkstrch:
+            self._i2c_mask = self.I2C_MASK_CS
+        else:
+            self._i2c_mask = self.I2C_MASK
+        # until the device is open, there is no way to tell if it has a
+        # wide (16) or narrow port (8). Lower API can deal with any, so
+        # delay any truncation till the device is actually open
+        self._set_gpio_direction(16, io_out, io_dir)
         # as 3-phase clock frequency mode is required for I2C mode, the
         # FTDI clock should be adapted to match the required frequency.
         frequency = self._ftdi.open_mpsse_from_url(
-            url, direction=self.I2C_DIR, initial=self.IDLE,
-            frequency=(3.0*frequency)/2.0, **kwargs)
+            url,
+            direction=self.I2C_DIR | self._gpio_dir,
+            initial=self.IDLE | (io_out & self._gpio_mask),
+            frequency=(3.0*frequency)/2.0,
+            **kwargs)
         self._frequency = (2.0*frequency)/3.0
         self._tx_size, self._rx_size = self._ftdi.fifo_sizes
         self._ftdi.enable_adaptive_clock(clkstrch)
@@ -448,11 +474,8 @@ class I2cController:
         except FtdiFeatureError:
             self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
         self._wide_port = self._ftdi.has_wide_port
-        if clkstrch:
-            self._i2c_mask = self.I2C_MASK_CS
-        else:
-            self._i2c_mask = self.I2C_MASK
-
+        if not self._wide_port:
+            self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
 
     def terminate(self):
         """Close the FTDI interface.
@@ -822,16 +845,19 @@ class I2cController:
            :param int direction: direction bitfield (on for output)
         """
         with self._lock:
-            if pins & self._i2c_mask:
-                raise I2cIOError('Cannot access I2C pins as GPIO')
-            gpio_width = self._wide_port and 16 or 8
-            gpio_mask = (1 << gpio_width) - 1
-            gpio_mask &= ~self._i2c_mask
-            if (pins & gpio_mask) != pins:
-                raise I2cIOError('No such GPIO pin(s)')
-            self._gpio_dir &= ~pins
-            self._gpio_dir |= (pins & direction)
-            self._gpio_mask = gpio_mask & pins
+            self._set_gpio_direction(self._wide_port and 16 or 8,
+                                     pins, direction)
+
+    def _set_gpio_direction(self, width, pins, direction):
+        if pins & self._i2c_mask:
+            raise I2cIOError('Cannot access I2C pins as GPIO')
+        gpio_mask = (1 << width) - 1
+        gpio_mask &= ~self._i2c_mask
+        if (pins & gpio_mask) != pins:
+            raise I2cIOError('No such GPIO pin(s)')
+        self._gpio_dir &= ~pins
+        self._gpio_dir |= (pins & direction)
+        self._gpio_mask = gpio_mask & pins
 
     @property
     def _data_lo(self):

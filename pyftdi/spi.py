@@ -286,6 +286,14 @@ class SpiController:
 
            Accepted options:
 
+           * ``direction`` a bitfield specifying the FTDI GPIO direction,
+              where high level defines an output, and low level defines an
+              input. Only useful to setup default IOs at start up, use
+              :py:class:`SpiGpioPort` to drive GPIOs. Note that pins reserved
+              for SPI feature take precedence over any this setting.
+           * ``initial`` a bitfield specifying the initial output value. Only
+              useful to setup default IOs at start up, use
+              :py:class:`SpiGpioPort` to drive GPIOs.
            * ``frequency`` the SPI bus frequency in Hz. Note that each slave
                           may reconfigure the SPI bus with a specialized
                           frequency.
@@ -297,13 +305,25 @@ class SpiController:
         # it is better to specify CS and turbo in configure, but the older
         # API where these parameters are specified at instanciation has been
         # preserved
-        self._cs_count = int(kwargs.get('cs_count', self._cs_count))
+        if 'cs_count' in kwargs:
+            self._cs_count = int(kwargs['cs_count'])
+            del kwargs['cs_count']
         if not 1 <= self._cs_count <= 5:
-            raise ValueError('Unsupported CS line count: %d' % self._cs_count)
-        self._turbo = bool(kwargs.get('turbo', self._turbo))
-        for k in ('direction', 'initial', 'cs_count', 'turbo'):
-            if k in kwargs:
-                del kwargs[k]
+            raise ValueError('Unsupported CS line count: %d' %
+                             self._cs_count)
+        if 'turbo' in kwargs:
+            self._turbo = bool(kwargs['turbo'])
+            del kwargs['turbo']
+        if 'direction' in kwargs:
+            io_dir = int(kwargs['direction'])
+            del kwargs['direction']
+        else:
+            io_dir = 0
+        if 'initial' in kwargs:
+            io_out = int(kwargs['initial'])
+            del kwargs['initial']
+        else:
+            io_out = 0
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
@@ -314,11 +334,19 @@ class SpiController:
                              SpiController.DO_BIT |
                              SpiController.SCK_BIT)
             self._spi_mask = self._cs_bits | self.SPI_BITS
+            # until the device is open, there is no way to tell if it has a
+            # wide (16) or narrow port (8). Lower API can deal with any, so
+            # delay any truncation till the device is actually open
+            self._set_gpio_direction(16, (~self._spi_mask) & 0xFFFF, io_dir)
             self._frequency = self._ftdi.open_mpsse_from_url(
-                # /CS all high
-                url, direction=self._spi_dir, initial=self._cs_bits, **kwargs)
+                url,
+                direction=self._spi_dir | self._gpio_dir,
+                initial=self._cs_bits | (io_out & self._gpio_mask),
+                **kwargs)
             self._ftdi.enable_adaptive_clock(False)
             self._wide_port = self._ftdi.has_wide_port
+            if not self._wide_port:
+                self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
 
     def terminate(self):
         """Close the FTDI interface"""
@@ -471,26 +499,29 @@ class SpiController:
            :param int direction: direction bitfield (on for output)
         """
         with self._lock:
-            if pins & self._spi_mask:
-                raise SpiIOError('Cannot access SPI pins as GPIO')
-            gpio_width = self._wide_port and 16 or 8
-            gpio_mask = (1 << gpio_width) - 1
-            gpio_mask &= ~self._spi_mask
-            if (pins & gpio_mask) != pins:
-                raise SpiIOError('No such GPIO pin(s)')
-            self._gpio_dir &= ~pins
-            self._gpio_dir |= (pins & direction)
-            self._gpio_mask = gpio_mask & pins
+            self._set_gpio_direction(self._wide_port and 16 or 8,
+                                     pins, direction)
+
+    def _set_gpio_direction(self, width, pins, direction):
+        if pins & self._spi_mask:
+            raise SpiIOError('Cannot access SPI pins as GPIO')
+        gpio_mask = (1 << width) - 1
+        gpio_mask &= ~self._spi_mask
+        if (pins & gpio_mask) != pins:
+            raise SpiIOError('No such GPIO pin(s)')
+        self._gpio_dir &= ~pins
+        self._gpio_dir |= (pins & direction)
+        self._gpio_mask = gpio_mask & pins
 
     def _read_raw(self, read_high):
         if read_high:
             cmd = bytearray([Ftdi.GET_BITS_LOW,
-                              Ftdi.GET_BITS_HIGH,
-                              Ftdi.SEND_IMMEDIATE])
+                             Ftdi.GET_BITS_HIGH,
+                             Ftdi.SEND_IMMEDIATE])
             fmt = '<H'
         else:
             cmd = bytearray([Ftdi.GET_BITS_LOW,
-                              Ftdi.SEND_IMMEDIATE])
+                             Ftdi.SEND_IMMEDIATE])
             fmt = 'B'
         self._ftdi.write_data(cmd)
         size = scalc(fmt)
