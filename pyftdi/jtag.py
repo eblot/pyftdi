@@ -27,7 +27,6 @@
 """JTAG support for PyFdti"""
 
 import time
-from array import array
 from pyftdi.ftdi import Ftdi
 from pyftdi.bits import BitSequence
 
@@ -313,8 +312,8 @@ class JtagController:
         if byte_count:
             blen = byte_count-1
             # print("RW OUT %s" % out[:pos])
-            cmd = array('B',
-                        (Ftdi.RW_BYTES_PVE_NVE_LSB, blen, (blen >> 8) & 0xff))
+            cmd = bytearray((Ftdi.RW_BYTES_PVE_NVE_LSB,
+                             blen, (blen >> 8) & 0xff))
             cmd.extend(out[:pos].tobytes(msby=True))
             self._stack_cmd(cmd)
             # print("push %d bytes" % byte_count)
@@ -352,8 +351,8 @@ class JtagController:
         return bs
 
     def _stack_cmd(self, cmd):
-        if not isinstance(cmd, array):
-            raise TypeError('Expect a byte array')
+        if not isinstance(cmd, (bytes, bytearray)):
+            raise TypeError('Expect bytes or bytearray')
         if not self._ftdi:
             raise JtagError("FTDI controller terminated")
         # Currrent buffer + new command + send_immediate
