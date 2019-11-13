@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+from os import environ
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
 
@@ -41,8 +42,9 @@ JTAG_INSTR = {'SAMPLE': BitSequence('0001', msb=True, length=4),
 class JtagTestCase(unittest.TestCase):
 
     def setUp(self):
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         self.jtag = JtagEngine(trst=True, frequency=3E6)
-        self.jtag.configure(vendor=0x403, product=0x6011, interface=1)
+        self.jtag.configure(url)
         self.jtag.reset()
         self.tool = JtagTool(self.jtag)
 

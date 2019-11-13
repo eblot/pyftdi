@@ -154,7 +154,7 @@ class BitSequence:
             bytes_.append(byte)
         if msby:
             bytes_.reverse()
-        return bytes_.tolist()
+        return bytes_
 
     @staticmethod
     def _tomutable(value):
