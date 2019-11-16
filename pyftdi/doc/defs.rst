@@ -11,7 +11,7 @@
 .. _tests/i2c.py: https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/i2c.py
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _FTDI: http://www.ftdichip.com/
-.. _PyUSB: https://walac.github.io/pyusb/
+.. _PyUSB: http://pyusb.github.io/pyusb/
 .. _Python: https://www.python.org/
 .. _pyserial: https://pythonhosted.org/pyserial/
 .. _libftdi: https://www.intra2net.com/en/developer/libftdi/
