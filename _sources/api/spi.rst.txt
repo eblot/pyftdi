@@ -5,6 +5,27 @@
 
 .. module :: pyftdi.spi
 
+Limitations
+~~~~~~~~~~~
+
+FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
+Application Node 114: *It is recommended that designers review the SPI Slave
+data sheet to determine the SPI mode implementation. **FTDI device can only
+support mode 0 and mode 2 due to the limitation of MPSSE engine.** *
+
+Mode 1 & Mode 3
+...............
+
+Support for mode 1 and mode 3 is implemented with some workarounds, but
+generated signals may not be reliable: YMMV. It is only available with -H
+series (232H, 2232H, 4232H).
+
+The 3-clock phase mode which has initially be designed to cope with |I2C|
+signalling is used to delay the data lines from the clock signals. A direct
+consequence of this workaround is that SCLK duty cycle is not longer 50% but
+25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
+considered as a kludge, you've been warned.
+
 Quickstart
 ~~~~~~~~~~
 
@@ -22,7 +43,7 @@ Example: communication with a SPI data flash (half-duplex example)
     slave = spi.get_port(cs=0, freq=12E6, mode=0)
 
     # Request the JEDEC ID from the SPI slave
-    jedec_id = slave.exchange([0x9f], 3).tobytes()
+    jedec_id = slave.exchange([0x9f], 3)
 
 
 Example: communication with a remote SPI device using full-duplex mode
@@ -37,12 +58,12 @@ Example: communication with a remote SPI device using full-duplex mode
     # Configure the first interface (IF/1) of the FTDI device as a SPI master
     spi.configure('ftdi://ftdi:2232h/1')
 
-    # Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 3 @ 10MHz
-    slave = spi.get_port(cs=1, freq=10E6, mode=3)
+    # Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 2 @ 10MHz
+    slave = spi.get_port(cs=1, freq=10E6, mode=2)
 
     # Synchronous exchange with the remote SPI slave
     write_buf = b'\x01\x02\x03'
-    read_buf = slave.exchange(write_buf, duplex=True).tobytes()
+    read_buf = slave.exchange(write_buf, duplex=True)
 
 See also pyspiflash_ module and `tests/spi.py`_
 
@@ -96,7 +117,7 @@ Tests
 
 SPI sample tests expect:
   * MX25L1606E device on /CS 0, SPI mode 0
-  * ADXL345 device on /CS 1, SPI mode 3
+  * ADXL345 device on /CS 1, SPI mode 2
   * RFDA2125 device on /CS 2, SPI mode 0
 
 Checkout a fresh copy from PyFtdi_ github repository.

@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -187,22 +187,18 @@
 <dd><p>Helpers to obtain information about connected USB devices.</p>
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.find_all">
-<em class="property">static </em><code class="sig-name descname">find_all</code><span class="sig-paren">(</span><em class="sig-param">vps</em>, <em class="sig-param">nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">find_all</code><span class="sig-paren">(</span><em class="sig-param">vps: Sequence[Tuple[int, int]], nocache: bool = False</em><span class="sig-paren">)</span> &#x2192; List[Tuple[pyftdi.usbtools.UsbDeviceDescriptor, int]]<a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find all devices that match the specified vendor/product pairs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vps</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) – a sequence of 2-tuple (vid, pid) pairs</p></li>
+<li><p><strong>vps</strong> – a sequence of 2-tuple (vid, pid) pairs</p></li>
 <li><p><strong>nocache</strong> (<em>bool</em>) – bypass cache to re-enumerate USB devices on
 the host</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of 5-tuple (vid, pid, sernum, iface, description)
-device descriptors</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list(tuple(int,int,str,int,str))</p>
+<dd class="field-even"><p>a list of 2-tuple (UsbDeviceDescriptor, interface count)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -221,7 +217,7 @@ in.</p>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.get_device">
-<em class="property">classmethod </em><code class="sig-name descname">get_device</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">description=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_device" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">get_device</code><span class="sig-paren">(</span><em class="sig-param">devdesc: pyftdi.usbtools.UsbDeviceDescriptor</em><span class="sig-paren">)</span> &#x2192; usb.core.Device<a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_device" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find a previously open device with the same vendor/product
 or initialize a new one, and return it.</p>
 <p>If several FTDI devices of the same kind (vid, pid) are connected
@@ -235,84 +231,66 @@ and FT4232H). The interface argument selects the FTDI port to use,
 starting from 1 (not 0).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
-<li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
-FTDI enumerated USB device on the host</p></li>
-<li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
-by its serial number</p></li>
-<li><p><strong>interface</strong> (<em>str</em>) – FTDI interface/port</p></li>
-</ul>
+<dd class="field-odd"><p><strong>devdesc</strong> – Device descriptor that identifies the device by
+constraints.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>PyUSB device instance</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>usb.core.Device</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.get_string">
-<em class="property">classmethod </em><code class="sig-name descname">get_string</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">strname</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">get_string</code><span class="sig-paren">(</span><em class="sig-param">device: usb.core.Device</em>, <em class="sig-param">strname: str</em><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a string from the USB device, dealing with PyUSB API breaks</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>device</strong> (<em>usb.core.Device</em>) – USB device instance</p></li>
-<li><p><strong>strname</strong> (<em>str</em>) – the string identifier</p></li>
+<li><p><strong>device</strong> – USB device instance</p></li>
+<li><p><strong>strname</strong> – the string identifier</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the string read from the USB device</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.parse_url">
-<em class="property">static </em><code class="sig-name descname">parse_url</code><span class="sig-paren">(</span><em class="sig-param">urlstr</em>, <em class="sig-param">devclass</em>, <em class="sig-param">scheme</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">parse_url</code><span class="sig-paren">(</span><em class="sig-param">urlstr: str, scheme: str, vdict: Mapping[str, int], pdict: Mapping[int, Mapping[str, int]], default_vendor: int</em><span class="sig-paren">)</span> &#x2192; Tuple[pyftdi.usbtools.UsbDeviceDescriptor, int]<a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a device specifier URL.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – the URL to parse</p></li>
-<li><p><strong>devclass</strong> – class that implements the scheme</p></li>
+<li><p><strong>url</strong> – the URL to parse</p></li>
 <li><p><strong>scheme</strong> – scheme to match in the URL string (scheme://…)</p></li>
-<li><p><strong>vdict</strong> (<em>dict</em>) – vendor name map of USB vendor ids</p></li>
-<li><p><strong>pdict</strong> (<em>dict</em>) – vendor id map of product name map of product ids</p></li>
-<li><p><strong>default_vendor</strong> (<em>int</em>) – default vendor id</p></li>
+<li><p><strong>vdict</strong> – vendor name map of USB vendor ids</p></li>
+<li><p><strong>pdict</strong> – vendor id map of product name map of product ids</p></li>
+<li><p><strong>default_vendor</strong> – default vendor id</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a list of 5-tuple (vid, pid, sernum, iface, description)
-device descriptors</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list(tuple(int,int,str,int,str))</p>
+<dd class="field-even"><p>UsbDeviceDescriptor, interface)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.release_device">
-<em class="property">classmethod </em><code class="sig-name descname">release_device</code><span class="sig-paren">(</span><em class="sig-param">usb_dev</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_device" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">release_device</code><span class="sig-paren">(</span><em class="sig-param">usb_dev: usb.core.Device</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_device" title="Permalink to this definition">¶</a></dt>
 <dd><p>Release a previously open device, if it not used anymore.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>usb_dev</strong> – a previously instanciated Usb device instance</p>
+<dd class="field-odd"><p><strong>usb_dev</strong> – a previously instanciated USB device instance</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.show_devices">
-<em class="property">static </em><code class="sig-name descname">show_devices</code><span class="sig-paren">(</span><em class="sig-param">scheme</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">candidates</em>, <em class="sig-param">out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">show_devices</code><span class="sig-paren">(</span><em class="sig-param">scheme: str, vdict: Mapping[str, int], pdict: Mapping[int, Mapping[str, int]], candidates: Sequence[Tuple[pyftdi.usbtools.UsbDeviceDescriptor, int]], out: Optional[IO] = None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show supported devices. When the joker url <code class="docutils literal notranslate"><span class="pre">scheme://*/?</span></code> is
 specified as an URL, it generates a list of connected USB devices
 that match the supported USB devices. It can be used to provide the
@@ -320,10 +298,11 @@ end-user with a list of valid URL schemes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vdict</strong> (<em>dict</em>) – vendor name map of USB vendor ids</p></li>
-<li><p><strong>pdict</strong> (<em>dict</em>) – vendor id map of product name map of product ids</p></li>
-<li><p><strong>candidates</strong> (<em>list</em><em>(</em><em>tuple</em><em>(</em><em>int</em><em>,</em><em>int</em><em>,</em><em>str</em><em>,</em><em>int</em><em>,</em><em>str</em><em>)</em><em>)</em>) – candidate devices</p></li>
-<li><p><strong>out</strong> (<em>file object</em><em> or </em><em>None</em>) – output stream, none for stdout</p></li>
+<li><p><strong>scheme</strong> – scheme to match in the URL string (scheme://…)</p></li>
+<li><p><strong>vdict</strong> – vendor name map of USB vendor ids</p></li>
+<li><p><strong>pdict</strong> – vendor id map of product name map of product ids</p></li>
+<li><p><strong>candidates</strong> – candidate devices</p></li>
+<li><p><strong>out</strong> – output stream, none for stdout</p></li>
 </ul>
 </dd>
 </dl>

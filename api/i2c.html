@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -234,13 +234,13 @@
 <p>An I2c master should be instanciated only once for each FTDI port that
 supports MPSSE (one or two ports, depending on the FTDI device).</p>
 <p>Once configured, <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_port()</span></code></a> should be invoked to obtain an I2c
-port for each I2c slave to drive. I2cport should handle all I/O requests
+port for each I2c slave to drive. I2c port should handle all I/O requests
 for its associated HW slave.</p>
 <p>It is not recommended to use I2cController <a class="reference internal" href="#pyftdi.i2c.I2cController.read" title="pyftdi.i2c.I2cController.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code></a>,
 <a class="reference internal" href="#pyftdi.i2c.I2cController.write" title="pyftdi.i2c.I2cController.write"><code class="xref py py-func docutils literal notranslate"><span class="pre">write()</span></code></a> or <a class="reference internal" href="#pyftdi.i2c.I2cController.exchange" title="pyftdi.i2c.I2cController.exchange"><code class="xref py py-func docutils literal notranslate"><span class="pre">exchange()</span></code></a> directly.</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">SCK</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS0</span></code>, and <code class="docutils literal notranslate"><span class="pre">A*BUS7</span></code> if clock</dt><dd><p>stretching mode is enavbled</p>
+<dt><code class="docutils literal notranslate"><span class="pre">SCK</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS0</span></code>, and <code class="docutils literal notranslate"><span class="pre">A*BUS7</span></code> if clock</dt><dd><p>stretching mode is enabled</p>
 </dd>
 </dl>
 </li>

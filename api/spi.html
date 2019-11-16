@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -96,6 +96,7 @@
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
@@ -182,6 +183,24 @@
             
   <div class="section" id="module-pyftdi.spi">
 <span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<p>FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
+Application Node 114: <em>It is recommended that designers review the SPI Slave
+data sheet to determine the SPI mode implementation. **FTDI device can only
+support mode 0 and mode 2 due to the limitation of MPSSE engine.*</em> *</p>
+<div class="section" id="mode-1-mode-3">
+<h3>Mode 1 &amp; Mode 3<a class="headerlink" href="#mode-1-mode-3" title="Permalink to this headline">¶</a></h3>
+<p>Support for mode 1 and mode 3 is implemented with some workarounds, but
+generated signals may not be reliable: YMMV. It is only available with -H
+series (232H, 2232H, 4232H).</p>
+<p>The 3-clock phase mode which has initially be designed to cope with I<sup>2</sup>C
+signalling is used to delay the data lines from the clock signals. A direct
+consequence of this workaround is that SCLK duty cycle is not longer 50% but
+25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
+considered as a kludge, you’ve been warned.</p>
+</div>
+</div>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>Example: communication with a SPI data flash (half-duplex example)</p>
@@ -195,7 +214,7 @@
 <span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">12E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="c1"># Request the JEDEC ID from the SPI slave</span>
-<span class="n">jedec_id</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x9f</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+<span class="n">jedec_id</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">([</span><span class="mh">0x9f</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Example: communication with a remote SPI device using full-duplex mode</p>
@@ -207,12 +226,12 @@
 <span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
 <span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/1&#39;</span><span class="p">)</span>
 
-<span class="c1"># Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 3 @ 10MHz</span>
-<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">10E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="c1"># Get a port to a SPI slave w/ /CS on A*BUS4 and SPI mode 2 @ 10MHz</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="mf">10E6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
 <span class="c1"># Synchronous exchange with the remote SPI slave</span>
 <span class="n">write_buf</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x01\x02\x03</span><span class="s1">&#39;</span>
-<span class="n">read_buf</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">write_buf</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+<span class="n">read_buf</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">write_buf</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
@@ -246,7 +265,7 @@
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pyftdi.spi.SpiController">
-<em class="property">class </em><code class="sig-prename descclassname">pyftdi.spi.</code><code class="sig-name descname">SpiController</code><span class="sig-paren">(</span><em class="sig-param">silent_clock=False</em>, <em class="sig-param">cs_count=4</em>, <em class="sig-param">turbo=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.spi.</code><code class="sig-name descname">SpiController</code><span class="sig-paren">(</span><em class="sig-param">silent_clock=False</em>, <em class="sig-param">cs_count=1</em>, <em class="sig-param">turbo=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController" title="Permalink to this definition">¶</a></dt>
 <dd><p>SPI master.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -258,6 +277,18 @@ drive on the SPI bus)</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.active_channels">
+<em class="property">property </em><code class="sig-name descname">active_channels</code><a class="headerlink" href="#pyftdi.spi.SpiController.active_channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the count of configured slaves.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.channels">
+<em class="property">property </em><code class="sig-name descname">channels</code><a class="headerlink" href="#pyftdi.spi.SpiController.channels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the maximum count of slaves.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyftdi.spi.SpiController.configure">
 <code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.configure" title="Permalink to this definition">¶</a></dt>
@@ -279,7 +310,7 @@ frequency.</p>
 </dl>
 </li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select</dt><dd><p>SPI slave devices</p>
+<dt><code class="docutils literal notranslate"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select</dt><dd><p>SPI slave devices, starting from A*BUS3 pin</p>
 </dd>
 </dl>
 </li>
@@ -312,13 +343,13 @@ frequency.</p>
 <dd><p>Obtain a SPI port to drive a SPI device selected by Chip Select.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Note</dt>
-<dd class="field-odd"><p>SPI mode 2 is not supported.</p>
+<dd class="field-odd"><p>SPI mode 1 and 3 are not officially supported.</p>
 </dd>
 <dt class="field-even">Parameters</dt>
 <dd class="field-even"><ul class="simple">
 <li><p><strong>cs</strong> (<em>int</em>) – chip select slot, starting from 0</p></li>
 <li><p><strong>freq</strong> (<em>float</em>) – SPI bus frequency for this slave in Hz</p></li>
-<li><p><strong>mode</strong> (<em>int</em>) – SPI mode [0,1,3]</p></li>
+<li><p><strong>mode</strong> (<em>int</em>) – SPI mode [0, 1, 2, 3]</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Return type</dt>
@@ -644,7 +675,7 @@ SpiController.get_gpio() method to obtain the GPIO port.</p>
 <dl class="simple">
 <dt>SPI sample tests expect:</dt><dd><ul class="simple">
 <li><p>MX25L1606E device on /CS 0, SPI mode 0</p></li>
-<li><p>ADXL345 device on /CS 1, SPI mode 3</p></li>
+<li><p>ADXL345 device on /CS 1, SPI mode 2</p></li>
 <li><p>RFDA2125 device on /CS 2, SPI mode 0</p></li>
 </ul>
 </dd>

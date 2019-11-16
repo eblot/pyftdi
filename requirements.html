@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -165,17 +165,17 @@
   <div class="section" id="requirements">
 <h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://www.python.org/">Python</a> 3.5 or above is required. (see next section for Python 2.x support)</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
 libraries:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="http://www.libusb.info/">libusb</a>, currently tested with 1.0.21</p></li>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not depend on any other native library, and only uses standard
-Python modules along with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
+Python modules along with <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</p></li>
+<li><p><a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</p></li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
@@ -184,8 +184,8 @@ Python modules along with <a class="reference external" href="https://walac.gith
 <p>If you have no choice but using previous releases of software, such as</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3+),</p></li>
-<li><p>other <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</p></li>
-<li><p><a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</p></li>
+<li><p>other <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</p></li>
+<li><p><a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</p></li>
 <li><p><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</p></li>
 </ul>
 <p>please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
@@ -195,7 +195,7 @@ for these deprecated environmement, but is no longer actively maintained.</p>
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed on macOS platforms (64-bit kernel), and is validated on a
 regular basis on Linux hosts.</p>
-<p>As it contains no native code, it should work on any <a class="reference external" href="https://walac.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="http://www.libusb.info/">libusb</a>
+<p>As it contains no native code, it should work on any <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="http://www.libusb.info/">libusb</a>
 supported platforms. However, M$ Windows is a seamless source of issues and is
 not officially supported, although users have reported successful installation
 with Windows 7 for example. Your mileage may vary.</p>

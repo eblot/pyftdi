@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -198,6 +198,27 @@ capability)</p></li>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> provides a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices.</p>
+</div>
+<div class="section" id="potential-api-break">
+<h2>Potential API break<a class="headerlink" href="#potential-api-break" title="Permalink to this headline">¶</a></h2>
+<p>Starting with version <em>v0.40.0</em>, several API changes are being introduced.
+While PyFtdi tries to maintain backward compatibility with previous versions,
+so of these changes may require existing clients to update calls to PyFtdi.</p>
+<p>Do not upgrade to <em>v0.40.0</em> or above without testing your client against the
+new PyFtdi releases. PyFtdi versions up to <em>v0.39.9</em> keep a stable API
+with <em>v0.22+</em> series.</p>
+<div class="section" id="major-changes">
+<h3>Major changes<a class="headerlink" href="#major-changes" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><p>read() functions now return <code class="docutils literal notranslate"><span class="pre">bytearray</span></code> instead of <cite>Array(‘B’)</cite> so that
+pyserial <code class="docutils literal notranslate"><span class="pre">readline()</span></code> may be used. It also brings some performance
+improvements</p></li>
+<li><p>PyFtdi URLs now supports <code class="docutils literal notranslate"><span class="pre">bus:address</span></code> alternative specifiers, which
+required to augment the <code class="docutils literal notranslate"><span class="pre">open_*()</span></code> methods with new, optional parameters.</p></li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="pyftdi-in-details">
 <h2>PyFTDI in details<a class="headerlink" href="#pyftdi-in-details" title="Permalink to this headline">¶</a></h2>

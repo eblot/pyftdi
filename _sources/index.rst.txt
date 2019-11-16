@@ -42,6 +42,26 @@ PyFtdi_ currently supports the following features:
 PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI_ devices.
 
+Potential API break
+-------------------
+
+Starting with version *v0.40.0*, several API changes are being introduced.
+While PyFtdi tries to maintain backward compatibility with previous versions,
+so of these changes may require existing clients to update calls to PyFtdi.
+
+Do not upgrade to *v0.40.0* or above without testing your client against the
+new PyFtdi releases. PyFtdi versions up to *v0.39.9* keep a stable API
+with *v0.22+* series.
+
+Major changes
+~~~~~~~~~~~~~
+
+ * read() functions now return ``bytearray`` instead of `Array('B')` so that
+   pyserial ``readline()`` may be used. It also brings some performance
+   improvements
+ * PyFtdi URLs now supports ``bus:address`` alternative specifiers, which
+   required to augment the ``open_*()`` methods with new, optional parameters.
+
 PyFTDI in details
 -----------------
 

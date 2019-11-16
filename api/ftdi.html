@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -469,17 +469,11 @@ device descriptors</p>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.get_identifiers">
-<em class="property">classmethod </em><code class="sig-name descname">get_identifiers</code><span class="sig-paren">(</span><em class="sig-param">url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">get_identifiers</code><span class="sig-paren">(</span><em class="sig-param">url</em><span class="sig-paren">)</span> &#x2192; Tuple[pyftdi.usbtools.UsbDeviceDescriptor, int]<a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract the identifiers of an FTDI device from URL, if any</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – input URL to parse</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>(vendor, product, index, sernum, interface)</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -652,7 +646,7 @@ bridge</p>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">bus=None</em>, <em class="sig-param">address=None</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device.</p>
 <p>If several FTDI devices of the same kind (vid, pid) are connected
 to the host, either index or serial argument should be used to
@@ -668,6 +662,8 @@ starting from 1 (not 0).</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
 <li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
+<li><p><strong>bus</strong> (<em>int</em>) – optional selector,  USB bus</p></li>
+<li><p><strong>address</strong> (<em>int</em>) – optional selector, USB address on bus</p></li>
 <li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
 FTDI enumerated USB device on the host</p></li>
 <li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
@@ -680,7 +676,7 @@ by its serial number</p></li>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_bitbang">
-<code class="sig-name descname">open_bitbang</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open_bitbang</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">bus=None</em>, <em class="sig-param">address=None</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
 <p>Bitbang enables direct read or write to FTDI GPIOs.</p>
 <dl class="field-list simple">
@@ -724,6 +720,20 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_from_device">
+<code class="sig-name descname">open_from_device</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">interface=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_from_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface from an existing USB device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> – FTDI USB device</p></li>
+<li><p><strong>interface</strong> – FTDI interface to use</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_from_url">
 <code class="sig-name descname">open_from_url</code><span class="sig-paren">(</span><em class="sig-param">url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_from_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device.</p>
@@ -736,7 +746,7 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_mpsse">
-<code class="sig-name descname">open_mpsse</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">frequency=6000000.0</em>, <em class="sig-param">latency=16</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open_mpsse</code><span class="sig-paren">(</span><em class="sig-param">vendor</em>, <em class="sig-param">product</em>, <em class="sig-param">bus=None</em>, <em class="sig-param">address=None</em>, <em class="sig-param">index=0</em>, <em class="sig-param">serial=None</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">frequency=6000000.0</em>, <em class="sig-param">latency=16</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
 <p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
 modes (vs. UART mode).</p>
@@ -755,6 +765,8 @@ capable.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
 <li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
+<li><p><strong>bus</strong> (<em>int</em>) – optional selector,  USB bus</p></li>
+<li><p><strong>address</strong> (<em>int</em>) – optional selector, USB address on bus</p></li>
 <li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
 FTDI enumerated USB device on the host</p></li>
 <li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device

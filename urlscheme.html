@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.30.0
+                0.40.5
               </div>
             
           
@@ -172,19 +172,18 @@
 <p>There are two ways to open a connection to an <cite>Ftdi</cite> object.</p>
 <p>The recommended way to open a connection is to specify connection details
 using a URL. The URL scheme is defined as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">protocol</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">][:[</span><span class="n">product</span><span class="p">][:</span><span class="n">index</span><span class="o">|</span><span class="p">:</span><span class="n">serial</span><span class="p">]]</span><span class="o">/</span><span class="n">interface</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="p">[</span><span class="n">vendor</span><span class="p">][:[</span><span class="n">product</span><span class="p">][:</span><span class="n">serial</span><span class="o">|</span><span class="p">:</span><span class="n">bus</span><span class="p">:</span><span class="n">address</span><span class="o">|</span><span class="p">:</span><span class="n">index</span><span class="p">]]</span><span class="o">/</span><span class="n">interface</span>
 </pre></div>
 </div>
 <p>where:</p>
-<ul class="simple">
-<li><p>protocol: always <code class="docutils literal notranslate"><span class="pre">ftdi</span></code></p></li>
-<li><p>vendor: the USB vendor ID of the manufacturer</p>
 <ul>
+<li><p>vendor: the USB vendor ID of the manufacturer</p>
+<ul class="simple">
 <li><p>ex: <code class="docutils literal notranslate"><span class="pre">ftdi</span></code> or <code class="docutils literal notranslate"><span class="pre">0x403</span></code></p></li>
 </ul>
 </li>
 <li><p>product: the USB product ID of the device</p>
-<ul>
+<ul class="simple">
 <li><p>ex: <code class="docutils literal notranslate"><span class="pre">232h</span></code> or <code class="docutils literal notranslate"><span class="pre">0x6014</span></code></p></li>
 <li><p>Supported product IDs: <code class="docutils literal notranslate"><span class="pre">0x6001</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6010</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6011</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6014</span></code>, <code class="docutils literal notranslate"><span class="pre">0x6015</span></code></p></li>
 <li><p>Supported product aliases:</p>
@@ -195,12 +194,38 @@ using a URL. The URL scheme is defined as:</p>
 </li>
 </ul>
 </li>
-<li><p>serial: the serial number as a string</p></li>
-<li><p>index: an integer (not particularly useful, as it depends on the enumeration
-order on the USB buses)</p></li>
-<li><p>interface: the interface of FTDI device, starting from 1</p>
-<ul>
-<li><p>ex: <code class="docutils literal notranslate"><span class="pre">1</span></code> for 232*, <code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> for 2232*, <code class="docutils literal notranslate"><span class="pre">1</span></code>-<code class="docutils literal notranslate"><span class="pre">4</span></code> for 4232* devices</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">serial</span></code>: the serial number as a string. This is the preferred method to
+uniquely identify a specific FTDI device. However, some FTDI device are not
+fitted with an EEPROM, or the EEPROM is either corrupted or erased. In this
+case, FTDI devices report no serial number</p>
+<dl class="simple">
+<dt>Examples:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://ftdi:232h:FT0FMF6V/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://:232h:FT0FMF6V/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://::FT0FMF6V/1</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bus:addess</span></code>: it is possible to select a FTDI device through a bus:address
+pair, specified as <em>hexadecimal</em> integer values.</p>
+<dl class="simple">
+<dt>Examples:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://ftdi:232h:10:22/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://ftdi:232h:10:22/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://::10:22/1</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<p>Here, bus <code class="docutils literal notranslate"><span class="pre">(0x)10</span></code> = 16 (decimal) and address <code class="docutils literal notranslate"><span class="pre">(0x)22</span></code> = 34 (decimal)</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code>: an integer - not particularly useful, as it depends on the
+enumeration order on the USB buses, and may vary from on session to another.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interface</span></code>: the interface of FTDI device, starting from 1</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> for 230x and 232* devices,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span></code> for 2232* devices,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">2</span></code>, <code class="docutils literal notranslate"><span class="pre">3</span></code> or <code class="docutils literal notranslate"><span class="pre">4</span></code> for 4232* devices</p></li>
 </ul>
 </li>
 </ul>
@@ -208,12 +233,11 @@ order on the USB buses)</p></li>
 match. Therefore, if you have a single FTDI device connected to your system,
 <code class="docutils literal notranslate"><span class="pre">ftdi:///1</span></code> should be enough.</p>
 <p>You can also ask PyFtdi to enumerate all the compatible devices with the
-special <code class="docutils literal notranslate"><span class="pre">ftdi:///?</span></code> syntax.</p>
+special <code class="docutils literal notranslate"><span class="pre">ftdi:///?</span></code> syntax. This syntax is useful to retrieve the available
+FTDI URLs with serial number and/or bus:address selectors.</p>
 <p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
 can be as simple as <code class="docutils literal notranslate"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
 from 1.</p>
-<p>You may also select a FTDI device by its sole serial number, <em>e.g.</em>
-<cite>ftdi://::serial/1</cite>.</p>
 <p>URL-based methods to open a connection:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
@@ -228,12 +252,8 @@ parameters (among others).</p>
 <span class="n">open_bitbang</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>API break
-<code class="docutils literal notranslate"><span class="pre">open()</span></code>, <code class="docutils literal notranslate"><span class="pre">open_mpsse()</span></code> and <code class="docutils literal notranslate"><span class="pre">open_bitbang</span></code> arguments have changed in
-v0.22.0, be sure to update your code.</p>
-</div>
+<p>You may also open an Ftdi device from an existing <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> device, with the help
+of the <code class="docutils literal notranslate"><span class="pre">open_from_device()</span></code> helper method.</p>
 <div class="section" id="tools">
 <h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory contains a tiny script <code class="docutils literal notranslate"><span class="pre">ftdu_urls.py</span></code> to list the
