@@ -416,7 +416,8 @@ class I2cController:
             raise ValueError('Invalid retry count')
         self._retry_count = count
 
-    def configure(self, url: str, **kwargs: Mapping[str, Any]) -> None:
+    def configure(self, url: Union[str, 'usb.core.Device'],
+                  **kwargs: Mapping[str, Any]) -> None:
         """Configure the FTDI interface as a I2c master.
 
            :param url: FTDI URL string, such as ``ftdi://ftdi:232h/1``
@@ -424,6 +425,9 @@ class I2cController:
 
            Accepted options:
 
+           * ``interface``: when URL is specifed as a USB device, the interface
+              named argument can be used to select a specific port of the FTDI
+              device, as an integer starting from 1.
            * ``direction`` a bitfield specifying the FTDI GPIO direction,
               where high level defines an output, and low level defines an
               input. Only useful to setup default IOs at start up, use
@@ -889,7 +893,8 @@ class I2cController:
             self._set_gpio_direction(16 if self._wide_port else 8,
                                      pins, direction)
 
-    def _set_gpio_direction(self, width, pins, direction):
+    def _set_gpio_direction(self, width: int, pins: int,
+                            direction: int) -> None:
         if pins & self._i2c_mask:
             raise I2cIOError('Cannot access I2C pins as GPIO')
         gpio_mask = (1 << width) - 1
