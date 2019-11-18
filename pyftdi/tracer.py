@@ -25,13 +25,13 @@
 
 """MPSSE command debug tracer."""
 
-from array import array
 from binascii import hexlify
 from collections import deque
 from inspect import stack
 from logging import getLogger
 from string import ascii_uppercase
 from struct import unpack as sunpack
+from typing import Union
 from .ftdi import Ftdi
 
 
@@ -44,7 +44,7 @@ class FtdiMpsseTracer:
     COMMAND_PREFIX = 'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND'
     NO_RX = ('SEND_IMMEDIATE', 'SET_BITS_LOW', 'SET_BITS_HIGH')
 
-    def build_commands(prefix):
+    def build_commands(prefix: str):
         commands = {}
         for cmd in dir(Ftdi):
             if cmd[0] not in ascii_uppercase:
@@ -73,7 +73,7 @@ class FtdiMpsseTracer:
         self._last_codes = deque()
         self._expect_resp = deque()
 
-    def send(self, buffer):
+    def send(self, buffer: Union[bytes, bytearray]) -> None:
         self._trace_tx.extend(buffer)
         while self._trace_tx:
             try:
@@ -99,7 +99,7 @@ class FtdiMpsseTracer:
             self._trace_rx = bytearray()
             self._last_codes.clear()
 
-    def receive(self, buffer):
+    def receive(self, buffer: Union[bytes, bytearray]) -> None:
         self._trace_rx.extend(buffer)
         while self._trace_rx:
             code = None
@@ -137,7 +137,7 @@ class FtdiMpsseTracer:
         if len(self._trace_tx) < 3:
             return False
         value, = sunpack('<H', self._trace_tx[1:3])
-        base = self._clkdiv5 and 12E6 or 60E6
+        base = 12E6 if self._clkdiv5 else 60E6
         freq = base / ((1 + value) * 2)
         self.log.info('Set frequency %.3fMHZ', freq/1E6)
         self._trace_tx[:] = self._trace_tx[3:]
@@ -304,7 +304,7 @@ class FtdiMpsseTracer:
                       funcname, length, hexlify(payload).decode('utf8'))
 
     @classmethod
-    def bits2str(cls, value, mask, z='_'):
+    def bits2str(cls, value: int, mask: int, z: str = '_') -> str:
         vstr = '{0:08b}'.format(value)
         mstr = '{0:08b}'.format(mask)
         return ''.join([m == '1' and v or z for v, m in zip(vstr, mstr)])
@@ -331,4 +331,3 @@ class FtdiMpsseTracer:
     # rw_bits_tms_nve_pve
     # rw_bits_tms_pve_nve
     # rw_bits_tms_nve_nve
-
