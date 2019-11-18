@@ -101,3 +101,7 @@ Contributors
  * meierphil:
 
   * Initial version of GPIO support for I2C mode
+
+ * etherfi:
+
+  * Fix issue with I2C write after API refactoring

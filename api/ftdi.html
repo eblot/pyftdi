@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.5
+                0.40.6
               </div>
             
           
@@ -1061,15 +1061,17 @@ been received from the FTDI device.</p>
 software or no flow control.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>flowctrl</strong> (<em>str</em>) – one of ‘hw’, ‘’</p>
+<dd class="field-odd"><p><strong>flowctrl</strong> (<em>str</em>) – either ‘hw’ for HW flow control or ‘’ (empty
+string) for no flow control.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – if the flow control argument is invalid</p>
 </dd>
 </dl>
-<p>..note:: How does RTS/CTS flow control work (from FTDI FAQ):</p>
-<blockquote>
-<div><p>FTxxx RTS# pin is an output. It should be connected to the CTS#
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>How does RTS/CTS flow control work (from FTDI FAQ):</p>
+<p>FTxxx RTS# pin is an output. It should be connected to the CTS#
 input pin of the device at the other end of the UART link.</p>
 <blockquote>
 <div><ul class="simple">
@@ -1102,7 +1104,7 @@ opposed to a byte basis.</p>
 </div></blockquote>
 <p>Word to the wise. Not only do RS232 level shifting devices
 level shift, but they also invert the signal.</p>
-</div></blockquote>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -1145,14 +1147,29 @@ the higher the host CPU load. Be careful with this option.</p>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.set_line_property">
-<code class="sig-name descname">set_line_property</code><span class="sig-paren">(</span><em class="sig-param">bits</em>, <em class="sig-param">stopbit</em>, <em class="sig-param">parity</em>, <em class="sig-param">break_=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_line_property" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">set_line_property</code><span class="sig-paren">(</span><em class="sig-param">bits</em>, <em class="sig-param">stopbit</em>, <em class="sig-param">parity</em>, <em class="sig-param">break_=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_line_property" title="Permalink to this definition">¶</a></dt>
 <dd><p>Configure the (RS232) UART characteristics.</p>
-<p>Parity accepts one of the following strings:
-* <code class="docutils literal notranslate"><span class="pre">N</span></code> for no parity bit
-* <code class="docutils literal notranslate"><span class="pre">O</span></code> for odd parity bit
-* <code class="docutils literal notranslate"><span class="pre">E</span></code> for even parity bit
-* <code class="docutils literal notranslate"><span class="pre">M</span></code> for parity bit always set
-* <code class="docutils literal notranslate"><span class="pre">S</span></code> for parity bit always reset</p>
+<p>Arguments match the valid subset for FTDI HW of pyserial
+definitions.</p>
+<p>Bits accepts one of the following values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">7</span></code> for 7-bit characters</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">8</span></code> for 8-bit characters</p></li>
+</ul>
+<p>Stopbit accepts one of the following values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span></code> for a single bit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1.5</span></code> for a bit and a half</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">2</span></code> for two bits</p></li>
+</ul>
+<p>Parity accepts one of the following strings:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> for no parity bit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">O</span></code> for odd parity bit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code> for even parity bit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">M</span></code> for parity bit always set</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">S</span></code> for parity bit always reset</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
