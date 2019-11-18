@@ -2,7 +2,7 @@ import os
 import re
 import sys
 
-# pip3 install sphinx-pypi-upload
+# pip3 install sphinx-autodoc-typehints sphinx-pypi-upload
 # python3 setup.py build_sphinx
 # sphinx-build -b html ../pyftdi/pyftdi/doc .
 
@@ -37,9 +37,10 @@ meta_file = read(topdir, 'pyftdi', '__init__.py')
 
 version = find_meta('version')
 
-needs_sphinx = '1.6'
+needs_sphinx = '2.1'
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.doctest']
+              'sphinx.ext.doctest',
+              'sphinx_autodoc_typehints']
 templates_path = ['templates']
 source_suffix = '.rst'
 master_doc = 'index'
