@@ -80,6 +80,7 @@ class SpiPort:
         self._cs_prolog = bytes([cs_clock, cs_select])
         self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
+        self._cs = cs
 
     def exchange(self, out: Union[bytes, bytearray, Iterable[int]] = b'',
                  readlen: int = 0, start: bool = True, stop: bool = True,
@@ -160,6 +161,11 @@ class SpiPort:
     def frequency(self) -> float:
         """Return the current SPI bus block"""
         return self._frequency
+
+    @property
+    def cs(self) -> int:
+        """Return the /CS index."""
+        return self._cs
 
 
 class SpiGpioPort:

@@ -232,6 +232,11 @@ class I2cPort:
         """
         return self._controller.frequency
 
+    @property
+    def address(self) -> int:
+        """Return the slave address."""
+        return self._address
+
     def _make_buffer(self, regaddr: int,
                      out: Union[bytes, bytearray, Iterable[int], None] = None)\
                      -> bytes:
