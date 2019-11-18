@@ -27,7 +27,7 @@
 """JTAG support for PyFdti"""
 
 from time import sleep
-from typing import Any, List, Union
+from typing import Any, List, Tuple, Union
 from .ftdi import Ftdi
 from .bits import BitSequence
 
@@ -41,7 +41,7 @@ class JtagError(Exception):
 class JtagState:
     """Test Access Port controller state"""
 
-    def __init__(self, name: str, modes):
+    def __init__(self, name: str, modes: Tuple[str, str]):
         self.name = name
         self.modes = modes
         self.exits = [self, self]  # dummy value before initial configuration
@@ -52,7 +52,7 @@ class JtagState:
     def __repr__(self):
         return self.name
 
-    def setx(self, fstate: JtagState, tstate: JtagState):
+    def setx(self, fstate: 'JtagState', tstate: 'JtagState'):
         self.exits = [fstate, tstate]
 
     def getx(self, event):

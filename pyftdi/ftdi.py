@@ -514,7 +514,7 @@ class Ftdi:
                                            latency=latency,
                                            debug=debug)
 
-    def open_mpsse(self, vendor: int, product: int, bus: Optioanl[int] = None,
+    def open_mpsse(self, vendor: int, product: int, bus: Optional[int] = None,
                    address: Optional[int] = None, index: int = 0,
                    serial: Optional[str] = None, interface: int = 1,
                    direction: int = 0x0, initial: int = 0x0,
@@ -1287,7 +1287,7 @@ class Ftdi:
         self.write_data(bytearray((loopback and Ftdi.LOOPBACK_START or
                                     Ftdi.LOOPBACK_END,)))
 
-    def write_data(self, data: Union[bytes, bytarray]) -> int:
+    def write_data(self, data: Union[bytes, bytearray]) -> int:
         """Write data to the FTDI port.
 
            In UART mode, data contains the serial stream to write to the UART

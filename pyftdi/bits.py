@@ -201,7 +201,7 @@ class BitSequence:
         except KeyError:
             raise BitSequenceError("Invalid binary character in initializer")
 
-    def _init_from_sibling(self, value: BitSequence, msb: bool) -> None:
+    def _init_from_sibling(self, value: 'BitSequence', msb: bool) -> None:
         """Initialize from a fellow object"""
         self._seq = value.sequence()
         if msb:
