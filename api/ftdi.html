@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.6
+                0.40.8
               </div>
             
           
@@ -194,13 +194,16 @@ USB identifiers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vid</strong> (<em>int</em>) – Vendor ID (USB 16-bit identifier)</p></li>
-<li><p><strong>pid</strong> (<em>int</em>) – Product ID (USB 16-bit identifier)</p></li>
-<li><p><strong>pidname</strong> (<em>str</em>) – Product name (arbitrary string)</p></li>
+<li><p><strong>vid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Vendor ID (USB 16-bit identifier)</p></li>
+<li><p><strong>pid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Product ID (USB 16-bit identifier)</p></li>
+<li><p><strong>pidname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Product name (arbitrary string)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – if the product id is already referenced</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -213,12 +216,15 @@ USB identifiers.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vid</strong> (<em>int</em>) – Vendor ID (USB 16-bit identifier)</p></li>
-<li><p><strong>vidname</strong> (<em>str</em>) – Vendor name (arbitrary string)</p></li>
+<li><p><strong>vid</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – Vendor ID (USB 16-bit identifier)</p></li>
+<li><p><strong>vidname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Vendor name (arbitrary string)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – if the vendor id is already referenced</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -228,12 +234,12 @@ USB identifiers.</p>
 <em class="property">property </em><code class="sig-name descname">bitbang_enabled</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.bitbang_enabled" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether some bitbang mode is activated</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI interface is configured to support
-bitbanging</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI interface is configured to support
+bitbanging</p>
 </dd>
 </dl>
 </dd></dl>
@@ -242,6 +248,11 @@ bitbanging</p>
 <dt id="pyftdi.ftdi.Ftdi.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the FTDI interface/port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -251,13 +262,13 @@ bitbanging</p>
 <p>URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – FTDI device selector</p>
+<dd class="field-odd"><p><strong>url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – FTDI device selector</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a fresh, open Ftdi instance</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ftdi</span></code></a></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>py:class:<cite>Ftdi</cite></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a fresh, open Ftdi instance</p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,13 +279,16 @@ bitbanging</p>
 <dd><p>Decode the FTDI modem status bitfield into short strings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>array</em>) – 2-byte mode status</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>) – 2-byte mode status</p></li>
+<li><p><strong>error_only</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – only decode error flags</p></li>
+</ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a tuple of status identifiers</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>tuple(str)</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a tuple of status identifiers</p>
 </dd>
 </dl>
 </dd></dl>
@@ -287,11 +301,14 @@ bitbanging</p>
 as a workaround to support SPI mode 3.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</p>
+<dd class="field-odd"><p><strong>enable</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to enable or disable this mode.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled or device is
 not capable of 3-phase clocking</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -304,10 +321,13 @@ not capable of 3-phase clocking</p>
 for JTAG with ARM core.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</p>
+<dd class="field-odd"><p><strong>enable</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to enable or disable this mode.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -320,11 +340,14 @@ for JTAG with ARM core.</p>
 collector driving mode.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>enable</strong> (<em>bool</em>) – whether to enable or disable this mode.</p>
+<dd class="field-odd"><p><strong>lines</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – bitfield of GPIO to drive in collector driven mode</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiMpsseError" title="pyftdi.ftdi.FtdiMpsseError"><strong>FtdiMpsseError</strong></a> – if MPSSE mode is not enabled or device is
 not capable of drive-zero mode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -336,11 +359,16 @@ not capable of drive-zero mode</p>
 purposes only. It does not support UART (TX to RX) mode.</p>
 <blockquote>
 <div><dl class="field-list simple">
-<dt class="field-odd">param bool loopback</dt>
+<dt class="field-odd">param loopback</dt>
 <dd class="field-odd"><p>whether to enable or disable this mode</p>
 </dd>
 </dl>
 </div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -348,11 +376,11 @@ purposes only. It does not support UART (TX to RX) mode.</p>
 <em class="property">property </em><code class="sig-name descname">fifo_sizes</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.fifo_sizes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the (TX, RX) tupple of hardware FIFO sizes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>2-tuple of TX, RX FIFO size in bytes</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple(int, int)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>2-tuple of TX, RX FIFO size in bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -385,11 +413,11 @@ device descriptors</p>
 <em class="property">property </em><code class="sig-name descname">frequency_max</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.frequency_max" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tells the maximum frequency for MPSSE clock.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the maximum supported frequency in Hz</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the maximum supported frequency in Hz</p>
 </dd>
 </dl>
 </dd></dl>
@@ -399,11 +427,11 @@ device descriptors</p>
 <code class="sig-name descname">get_cd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read terminal status line: Carrier Detect</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>CD line logical level</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CD line logical level</p>
 </dd>
 </dl>
 </dd></dl>
@@ -413,11 +441,11 @@ device descriptors</p>
 <code class="sig-name descname">get_cts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read terminal status line: Clear To Send</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>CTS line logical level</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CTS line logical level</p>
 </dd>
 </dl>
 </dd></dl>
@@ -428,13 +456,13 @@ device descriptors</p>
 <dd><p>Get a USB device from its URL, without opening an instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – input URL to parse</p>
+<dd class="field-odd"><p><strong>url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – input URL to parse</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the USB device that match the specified URL</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>py:class:<cite>usb.core.Device</cite></p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the USB device that match the specified URL</p>
 </dd>
 </dl>
 </dd></dl>
@@ -444,11 +472,11 @@ device descriptors</p>
 <code class="sig-name descname">get_dsr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_dsr" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read terminal status line: Data Set Ready</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>DSR line logical level</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>DSR line logical level</p>
 </dd>
 </dl>
 </dd></dl>
@@ -456,24 +484,27 @@ device descriptors</p>
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.get_error_string">
 <em class="property">classmethod </em><code class="sig-name descname">get_error_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_error_string" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for libftdi compatibility.</p>
+<dd><p>Wrapper for legacy compatibility.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a constant, meaningless string</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a constant, meaningless string</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.get_identifiers">
-<em class="property">classmethod </em><code class="sig-name descname">get_identifiers</code><span class="sig-paren">(</span><em class="sig-param">url</em><span class="sig-paren">)</span> &#x2192; Tuple[pyftdi.usbtools.UsbDeviceDescriptor, int]<a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">get_identifiers</code><span class="sig-paren">(</span><em class="sig-param">url</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract the identifiers of an FTDI device from URL, if any</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – input URL to parse</p>
+<dd class="field-odd"><p><strong>url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – input URL to parse</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -481,7 +512,15 @@ device descriptors</p>
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.get_latency_timer">
 <code class="sig-name descname">get_latency_timer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_latency_timer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get latency timer</p>
+<dd><p>Get latency timer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the current latency (unspecified unit)</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -489,11 +528,11 @@ device descriptors</p>
 <code class="sig-name descname">get_ri</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_ri" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read terminal status line: Ring Indicator</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>RI line logical level</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>RI line logical level</p>
 </dd>
 </dl>
 </dd></dl>
@@ -505,11 +544,11 @@ device descriptors</p>
 device supports the open-collector drive mode, useful for I2C
 communication for example.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI device features drive-zero mode</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device features drive-zero mode</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
@@ -522,11 +561,11 @@ communication for example.</p>
 <em class="property">property </em><code class="sig-name descname">has_mpsse</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_mpsse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device supports MPSSE (I2C, SPI, JTAG, …)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI device supports MPSSE</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device supports MPSSE</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
@@ -539,11 +578,11 @@ communication for example.</p>
 <em class="property">property </em><code class="sig-name descname">has_wide_port</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_wide_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device supports 16-bit GPIO ports (vs. 8 bits)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI device supports wide GPIO port</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device supports wide GPIO port</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
@@ -558,11 +597,11 @@ communication for example.</p>
 <p>see also <a class="reference external" href="http://www.ftdichip.com/Support/">http://www.ftdichip.com/Support/</a>
 Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the identified FTDI device as a string</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>str</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the identified FTDI device as a string</p>
 </dd>
 </dl>
 </dd></dl>
@@ -572,14 +611,28 @@ Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 <em class="property">property </em><code class="sig-name descname">is_H_series</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_H_series" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device is a high-end FTDI</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI device is a high-end USB-UART bridge</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device is a high-end USB-UART bridge</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.is_connected">
+<em class="property">property </em><code class="sig-name descname">is_connected</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tells whether this instance is connected to an actual USB slave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the slave connection status</p>
 </dd>
 </dl>
 </dd></dl>
@@ -589,12 +642,12 @@ Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 <em class="property">property </em><code class="sig-name descname">is_legacy</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_legacy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device is a low-end FTDI</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI device can only be used as a slow USB-UART
-bridge</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device can only be used as a slow USB-UART
+bridge</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
@@ -607,11 +660,11 @@ bridge</p>
 <em class="property">property </em><code class="sig-name descname">is_mpsse</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_mpsse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device is configured in MPSSE mode</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if the FTDI interface is configured in MPSSE mode</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI interface is configured in MPSSE mode</p>
 </dd>
 </dl>
 </dd></dl>
@@ -621,11 +674,11 @@ bridge</p>
 <code class="sig-name descname">modem_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.modem_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide the current modem status as a tuple of set signals</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>decodede modem status as short strings</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>tuple(str)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>decodede modem status as short strings</p>
 </dd>
 </dl>
 </dd></dl>
@@ -635,11 +688,11 @@ bridge</p>
 <em class="property">property </em><code class="sig-name descname">mpsse_bit_delay</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.mpsse_bit_delay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delay between execution of two MPSSE SET_BITS commands.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>minimum delay (actual value might be larger) in seconds</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>minimum delay (actual value might be larger) in seconds</p>
 </dd>
 </dl>
 </dd></dl>
@@ -671,6 +724,9 @@ by its serial number</p></li>
 <li><p><strong>interface</strong> (<em>str</em>) – FTDI interface/port</p></li>
 </ul>
 </dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -682,39 +738,68 @@ by its serial number</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
-<li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+<li><p><strong>vendor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – USB vendor id</p></li>
+<li><p><strong>product</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – USB product id</p></li>
+<li><p><strong>index</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – optional selector, specified the n-th matching
 FTDI enumerated USB device on the host</p></li>
-<li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+<li><p><strong>serial</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – optional selector, specified the FTDI device
 by its serial number</p></li>
-<li><p><strong>interface</strong> (<em>str</em>) – FTDI interface/port</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+<li><p><strong>interface</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – FTDI interface/port</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
-<li><p><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency to select the USB FTDI poll
 delay. The shorter the delay, the higher the host CPU load.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_bitbang_from_device">
+<code class="sig-name descname">open_bitbang_from_device</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang_from_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
+<p>Bitbang enables direct read or write to FTDI GPIOs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>) – FTDI USB device</p></li>
+<li><p><strong>interface</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – FTDI interface/port</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</p></li>
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency to select the USB FTDI poll
+delay. The shorter the delay, the higher the host CPU load.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_bitbang_from_url">
-<code class="sig-name descname">open_bitbang_from_url</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang_from_url" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open_bitbang_from_url</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">latency=16</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_bitbang_from_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
 <p>Bitbang enables direct read or write to FTDI GPIOs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+<li><p><strong>url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – a FTDI URL selector</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
-<li><p><strong>initial</strong> (<em>int</em>) – ignored</p></li>
-<li><p><strong>latency</strong> (<em>int</em>) – low-level latency to select the USB FTDI poll
+<li><p><strong>initial</strong> – ignored</p></li>
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency to select the USB FTDI poll
 delay. The shorter the delay, the higher the host CPU load.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -726,9 +811,12 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>device</strong> – FTDI USB device</p></li>
-<li><p><strong>interface</strong> – FTDI interface to use</p></li>
+<li><p><strong>device</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>) – FTDI USB device (PyUSB instance)</p></li>
+<li><p><strong>interface</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – FTDI interface to use (integer starting from 1)</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -740,6 +828,9 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -763,25 +854,72 @@ capable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
-<li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
-<li><p><strong>bus</strong> (<em>int</em>) – optional selector,  USB bus</p></li>
-<li><p><strong>address</strong> (<em>int</em>) – optional selector, USB address on bus</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+<li><p><strong>vendor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – USB vendor id</p></li>
+<li><p><strong>product</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – USB product id</p></li>
+<li><p><strong>bus</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – optional selector, USB bus</p></li>
+<li><p><strong>address</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – optional selector, USB address on bus</p></li>
+<li><p><strong>index</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – optional selector, specified the n-th matching
 FTDI enumerated USB device on the host</p></li>
-<li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+<li><p><strong>serial</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – optional selector, specified the FTDI device
 by its serial number</p></li>
-<li><p><strong>interface</strong> (<em>str</em>) – FTDI interface/port</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+<li><p><strong>interface</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – FTDI interface/port</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
-<li><p><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</p></li>
-<li><p><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</p></li>
-<li><p><strong>latency</strong> (<em>int</em>) – low-level latency in milliseconds. The shorter
+<li><p><strong>initial</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the initial output value</p></li>
+<li><p><strong>frequency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – serial interface clock in Hz</p></li>
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
 <li><p><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>actual bus frequency in Hz</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.open_mpsse_from_device">
+<code class="sig-name descname">open_mpsse_from_device</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">frequency=6000000.0</em>, <em class="sig-param">latency=16</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
+<p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
+modes (vs. UART mode).</p>
+<p>If several FTDI devices of the same kind (vid, pid) are connected
+to the host, either index or serial argument should be used to
+discriminate the FTDI device.</p>
+<p>index argument is not a reliable solution as the host may enumerate
+the USB device in random order. serial argument is more reliable
+selector and should always be prefered.</p>
+<p>Some FTDI devices support several interfaces/ports (such as FT2232H
+and FT4232H). The interface argument selects the FTDI port to use,
+starting from 1 (not 0). Note that not all FTDI ports are MPSSE
+capable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>) – FTDI USB device</p></li>
+<li><p><strong>interface</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – FTDI interface/port</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input</p></li>
+<li><p><strong>initial</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the initial output value</p></li>
+<li><p><strong>frequency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – serial interface clock in Hz</p></li>
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency in milliseconds. The shorter
+the delay, the higher the host CPU load. Do not use shorter
+values than the default, as it triggers data loss in FTDI.</p></li>
+<li><p><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>actual bus frequency in Hz</p>
 </dd>
 </dl>
 </dd></dl>
@@ -795,17 +933,23 @@ modes (vs. UART mode).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+<li><p><strong>url</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – a FTDI URL selector</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
-<li><p><strong>initial</strong> (<em>int</em>) – a bitfield specifying the initial output value</p></li>
+<li><p><strong>initial</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the initial output value</p></li>
 <li><p><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</p></li>
-<li><p><strong>latency</strong> (<em>int</em>) – low-level latency in milliseconds. The shorter
+<li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
-<li><p><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
+<li><p><strong>debug</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – use a tracer to decode MPSSE protocol</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>actual bus frequency in Hz</p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,11 +965,11 @@ event polling on the UART interface is done through the regular
 control endpoint.</p>
 <p>see <a class="reference internal" href="#pyftdi.ftdi.Ftdi.modem_status" title="pyftdi.ftdi.Ftdi.modem_status"><code class="xref py py-func docutils literal notranslate"><span class="pre">modem_status()</span></code></a> to obtain decoded status strings</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>modem status, as a proprietary bitfield</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>integer</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modem status, as a proprietary bitfield</p>
 </dd>
 </dl>
 </dd></dl>
@@ -834,18 +978,33 @@ control endpoint.</p>
 <dt id="pyftdi.ftdi.Ftdi.purge_buffers">
 <code class="sig-name descname">purge_buffers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_buffers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the buffers on the chip and the internal read buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.purge_rx_buffer">
 <code class="sig-name descname">purge_rx_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_rx_buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the read buffer on the chip and the internal read buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.purge_tx_buffer">
 <code class="sig-name descname">purge_tx_buffer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.purge_tx_buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the write buffer on the chip.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -856,13 +1015,13 @@ control endpoint.</p>
 size.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>size</strong> (<em>int</em>) – the number of bytes to received from the device</p>
+<dd class="field-odd"><p><strong>size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the number of bytes to received from the device</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>payload bytes</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>bytes</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>payload bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -888,15 +1047,15 @@ requested amount.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>size</strong> (<em>int</em>) – the number of bytes to received from the device</p></li>
-<li><p><strong>attempt</strong> (<em>int</em>) – attempt cycle count</p></li>
+<li><p><strong>size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the number of bytes to received from the device</p></li>
+<li><p><strong>attempt</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – attempt cycle count</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>payload bytes, as an array of bytes</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>payload bytes, as bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -906,11 +1065,11 @@ requested amount.</p>
 <code class="sig-name descname">read_data_get_chunksize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_get_chunksize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get read buffer chunk size.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the size of the write buffer in bytes</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the size of the write buffer in bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -923,7 +1082,10 @@ requested amount.</p>
 be use for a regular usage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>chunksize</strong> (<em>int</em>) – the size of the read buffer in bytes</p>
+<dd class="field-odd"><p><strong>chunksize</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the size of the read buffer in bytes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -934,11 +1096,11 @@ be use for a regular usage.</p>
 <dd><p>Directly read pin state, circumventing the read buffer.
 Useful for bitbang mode.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>bitfield of FTDI interface input GPIO</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bitfield of FTDI interface input GPIO</p>
 </dd>
 </dl>
 </dd></dl>
@@ -959,13 +1121,16 @@ the configuration.</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>baudrate</strong> (<em>int</em>) – the new baudrate for the UART.</p>
+<dd class="field-odd"><p><strong>baudrate</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the new baudrate for the UART.</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><strong>ValueError</strong> – if deviation from selected baudrate is too large</p>
 </dd>
 <dt class="field-odd">Rause FtdiError</dt>
 <dd class="field-odd"><p>on IO Error</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -975,6 +1140,11 @@ the configuration.</p>
 <code class="sig-name descname">set_bitmode</code><span class="sig-paren">(</span><em class="sig-param">bitmask</em>, <em class="sig-param">mode</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_bitmode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable/disable bitbang modes.</p>
 <p>Switch the FTDI interface to bitbang mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -983,7 +1153,10 @@ the configuration.</p>
 <dd><p>Start or stop a break exception event on the serial line</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>break</strong> (<em>bool</em>) – either start or stop break event</p>
+<dd class="field-odd"><p><strong>break</strong> – either start or stop break event</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -994,7 +1167,10 @@ the configuration.</p>
 <dd><p>Set dtr line</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>state</strong> (<em>bool</em>) – new DTR logical level</p>
+<dd class="field-odd"><p><strong>state</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – new DTR logical level</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1006,9 +1182,12 @@ the configuration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dtr</strong> (<em>bool</em>) – new DTR logical level</p></li>
-<li><p><strong>rts</strong> (<em>bool</em>) – new RTS logical level</p></li>
+<li><p><strong>dtr</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – new DTR logical level</p></li>
+<li><p><strong>rts</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – new RTS logical level</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1033,10 +1212,13 @@ been received from the FTDI device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>lmin</strong> (<em>int</em>) – minimum latency level (ms)</p></li>
-<li><p><strong>lmax</strong> (<em>int</em>) – maximum latenty level (ms)</p></li>
-<li><p><strong>threshold</strong> (<em>int</em>) – count to reset latency to maximum level</p></li>
+<li><p><strong>lmin</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – minimum latency level (ms)</p></li>
+<li><p><strong>lmax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – maximum latenty level (ms)</p></li>
+<li><p><strong>threshold</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count to reset latency to maximum level</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1045,12 +1227,22 @@ been received from the FTDI device.</p>
 <dt id="pyftdi.ftdi.Ftdi.set_error_char">
 <code class="sig-name descname">set_error_char</code><span class="sig-paren">(</span><em class="sig-param">errorch</em>, <em class="sig-param">enable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_error_char" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set error character</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.set_event_char">
 <code class="sig-name descname">set_event_char</code><span class="sig-paren">(</span><em class="sig-param">eventch</em>, <em class="sig-param">enable</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_event_char" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the special event character</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1105,6 +1297,11 @@ opposed to a byte basis.</p>
 <p>Word to the wise. Not only do RS232 level shifting devices
 level shift, but they also invert the signal.</p>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -1116,15 +1313,15 @@ internal dividors are only able to achieve some frequencies.</p>
 <p>PyFtdi finds and selects the closest configurable frequency.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>frequency</strong> (<em>float</em>) – the new frequency for the serial interface,
+<dd class="field-odd"><p><strong>frequency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the new frequency for the serial interface,
 in Hz.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the selected frequency, which may differ from the requested
-one, in Hz</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>float</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the selected frequency, which may differ from the requested
+one, in Hz</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1140,7 +1337,7 @@ load on the usb bus.</p>
 the higher the host CPU load. Be careful with this option.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>latency</strong> (<em>int</em>) – latency (unspecified unit)</p>
+<dd class="field-odd"><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – latency (unspecified unit)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1173,11 +1370,14 @@ definitions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bits</strong> (<em>int</em>) – data bit count</p></li>
-<li><p><strong>stopbit</strong> (<em>float</em>) – stop bit count</p></li>
-<li><p><strong>parity</strong> (<em>str</em>) – parity mode as a single uppercase character</p></li>
-<li><p><strong>break</strong> (<em>bool</em>) – force break event</p></li>
+<li><p><strong>bits</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – data bit count</p></li>
+<li><p><strong>stopbit</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – stop bit count</p></li>
+<li><p><strong>parity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – parity mode as a single uppercase character</p></li>
+<li><p><strong>break</strong> – force break event</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1188,7 +1388,10 @@ definitions.</p>
 <dd><p>Set rts line</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>state</strong> (<em>bool</em>) – new RTS logical level</p>
+<dd class="field-odd"><p><strong>state</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – new RTS logical level</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1201,6 +1404,9 @@ device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if the FTDI device rejected the command.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1217,7 +1423,13 @@ data.</p>
 the USB bus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>array</em><em> or </em><em>bytes</em>) – the byte stream to send to the FTDI interface</p>
+<dd class="field-odd"><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]) – the byte stream to send to the FTDI interface</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>count of written bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1227,11 +1439,11 @@ the USB bus.</p>
 <code class="sig-name descname">write_data_get_chunksize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.write_data_get_chunksize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get write buffer chunk size.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the size of the write buffer in bytes</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the size of the write buffer in bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1244,7 +1456,10 @@ the USB bus.</p>
 be use for a regular usage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>chunksize</strong> (<em>int</em>) – the size of the write buffer in bytes</p>
+<dd class="field-odd"><p><strong>chunksize</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the size of the write buffer in bytes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>

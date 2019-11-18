@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.6
+                0.40.8
               </div>
             
           
@@ -190,10 +190,16 @@ representation of the buffer data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</p></li>
-<li><p><strong>full</strong> (<em>bool</em>) – use <cite>hexdump -Cv</cite> format</p></li>
-<li><p><strong>abbreviate</strong> (<em>bool</em>) – replace identical lines with ‘*’</p></li>
+<li><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – binary buffer to dump</p></li>
+<li><p><strong>full</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – use <cite>hexdump -Cv</cite> format</p></li>
+<li><p><strong>abbreviate</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – replace identical lines with ‘*’</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the generated string</p>
 </dd>
 </dl>
 </dd></dl>
@@ -206,7 +212,16 @@ representation of the buffer data.</p>
 of the buffer data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data</strong> (<em>bytes</em><em> or </em><em>array</em><em> or </em><em>bytearray</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – binary buffer to dump</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – binary buffer to dump</p></li>
+<li><p><strong>sep</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the separator string/char</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the formatted string</p>
 </dd>
 </dl>
 </dd></dl>
@@ -235,24 +250,24 @@ of the buffer data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>size</strong> (<em>int</em>) – integral value to convert</p></li>
-<li><p><strong>sep</strong> (<em>str</em>) – the separator character between the integral value and
+<li><p><strong>size</strong> – integral value to convert</p></li>
+<li><p><strong>sep</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the separator character between the integral value and
 the unit specifier</p></li>
-<li><p><strong>lim_k</strong> (<em>int</em>) – any value above this limit is a candidate for KiB
+<li><p><strong>lim_k</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – any value above this limit is a candidate for KiB
 conversion.</p></li>
-<li><p><strong>lim_m</strong> (<em>int</em>) – any value above this limit is a candidate for MiB
+<li><p><strong>lim_m</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – any value above this limit is a candidate for MiB
 conversion.</p></li>
-<li><p><strong>plural</strong> (<em>bool</em>) – whether to append a final ‘s’ to byte(s)</p></li>
-<li><p><strong>floor</strong> (<em>bool</em>) – how to behave when exact conversion cannot be
+<li><p><strong>plural</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to append a final ‘s’ to byte(s)</p></li>
+<li><p><strong>floor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – how to behave when exact conversion cannot be
 achieved: take the closest, smaller value or fallback to the next
 unit that allows the exact representation of the input value</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the prettyfied size</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the prettyfied size</p>
 </dd>
 </dl>
 </dd></dl>
@@ -268,16 +283,16 @@ unit that allows the exact representation of the input value</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> (<em>str</em><em> or </em><em>int</em><em> or </em><em>bool</em>) – the value to parse and convert</p></li>
-<li><p><strong>permissive</strong> (<em>bool</em>) – default to the False value if parsing fails</p></li>
-<li><p><strong>allow_int</strong> (<em>bool</em>) – allow an integral type as the input value</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – the value to parse and convert</p></li>
+<li><p><strong>permissive</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – default to the False value if parsing fails</p></li>
+<li><p><strong>allow_int</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – allow an integral type as the input value</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>bool</p>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if the input value cannot be converted into an bool</p>
 </dd>
-<dt class="field-odd">Raises</dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – if the input value cannot be converted into an bool</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -293,7 +308,7 @@ unit that allows the exact representation of the input value</p></li>
 - a integral value with a unit specifier (kilo or mega)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>str</em><em> or </em><em>int</em>) – input value to convert to an integer</p>
+<dd class="field-odd"><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – input value to convert to an integer</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the value as an integer</p>
@@ -318,11 +333,11 @@ unit that allows the exact representation of the input value</p></li>
 <li><p><strong>_b_</strong> – second argument</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>xor-ed value</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>bool</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>xor-ed value</p>
 </dd>
 </dl>
 </dd></dl>

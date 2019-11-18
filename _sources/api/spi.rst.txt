@@ -98,13 +98,13 @@ Example: communication with a SPI device and an extra GPIO
 Classes
 ~~~~~~~
 
-.. autoclass :: SpiController
- :members:
-
 .. autoclass :: SpiPort
  :members:
 
 .. autoclass :: SpiGpioPort
+ :members:
+
+.. autoclass :: SpiController
  :members:
 
 Exceptions

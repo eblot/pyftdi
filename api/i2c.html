@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.6
+                0.40.8
               </div>
             
           
@@ -228,343 +228,11 @@
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="pyftdi.i2c.I2cController">
-<em class="property">class </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cController</code><a class="headerlink" href="#pyftdi.i2c.I2cController" title="Permalink to this definition">¶</a></dt>
-<dd><p>I2c master.</p>
-<p>An I2c master should be instanciated only once for each FTDI port that
-supports MPSSE (one or two ports, depending on the FTDI device).</p>
-<p>Once configured, <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_port()</span></code></a> should be invoked to obtain an I2c
-port for each I2c slave to drive. I2c port should handle all I/O requests
-for its associated HW slave.</p>
-<p>It is not recommended to use I2cController <a class="reference internal" href="#pyftdi.i2c.I2cController.read" title="pyftdi.i2c.I2cController.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code></a>,
-<a class="reference internal" href="#pyftdi.i2c.I2cController.write" title="pyftdi.i2c.I2cController.write"><code class="xref py py-func docutils literal notranslate"><span class="pre">write()</span></code></a> or <a class="reference internal" href="#pyftdi.i2c.I2cController.exchange" title="pyftdi.i2c.I2cController.exchange"><code class="xref py py-func docutils literal notranslate"><span class="pre">exchange()</span></code></a> directly.</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">SCK</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS0</span></code>, and <code class="docutils literal notranslate"><span class="pre">A*BUS7</span></code> if clock</dt><dd><p>stretching mode is enabled</p>
-</dd>
-</dl>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SDA</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS1</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">A*BUS2</span></code></p></li>
-</ul>
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.configure">
-<code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.configure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Configure the FTDI interface as a I2c master.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – FTDI URL string, such as ‘ftdi://ftdi:232h/1’</p></li>
-<li><p><strong>kwargs</strong> – options to configure the I2C bus</p></li>
-</ul>
-</dd>
-</dl>
-<p>Accepted options:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code> float value the I2C bus frequency in Hz</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">clockstretching</span></code> boolean value to enable clockstreching.
-xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.configured">
-<em class="property">property </em><code class="sig-name descname">configured</code><a class="headerlink" href="#pyftdi.i2c.I2cController.configured" title="Permalink to this definition">¶</a></dt>
-<dd><p>Test whether the device has been properly configured.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>True if configured</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.direction">
-<em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.i2c.I2cController.direction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provide the FTDI GPIO direction</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.exchange">
-<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">readlen=0</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
-<dd><p>Send a byte sequence to a remote slave followed with
-a read request of one or more bytes.</p>
-<p>This command is useful to tell the slave what data
-should be read out.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus, or None to discard start</p></li>
-<li><p><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</p></li>
-<li><p><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>read bytes</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
-are invalid</p>
-</dd>
-</dl>
-<p>Address is a logical slave address (0x7f max)</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.flush">
-<code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.flush" title="Permalink to this definition">¶</a></dt>
-<dd><p>Flush the HW FIFOs</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.frequency">
-<em class="property">property </em><code class="sig-name descname">frequency</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides the current I2c clock frequency.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the I2C bus clock</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.frequency_max">
-<em class="property">property </em><code class="sig-name descname">frequency_max</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency_max" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides the maximum I2c clock frequency.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.get_gpio">
-<code class="sig-name descname">get_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_gpio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the GPIO port.</p>
-<p>:return GPIO port</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.get_port">
-<code class="sig-name descname">get_port</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_port" title="Permalink to this definition">¶</a></dt>
-<dd><p>Obtain an I2cPort to drive an I2c slave.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>address</strong> (<em>int</em>) – the address on the I2C bus</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>an I2cPort instance</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.i2c.I2cPort" title="pyftdi.i2c.I2cPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cPort</span></code></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.gpio_all_pins">
-<em class="property">property </em><code class="sig-name descname">gpio_all_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_all_pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the addressable GPIOs as a bitfield</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.gpio_pins">
-<em class="property">property </em><code class="sig-name descname">gpio_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the configured GPIOs as a bitfield</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.poll">
-<code class="sig-name descname">poll</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">write=False</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll" title="Permalink to this definition">¶</a></dt>
-<dd><p>Poll a remote slave, expect ACK or NACK.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus, or None to discard start</p></li>
-<li><p><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if the slave acknowledged, False otherwise</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.poll_cond">
-<code class="sig-name descname">poll_cond</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">fmt</em>, <em class="sig-param">mask</em>, <em class="sig-param">value</em>, <em class="sig-param">count</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll_cond" title="Permalink to this definition">¶</a></dt>
-<dd><p>Poll a remove slave, watching for condition to satisfy.
-On each poll cycle, a repeated start condition is emitted, without
-releasing the I2C bus, and an ACK is returned to the slave.</p>
-<p>If relax is set, this method releases the I2C bus however it leaves.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus, or None to discard start</p></li>
-<li><p><strong>fmt</strong> (<em>str</em>) – struct format for poll register</p></li>
-<li><p><strong>mask</strong> (<em>int</em>) – binary mask to apply on the condition register
-before testing for the value</p></li>
-<li><p><strong>value</strong> (<em>int</em>) – value to test the masked condition register
-against. Condition is satisfied when register &amp; mask == value</p></li>
-<li><p><strong>count</strong> (<em>int</em>) – maximum poll count before raising a timeout</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the polled register value, or None if poll failed</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array or None</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.read">
-<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">readlen=1</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read one or more bytes from a remote slave</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus, or None to discard start</p></li>
-<li><p><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – not used</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>read bytes</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
-are invalid</p>
-</dd>
-</dl>
-<p>Address is a logical slave address (0x7f max)</p>
-<p>Most I2C devices require a register address to read out
-check out the exchange() method.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.read_gpio">
-<code class="sig-name descname">read_gpio</code><span class="sig-paren">(</span><em class="sig-param">with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read_gpio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read GPIO port</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the GPIO port pins as a bitfield</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.set_gpio_direction">
-<code class="sig-name descname">set_gpio_direction</code><span class="sig-paren">(</span><em class="sig-param">pins</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_gpio_direction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the direction of the GPIO pins</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – direction bitfield (on for output)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.set_retry_count">
-<code class="sig-name descname">set_retry_count</code><span class="sig-paren">(</span><em class="sig-param">count</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_retry_count" title="Permalink to this definition">¶</a></dt>
-<dd><p>Change the default retry count when a communication error occurs,
-before bailing out.
-:param int count: count of retries</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.terminate">
-<code class="sig-name descname">terminate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.terminate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close the FTDI interface.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.validate_address">
-<em class="property">classmethod </em><code class="sig-name descname">validate_address</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.validate_address" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assert an I2C slave address is in the supported range.
-None is a special bypass address.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if the I2C slave address is not supported</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.width">
-<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.i2c.I2cController.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the FTDI count of addressable pins.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the count of IO pins (including I2C ones).</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write one or more bytes to a remote slave</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>address</strong> (<em>int</em><em> or </em><em>None</em>) – the address on the I2C bus, or None to discard start</p></li>
-<li><p><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
-are invalid</p>
-</dd>
-</dl>
-<p>Address is a logical slave address (0x7f max)</p>
-<p>Most I2C devices require a register address to write into. It should
-be added as the first (byte)s of the output buffer.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.i2c.I2cController.write_gpio">
-<code class="sig-name descname">write_gpio</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write_gpio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Write GPIO port</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="pyftdi.i2c.I2cPort">
 <em class="property">class </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cPort</code><span class="sig-paren">(</span><em class="sig-param">controller</em>, <em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>I2C port.</p>
-<p>An I2C port is never instanciated directly: use I2cController.get_port()
-method to obtain an I2C port.</p>
+<p>An I2C port is never instanciated directly:
+use <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-meth docutils literal notranslate"><span class="pre">I2cController.get_port()</span></code></a> method to obtain an I2C port.</p>
 <p><code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter in I2cPort methods may be used to prevent the master
 from releasing the I2C bus, if some further data should be exchanged
 with the slave device. Note that in case of any error, the I2C bus is
@@ -580,16 +248,29 @@ released and the <code class="docutils literal notranslate"><span class="pre">re
 </pre></div>
 </div>
 <dl class="method">
+<dt id="pyftdi.i2c.I2cPort.address">
+<em class="property">property </em><code class="sig-name descname">address</code><a class="headerlink" href="#pyftdi.i2c.I2cPort.address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the slave address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.i2c.I2cPort.configure_register">
 <code class="sig-name descname">configure_register</code><span class="sig-paren">(</span><em class="sig-param">bigendian=False</em>, <em class="sig-param">width=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.configure_register" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reconfigure the format of the slave address register (if any)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>bigendian</strong> (<em>bool</em>) – True for a big endian encoding,
-False otherwise</p></li>
-<li><p><strong>width</strong> (<em>int</em>) – width, in bytes, of the register</p></li>
+<li><p><strong>bigendian</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – True for a big endian encoding, False otherwise</p></li>
+<li><p><strong>width</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – width, in bytes, of the register</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -601,19 +282,19 @@ False otherwise</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out</strong> – an array of bytes to send to the I2c slave,
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – an array of bytes to send to the I2c slave,
 may be empty to only read out data from the slave</p></li>
-<li><p><strong>readlen</strong> – count of bytes to read out from the slave,
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to read out from the slave,
 may be zero to only write to the slave</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>data read out from the slave</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>data read out from the slave</p>
 </dd>
 </dl>
 </dd></dl>
@@ -622,12 +303,22 @@ may be zero to only write to the slave</p></li>
 <dt id="pyftdi.i2c.I2cPort.flush">
 <code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort.flush" title="Permalink to this definition">¶</a></dt>
 <dd><p>Force the flush of the HW FIFOs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cPort.frequency">
 <em class="property">property </em><code class="sig-name descname">frequency</code><a class="headerlink" href="#pyftdi.i2c.I2cPort.frequency" title="Permalink to this definition">¶</a></dt>
 <dd><p>Provide the current I2c bus frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -637,16 +328,16 @@ may be zero to only write to the slave</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>write</strong> (<em>bool</em>) – poll in write mode (vs. read)</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>write</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – poll in write mode (vs. read)</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>True if the slave acknowledged, False otherwise</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>bool</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the slave acknowledged, False otherwise</p>
 </dd>
 </dl>
 </dd></dl>
@@ -661,25 +352,25 @@ releasing the I2C bus, and an ACK is returned to the slave.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>width</strong> (<em>int</em>) – count of bytes to poll for the condition check,
+<li><p><strong>width</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to poll for the condition check,
 that is the size of the condition register</p></li>
-<li><p><strong>mask</strong> (<em>int</em>) – binary mask to apply on the condition register
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – binary mask to apply on the condition register
 before testing for the value</p></li>
-<li><p><strong>value</strong> (<em>int</em>) – value to test the masked condition register
+<li><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – value to test the masked condition register
 against. Condition is satisfied when register &amp; mask == value</p></li>
-<li><p><strong>count</strong> (<em>int</em>) – maximum poll count before raising a timeout</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>count</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – maximum poll count before raising a timeout</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the polled register value</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the polled register value</p>
 </dd>
 <dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>I2cTimeoutError</strong> – if poll condition is not satisified</p>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cTimeoutError" title="pyftdi.i2c.I2cTimeoutError"><strong>I2cTimeoutError</strong></a> – if poll condition is not satisified</p>
 </dd>
 </dl>
 </dd></dl>
@@ -691,16 +382,16 @@ against. Condition is satisfied when register &amp; mask == value</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to read out.</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>byte sequence of read out bytes</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>byte sequence of read out bytes</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
@@ -716,17 +407,17 @@ are invalid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>regaddr</strong> (<em>int</em>) – slave register address to read from</p></li>
-<li><p><strong>readlen</strong> (<em>int</em>) – count of bytes to read out.</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>regaddr</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – slave register address to read from</p></li>
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to read out.</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>data read out from the slave</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>array</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>data read out from the slave</p>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
@@ -748,14 +439,17 @@ are invalid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – the byte buffer to send</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
 are invalid</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -767,10 +461,10 @@ are invalid</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>regaddr</strong> (<em>int</em>) – slave register address to write to</p></li>
-<li><p><strong>out</strong> (<em>array</em><em> or </em><em>bytes</em><em> or </em><em>list</em><em>(</em><em>int</em><em>)</em>) – the byte buffer to send</p></li>
-<li><p><strong>relax</strong> (<em>bool</em>) – whether to relax the bus (emit STOP) or not</p></li>
-<li><p><strong>start</strong> (<em>bool</em>) – whether to emit a start sequence (w/ address)</p></li>
+<li><p><strong>regaddr</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – slave register address to write to</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – the byte buffer to send</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to emit a start sequence (w/ address)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
@@ -790,36 +484,65 @@ are invalid</p>
 I2c feature as regular GPIOs.</p>
 <p>GPIO are managed as a bitfield. The LSBs are reserved for the I2c
 feature, which means that the lowest pin that can be used as a GPIO is
-b4:</p>
+<em>b3</em>:</p>
 <ul class="simple">
-<li><p>b0: I2C SCL</p></li>
-<li><p>b1: I2C SDA_O</p></li>
-<li><p>b2: I2C SDA_I</p></li>
-<li><p>b3: first GPIO</p></li>
-<li><p>b7: reserved for I2C clock stretching if this mode is enabled</p></li>
+<li><p><em>b0</em>: I2C SCL</p></li>
+<li><p><em>b1</em>: I2C SDA_O</p></li>
+<li><p><em>b2</em>: I2C SDA_I</p></li>
+<li><p><em>b3</em>: first GPIO</p></li>
+<li><p><em>b7</em>: reserved for I2C clock stretching, if this mode is enabled</p></li>
 </ul>
 <p>There is no offset bias in GPIO bit position, <em>i.e.</em> the first available
 GPIO can be reached from as <code class="docutils literal notranslate"><span class="pre">0x08</span></code>.</p>
 <p>Bitfield size depends on the FTDI device: 4432H series use 8-bit GPIO
 ports, while 232H and 2232H series use wide 16-bit ports.</p>
 <p>An I2cGpio port is never instanciated directly: use
-I2cController.get_gpio() method to obtain the GPIO port.</p>
+<a class="reference internal" href="#pyftdi.i2c.I2cController.get_gpio" title="pyftdi.i2c.I2cController.get_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">I2cController.get_gpio()</span></code></a> method to obtain the GPIO port.</p>
 <dl class="method">
 <dt id="pyftdi.i2c.I2cGpioPort.all_pins">
 <em class="property">property </em><code class="sig-name descname">all_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.all_pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the addressable GPIOs as a bitfield</p>
+<dd><p>Report the addressable GPIOs as a bitfield.</p>
+<p>A true bit represents a pin which may be used as a GPIO, a false bit
+a reserved pin (for I2C support)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of configurable GPIO pins.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cGpioPort.direction">
 <em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.direction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provide the FTDI GPIO direction</p>
+<dd><p>Provide the FTDI GPIO direction.self</p>
+<p>A true bit represents an output GPIO, a false bit an input GPIO.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of direction.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="pyftdi.i2c.I2cGpioPort.pins">
 <em class="property">property </em><code class="sig-name descname">pins</code><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.pins" title="Permalink to this definition">¶</a></dt>
 <dd><p>Report the configured GPIOs as a bitfield.</p>
+<p>A true bit represents a GPIO, a false bit a reserved or not
+configured pin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of configured GPIO pins.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -828,13 +551,13 @@ I2cController.get_gpio() method to obtain the GPIO port.</p>
 <dd><p>Read GPIO port.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>with_output</strong> (<em>bool</em>) – set to unmask output pins</p>
+<dd class="field-odd"><p><strong>with_output</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – set to unmask output pins</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the GPIO port pins as a bitfield</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int</p>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the GPIO port pins as a bitfield</p>
 </dd>
 </dl>
 </dd></dl>
@@ -846,9 +569,12 @@ I2cController.get_gpio() method to obtain the GPIO port.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – direction bitfield (high level for output)</p></li>
+<li><p><strong>pins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which GPIO pins should be reconfigured</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – direction bitfield (high level for output)</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -859,8 +585,11 @@ I2cController.get_gpio() method to obtain the GPIO port.</p>
 <dd><p>Report the FTDI count of addressable pins.</p>
 <p>Note that all pins, including reserved I2C ones, are reported.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>the count of IO pins (including I2C ones).</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the count of IO pins (including I2C ones).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -871,7 +600,435 @@ I2cController.get_gpio() method to obtain the GPIO port.</p>
 <dd><p>Write GPIO port.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – the GPIO port pins as a bitfield</p>
+<dd class="field-odd"><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the GPIO port pins as a bitfield</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.i2c.I2cController">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cController</code><a class="headerlink" href="#pyftdi.i2c.I2cController" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2c master.</p>
+<p>An I2c master should be instanciated only once for each FTDI port that
+supports MPSSE (one or two ports, depending on the FTDI device).</p>
+<p>Once configured, <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_port()</span></code></a> should be invoked to obtain an I2c
+port for each I2c slave to drive. I2c port should handle all I/O requests
+for its associated HW slave.</p>
+<p>It is not recommended to use I2cController <a class="reference internal" href="#pyftdi.i2c.I2cController.read" title="pyftdi.i2c.I2cController.read"><code class="xref py py-func docutils literal notranslate"><span class="pre">read()</span></code></a>,
+<a class="reference internal" href="#pyftdi.i2c.I2cController.write" title="pyftdi.i2c.I2cController.write"><code class="xref py py-func docutils literal notranslate"><span class="pre">write()</span></code></a> or <a class="reference internal" href="#pyftdi.i2c.I2cController.exchange" title="pyftdi.i2c.I2cController.exchange"><code class="xref py py-func docutils literal notranslate"><span class="pre">exchange()</span></code></a> directly.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SCK</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS0</span></code>, and <code class="docutils literal notranslate"><span class="pre">A*BUS7</span></code> if clock
+stretching mode is enabled</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SDA</span></code> should be connected to <code class="docutils literal notranslate"><span class="pre">A*BUS1</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">A*BUS2</span></code></p></li>
+</ul>
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.configure">
+<code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the FTDI interface as a I2c master.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>]) – FTDI URL string, such as <code class="docutils literal notranslate"><span class="pre">ftdi://ftdi:232h/1</span></code></p></li>
+<li><p><strong>kwargs</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]) – options to configure the I2C bus</p></li>
+</ul>
+</dd>
+</dl>
+<p>Accepted options:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">interface</span></code>: when URL is specifed as a USB device, the interface
+named argument can be used to select a specific port of the FTDI
+device, as an integer starting from 1.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">direction</span></code> a bitfield specifying the FTDI GPIO direction,
+where high level defines an output, and low level defines an
+input. Only useful to setup default IOs at start up, use
+<a class="reference internal" href="#pyftdi.i2c.I2cGpioPort" title="pyftdi.i2c.I2cGpioPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cGpioPort</span></code></a> to drive GPIOs. Note that pins reserved
+for I2C feature take precedence over any this setting.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initial</span></code> a bitfield specifying the initial output value. Only
+useful to setup default IOs at start up, use
+<a class="reference internal" href="#pyftdi.i2c.I2cGpioPort" title="pyftdi.i2c.I2cGpioPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cGpioPort</span></code></a> to drive GPIOs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code> float value the I2C bus frequency in Hz</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clockstretching</span></code> boolean value to enable clockstreching.
+xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.configured">
+<em class="property">property </em><code class="sig-name descname">configured</code><a class="headerlink" href="#pyftdi.i2c.I2cController.configured" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether the device has been properly configured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if configured</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.direction">
+<em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.i2c.I2cController.direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the FTDI pin direction</p>
+<p>A true bit represents an output pin, a false bit an input pin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of direction.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.exchange">
+<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">readlen=0</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a byte sequence to a remote slave followed with
+a read request of one or more bytes.</p>
+<p>This command is useful to tell the slave what data
+should be read out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus, or None to discard start</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – the byte buffer to send</p></li>
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to read out.</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>read bytes</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</dd>
+</dl>
+<p>Address is a logical slave address (0x7f max)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.flush">
+<code class="sig-name descname">flush</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.flush" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flush the HW FIFOs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.frequency">
+<em class="property">property </em><code class="sig-name descname">frequency</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the current I2C clock frequency in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the I2C bus clock frequency</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.frequency_max">
+<em class="property">property </em><code class="sig-name descname">frequency_max</code><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency_max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the maximum I2C clock frequency in Hz.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>I2C bus clock frequency</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.get_gpio">
+<code class="sig-name descname">get_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the GPIO port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.i2c.I2cGpioPort" title="pyftdi.i2c.I2cGpioPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cGpioPort</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>GPIO port</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.get_port">
+<code class="sig-name descname">get_port</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.get_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Obtain an I2cPort to drive an I2c slave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cPort" title="pyftdi.i2c.I2cPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">I2cPort</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>an I2cPort instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.gpio_all_pins">
+<em class="property">property </em><code class="sig-name descname">gpio_all_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_all_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield.</p>
+<p>A true bit represents a pin which may be used as a GPIO, a false bit
+a reserved pin (for I2C support)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of configurable GPIO pins.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.gpio_pins">
+<em class="property">property </em><code class="sig-name descname">gpio_pins</code><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the configured GPIOs as a bitfield.</p>
+<p>A true bit represents a GPIO, a false bit a reserved or not
+configured pin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the bitfield of configured GPIO pins.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.poll">
+<code class="sig-name descname">poll</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">write=False</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remote slave, expect ACK or NACK.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus, or None to discard start</p></li>
+<li><p><strong>write</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – poll in write mode (vs. read)</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if the slave acknowledged, False otherwise</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.poll_cond">
+<code class="sig-name descname">poll_cond</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">fmt</em>, <em class="sig-param">mask</em>, <em class="sig-param">value</em>, <em class="sig-param">count</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.poll_cond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poll a remove slave, watching for condition to satisfy.
+On each poll cycle, a repeated start condition is emitted, without
+releasing the I2C bus, and an ACK is returned to the slave.</p>
+<p>If relax is set, this method releases the I2C bus however it leaves.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus, or None to discard start</p></li>
+<li><p><strong>fmt</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – struct format for poll register</p></li>
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – binary mask to apply on the condition register
+before testing for the value</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – value to test the masked condition register
+against. Condition is satisfied when register &amp; mask == value</p></li>
+<li><p><strong>count</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – maximum poll count before raising a timeout</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the polled register value, or None if poll failed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">readlen=1</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read one or more bytes from a remote slave</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus, or None to discard start</p></li>
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – count of bytes to read out.</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – not used</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>read bytes</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</dd>
+</dl>
+<p>Address is a logical slave address (0x7f max)</p>
+<p>Most I2C devices require a register address to read out
+check out the exchange() method.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.read_gpio">
+<code class="sig-name descname">read_gpio</code><span class="sig-paren">(</span><em class="sig-param">with_output=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.read_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read GPIO port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>with_output</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – set to unmask output pins</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the GPIO port pins as a bitfield</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.set_gpio_direction">
+<code class="sig-name descname">set_gpio_direction</code><span class="sig-paren">(</span><em class="sig-param">pins</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_gpio_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the direction of the GPIO pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which GPIO pins should be reconfigured</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – direction bitfield (on for output)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.set_retry_count">
+<code class="sig-name descname">set_retry_count</code><span class="sig-paren">(</span><em class="sig-param">count</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.set_retry_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the default retry count when a communication error occurs,
+before bailing out.
+:type count: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
+:param count: count of retries</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.terminate">
+<code class="sig-name descname">terminate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.terminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Close the FTDI interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.validate_address">
+<em class="property">classmethod </em><code class="sig-name descname">validate_address</code><span class="sig-paren">(</span><em class="sig-param">address</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.validate_address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assert an I2C slave address is in the supported range.
+None is a special bypass address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if the I2C slave address is not supported</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.i2c.I2cController.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the FTDI count of addressable pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the count of IO pins (including I2C ones).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">address</em>, <em class="sig-param">out</em>, <em class="sig-param">relax=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write one or more bytes to a remote slave</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>address</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the address on the I2C bus, or None to discard start</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – the byte buffer to send</p></li>
+<li><p><strong>relax</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to relax the bus (emit STOP) or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyftdi.i2c.I2cIOError" title="pyftdi.i2c.I2cIOError"><strong>I2cIOError</strong></a> – if device is not configured or input parameters
+are invalid</p>
+</dd>
+</dl>
+<p>Address is a logical slave address (0x7f max)</p>
+<p>Most I2C devices require a register address to write into. It should
+be added as the first (byte)s of the output buffer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.i2c.I2cController.write_gpio">
+<code class="sig-name descname">write_gpio</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.write_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write GPIO port.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the GPIO port pins as a bitfield</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -891,6 +1048,12 @@ I2cController.get_gpio() method to obtain the GPIO port.</p>
 <dt id="pyftdi.i2c.I2cNackError">
 <em class="property">exception </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cNackError</code><a class="headerlink" href="#pyftdi.i2c.I2cNackError" title="Permalink to this definition">¶</a></dt>
 <dd><p>I2c NACK receive from slave</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pyftdi.i2c.I2cTimeoutError">
+<em class="property">exception </em><code class="sig-prename descclassname">pyftdi.i2c.</code><code class="sig-name descname">I2cTimeoutError</code><a class="headerlink" href="#pyftdi.i2c.I2cTimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>I2c timeout on polling</p>
 </dd></dl>
 
 </div>

@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.6
+                0.40.8
               </div>
             
           
@@ -198,7 +198,23 @@ the <a class="reference internal" href="spi.html"><span class="doc">SPI API</spa
 <dl class="class">
 <dt id="pyftdi.gpio.GpioController">
 <em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioController</code><a class="headerlink" href="#pyftdi.gpio.GpioController" title="Permalink to this definition">¶</a></dt>
-<dd><p>GPIO controller for an FTDI port</p>
+<dd><p>GPIO controller for an FTDI port, in bit-bang legacy mode.</p>
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.all_pins">
+<em class="property">property </em><code class="sig-name descname">all_pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.all_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the addressable GPIOs as a bitfield.</p>
+<p>A true bit represents a pin which may be used as a GPIO, a false bit
+a reserved pin</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>always 0xFF.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyftdi.gpio.GpioController.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.close" title="Permalink to this definition">¶</a></dt>
@@ -226,12 +242,12 @@ input</p></li>
 <em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.gpio.GpioController.direction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reports the GPIO direction.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>a bitfield specifying the FTDI GPIO direction, where high
-level reports an output pin, and low level reports an input pin</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>int</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a bitfield specifying the FTDI GPIO direction, where high
+level reports an output pin, and low level reports an input pin</p>
 </dd>
 </dl>
 </dd></dl>
@@ -240,6 +256,14 @@ level reports an output pin, and low level reports an input pin</p>
 <dt id="pyftdi.gpio.GpioController.is_connected">
 <em class="property">property </em><code class="sig-name descname">is_connected</code><a class="headerlink" href="#pyftdi.gpio.GpioController.is_connected" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reports whether a connection exists with the FTDI interface.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the FTDI slave connection status</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -261,7 +285,17 @@ input</p></li>
 <dl class="method">
 <dt id="pyftdi.gpio.GpioController.pins">
 <em class="property">property </em><code class="sig-name descname">pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the addressable GPIOs as a bitfield.</p>
+<dd><p>Report the configured GPIOs as a bitfield.</p>
+<p>A true bit represents a GPIO, a false bit a reserved or not
+configured pin.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>always 0xFF.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -270,8 +304,11 @@ input</p></li>
 <dd><p>Read the GPIO input pin electrical level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a GPIO
+<dd class="field-odd"><p><strong>value</strong> – a bitfield of GPIO pins. Each bit represent a GPIO
 pin, matching the logical input level of the pin.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -282,8 +319,11 @@ pin, matching the logical input level of the pin.</p>
 <dd><p>Read the GPIO input pin electrical level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a GPIO
+<dd class="field-odd"><p><strong>value</strong> – a bitfield of GPIO pins. Each bit represent a GPIO
 pin, matching the logical input level of the pin.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -295,11 +335,28 @@ pin, matching the logical input level of the pin.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pins</strong> (<em>int</em>) – which GPIO pins should be reconfigured</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield of GPIO pins. Each bit represent a
+<li><p><strong>pins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which GPIO pins should be reconfigured</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield of GPIO pins. Each bit represent a
 GPIO pin, where a high level sets the pin as output and a low
 level sets the pin as input/high-Z.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioController.width">
+<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.gpio.GpioController.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the FTDI count of addressable pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>always 8.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -312,6 +369,9 @@ level sets the pin as input/high-Z.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</p>
 </dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -322,6 +382,9 @@ level sets the pin as input/high-Z.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -334,7 +397,7 @@ level sets the pin as input/high-Z.</p></li>
 <dl class="exception">
 <dt id="pyftdi.gpio.GpioException">
 <em class="property">exception </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioException</code><a class="headerlink" href="#pyftdi.gpio.GpioException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for GPIO errors</p>
+<dd><p>Base class for GPIO errors.</p>
 </dd></dl>
 
 </div>
