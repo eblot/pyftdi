@@ -991,7 +991,7 @@ class I2cController:
         return bytearray(b''.join(chunks))
 
     def _do_write(self, out):
-        if not isinstance(out, array):
+        if not isinstance(out, bytearray):
             out = bytearray(out)
         if not out:
             return
