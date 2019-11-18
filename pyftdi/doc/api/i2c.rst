@@ -59,13 +59,13 @@ See also pyi2cflash_ module and `tests/i2c.py`_
 Classes
 ~~~~~~~
 
-.. autoclass :: I2cController
- :members:
-
 .. autoclass :: I2cPort
  :members:
 
 .. autoclass :: I2cGpioPort
+ :members:
+
+.. autoclass :: I2cController
  :members:
 
 
@@ -74,6 +74,7 @@ Exceptions
 
 .. autoexception :: I2cIOError
 .. autoexception :: I2cNackError
+.. autoexception:: I2cTimeoutError
 
 
 Tests
