@@ -995,10 +995,11 @@ class Ftdi:
            Either hardware flow control through RTS/CTS UART lines,
            software or no flow control.
 
-           :param str flowctrl: one of 'hw', ''
+           :param str flowctrl: either 'hw' for HW flow control or '' (empty
+                                string) for no flow control.
            :raise ValueError: if the flow control argument is invalid
 
-           ..note:: How does RTS/CTS flow control work (from FTDI FAQ):
+           .. note:: How does RTS/CTS flow control work (from FTDI FAQ):
 
                 FTxxx RTS# pin is an output. It should be connected to the CTS#
                 input pin of the device at the other end of the UART link.
@@ -1106,10 +1107,25 @@ class Ftdi:
         if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
             raise FtdiError('Unable to set error char')
 
-    def set_line_property(self, bits, stopbit, parity, break_=0):
+    def set_line_property(self, bits, stopbit, parity, break_=False):
         """Configure the (RS232) UART characteristics.
 
+           Arguments match the valid subset for FTDI HW of pyserial
+           definitions.
+
+           Bits accepts one of the following values:
+
+           * ``7`` for 7-bit characters
+           * ``8`` for 8-bit characters
+
+           Stopbit accepts one of the following values:
+
+           * ``1`` for a single bit
+           * ``1.5`` for a bit and a half
+           * ``2`` for two bits
+
            Parity accepts one of the following strings:
+
            * ``N`` for no parity bit
            * ``O`` for odd parity bit
            * ``E`` for even parity bit
