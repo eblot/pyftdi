@@ -30,6 +30,7 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Set, Union
+from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
 
 #pylint: disable-msg=too-many-arguments
@@ -187,7 +188,7 @@ class SpiGpioPort:
        ports, while 232H and 2232H series use wide 16-bit ports.
 
        An SpiGpio port is never instanciated directly: use
-       :pu:meth:`SpiController.get_gpio()` method to obtain the GPIO port.
+       :py:meth:`SpiController.get_gpio()` method to obtain the GPIO port.
     """
     def __init__(self, controller: 'SpiController'):
         self.log = getLogger('pyftdi.spi.gpio')
@@ -294,31 +295,31 @@ class SpiController:
         self._spi_dir = 0
         self._spi_mask = self.SPI_BITS
 
-    def configure(self, url: Union[str, 'usb.core.Device'],
+    def configure(self, url: Union[str, UsbDevice],
                   **kwargs: Mapping[str, Any]) -> None:
         """Configure the FTDI interface as a SPI master
 
-           :param url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+           :param url: FTDI URL string, such as ``ftdi://ftdi:232h/1``
            :param kwargs: options to configure the SPI bus
 
            Accepted options:
 
            * ``interface``: when URL is specifed as a USB device, the interface
-              named argument can be used to select a specific port of the FTDI
-              device, as an integer starting from 1.
+             named argument can be used to select a specific port of the FTDI
+             device, as an integer starting from 1.
            * ``direction`` a bitfield specifying the FTDI GPIO direction,
-              where high level defines an output, and low level defines an
-              input. Only useful to setup default IOs at start up, use
-              :py:class:`SpiGpioPort` to drive GPIOs. Note that pins reserved
-              for SPI feature take precedence over any this setting.
+             where high level defines an output, and low level defines an
+             input. Only useful to setup default IOs at start up, use
+             :py:class:`SpiGpioPort` to drive GPIOs. Note that pins reserved
+             for SPI feature take precedence over any this setting.
            * ``initial`` a bitfield specifying the initial output value. Only
-              useful to setup default IOs at start up, use
-              :py:class:`SpiGpioPort` to drive GPIOs.
+             useful to setup default IOs at start up, use
+             :py:class:`SpiGpioPort` to drive GPIOs.
            * ``frequency`` the SPI bus frequency in Hz. Note that each slave
-                          may reconfigure the SPI bus with a specialized
-                          frequency.
+             may reconfigure the SPI bus with a specialized
+             frequency.
            * ``cs_count`` count of chip select signals dedicated to select
-                          SPI slave devices, starting from A*BUS3 pin
+             SPI slave devices, starting from A*BUS3 pin
            * ``turbo`` whether to enable or disable turbo mode
            * ``debug`` for extra debug output
         """

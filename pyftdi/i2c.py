@@ -31,8 +31,10 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
+from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiFeatureError
 
+#pylint: disable-msg=too-many-lines
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-many-public-methods
@@ -416,7 +418,7 @@ class I2cController:
             raise ValueError('Invalid retry count')
         self._retry_count = count
 
-    def configure(self, url: Union[str, 'usb.core.Device'],
+    def configure(self, url: Union[str, UsbDevice],
                   **kwargs: Mapping[str, Any]) -> None:
         """Configure the FTDI interface as a I2c master.
 
@@ -426,16 +428,16 @@ class I2cController:
            Accepted options:
 
            * ``interface``: when URL is specifed as a USB device, the interface
-              named argument can be used to select a specific port of the FTDI
-              device, as an integer starting from 1.
+             named argument can be used to select a specific port of the FTDI
+             device, as an integer starting from 1.
            * ``direction`` a bitfield specifying the FTDI GPIO direction,
-              where high level defines an output, and low level defines an
-              input. Only useful to setup default IOs at start up, use
-              :py:class:`I2cGpioPort` to drive GPIOs. Note that pins reserved
-              for I2C feature take precedence over any this setting.
+             where high level defines an output, and low level defines an
+             input. Only useful to setup default IOs at start up, use
+             :py:class:`I2cGpioPort` to drive GPIOs. Note that pins reserved
+             for I2C feature take precedence over any this setting.
            * ``initial`` a bitfield specifying the initial output value. Only
-              useful to setup default IOs at start up, use
-              :py:class:`I2cGpioPort` to drive GPIOs.
+             useful to setup default IOs at start up, use
+             :py:class:`I2cGpioPort` to drive GPIOs.
            * ``frequency`` float value the I2C bus frequency in Hz
            * ``clockstretching`` boolean value to enable clockstreching.
              xD7 (GPIO7) pin should be connected back to xD0 (SCK)

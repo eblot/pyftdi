@@ -32,13 +32,15 @@ from logging import getLogger
 from struct import unpack as sunpack
 from sys import platform
 from typing import Optional, List, Sequence, Tuple, Union
-import usb.core
-import usb.util
+from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
+                      USBError)
+from usb.util import (build_request_type, CTRL_IN, CTRL_OUT, CTRL_TYPE_VENDOR,
+                      CTRL_RECIPIENT_DEVICE)
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
 #pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=invalid-names
+#pylint: disable-msg=invalid-name
 
 
 class FtdiError(IOError):
@@ -175,14 +177,10 @@ class Ftdi:
     BITMODE_MASK = 0x7F     # Mask for all bitmodes
 
     # USB control requests
-    REQ_OUT = usb.util.build_request_type(
-        usb.util.CTRL_OUT,
-        usb.util.CTRL_TYPE_VENDOR,
-        usb.util.CTRL_RECIPIENT_DEVICE)
-    REQ_IN = usb.util.build_request_type(
-        usb.util.CTRL_IN,
-        usb.util.CTRL_TYPE_VENDOR,
-        usb.util.CTRL_RECIPIENT_DEVICE)
+    REQ_OUT = build_request_type(CTRL_OUT, CTRL_TYPE_VENDOR,
+                                 CTRL_RECIPIENT_DEVICE)
+    REQ_IN = build_request_type(CTRL_IN, CTRL_TYPE_VENDOR,
+                                CTRL_RECIPIENT_DEVICE)
 
     # Requests
     SIO_RESET = 0               # Reset the port
@@ -311,7 +309,7 @@ class Ftdi:
                                   cls.DEFAULT_VENDOR)
 
     @classmethod
-    def get_device(cls, url: str) -> usb.core.Device:
+    def get_device(cls, url: str) -> UsbDevice:
         """Get a USB device from its URL, without opening an instance.
 
            :param url: input URL to parse
@@ -440,19 +438,19 @@ class Ftdi:
         device = UsbTools.get_device(devdesc)
         self.open_from_device(device, interface)
 
-    def open_from_device(self, device: usb.core.Device,
+    def open_from_device(self, device: UsbDevice,
                          interface: int = 1) -> None:
         """Open a new interface from an existing USB device.
 
            :param device: FTDI USB device (PyUSB instance)
            :param interface: FTDI interface to use (integer starting from 1)
         """
-        if not isinstance(device, usb.core.Device):
+        if not isinstance(device, UsbDevice):
             raise FtdiError("Device '%s' is not a PyUSB device" % device)
         self.usb_dev = device
         try:
             self.usb_dev.set_configuration()
-        except usb.core.USBError:
+        except USBError:
             pass
         # detect invalid interface as early as possible
         config = self.usb_dev.get_active_configuration()
@@ -482,7 +480,7 @@ class Ftdi:
                 ctx.managed_release_interface(dev, self.index - 1)
                 try:
                     self.usb_dev.attach_kernel_driver(self.index - 1)
-                except (NotImplementedError, usb.core.USBError):
+                except (NotImplementedError, USBError):
                     pass
             self.usb_dev = None
             UsbTools.release_device(dev)
@@ -570,7 +568,7 @@ class Ftdi:
                                            latency=latency,
                                            debug=debug)
 
-    def open_mpsse_from_device(self, device: usb.core.Device,
+    def open_mpsse_from_device(self, device: UsbDevice,
                                interface: int = 1, direction: int = 0x0,
                                initial: int = 0x0, frequency: float = 6.0E6,
                                latency: int = 16,
@@ -694,7 +692,7 @@ class Ftdi:
         self.open_bitbang_from_device(device, interface, direction=direction,
                                       latency=latency)
 
-    def open_bitbang_from_device(self, device: usb.core.Device,
+    def open_bitbang_from_device(self, device: UsbDevice,
                                  interface: int = 1, direction: int = 0x0,
                                  latency: int = 16) -> None:
         """Open a new interface to the specified FTDI device in bitbang mode.
@@ -894,7 +892,7 @@ class Ftdi:
                     bytearray(), self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = baudrate
-        except usb.core.USBError as ex:
+        except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def set_frequency(self, frequency: float) -> float:
@@ -1103,7 +1101,7 @@ class Ftdi:
                     Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, bytearray(),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
-        except usb.core.USBError as exc:
+        except USBError as exc:
             raise FtdiError('UsbError: %s' % str(exc))
 
     def set_dtr(self, state: bool) -> None:
@@ -1321,7 +1319,7 @@ class Ftdi:
                     raise FtdiError("Usb bulk write error")
                 offset += length
             return offset
-        except usb.core.USBError as ex:
+        except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def read_data_bytes(self, size: int, attempt: int = 1) -> bytes:
@@ -1441,7 +1439,7 @@ class Ftdi:
                                                 self.readoffset+part_size]
                         self.readoffset += part_size
                         return data
-        except usb.core.USBError as ex:
+        except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
         # never reached
         raise FtdiError("Internal error")
@@ -1551,7 +1549,7 @@ class Ftdi:
 
     # --- Private implementation -------------------------------------------
 
-    def _set_interface(self, config: usb.core.Configuration, ifnum: int):
+    def _set_interface(self, config: UsbConfiguration, ifnum: int):
         """Select the interface to use on the FTDI device"""
         if ifnum == 0:
             ifnum = 1
@@ -1566,7 +1564,7 @@ class Ftdi:
         try:
             if self.usb_dev.is_kernel_driver_active(self.index - 1):
                 self.usb_dev.detach_kernel_driver(self.index - 1)
-        except (NotImplementedError, usb.core.USBError):
+        except (NotImplementedError, USBError):
             pass
 
     def _reset_device(self):
@@ -1585,7 +1583,7 @@ class Ftdi:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_OUT, reqtype, value, self.index,
                 bytearray(data), self.usb_write_timeout)
-        except usb.core.USBError as ex:
+        except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def _ctrl_transfer_in(self, reqtype: int, length: int):
@@ -1594,7 +1592,7 @@ class Ftdi:
             return self.usb_dev.ctrl_transfer(
                 Ftdi.REQ_IN, reqtype, 0, self.index, length,
                 self.usb_read_timeout)
-        except usb.core.USBError as ex:
+        except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def _write(self, data: bytes) -> int:
