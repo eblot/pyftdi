@@ -30,6 +30,7 @@ from collections import namedtuple
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
+from typing import Any, Iterable, Mapping, Optional, Union
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
 
 # pylint: disable-msg=too-many-locals,too-many-instance-attributes
@@ -52,8 +53,8 @@ class I2cTimeoutError(TimeoutError):
 class I2cPort:
     """I2C port.
 
-       An I2C port is never instanciated directly: use I2cController.get_port()
-       method to obtain an I2C port.
+       An I2C port is never instanciated directly:
+       use :py:meth:`I2cController.get_port()` method to obtain an I2C port.
 
        ``relax`` parameter in I2cPort methods may be used to prevent the master
        from releasing the I2C bus, if some further data should be exchanged
@@ -72,19 +73,19 @@ class I2cPort:
     """
     FORMATS = {scalc(fmt): fmt for fmt in 'BHI'}
 
-    def __init__(self, controller, address):
+    def __init__(self, controller: 'I2cController', address: int):
         self._controller = controller
         self._address = address
         self._shift = 0
         self._endian = '<'
         self._format = 'B'
 
-    def configure_register(self, bigendian=False, width=1):
+    def configure_register(self,
+                           bigendian: bool = False, width: int = 1) -> None:
         """Reconfigure the format of the slave address register (if any)
 
-            :param bool bigendian: True for a big endian encoding,
-                                   False otherwise
-            :param int width: width, in bytes, of the register
+            :param bigendian: True for a big endian encoding, False otherwise
+            :param width: width, in bytes, of the register
         """
         try:
             self._format = self.FORMATS[width]
@@ -92,20 +93,20 @@ class I2cPort:
             raise I2cIOError('Unsupported integer width')
         self._endian = bigendian and '>' or '<'
 
-    def shift_address(self, offset):
+    def shift_address(self, offset: int):
         """Tweak the I2C slave address, as required with some devices
         """
         I2cController.validate_address(self._address+offset)
         self._shift = offset
 
-    def read(self, readlen=0, relax=True, start=True):
+    def read(self, readlen: int = 0, relax: bool = True,
+             start: bool = True) -> bytes:
         """Read one or more bytes from a remote slave
 
-           :param int readlen: count of bytes to read out.
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param readlen: count of bytes to read out.
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :return: byte sequence of read out bytes
-           :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
@@ -113,13 +114,13 @@ class I2cPort:
             self._address+self._shift if start else None,
             readlen=readlen, relax=relax)
 
-    def write(self, out, relax=True, start=True):
+    def write(self, out: Union[bytes, bytearray, Iterable[int]],
+              relax: bool = True, start: bool = True) -> None:
         """Write one or more bytes to a remote slave
 
            :param out: the byte buffer to send
-           :type out: array or bytes or list(int)
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
@@ -127,15 +128,15 @@ class I2cPort:
             self._address+self._shift if start else None,
             out, relax=relax)
 
-    def read_from(self, regaddr, readlen=0, relax=True, start=True):
+    def read_from(self, regaddr: int, readlen: int = 0,
+                  relax: bool = True, start: bool = True) -> bytes:
         """Read one or more bytes from a remote slave
 
-           :param int regaddr: slave register address to read from
-           :param int readlen: count of bytes to read out.
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param regaddr: slave register address to read from
+           :param readlen: count of bytes to read out.
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :return: data read out from the slave
-           :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
@@ -143,14 +144,15 @@ class I2cPort:
             self._address+self._shift if start else None,
             out=self._make_buffer(regaddr), readlen=readlen, relax=relax)
 
-    def write_to(self, regaddr, out, relax=True, start=True):
+    def write_to(self, regaddr: int,
+                 out: Union[bytes, bytearray, Iterable[int]],
+                 relax: bool = True, start: bool = True):
         """Read one or more bytes from a remote slave
 
-           :param int regaddr: slave register address to write to
+           :param regaddr: slave register address to write to
            :param out: the byte buffer to send
-           :type out: array or bytes or list(int)
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
         """
@@ -158,53 +160,54 @@ class I2cPort:
             self._address+self._shift if start else None,
             out=self._make_buffer(regaddr, out), relax=relax)
 
-    def exchange(self, out=b'', readlen=0, relax=True, start=True):
+    def exchange(self, out: Union[bytes, bytearray, Iterable[int]] =b'',
+                 readlen: int = 0,
+                 relax: bool = True, start: bool = True) -> bytes:
         """Perform an exchange or a transaction with the I2c slave
 
            :param out: an array of bytes to send to the I2c slave,
                        may be empty to only read out data from the slave
            :param readlen: count of bytes to read out from the slave,
                        may be zero to only write to the slave
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :return: data read out from the slave
-           :rtype: array
         """
         return self._controller.exchange(
             self._address+self._shift if start else None, out,
             readlen, relax=relax)
 
-    def poll(self, write=False, relax=True, start=True):
+    def poll(self, write: bool = False,
+             relax: bool = True, start: bool = True) -> bool:
         """Poll a remote slave, expect ACK or NACK.
 
-           :param bool write: poll in write mode (vs. read)
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param write: poll in write mode (vs. read)
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :return: True if the slave acknowledged, False otherwise
-           :rtype: bool
         """
         return self._controller.poll(
             self._address+self._shift if start else None, write,
             relax=relax)
 
-    def poll_cond(self, width, mask, value, count, relax=True, start=True):
+    def poll_cond(self, width: int, mask: int, value: int, count: int,
+                  relax: bool = True, start: bool = True) -> Optional[bytes]:
         """Poll a remove slave, watching for condition to satisfy.
            On each poll cycle, a repeated start condition is emitted, without
            releasing the I2C bus, and an ACK is returned to the slave.
 
            If relax is set, this method releases the I2C bus however it leaves.
 
-           :param int width: count of bytes to poll for the condition check,
+           :param width: count of bytes to poll for the condition check,
                 that is the size of the condition register
-           :param int mask: binary mask to apply on the condition register
+           :param mask: binary mask to apply on the condition register
                 before testing for the value
-           :param int value: value to test the masked condition register
+           :param value: value to test the masked condition register
                 against. Condition is satisfied when register & mask == value
-           :param int count: maximum poll count before raising a timeout
-           :param bool relax: whether to relax the bus (emit STOP) or not
-           :param bool start: whether to emit a start sequence (w/ address)
+           :param count: maximum poll count before raising a timeout
+           :param relax: whether to relax the bus (emit STOP) or not
+           :param start: whether to emit a start sequence (w/ address)
            :return: the polled register value
-           :rtype: array
            :raise I2cTimeoutError: if poll condition is not satisified
         """
         try:
@@ -215,18 +218,20 @@ class I2cPort:
             self._address+self._shift if start else None,
             fmt, mask, value, count, relax=relax)
 
-    def flush(self):
+    def flush(self) -> None:
         """Force the flush of the HW FIFOs.
         """
         self._controller.flush()
 
     @property
-    def frequency(self):
+    def frequency(self) -> float:
         """Provide the current I2c bus frequency.
         """
         return self._controller.frequency
 
-    def _make_buffer(self, regaddr, out=None):
+    def _make_buffer(self, regaddr: int,
+                     out: Union[bytes, bytearray, Iterable[int], None] = None)\
+                     -> bytes:
         data = bytearray()
         data.extend(spack('%s%s' % (self._endian, self._format), regaddr))
         if out:
@@ -242,13 +247,13 @@ class I2cGpioPort:
 
        GPIO are managed as a bitfield. The LSBs are reserved for the I2c
        feature, which means that the lowest pin that can be used as a GPIO is
-       b4:
+       *b3*:
 
-       * b0: I2C SCL
-       * b1: I2C SDA_O
-       * b2: I2C SDA_I
-       * b3: first GPIO
-       * b7: reserved for I2C clock stretching if this mode is enabled
+       * *b0*: I2C SCL
+       * *b1*: I2C SDA_O
+       * *b2*: I2C SDA_I
+       * *b3*: first GPIO
+       * *b7*: reserved for I2C clock stretching, if this mode is enabled
 
        There is no offset bias in GPIO bit position, *i.e.* the first available
        GPIO can be reached from as ``0x08``.
@@ -257,24 +262,24 @@ class I2cGpioPort:
        ports, while 232H and 2232H series use wide 16-bit ports.
 
        An I2cGpio port is never instanciated directly: use
-       I2cController.get_gpio() method to obtain the GPIO port.
+       :py:meth:`I2cController.get_gpio()` method to obtain the GPIO port.
     """
-    def __init__(self, controller):
+    def __init__(self, controller: 'I2cController'):
         self.log = getLogger('pyftdi.i2c.gpio')
         self._controller = controller
 
     @property
-    def pins(self):
+    def pins(self) -> int:
         """Report the configured GPIOs as a bitfield."""
         return self._controller.gpio_pins
 
     @property
-    def all_pins(self):
+    def all_pins(self) -> int:
         """Report the addressable GPIOs as a bitfield"""
         return self._controller.gpio_all_pins
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Report the FTDI count of addressable pins.
 
            Note that all pins, including reserved I2C ones, are reported.
@@ -284,27 +289,26 @@ class I2cGpioPort:
         return self._controller.width
 
     @property
-    def direction(self):
+    def direction(self) -> int:
         """Provide the FTDI GPIO direction"""
         return self._controller.direction
 
-    def read(self, with_output=False):
+    def read(self, with_output: bool = False) -> int:
         """Read GPIO port.
 
-           :param bool with_output: set to unmask output pins
+           :param with_output: set to unmask output pins
            :return: the GPIO port pins as a bitfield
-           :rtype: int
         """
         return self._controller.read_gpio(with_output)
 
-    def write(self, value):
+    def write(self, value: int) -> None:
         """Write GPIO port.
 
            :param int value: the GPIO port pins as a bitfield
         """
         return self._controller.write_gpio(value)
 
-    def set_direction(self, pins, direction):
+    def set_direction(self, pins: int, direction: int) -> None:
         """Change the direction of the GPIO pins.
 
            :param int pins: which GPIO pins should be reconfigured
@@ -332,7 +336,7 @@ class I2cController:
        :py:func:`write` or :py:func:`exchange` directly.
 
        * ``SCK`` should be connected to ``A*BUS0``, and ``A*BUS7`` if clock
-           stretching mode is enabled
+         stretching mode is enabled
        * ``SDA`` should be connected to ``A*BUS1`` **and** ``A*BUS2``
     """
 
@@ -385,19 +389,19 @@ class I2cController:
         self._ck_su_sto = 0
         self._ck_idle = 0
 
-    def set_retry_count(self, count):
+    def set_retry_count(self, count: int) -> None:
         """Change the default retry count when a communication error occurs,
            before bailing out.
-           :param int count: count of retries
+           :param count: count of retries
         """
         if not isinstance(count, int) or not 0 < count <= 16:
             raise ValueError('Invalid retry count')
         self._retry_count = count
 
-    def configure(self, url, **kwargs):
+    def configure(self, url: str, **kwargs: Mapping[str, Any]) -> None:
         """Configure the FTDI interface as a I2c master.
 
-           :param str url: FTDI URL string, such as 'ftdi://ftdi:232h/1'
+           :param url: FTDI URL string, such as ``ftdi://ftdi:232h/1``
            :param kwargs: options to configure the I2C bus
 
            Accepted options:
@@ -454,7 +458,7 @@ class I2cController:
             self._i2c_mask = self.I2C_MASK
 
 
-    def terminate(self):
+    def terminate(self) -> None:
         """Close the FTDI interface.
         """
         with self._lock:
@@ -462,12 +466,11 @@ class I2cController:
                 self._ftdi.close()
                 self._ftdi = None
 
-    def get_port(self, address):
+    def get_port(self, address: int) -> I2cPort:
         """Obtain an I2cPort to drive an I2c slave.
 
-           :param int address: the address on the I2C bus
+           :param address: the address on the I2C bus
            :return: an I2cPort instance
-           :rtype: :py:class:`I2cPort`
         """
         if not self._ftdi:
             raise I2cIOError("FTDI controller not initialized")
@@ -476,10 +479,10 @@ class I2cController:
             self._slaves[address] = I2cPort(self, address)
         return self._slaves[address]
 
-    def get_gpio(self):
+    def get_gpio(self) -> I2cGpioPort:
         """Retrieve the GPIO port.
 
-           :return GPIO port
+           :return: GPIO port
         """
         with self._lock:
             if not self._ftdi:
@@ -489,7 +492,7 @@ class I2cController:
             return self._gpio_port
 
     @property
-    def configured(self):
+    def configured(self) -> bool:
         """Test whether the device has been properly configured.
 
            :return: True if configured
@@ -497,12 +500,11 @@ class I2cController:
         return bool(self._ftdi) and bool(self._start)
 
     @classmethod
-    def validate_address(cls, address):
+    def validate_address(cls, address: int) -> None:
         """Assert an I2C slave address is in the supported range.
            None is a special bypass address.
 
            :param address: the address on the I2C bus
-           :type address: int or None
            :raise I2cIOError: if the I2C slave address is not supported
         """
         if address is None:
@@ -511,55 +513,70 @@ class I2cController:
             raise I2cIOError("No such I2c slave: 0x%02x" % address)
 
     @property
-    def frequency_max(self):
+    def frequency_max(self) -> float:
         """Provides the maximum I2c clock frequency.
         """
         return self._ftdi.frequency_max
 
     @property
-    def frequency(self):
+    def frequency(self) -> float:
         """Provides the current I2c clock frequency.
 
            :return: the I2C bus clock
-           :rtype: float
         """
         return self._frequency
 
     @property
-    def direction(self):
-        """Provide the FTDI GPIO direction"""
+    def direction(self) -> int:
+        """Provide the FTDI GPIO direction
+
+           A true bit represents an output GPIO, a false bit an input GPIO.
+
+           :return: the bitfield of direction.
+        """
         return self.I2C_DIR | self._gpio_dir
 
     @property
-    def gpio_pins(self):
-        """Report the configured GPIOs as a bitfield"""
+    def gpio_pins(self) -> int:
+        """Report the configured GPIOs as a bitfield.
+
+           A true bit represents a GPIO, a false bit a reserved or not
+           configured pin.
+
+           :return: the bitfield of configured GPIO pins.
+        """
         with self._lock:
             return self._gpio_mask
 
     @property
-    def gpio_all_pins(self):
-        """Report the addressable GPIOs as a bitfield"""
+    def gpio_all_pins(self) -> int:
+        """Report the addressable GPIOs as a bitfield.
+
+           A true bit represents a pin which may be used as a GPIO, a false bit
+           a reserved pin (for I2C support)
+
+           :return: the bitfield of configurable GPIO pins.
+        """
         mask = (1 << self.width) - 1
         with self._lock:
             return mask & ~self._i2c_mask
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Report the FTDI count of addressable pins.
 
            :return: the count of IO pins (including I2C ones).
         """
         return 16 if self._wide_port else 8
 
-    def read(self, address, readlen=1, relax=True):
+    def read(self, address: int, readlen: int = 1,
+             relax: bool = True) -> bytes:
         """Read one or more bytes from a remote slave
 
            :param address: the address on the I2C bus, or None to discard start
-           :type address: int or None
-           :param int readlen: count of bytes to read out.
-           :param bool relax: not used
+           :param readlen: count of bytes to read out.
+           :param relax: not used
            :return: read bytes
-           :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
 
@@ -594,14 +611,13 @@ class I2cController:
                     if do_epilog:
                         self._do_epilog()
 
-    def write(self, address, out, relax=True):
+    def write(self, address: int, out: Union[bytes, bytearray, Iterable[int]],
+              relax: bool = True) -> None:
         """Write one or more bytes to a remote slave
 
            :param address: the address on the I2C bus, or None to discard start
-           :type address: int or None
            :param out: the byte buffer to send
-           :type out: array or bytes or list(int)
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param relax: whether to relax the bus (emit STOP) or not
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
 
@@ -635,7 +651,9 @@ class I2cController:
                     if do_epilog:
                         self._do_epilog()
 
-    def exchange(self, address, out, readlen=0, relax=True):
+    def exchange(self, address: int,
+                 out: Union[bytes, bytearray, Iterable[int]],
+                 readlen: int = 0, relax: bool = True) -> bytes:
         """Send a byte sequence to a remote slave followed with
            a read request of one or more bytes.
 
@@ -643,13 +661,10 @@ class I2cController:
            should be read out.
 
            :param address: the address on the I2C bus, or None to discard start
-           :type address: int or None
            :param out: the byte buffer to send
-           :type out: array or bytes or list(int)
-           :param int readlen: count of bytes to read out.
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param readlen: count of bytes to read out.
+           :param relax: whether to relax the bus (emit STOP) or not
            :return: read bytes
-           :rtype: array
            :raise I2cIOError: if device is not configured or input parameters
                               are invalid
 
@@ -687,15 +702,14 @@ class I2cController:
                     if do_epilog:
                         self._do_epilog()
 
-    def poll(self, address, write=False, relax=True):
+    def poll(self, address: int, write: bool = False,
+             relax: bool = True) -> bool:
         """Poll a remote slave, expect ACK or NACK.
 
            :param address: the address on the I2C bus, or None to discard start
-           :type address: int or None
-           :param bool write: poll in write mode (vs. read)
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param write: poll in write mode (vs. read)
+           :param relax: whether to relax the bus (emit STOP) or not
            :return: True if the slave acknowledged, False otherwise
-           :rtype: bool
         """
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
@@ -719,7 +733,8 @@ class I2cController:
                 if do_epilog:
                     self._do_epilog()
 
-    def poll_cond(self, address, fmt, mask, value, count, relax=True):
+    def poll_cond(self, address: int, fmt: str, mask: int, value: int,
+                  count: int, relax: bool = True) -> Optional[bytes]:
         """Poll a remove slave, watching for condition to satisfy.
            On each poll cycle, a repeated start condition is emitted, without
            releasing the I2C bus, and an ACK is returned to the slave.
@@ -727,16 +742,14 @@ class I2cController:
            If relax is set, this method releases the I2C bus however it leaves.
 
            :param address: the address on the I2C bus, or None to discard start
-           :type address: int or None
-           :param str fmt: struct format for poll register
-           :param int mask: binary mask to apply on the condition register
+           :param fmt: struct format for poll register
+           :param mask: binary mask to apply on the condition register
                 before testing for the value
-           :param int value: value to test the masked condition register
+           :param value: value to test the masked condition register
                 against. Condition is satisfied when register & mask == value
-           :param int count: maximum poll count before raising a timeout
-           :param bool relax: whether to relax the bus (emit STOP) or not
+           :param count: maximum poll count before raising a timeout
+           :param relax: whether to relax the bus (emit STOP) or not
            :return: the polled register value, or None if poll failed
-           :rtype: array or None
         """
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
@@ -775,8 +788,8 @@ class I2cController:
                 if do_epilog:
                     self._do_epilog()
 
-    def flush(self):
-        """Flush the HW FIFOs
+    def flush(self) -> None:
+        """Flush the HW FIFOs.
         """
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
@@ -784,12 +797,11 @@ class I2cController:
             self._ftdi.write_data(self._immediate)
             self._ftdi.purge_buffers()
 
-    def read_gpio(self, with_output=False):
-        """Read GPIO port
+    def read_gpio(self, with_output: bool = False) -> int:
+        """Read GPIO port.
 
-           :param bool with_output: set to unmask output pins
+           :param with_output: set to unmask output pins
            :return: the GPIO port pins as a bitfield
-           :rtype: int
         """
         with self._lock:
             data = self._read_raw(self._wide_port)
@@ -798,10 +810,10 @@ class I2cController:
             value &= ~self._gpio_dir
         return value
 
-    def write_gpio(self, value):
-        """Write GPIO port
+    def write_gpio(self, value: int) -> None:
+        """Write GPIO port.
 
-           :param int value: the GPIO port pins as a bitfield
+           :param value: the GPIO port pins as a bitfield
         """
         with self._lock:
             if (value & self._gpio_dir) != value:
@@ -815,11 +827,11 @@ class I2cController:
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._i2c_mask
 
-    def set_gpio_direction(self, pins, direction):
-        """Change the direction of the GPIO pins
+    def set_gpio_direction(self, pins: int, direction: int) -> None:
+        """Change the direction of the GPIO pins.
 
-           :param int pins: which GPIO pins should be reconfigured
-           :param int direction: direction bitfield (on for output)
+           :param pins: which GPIO pins should be reconfigured
+           :param direction: direction bitfield (on for output)
         """
         with self._lock:
             if pins & self._i2c_mask:
@@ -876,13 +888,13 @@ class I2cController:
 
     def _read_raw(self, read_high):
         if read_high:
-            cmd = array('B', [Ftdi.GET_BITS_LOW,
-                              Ftdi.GET_BITS_HIGH,
-                              Ftdi.SEND_IMMEDIATE])
+            cmd = bytes([Ftdi.GET_BITS_LOW,
+                         Ftdi.GET_BITS_HIGH,
+                         Ftdi.SEND_IMMEDIATE])
             fmt = '<H'
         else:
-            cmd = array('B', [Ftdi.GET_BITS_LOW,
-                              Ftdi.SEND_IMMEDIATE])
+            cmd = bytes([Ftdi.GET_BITS_LOW,
+                         Ftdi.SEND_IMMEDIATE])
             fmt = 'B'
         self._ftdi.write_data(cmd)
         size = scalc(fmt)
@@ -899,10 +911,10 @@ class I2cController:
         if write_high:
             high_data = (data >> 8) & 0xFF
             high_dir = (direction >> 8) & 0xFF
-            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir,
-                              Ftdi.SET_BITS_HIGH, high_data, high_dir])
+            cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir,
+                         Ftdi.SET_BITS_HIGH, high_data, high_dir])
         else:
-            cmd = array('B', [Ftdi.SET_BITS_LOW, low_data, low_dir])
+            cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
     def _do_prolog(self, i2caddress):
