@@ -68,7 +68,7 @@ UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
 """
 
 class UsbToolsError(Exception):
-    """UsbTools error"""
+    """UsbTools error."""
 
 
 class UsbTools:

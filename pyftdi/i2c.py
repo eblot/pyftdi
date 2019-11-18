@@ -31,7 +31,7 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
-from pyftdi.ftdi import Ftdi, FtdiFeatureError
+from .ftdi import Ftdi, FtdiFeatureError
 
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-many-instance-attributes
@@ -303,7 +303,12 @@ class I2cGpioPort:
 
     @property
     def direction(self) -> int:
-        """Provide the FTDI GPIO direction"""
+        """Provide the FTDI GPIO direction.self
+
+           A true bit represents an output GPIO, a false bit an input GPIO.
+
+           :return: the bitfield of direction.
+        """
         return self._controller.direction
 
     def read(self, with_output: bool = False) -> int:

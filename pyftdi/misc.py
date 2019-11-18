@@ -28,6 +28,9 @@
 
 from array import array
 from re import match
+from typing import Any, Iterable, Union
+
+#pylint: disable-msg=invalid-name
 
 
 # String values evaluated as true boolean values
@@ -40,16 +43,17 @@ ASCIIFILTER = ''.join([((len(repr(chr(_x))) == 3) or (_x == 0x5c)) and chr(_x)
 ASCIIFILTER = bytearray(ASCIIFILTER.encode('ascii'))
 
 
-def hexdump(data, full=False, abbreviate=False):
+def hexdump(data: Union[bytes, bytearray, Iterable[int]],
+            full: bool = False, abbreviate: bool = False) -> str:
     """Convert a binary buffer into a hexadecimal representation.
 
        Return a multi-line strings with hexadecimal values and ASCII
        representation of the buffer data.
 
        :param data: binary buffer to dump
-       :type data: bytes or array or bytearray or list(int)
-       :param bool full: use `hexdump -Cv` format
-       :param bool abbreviate: replace identical lines with '*'
+       :param full: use `hexdump -Cv` format
+       :param abbreviate: replace identical lines with '*'
+       :return: the generated string
     """
     try:
         if isinstance(data, (bytes, array)):
@@ -90,14 +94,16 @@ def hexdump(data, full=False, abbreviate=False):
     return ''.join(result)
 
 
-def hexline(data, sep=' '):
+def hexline(data: Union[bytes, bytearray, Iterable[int]],
+            sep: str = ' ') -> str:
     """Convert a binary buffer into a hexadecimal representation.
 
        Return a string with hexadecimal values and ASCII representation
        of the buffer data.
 
        :param data: binary buffer to dump
-       :type data: bytes or array or bytearray or list(int)
+       :param sep: the separator string/char
+       :return: the formatted string
     """
     try:
         if isinstance(data, (bytes, array)):
@@ -115,7 +121,7 @@ def hexline(data, sep=' '):
     return "(%d) %s : %s" % (len(data), hexa, printable)
 
 
-def to_int(value):
+def to_int(value: Union[int, str]) -> int:
     """Parse a value and convert it into an integer value if possible.
 
        Input value may be:
@@ -125,7 +131,6 @@ def to_int(value):
        - a integral value with a unit specifier (kilo or mega)
 
        :param value: input value to convert to an integer
-       :type value: str or int
        :return: the value as an integer
        :rtype: int
        :raise ValueError: if the input value cannot be converted into an int
@@ -134,7 +139,7 @@ def to_int(value):
         return 0
     if isinstance(value, int):
         return value
-    mo = match('^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
+    mo = match(r'^\s*(\d+)\s*(?:([KMkm]i?)?B?)?\s*$', value)
     if mo:
         mult = {'K': (1000),
                 'KI': (1 << 10),
@@ -147,7 +152,8 @@ def to_int(value):
     return int(value.strip(), value.startswith('0x') and 16 or 10)
 
 
-def to_bool(value, permissive=True, allow_int=False):
+def to_bool(value: Union[int, bool, str], permissive: bool = True,
+            allow_int: bool = False) -> bool:
     """Parse a string and convert it into a boolean value if possible.
 
        Input value may be:
@@ -156,10 +162,8 @@ def to_bool(value, permissive=True, allow_int=False):
        - a string with a common boolean definition
 
        :param value: the value to parse and convert
-       :type value: str or int or bool
-       :param bool permissive: default to the False value if parsing fails
-       :param bool allow_int: allow an integral type as the input value
-       :rtype: bool
+       :param permissive: default to the False value if parsing fails
+       :param allow_int: allow an integral type as the input value
        :raise ValueError: if the input value cannot be converted into an bool
     """
     if value is None:
@@ -180,18 +184,17 @@ def to_bool(value, permissive=True, allow_int=False):
     raise ValueError('"Invalid boolean value: "%s"' % value)
 
 
-def xor(_a_, _b_):
+def xor(_a_: bool, _b_: bool) -> bool:
     """XOR logical operation.
 
        :param _a_: first argument
        :param _b_: second argument
        :return: xor-ed value
-       :rtype: bool
     """
     return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
 
 
-def is_iterable(obj):
+def is_iterable(obj: Any) -> bool:
     """Tells whether an instance is iterable or not.
 
        :param obj: the instance to test
@@ -206,23 +209,23 @@ def is_iterable(obj):
         return False
 
 
-def pretty_size(size, sep=' ', lim_k=1 << 10, lim_m=10 << 20, plural=True,
-                floor=True):
+def pretty_size(size, sep: str = ' ',
+                lim_k: int = 1 << 10, lim_m: int = 10 << 20,
+                plural: bool = True, floor: bool = True) -> str:
     """Convert a size into a more readable unit-indexed size (KiB, MiB)
 
-       :param int size: integral value to convert
-       :param str sep: the separator character between the integral value and
+       :param size: integral value to convert
+       :param sep: the separator character between the integral value and
             the unit specifier
-       :param int lim_k: any value above this limit is a candidate for KiB
+       :param lim_k: any value above this limit is a candidate for KiB
             conversion.
-       :param int lim_m: any value above this limit is a candidate for MiB
+       :param lim_m: any value above this limit is a candidate for MiB
             conversion.
-       :param bool plural: whether to append a final 's' to byte(s)
-       :param bool floor: how to behave when exact conversion cannot be
+       :param plural: whether to append a final 's' to byte(s)
+       :param floor: how to behave when exact conversion cannot be
             achieved: take the closest, smaller value or fallback to the next
             unit that allows the exact representation of the input value
        :return: the prettyfied size
-       :rtype: str
     """
     size = int(size)
     if size > lim_m:

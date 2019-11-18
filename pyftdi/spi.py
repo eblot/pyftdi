@@ -30,7 +30,7 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Set, Union
-from pyftdi.ftdi import Ftdi, FtdiError
+from .ftdi import Ftdi, FtdiError
 
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-locals
@@ -209,7 +209,7 @@ class SpiGpioPort:
         """Report the addressable GPIOs as a bitfield.
 
            A true bit represents a pin which may be used as a GPIO, a false bit
-           a reserved pin (for I2C support)
+           a reserved pin (for SPI support)
 
            :return: the bitfield of configurable GPIO pins.
         """
@@ -455,7 +455,7 @@ class SpiController:
         """Report the addressable GPIOs as a bitfield.
 
            A true bit represents a pin which may be used as a GPIO, a false bit
-           a reserved pin (for I2C support)
+           a reserved pin (for SPI support)
 
            :return: the bitfield of configurable GPIO pins.
         """

@@ -26,21 +26,25 @@
 
 """JTAG support for PyFdti"""
 
-import time
-from pyftdi.ftdi import Ftdi
-from pyftdi.bits import BitSequence
+from time import sleep
+from typing import Any, List, Union
+from .ftdi import Ftdi
+from .bits import BitSequence
+
+#pylint: disable-msg=invalid-name
 
 
 class JtagError(Exception):
-    """Generic JTAG error"""
+    """Generic JTAG error."""
 
 
 class JtagState:
     """Test Access Port controller state"""
 
-    def __init__(self, name, modes):
+    def __init__(self, name: str, modes):
         self.name = name
         self.modes = modes
+        self.exits = [self, self]  # dummy value before initial configuration
 
     def __str__(self):
         return self.name
@@ -48,19 +52,19 @@ class JtagState:
     def __repr__(self):
         return self.name
 
-    def setx(self, fstate, tstate):
+    def setx(self, fstate: JtagState, tstate: JtagState):
         self.exits = [fstate, tstate]
 
     def getx(self, event):
-        x = event and 1 or 0
+        x = int(bool(event))
         return self.exits[x]
 
-    def is_of(self, mode):
+    def is_of(self, mode: str) -> bool:
         return mode in self.modes
 
 
 class JtagStateMachine:
-    """Test Access Port controller state machine"""
+    """Test Access Port controller state machine."""
 
     def __init__(self):
         self.states = {}
@@ -102,26 +106,29 @@ class JtagStateMachine:
         self['pause_ir'].setx(self['pause_ir'], self['exit_2_ir'])
         self['exit_2_ir'].setx(self['shift_ir'], self['update_ir'])
         self['update_ir'].setx(self['run_test_idle'], self['select_dr_scan'])
+        self._current = self['test_logic_reset']
 
-        self.reset()
-
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> JtagState:
         return self.states[name]
 
-    def state(self):
+    def state(self) -> JtagState:
         return self._current
 
-    def state_of(self, mode):
+    def state_of(self, mode: str) -> bool:
         return self._current.is_of(mode)
 
     def reset(self):
         self._current = self['test_logic_reset']
 
-    def find_path(self, target, source=None):
+    def find_path(self, target: Union[JtagState, str],
+                  source: Union[JtagState, str, None] = None) \
+                  -> List[JtagState]:
         """Find the shortest event sequence to move from source state to
            target state. If source state is not specified, used the current
            state.
-           Return the list of states, including source and target states"""
+
+           :return: the list of states, including source and target states.
+        """
         if source is None:
             source = self.state()
         if isinstance(source, str):
@@ -148,8 +155,8 @@ class JtagStateMachine:
                 if npath:
                     paths.append(npath)
             # keep the shortest path
-            return paths and min([(len(l), l) for l in paths],
-                                 key=lambda x: x[0])[1] or []
+            return min([(len(l), l) for l in paths],
+                       key=lambda x: x[0])[1] if paths else []
         return next_path(source, target, [])
 
     def get_events(self, path):
@@ -182,7 +189,7 @@ class JtagController:
     FTDI_PIPE_LEN = 512
 
     # Private API
-    def __init__(self, trst=False, frequency=3.0E6):
+    def __init__(self, trst: bool = False, frequency: float = 3.0E6):
         """
         trst uses the nTRST optional JTAG line to hard-reset the TAP
           controller
@@ -198,7 +205,7 @@ class JtagController:
         self._write_buff = bytearray()
 
     # Public API
-    def configure(self, url):
+    def configure(self, url: str) -> None:
         """Configure the FTDI interface as a JTAG controller"""
         self._ftdi.open_mpsse_from_url(
             url, direction=self.direction, frequency=self._frequency)
@@ -206,52 +213,51 @@ class JtagController:
         cmd = bytearray((Ftdi.SET_BITS_LOW, 0x0, self.direction))
         self._ftdi.write_data(cmd)
 
-    def close(self):
-        if self._ftdi:
+    def close(self) -> None:
+        if self._ftdi.is_connected:
             self._ftdi.close()
-            self._ftdi = None
 
-    def purge(self):
+    def purge(self) -> None:
         self._ftdi.purge_buffers()
 
-    def reset(self, sync=False):
+    def reset(self, sync: bool = False) -> None:
         """Reset the attached TAP controller.
            sync sends the command immediately (no caching)
         """
         # we can either send a TRST HW signal or perform 5 cycles with TMS=1
         # to move the remote TAP controller back to 'test_logic_reset' state
         # do both for now
-        if not self._ftdi:
+        if not self._ftdi.is_connected:
             raise JtagError("FTDI controller terminated")
         if self._trst:
             # nTRST
             value = 0
             cmd = bytearray((Ftdi.SET_BITS_LOW, value, self.direction))
             self._ftdi.write_data(cmd)
-            time.sleep(0.1)
+            sleep(0.1)
             # nTRST should be left to the high state
             value = JtagController.TRST_BIT
             cmd = bytearray((Ftdi.SET_BITS_LOW, value, self.direction))
             self._ftdi.write_data(cmd)
-            time.sleep(0.1)
+            sleep(0.1)
         # TAP reset (even with HW reset, could be removed though)
         self.write_tms(BitSequence('11111'))
         if sync:
             self.sync()
 
-    def sync(self):
-        if not self._ftdi:
+    def sync(self) -> None:
+        if not self._ftdi.is_connected:
             raise JtagError("FTDI controller terminated")
         if self._write_buff:
             self._ftdi.write_data(self._write_buff)
             self._write_buff = bytearray()
 
-    def write_tms(self, tms):
+    def write_tms(self, tms: BitSequence) -> None:
         """Change the TAP controller state"""
         if not isinstance(tms, BitSequence):
             raise JtagError('Expect a BitSequence')
         length = len(tms)
-        if not (0 < length < 8):
+        if not 0 < length < 8:
             raise JtagError('Invalid TMS length')
         out = BitSequence(tms, length=8)
         # apply the last TDO bit
@@ -264,8 +270,8 @@ class JtagController:
         self._stack_cmd(cmd)
         self.sync()
 
-    def read(self, length):
-        """Read out a sequence of bits from TDO"""
+    def read(self, length: int) -> BitSequence:
+        """Read out a sequence of bits from TDO."""
         byte_count = length//8
         bit_count = length-8*byte_count
         bs = BitSequence()
@@ -277,7 +283,7 @@ class JtagController:
             bs.append(bits)
         return bs
 
-    def write(self, out, use_last=True):
+    def write(self, out: Union[BitSequence, str], use_last: bool = True):
         """Write a sequence of bits to TDI"""
         if isinstance(out, str):
             if len(out) > 1:
@@ -296,7 +302,8 @@ class JtagController:
         if bit_count:
             self._write_bits(out[pos:])
 
-    def shift_register(self, out, use_last=False):
+    def shift_register(self, out: BitSequence,
+                       use_last: bool = False) -> BitSequence:
         """Shift a BitSequence into the current register and retrieve the
            register output"""
         if not isinstance(out, BitSequence):
@@ -350,7 +357,7 @@ class JtagController:
             raise ValueError("Internal error")
         return bs
 
-    def _stack_cmd(self, cmd):
+    def _stack_cmd(self, cmd: Union[bytes, bytearray]):
         if not isinstance(cmd, (bytes, bytearray)):
             raise TypeError('Expect bytes or bytearray')
         if not self._ftdi:
@@ -360,7 +367,7 @@ class JtagController:
             self.sync()
         self._write_buff.extend(cmd)
 
-    def _read_bits(self, length):
+    def _read_bits(self, length: int):
         """Read out bits from TDO"""
         if length > 8:
             raise JtagError("Cannot fit into FTDI fifo")
@@ -374,7 +381,7 @@ class JtagController:
         # print("READ BITS %s" % bs)
         return bs
 
-    def _write_bits(self, out):
+    def _write_bits(self, out: BitSequence) -> None:
         """Output bits on TDI"""
         length = len(out)
         byte = out.tobyte()
@@ -382,13 +389,13 @@ class JtagController:
         cmd = bytearray((Ftdi.WRITE_BITS_NVE_LSB, length-1, byte))
         self._stack_cmd(cmd)
 
-    def _read_bytes(self, length):
+    def _read_bytes(self, length: int) -> BitSequence:
         """Read out bytes from TDO"""
         if length > JtagController.FTDI_PIPE_LEN:
             raise JtagError("Cannot fit into FTDI fifo")
         alen = length-1
         cmd = bytearray((Ftdi.READ_BYTES_NVE_LSB, alen & 0xff,
-                          (alen >> 8) & 0xff))
+                         (alen >> 8) & 0xff))
         self._stack_cmd(cmd)
         self.sync()
         data = self._ftdi.read_data_bytes(length, 4)
@@ -396,7 +403,7 @@ class JtagController:
         # print("READ BYTES %s" % bs)
         return bs
 
-    def _write_bytes(self, out):
+    def _write_bytes(self, out: BitSequence):
         """Output bytes on TDI"""
         bytes_ = out.tobytes(msby=True)  # don't ask...
         olen = len(bytes_)-1
@@ -406,11 +413,11 @@ class JtagController:
         cmd.extend(bytes_)
         self._stack_cmd(cmd)
 
-    def _write_bytes_raw(self, out):
+    def _write_bytes_raw(self, out: BitSequence):
         """Output bytes on TDI"""
         olen = len(out)-1
         cmd = bytearray((Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
-                          (olen >> 8) & 0xff))
+                         (olen >> 8) & 0xff))
         cmd.extend(out)
         self._stack_cmd(cmd)
 
@@ -418,29 +425,37 @@ class JtagController:
 class JtagEngine:
     """High-level JTAG engine controller"""
 
-    def __init__(self, trst=False, frequency=3E06):
+    def __init__(self, trst: bool = False, frequency: float = 3E06):
         self._ctrl = JtagController(trst, frequency)
         self._sm = JtagStateMachine()
         self._seq = bytearray()
 
-    def configure(self, url):
+    @property
+    def state_machine(self):
+        return self._sm
+
+    @property
+    def controller(self):
+        return self._ctrl
+
+    def configure(self, url: str) -> None:
         """Configure the FTDI interface as a JTAG controller"""
         self._ctrl.configure(url)
 
-    def close(self):
+    def close(self) -> None:
         """Terminate a JTAG session/connection"""
         self._ctrl.close()
 
-    def purge(self):
+    def purge(self) -> None:
         """Purge low level HW buffers"""
         self._ctrl.purge()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset the attached TAP controller"""
         self._ctrl.reset()
         self._sm.reset()
 
-    def write_tms(self, out):
+    def write_tms(self, out) -> None:
         """Change the TAP controller state"""
         self._ctrl.write_tms(out)
 
@@ -448,7 +463,7 @@ class JtagEngine:
         """Read out a sequence of bits from TDO"""
         return self._ctrl.read(length)
 
-    def write(self, out, use_last=False):
+    def write(self, out, use_last=False) -> None:
         """Write a sequence of bits to TDI"""
         self._ctrl.write(out, use_last)
 
@@ -456,7 +471,7 @@ class JtagEngine:
         """Return a list of supported state name"""
         return [str(s) for s in self._sm.states]
 
-    def change_state(self, statename):
+    def change_state(self, statename) -> None:
         """Advance the TAP controller to the defined state"""
         # find the state machine path to move to the new instruction
         path = self._sm.find_path(statename)
@@ -467,38 +482,38 @@ class JtagEngine:
         # update the current state machine's state
         self._sm.handle_events(events)
 
-    def go_idle(self):
+    def go_idle(self) -> None:
         """Change the current TAP controller to the IDLE state"""
         self.change_state('run_test_idle')
 
-    def write_ir(self, instruction):
+    def write_ir(self, instruction) -> None:
         """Change the current instruction of the TAP controller"""
         self.change_state('shift_ir')
         self._ctrl.write(instruction)
         self.change_state('update_ir')
 
-    def capture_ir(self):
+    def capture_ir(self) -> None:
         """Capture the current instruction from the TAP controller"""
         self.change_state('capture_ir')
 
-    def write_dr(self, data):
+    def write_dr(self, data) -> None:
         """Change the data register of the TAP controller"""
         self.change_state('shift_dr')
         self._ctrl.write(data)
         self.change_state('update_dr')
 
-    def read_dr(self, length):
+    def read_dr(self, length: int) -> BitSequence:
         """Read the data register from the TAP controller"""
         self.change_state('shift_dr')
         data = self._ctrl.read(length)
         self.change_state('update_dr')
         return data
 
-    def capture_dr(self):
+    def capture_dr(self) -> None:
         """Capture the current data register from the TAP controller"""
         self.change_state('capture_dr')
 
-    def shift_register(self, length):
+    def shift_register(self, length) -> BitSequence:
         if not self._sm.state_of('shift'):
             raise JtagError("Invalid state: %s" % self._sm.state())
         if self._sm.state_of('capture'):
@@ -507,7 +522,7 @@ class JtagEngine:
             self._sm.handle_events(bs)
         return self._ctrl.shift_register(length)
 
-    def sync(self):
+    def sync(self) -> None:
         self._ctrl.sync()
 
 
@@ -517,12 +532,12 @@ class JtagTool:
     def __init__(self, engine):
         self._engine = engine
 
-    def idcode(self):
-        idcode = self.read_dr(32)
+    def idcode(self) -> None:
+        idcode = self._engine.read_dr(32)
         self._engine.go_idle()
         return int(idcode)
 
-    def preload(self, bsdl, data):
+    def preload(self, bsdl, data) -> None:
         instruction = bsdl.get_jtag_ir('preload')
         self._engine.write_ir(instruction)
         self._engine.write_dr(data)
@@ -535,7 +550,7 @@ class JtagTool:
         self._engine.go_idle()
         return data
 
-    def extest(self, bsdl):
+    def extest(self, bsdl) -> None:
         instruction = bsdl.get_jtag_ir('extest')
         self._engine.write_ir(instruction)
 
@@ -544,14 +559,15 @@ class JtagTool:
         self._engine.go_idle()
         return data
 
-    def detect_register_size(self):
+    def detect_register_size(self) -> int:
         # Freely inpired from UrJTAG
-        if not self._engine._sm.state_of('shift'):
-            raise JtagError("Invalid state: %s" % self._engine._sm.state())
-        if self._engine._sm.state_of('capture'):
+        stm = self._engine.state_machine
+        if not stm.state_of('shift'):
+            raise JtagError("Invalid state: %s" % stm.state())
+        if stm.state_of('capture'):
             bs = BitSequence(False)
-            self._engine._ctrl.write_tms(bs)
-            self._engine._sm.handle_events(bs)
+            self._engine.controller.write_tms(bs)
+            stm.handle_events(bs)
         MAX_REG_LEN = 1024
         PATTERN_LEN = 8
         stuck = None

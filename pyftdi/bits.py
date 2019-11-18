@@ -26,8 +26,13 @@
 
 """Bit field and sequence management."""
 
+from typing import Iterable, List, Optional, Tuple, Union
 from .misc import is_iterable, xor
 
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=unneeded-not
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-arguments
 
 class BitSequenceError(Exception):
     """Bit sequence error"""
@@ -51,8 +56,9 @@ class BitSequence:
        :param msby:   most significant byte first or not
     """
 
-    def __init__(self, value=None, msb=False, length=0, bytes_=None,
-                 msby=True):
+    def __init__(self, value: Union['BitSequence', str, int] = None,
+                 msb: bool = False, length: int = 0,
+                 bytes_: Optional[bytes] = None, msby: bool = True):
         """Instanciate a new bit sequence.
         """
         self._seq = bytearray()
@@ -61,14 +67,14 @@ class BitSequence:
             raise BitSequenceError("Cannot inialize with both a value and "
                                    "bytes")
         if bytes_:
-            provider = msby and list(bytes_).__iter__() or reversed(bytes_)
+            provider = list(bytes_).__iter__() if msby else reversed(bytes_)
             for byte in provider:
                 if isinstance(byte, str):
                     byte = ord(byte)
                 elif byte > 0xff:
                     raise BitSequenceError("Invalid byte value")
                 b = []
-                for x in range(8):
+                for _ in range(8):
                     b.append(bool(byte & 0x1))
                     byte >>= 1
                 if msb:
@@ -88,49 +94,49 @@ class BitSequence:
             raise BitSequenceError("Cannot initialize from a %s" % type(value))
         self._update_length(length, msb)
 
-    def sequence(self):
+    def sequence(self) -> bytearray:
         """Return the internal representation as a new mutable sequence"""
         return bytearray(self._seq)
 
-    def reverse(self):
+    def reverse(self) -> 'BitSequence':
         """In-place reverse"""
         self._seq.reverse()
         return self
 
-    def invert(self):
+    def invert(self) -> 'BitSequence':
         """In-place invert sequence values"""
         self._seq = bytearray([x ^ 1 for x in self._seq])
         return self
 
-    def append(self, seq):
+    def append(self, seq) -> 'BitSequence':
         """Concatenate a new BitSequence"""
         if not isinstance(seq, BitSequence):
             seq = BitSequence(seq)
         self._seq.extend(seq.sequence())
         return self
 
-    def lsr(self, count):
+    def lsr(self, count: int) -> None:
         """Left shift rotate"""
         count %= len(self)
         self._seq[:] = self._seq[count:] + self._seq[:count]
 
-    def rsr(self, count):
+    def rsr(self, count: int) -> None:
         """Right shift rotate"""
         count %= len(self)
         self._seq[:] = self._seq[-count:] + self._seq[:-count]
 
-    def tobit(self):
+    def tobit(self) -> bool:
         """Degenerate the sequence into a single bit, if possible"""
         if len(self) != 1:
             raise BitSequenceError("BitSequence should be a scalar")
         return bool(self._seq[0])
 
-    def tobyte(self, msb=False):
+    def tobyte(self, msb: bool = False) -> int:
         """Convert the sequence into a single byte value, if possible"""
         if len(self) > 8:
             raise BitSequenceError("Cannot fit into a single byte")
         byte = 0
-        pos = not msb and -1 or 0
+        pos = -1 if not msb else 0
         # copy the sequence
         seq = self._seq[:]
         while seq:
@@ -138,7 +144,7 @@ class BitSequence:
             byte |= seq.pop(pos)
         return byte
 
-    def tobytes(self, msb=False, msby=False):
+    def tobytes(self, msb: bool = False, msby: bool = False) -> bytearray:
         """Convert the sequence into a sequence of byte values"""
         blength = (len(self)+7) & (~0x7)
         sequence = list(self._seq)
@@ -157,7 +163,7 @@ class BitSequence:
         return bytes_
 
     @staticmethod
-    def _tomutable(value):
+    def _tomutable(value: Union[str, Tuple]) -> List:
         """Convert a immutable sequence into a mutable one"""
         if isinstance(value, tuple):
             # convert immutable sequence into a list so it can be popped out
@@ -170,7 +176,7 @@ class BitSequence:
                 value = list(value)
         return value
 
-    def _init_from_integer(self, value, msb, length):
+    def _init_from_integer(self, value: int, msb: bool, length: int) -> None:
         """Initialize from any integer value"""
         bl = length or -1
         seq = self._seq
@@ -183,7 +189,7 @@ class BitSequence:
         if msb:
             seq.reverse()
 
-    def _init_from_iterable(self, iterable, msb):
+    def _init_from_iterable(self, iterable: Iterable, msb: bool) -> None:
         """Initialize from an iterable"""
         smap = {'0': 0, '1': 1, False: 0, True: 1, 0: 0, 1: 1}
         seq = self._seq
@@ -195,7 +201,7 @@ class BitSequence:
         except KeyError:
             raise BitSequenceError("Invalid binary character in initializer")
 
-    def _init_from_sibling(self, value, msb):
+    def _init_from_sibling(self, value: BitSequence, msb: bool) -> None:
         """Initialize from a fellow object"""
         self._seq = value.sequence()
         if msb:
@@ -221,8 +227,7 @@ class BitSequence:
     def __getitem__(self, index):
         if isinstance(index, slice):
             return self.__class__(value=self._seq[index])
-        else:
-            return self._seq[index]
+        return self._seq[index]
 
     def __setitem__(self, index, value):
         if isinstance(value, BitSequence):
@@ -328,7 +333,7 @@ class BitSequence:
         self._seq = seq
         return self
 
-    def inc(self):
+    def inc(self) -> None:
         """Increment the sequence"""
         for p, b in enumerate(self._seq):
             b ^= True
@@ -336,7 +341,7 @@ class BitSequence:
             if b:
                 break
 
-    def dec(self):
+    def dec(self) -> None:
         """Decrement the sequence"""
         for p, b in enumerate(self._seq):
             b ^= True
@@ -344,7 +349,7 @@ class BitSequence:
             if not b:
                 break
 
-    def invariant(self):
+    def invariant(self) -> bool:
         """Tells whether all bits of the sequence are of the same value.
 
            Return the value, or ValueError if the bits are not of the same
@@ -451,8 +456,7 @@ class BitZSequence(BitSequence):
             """Compute the boolean AND operation for a tri-state boolean"""
             if BitZSequence.Z in (x, y):
                 return BitZSequence.Z
-            else:
-                return x and y
+            return x and y
         return self.__class__(
             value=list(map(andz, self._seq, other.sequence())))
 
@@ -467,8 +471,7 @@ class BitZSequence(BitSequence):
             """Compute the boolean OR operation for a tri-state boolean"""
             if BitZSequence.Z in (x, y):
                 return BitZSequence.Z
-            else:
-                return x or y
+            return x or y
         return self.__class__(value=list(map(orz, self._seq,
                                              other.sequence())))
 
@@ -518,8 +521,7 @@ class BitField:
                 count = index.stop-index.start+1
             mask = (1 << count)-1
             return (self._val >> offset) & mask
-        else:
-            return (self._val >> index) & 1
+        return (self._val >> index) & 1
 
     def __setitem__(self, index, value):
         if isinstance(index, slice):
