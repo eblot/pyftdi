@@ -30,12 +30,13 @@ from collections import namedtuple
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
-from typing import Any, Iterable, Mapping, Optional, Union
+from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 from pyftdi.ftdi import Ftdi, FtdiFeatureError
 
-# pylint: disable-msg=too-many-locals,too-many-instance-attributes
-# pylint: disable-msg=too-many-arguments
-# pylint: disable-msg=consider-using-ternary
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-instance-attributes
+#pylint: disable-msg=too-many-public-methods
+#pylint: disable-msg=too-many-arguments
 
 
 class I2cIOError(IOError):
@@ -160,7 +161,7 @@ class I2cPort:
             self._address+self._shift if start else None,
             out=self._make_buffer(regaddr, out), relax=relax)
 
-    def exchange(self, out: Union[bytes, bytearray, Iterable[int]] =b'',
+    def exchange(self, out: Union[bytes, bytearray, Iterable[int]] = b'',
                  readlen: int = 0,
                  relax: bool = True, start: bool = True) -> bytes:
         """Perform an exchange or a transaction with the I2c slave
@@ -270,12 +271,24 @@ class I2cGpioPort:
 
     @property
     def pins(self) -> int:
-        """Report the configured GPIOs as a bitfield."""
+        """Report the configured GPIOs as a bitfield.
+
+           A true bit represents a GPIO, a false bit a reserved or not
+           configured pin.
+
+           :return: the bitfield of configured GPIO pins.
+        """
         return self._controller.gpio_pins
 
     @property
     def all_pins(self) -> int:
-        """Report the addressable GPIOs as a bitfield"""
+        """Report the addressable GPIOs as a bitfield.
+
+           A true bit represents a pin which may be used as a GPIO, a false bit
+           a reserved pin (for I2C support)
+
+           :return: the bitfield of configurable GPIO pins.
+        """
         return self._controller.gpio_all_pins
 
     @property
@@ -304,15 +317,15 @@ class I2cGpioPort:
     def write(self, value: int) -> None:
         """Write GPIO port.
 
-           :param int value: the GPIO port pins as a bitfield
+           :param value: the GPIO port pins as a bitfield
         """
         return self._controller.write_gpio(value)
 
     def set_direction(self, pins: int, direction: int) -> None:
         """Change the direction of the GPIO pins.
 
-           :param int pins: which GPIO pins should be reconfigured
-           :param int direction: direction bitfield (high level for output)
+           :param pins: which GPIO pins should be reconfigured
+           :param direction: direction bitfield (high level for output)
         """
         self._controller.set_gpio_direction(pins, direction)
 
@@ -462,9 +475,8 @@ class I2cController:
         """Close the FTDI interface.
         """
         with self._lock:
-            if self._ftdi:
+            if self._ftdi.is_connected:
                 self._ftdi.close()
-                self._ftdi = None
 
     def get_port(self, address: int) -> I2cPort:
         """Obtain an I2cPort to drive an I2c slave.
@@ -472,7 +484,7 @@ class I2cController:
            :param address: the address on the I2C bus
            :return: an I2cPort instance
         """
-        if not self._ftdi:
+        if not self._ftdi.is_connected:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
         if address not in self._slaves:
@@ -485,7 +497,7 @@ class I2cController:
            :return: GPIO port
         """
         with self._lock:
-            if not self._ftdi:
+            if not self._ftdi.is_connected:
                 raise I2cIOError("FTDI controller not initialized")
             if not self._gpio_port:
                 self._gpio_port = I2cGpioPort(self)
@@ -497,7 +509,7 @@ class I2cController:
 
            :return: True if configured
         """
-        return bool(self._ftdi) and bool(self._start)
+        return self._ftdi.is_connected and bool(self._start)
 
     @classmethod
     def validate_address(cls, address: int) -> None:
@@ -514,23 +526,25 @@ class I2cController:
 
     @property
     def frequency_max(self) -> float:
-        """Provides the maximum I2c clock frequency.
+        """Provides the maximum I2C clock frequency in Hz.
+
+           :return: I2C bus clock frequency
         """
         return self._ftdi.frequency_max
 
     @property
     def frequency(self) -> float:
-        """Provides the current I2c clock frequency.
+        """Provides the current I2C clock frequency in Hz.
 
-           :return: the I2C bus clock
+           :return: the I2C bus clock frequency
         """
         return self._frequency
 
     @property
     def direction(self) -> int:
-        """Provide the FTDI GPIO direction
+        """Provide the FTDI pin direction
 
-           A true bit represents an output GPIO, a false bit an input GPIO.
+           A true bit represents an output pin, a false bit an input pin.
 
            :return: the bitfield of direction.
         """
@@ -836,7 +850,7 @@ class I2cController:
         with self._lock:
             if pins & self._i2c_mask:
                 raise I2cIOError('Cannot access I2C pins as GPIO')
-            gpio_width = self._wide_port and 16 or 8
+            gpio_width = 16 if self._wide_port else 8
             gpio_mask = (1 << gpio_width) - 1
             gpio_mask &= ~self._i2c_mask
             if (pins & gpio_mask) != pins:
@@ -846,47 +860,47 @@ class I2cController:
             self._gpio_mask = gpio_mask & pins
 
     @property
-    def _data_lo(self):
+    def _data_lo(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self.SCL_BIT | self._gpio_low,
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
-    def _clk_lo_data_hi(self):
+    def _clk_lo_data_hi(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self.SDA_O_BIT | self._gpio_low,
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
-    def _clk_lo_data_lo(self):
+    def _clk_lo_data_lo(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self._gpio_low,
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
-    def _idle(self):
+    def _idle(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self.I2C_DIR | self._gpio_low,
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
-    def _start(self):
+    def _start(self) -> Tuple[int]:
         return self._data_lo * self._ck_hd_sta + \
                self._clk_lo_data_lo * self._ck_hd_sta
 
     @property
-    def _stop(self):
+    def _stop(self) -> Tuple[int]:
         return self._clk_lo_data_hi * self._ck_hd_sta + \
                self._data_lo * self._ck_su_sto + \
                self._idle * self._ck_idle
 
-    def _compute_delay_cycles(self, value):
+    def _compute_delay_cycles(self, value: Union[int, float]) -> int:
         # approx ceiling without relying on math module
         # the bit delay is far from being precisely known anyway
         bit_delay = self._ftdi.mpsse_bit_delay
         return max(1, int((value + bit_delay) / bit_delay))
 
-    def _read_raw(self, read_high):
+    def _read_raw(self, read_high: bool) -> int:
         if read_high:
             cmd = bytes([Ftdi.GET_BITS_LOW,
                          Ftdi.GET_BITS_HIGH,
@@ -904,7 +918,7 @@ class I2cController:
         value, = sunpack(fmt, data)
         return value
 
-    def _write_raw(self, data, write_high):
+    def _write_raw(self, data: int, write_high: bool):
         direction = self.direction
         low_data = data & 0xFF
         low_dir = direction & 0xFF
@@ -917,7 +931,7 @@ class I2cController:
             cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
-    def _do_prolog(self, i2caddress):
+    def _do_prolog(self, i2caddress: int) -> None:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
@@ -941,14 +955,14 @@ class I2cController:
             self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
             raise I2cNackError('NACK from slave')
 
-    def _do_epilog(self):
+    def _do_epilog(self) -> None:
         self.log.debug('   epilog')
         cmd = bytearray(self._stop)
         self._ftdi.write_data(cmd)
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _do_read(self, readlen):
+    def _do_read(self, readlen: int) -> bytes:
         self.log.debug('- read %d byte(s)', readlen)
         if not readlen:
             # force a real read request on device, but discard any result
@@ -1002,7 +1016,7 @@ class I2cController:
             rem -= size
         return bytearray(b''.join(chunks))
 
-    def _do_write(self, out):
+    def _do_write(self, out: Union[bytes, bytearray, Iterable[int]]):
         if not isinstance(out, bytearray):
             out = bytearray(out)
         if not out:

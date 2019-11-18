@@ -388,6 +388,14 @@ class Ftdi:
         """
         return UsbTools.find_all(vps, nocache)
 
+    @property
+    def is_connected(self) -> bool:
+        """Tells whether this instance is connected to an actual USB slave.
+
+           :return: the slave connection status
+        """
+        return bool(self.usb_dev)
+
     def open_from_url(self, url):
         """Open a new interface to the specified FTDI device.
 
@@ -430,9 +438,9 @@ class Ftdi:
 
     def open_from_device(self, device, interface=1):
         """Open a new interface from an existing USB device.
-        
+
            :param device: FTDI USB device
-           :param interface: FTDI interface to use 
+           :param interface: FTDI interface to use
         """
         self.usb_dev = device
         try:
