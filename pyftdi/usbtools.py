@@ -32,8 +32,8 @@ from threading import RLock
 from typing import (IO, List, Mapping, NamedTuple, Optional, Sequence, Set,
                     Tuple)
 from urllib.parse import urlsplit
-import usb.core
-import usb.util
+from usb.core import Device as UsbDevice, USBError
+from usb.util import dispose_resources, get_string as usb_get_string
 from .misc import to_int
 
 #pylint: disable-msg=broad-except
@@ -124,7 +124,7 @@ class UsbTools:
         cls.Lock.release()
 
     @classmethod
-    def get_device(cls, devdesc: UsbDeviceDescriptor) -> usb.core.Device:
+    def get_device(cls, devdesc: UsbDeviceDescriptor) -> UsbDevice:
         """Find a previously open device with the same vendor/product
            or initialize a new one, and return it.
 
@@ -190,12 +190,12 @@ class UsbTools:
                 try:
                     config = dev.get_active_configuration()
                     setconf = config.bConfigurationValue != 1
-                except usb.core.USBError:
+                except USBError:
                     setconf = True
                 if setconf:
                     try:
                         dev.set_configuration()
-                    except usb.core.USBError:
+                    except USBError:
                         pass
                 cls.Devices[devkey] = [dev, 1]
             else:
@@ -205,7 +205,7 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
-    def release_device(cls, usb_dev: usb.core.Device):
+    def release_device(cls, usb_dev: UsbDevice):
         """Release a previously open device, if it not used anymore.
 
            :param usb_dev: a previously instanciated USB device instance
@@ -222,7 +222,7 @@ class UsbTools:
                         cls.Devices[devkey][1] -= 1
                     else:
                         # last interface in use, release
-                        usb.util.dispose_resources(cls.Devices[devkey][0])
+                        dispose_resources(cls.Devices[devkey][0])
                         del cls.Devices[devkey]
                     break
         finally:
@@ -230,7 +230,7 @@ class UsbTools:
 
     @classmethod
     def _find_devices(cls, vendor: int, product: int,
-                      nocache: bool = False) -> Set[usb.core.Device]:
+                      nocache: bool = False) -> Set[UsbDevice]:
         """Find a USB device and return it.
 
            This code re-implements the usb.core.find() method using a local
@@ -277,7 +277,7 @@ class UsbTools:
                 vpdict.setdefault(vendor, [])
                 vpdict[vendor].append(product)
                 for dev in backend.enumerate_devices():
-                    device = usb.core.Device(dev, backend)
+                    device = UsbDevice(dev, backend)
                     if device.idVendor in vpdict:
                         products = vpdict[device.idVendor]
                         if products and (device.idProduct not in products):
@@ -526,7 +526,7 @@ class UsbTools:
         print('', file=out)
 
     @classmethod
-    def get_string(cls, device: usb.core.Device, strname: str) -> str:
+    def get_string(cls, device: UsbDevice, strname: str) -> str:
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
 
            :param device: USB device instance
@@ -536,11 +536,11 @@ class UsbTools:
         if cls.UsbApi is None:
             import inspect
             args, _, _, _ = \
-                inspect.signature(usb.core.Device.read).parameters
+                inspect.signature(UsbDevice.read).parameters
             if (len(args) >= 3) and args[1] == 'length':
                 cls.UsbApi = 1
             else:
                 cls.UsbApi = 2
         if cls.UsbApi == 2:
-            return usb.util.get_string(device, strname)
-        return usb.util.get_string(device, 64, strname)
+            return usb_get_string(device, strname)
+        return usb_get_string(device, 64, strname)
