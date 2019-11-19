@@ -891,7 +891,7 @@ class Ftdi:
                     Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index,
                     bytearray(), self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
-            self.baudrate = baudrate
+            self.baudrate = actual
         except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 

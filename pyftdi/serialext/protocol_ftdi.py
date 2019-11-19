@@ -172,6 +172,7 @@ class FtdiSerial(SerialBase):
     def _reconfigure_port(self):
         try:
             self.udev.set_baudrate(self._baudrate)
+            self._baudrate = self.udev.baudrate
             self.udev.set_line_property(self._bytesize,
                                         self._stopbits,
                                         self._parity)
