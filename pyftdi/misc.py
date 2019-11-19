@@ -184,6 +184,31 @@ def to_bool(value: Union[int, bool, str], permissive: bool = True,
     raise ValueError('"Invalid boolean value: "%s"' % value)
 
 
+def to_bps(value: str) -> int:
+    """Parse a string and convert it into a baudrate value.
+
+       The function accepts common multipliers as K, M and G
+
+       :param value: the value to parse and convert
+       :type value: str or int or float
+       :rtype: float
+       :raise ValueError: if the input value cannot be converted into a float
+    """
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    mo = match(r'^(?P<value>[-+]?[0-9]*\.?[0-9]+(?:[Ee][-+]?[0-9]+)?)'
+               r'(?P<unit>[KkMmGg])?$', value)
+    if not mo:
+        raise ValueError('Invalid frequency')
+    frequency = float(mo.group(1))
+    if mo.group(2):
+        mult = {'K': 1E3, 'M': 1E6, 'G': 1E9}
+        frequency *= mult[mo.group(2).upper()]
+    return int(frequency)
+
+
 def xor(_a_: bool, _b_: bool) -> bool:
     """XOR logical operation.
 

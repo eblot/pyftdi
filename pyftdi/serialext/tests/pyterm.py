@@ -43,7 +43,7 @@ MSWIN = platform == 'win32'
 if not MSWIN:
     from termios import TCSANOW, tcgetattr, tcsetattr
 from pyftdi import FtdiLogger
-from pyftdi.misc import to_int
+from pyftdi.misc import to_bps
 from term import getkey
 
 
@@ -332,7 +332,7 @@ def main():
         FtdiLogger.log.addHandler(StreamHandler(stderr))
 
         miniterm = MiniTerm(device=args.device,
-                            baudrate=to_int(args.baudrate),
+                            baudrate=to_bps(args.baudrate),
                             parity='N',
                             rtscts=args.hwflow,
                             debug=args.debug)
