@@ -70,17 +70,10 @@ class SpiPort:
                  spi_mode: int = 0):
         self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
-        self._cpol = spi_mode & 0x2
-        self._cpha = spi_mode & 0x1
-        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
-                            SpiController.DO_BIT)
-        cs_select = 0xFF & ~((SpiController.CS_BIT << cs) |
-                             (int(not self._cpol) and SpiController.SCK_BIT) |
-                             SpiController.DO_BIT)
-        self._cs_prolog = bytes([cs_clock, cs_select])
-        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
         self._frequency = self._controller.frequency
         self._cs = cs
+        self._cs_hold = cs_hold
+        self.set_mode(spi_mode)
 
     def exchange(self, out: Union[bytes, bytearray, Iterable[int]] = b'',
                  readlen: int = 0, start: bool = True, stop: bool = True,
@@ -157,6 +150,32 @@ class SpiPort:
         """
         self._frequency = min(frequency, self._controller.frequency_max)
 
+    def set_mode(self, mode: int, cs_hold: Optional[int] = None) -> None:
+        """Set or change the SPI mode to communicate with the SPI slave.
+
+           :param mode: new SPI mode
+           :param cs_hold: change the /CS hold duration (or keep using previous
+                           value)
+        """
+        if not 0 <= mode <= 3:
+            raise SpiIOError('Invalid SPI mode: %d' % mode)
+        if (mode & 0x2) and not self._controller.is_inverted_cpha_supported:
+            raise SpiIOError('SPI with CPHA high is not supported by '
+                             'this FTDI device')
+        if cs_hold is None:
+            cs_hold = self._cs_hold
+        else:
+            self._cs_hold = cs_hold
+        self._cpol = bool(mode & 0x2)
+        self._cpha = bool(mode & 0x1)
+        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
+                            SpiController.DO_BIT)
+        cs_select = 0xFF & ~((SpiController.CS_BIT << self._cs) |
+                             (int(not self._cpol) and SpiController.SCK_BIT) |
+                             SpiController.DO_BIT)
+        self._cs_prolog = bytes([cs_clock, cs_select])
+        self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
+
     @property
     def frequency(self) -> float:
         """Return the current SPI bus block"""
@@ -164,8 +183,19 @@ class SpiPort:
 
     @property
     def cs(self) -> int:
-        """Return the /CS index."""
+        """Return the /CS index.
+
+          :return: the /CS index (starting from 0)
+        """
         return self._cs
+
+    @property
+    def mode(self) -> int:
+        """Return the current SPI mode.
+
+           :return: the SPI mode
+        """
+        return (int(self._cpol) << 2) | int(self._cpha)
 
 
 class SpiGpioPort:
@@ -409,11 +439,6 @@ class SpiController:
                     # increase cs_count (up to 4) to reserve more /CS channels
                     raise SpiIOError("/CS pin %d not reserved for SPI" % cs)
                 raise SpiIOError("No such SPI port: %d" % cs)
-            if not 0 <= mode <= 3:
-                raise SpiIOError("Invalid SPI mode")
-            if (mode & 0x2) and not self._ftdi.is_H_series:
-                raise SpiIOError("SPI with CPHA high is not supported by "
-                                 "this FTDI device")
             if not self._spi_ports[cs]:
                 freq = min(freq or self._frequency, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
@@ -518,6 +543,14 @@ class SpiController:
            :return: the count of IO pins (including SPI ones).
         """
         return 16 if self._wide_port else 8
+
+    @property
+    def is_inverted_cpha_supported(self) -> bool:
+        """Report whether it is possible to supported CPHA=1.
+
+           :return: inverted CPHA supported (with a kludge)
+        """
+        return self._ftdi.is_H_series
 
     def exchange(self, frequency: float,
                  out: Union[bytes, bytearray, Iterable[int]], readlen: int,
