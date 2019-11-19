@@ -59,7 +59,7 @@ class BitSequence:
     def __init__(self, value: Union['BitSequence', str, int] = None,
                  msb: bool = False, length: int = 0,
                  bytes_: Optional[bytes] = None, msby: bool = True):
-        """Instanciate a new bit sequence.
+        """Instantiate a new bit sequence.
         """
         self._seq = bytearray()
         seq = self._seq
