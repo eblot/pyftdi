@@ -52,22 +52,26 @@ Mini serial terminal example
 ``serialext/tests/pyterm.py`` is a simple serial terminal that can be used
 to test the serial port feature.::
 
-  Usage: pyterm.py [options]
-  Pure python simple serial terminal
+  Usage: pyterm.py [-h] [-f] [-p DEVICE] [-b BAUDRATE] [-w] [-e] [-r] [-l] [-s]
+                 [-v] [-d]
 
-  Options:
+  Simple Python serial terminal
+
+  Optional arguments:
     -h, --help            show this help message and exit
+    -f, --fullmode        use full terminal mode, exit with [Ctrl]+B
+    -p DEVICE, --device DEVICE
+                          serial port device name (default: ftdi:///1)
+    -b BAUDRATE, --baudrate BAUDRATE
+                          serial port baudrate (default: 115200)
+    -w, --hwflow          hardware flow control
+    -e, --localecho       local echo mode (print all typed chars)
+    -r, --crlf            prefix LF with CR char, use twice to replace all LF
+                          with CR chars
+    -l, --loopback        loopback mode (send back all received chars)
+    -s, --silent          silent mode
+    -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
-    -f, --fullmode        use full terminal mode, exit with [Ctrl]+A
-    -p DEVICE, --port=DEVICE
-                          serial port device name (list available ports with
-                          'ftdi:///?)
-    -b BAUDRATE, --baudrate=BAUDRATE
-                          serial port baudrate
-    -r RESET, --reset=RESET
-                          HW reset on DTR line
-    -o LOGFILE, --logfile=LOGFILE
-                          path to the log file
 
 If the PyFtdi module is not yet installed and ``pyterm.py`` is run from the
 archive directory, ``PYTHONPATH`` should be defined to the current directory::
@@ -85,3 +89,54 @@ the proper port, for example:
     PYTHONPATH=. python3 pyftdi/serialext/tests/pyterm.py -p ftdi:///?
     # use the first interface of the first FT2232H as a serial port
     PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
+
+
+.. _uart-limitations:
+
+Limitations
+~~~~~~~~~~~
+
+Although the FTDI H series are in theory capable of 12 MBps baudrate, baudrates
+above 6 Mbps are barely usable.
+
+See the following table for details.
+
++-----------+-------------+------------+------------+------------+--------+
+| Requ. bps |HW capability| 9-bit time | Real bps   | Duty cycle | Stable |
++===========+=============+============+============+============+========+
+|    6 Mbps |      6 Mbps |   1.49 µs  |     6 Mbps |       50%  |  Yes   |
++-----------+-------------+------------+------------+------------+--------+
+|    7 Mbps |  6.857 Mbps |   1.13 µs  | 7.964 Mbps |       44%  |   No   |
++-----------+-------------+------------+------------+------------+--------+
+|    8 Mbps |      8 Mbps |   1.11 µs  | 8.108 Mbps |   44%-48%  |   No   |
++-----------+-------------+------------+------------+------------+--------+
+|  8.8 Mbps |  8.727 Mbps |   1.13 µs  | 7.964 Mbps |       44%  |   No   |
++-----------+-------------+------------+------------+------------+--------+
+|  9.6 Mbps |    9.6 Mbps |   1.12 µs  | 8.036 Mbps |       48%  |   No   |
++-----------+-------------+------------+------------+------------+--------+
+| 10.5 Mbps | 10.667 Mbps |   1.11 µs  | 8.108 Mbps |       44%  |   No   |
++-----------+-------------+------------+------------+------------+--------+
+|   12 Mbps |     12 Mbps |   0.75 µs  |    12 Mbps |       43%  |  Yes   |
++-----------+-------------+------------+------------+------------+--------+
+
+ * 9-bit time is the measured time @ FTDI output pins for a 8-bit character
+   (start bit + 8 bit data)
+ * Duty cycle is the ratio between a low-bit duration and a high-bit duration,
+   a good UART should have a duty cycle close to 50%.
+ * Stability reports whether subsequent runs, with the very same HW settings,
+   produce the same timings.
+
+Moreover, as the hardware flow control of the FTDI device is not a true HW
+flow control, quoting FTDI application note:
+
+   *If CTS# is logic 1 it is indicating the external device cannot accept more
+   data. the FTxxx will stop transmitting within 0~3 characters, depending on
+   what is in the buffer.*
+   **This potential 3 character overrun does occasionally present problems.**
+   *Customers shoud be made aware the FTxxx is a USB device and not a "normal"
+   RS232 device as seen on a PC. As such the device operates on a packet
+   basis as opposed to a byte basis.*
+
+achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible.
+

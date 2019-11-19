@@ -27,6 +27,7 @@ demonstrating the use of this extension, and a dispatcher automatically
 selecting the serial backend (pyserial_, PyFtdi_), based on the serial port
 name.
 
+See also :ref:`uart-limitations`.
 
 SPI master
 ..........
@@ -37,9 +38,9 @@ Supported devices:
 Mode   CPol   CPha  Status
 =====  ===== ====== ====================================================
   0      0      0   Supported on all MPSSE devices
-  1      0      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
-  2      1      0   Not supported (FTDI HW limitation)
-  3      1      1   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
+  1      0      1   Workaround available for on -H series
+  2      1      0   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
+  3      1      1   Workaround available for on -H series
 =====  ===== ====== ====================================================
 
 PyFtdi_ can be used with pyspiflash_ module that demonstrates how to

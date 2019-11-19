@@ -100,6 +100,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mini-serial-terminal-example">Mini serial terminal example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
@@ -217,22 +218,26 @@ as the UART client should use the regular <a class="reference external" href="ht
 <h2>Mini serial terminal example<a class="headerlink" href="#mini-serial-terminal-example" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">serialext/tests/pyterm.py</span></code> is a simple serial terminal that can be used
 to test the serial port feature.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="n">options</span><span class="p">]</span>
-<span class="n">Pure</span> <span class="n">python</span> <span class="n">simple</span> <span class="n">serial</span> <span class="n">terminal</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span>
+               <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
 
-<span class="n">Options</span><span class="p">:</span>
+<span class="n">Simple</span> <span class="n">Python</span> <span class="n">serial</span> <span class="n">terminal</span>
+
+<span class="n">Optional</span> <span class="n">arguments</span><span class="p">:</span>
   <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span><span class="p">,</span> <span class="o">--</span><span class="n">fullmode</span>        <span class="n">use</span> <span class="n">full</span> <span class="n">terminal</span> <span class="n">mode</span><span class="p">,</span> <span class="n">exit</span> <span class="k">with</span> <span class="p">[</span><span class="n">Ctrl</span><span class="p">]</span><span class="o">+</span><span class="n">B</span>
+  <span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">,</span> <span class="o">--</span><span class="n">device</span> <span class="n">DEVICE</span>
+                        <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">,</span> <span class="o">--</span><span class="n">baudrate</span> <span class="n">BAUDRATE</span>
+                        <span class="n">serial</span> <span class="n">port</span> <span class="n">baudrate</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">115200</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="o">--</span><span class="n">hwflow</span>          <span class="n">hardware</span> <span class="n">flow</span> <span class="n">control</span>
+  <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">localecho</span>       <span class="n">local</span> <span class="n">echo</span> <span class="n">mode</span> <span class="p">(</span><span class="nb">print</span> <span class="nb">all</span> <span class="n">typed</span> <span class="n">chars</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">crlf</span>            <span class="n">prefix</span> <span class="n">LF</span> <span class="k">with</span> <span class="n">CR</span> <span class="n">char</span><span class="p">,</span> <span class="n">use</span> <span class="n">twice</span> <span class="n">to</span> <span class="n">replace</span> <span class="nb">all</span> <span class="n">LF</span>
+                        <span class="k">with</span> <span class="n">CR</span> <span class="n">chars</span>
+  <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">loopback</span>        <span class="n">loopback</span> <span class="n">mode</span> <span class="p">(</span><span class="n">send</span> <span class="n">back</span> <span class="nb">all</span> <span class="n">received</span> <span class="n">chars</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="o">--</span><span class="n">silent</span>          <span class="n">silent</span> <span class="n">mode</span>
+  <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
   <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
-  <span class="o">-</span><span class="n">f</span><span class="p">,</span> <span class="o">--</span><span class="n">fullmode</span>        <span class="n">use</span> <span class="n">full</span> <span class="n">terminal</span> <span class="n">mode</span><span class="p">,</span> <span class="n">exit</span> <span class="k">with</span> <span class="p">[</span><span class="n">Ctrl</span><span class="p">]</span><span class="o">+</span><span class="n">A</span>
-  <span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">,</span> <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="n">DEVICE</span>
-                        <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="nb">list</span> <span class="n">available</span> <span class="n">ports</span> <span class="k">with</span>
-                        <span class="s1">&#39;ftdi:///?)</span>
-  <span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">,</span> <span class="o">--</span><span class="n">baudrate</span><span class="o">=</span><span class="n">BAUDRATE</span>
-                        <span class="n">serial</span> <span class="n">port</span> <span class="n">baudrate</span>
-  <span class="o">-</span><span class="n">r</span> <span class="n">RESET</span><span class="p">,</span> <span class="o">--</span><span class="n">reset</span><span class="o">=</span><span class="n">RESET</span>
-                        <span class="n">HW</span> <span class="n">reset</span> <span class="n">on</span> <span class="n">DTR</span> <span class="n">line</span>
-  <span class="o">-</span><span class="n">o</span> <span class="n">LOGFILE</span><span class="p">,</span> <span class="o">--</span><span class="n">logfile</span><span class="o">=</span><span class="n">LOGFILE</span>
-                        <span class="n">path</span> <span class="n">to</span> <span class="n">the</span> <span class="n">log</span> <span class="n">file</span>
 </pre></div>
 </div>
 <p>If the PyFtdi module is not yet installed and <code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is run from the
@@ -249,6 +254,105 @@ the proper port, for example:</p>
 <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span> pyftdi/serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
 </pre></div>
 </div>
+</div>
+<div class="section" id="limitations">
+<span id="uart-limitations"></span><h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<p>Although the FTDI H series are in theory capable of 12 MBps baudrate, baudrates
+above 6 Mbps are barely usable.</p>
+<p>See the following table for details.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 19%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Requ. bps</p></th>
+<th class="head"><p>HW capability</p></th>
+<th class="head"><p>9-bit time</p></th>
+<th class="head"><p>Real bps</p></th>
+<th class="head"><p>Duty cycle</p></th>
+<th class="head"><p>Stable</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>6 Mbps</p></td>
+<td><p>6 Mbps</p></td>
+<td><p>1.49 µs</p></td>
+<td><p>6 Mbps</p></td>
+<td><p>50%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>7 Mbps</p></td>
+<td><p>6.857 Mbps</p></td>
+<td><p>1.13 µs</p></td>
+<td><p>7.964 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>8 Mbps</p></td>
+<td><p>8 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
+<td><p>44%-48%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>8.8 Mbps</p></td>
+<td><p>8.727 Mbps</p></td>
+<td><p>1.13 µs</p></td>
+<td><p>7.964 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>9.6 Mbps</p></td>
+<td><p>9.6 Mbps</p></td>
+<td><p>1.12 µs</p></td>
+<td><p>8.036 Mbps</p></td>
+<td><p>48%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>10.5 Mbps</p></td>
+<td><p>10.667 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>12 Mbps</p></td>
+<td><p>12 Mbps</p></td>
+<td><p>0.75 µs</p></td>
+<td><p>12 Mbps</p></td>
+<td><p>43%</p></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<div><ul class="simple">
+<li><p>9-bit time is the measured time &#64; FTDI output pins for a 8-bit character
+(start bit + 8 bit data)</p></li>
+<li><p>Duty cycle is the ratio between a low-bit duration and a high-bit duration,
+a good UART should have a duty cycle close to 50%.</p></li>
+<li><p>Stability reports whether subsequent runs, with the very same HW settings,
+produce the same timings.</p></li>
+</ul>
+</div></blockquote>
+<p>Moreover, as the hardware flow control of the FTDI device is not a true HW
+flow control, quoting FTDI application note:</p>
+<blockquote>
+<div><p><em>If CTS# is logic 1 it is indicating the external device cannot accept more
+data. the FTxxx will stop transmitting within 0~3 characters, depending on
+what is in the buffer.</em>
+<strong>This potential 3 character overrun does occasionally present problems.</strong>
+<em>Customers shoud be made aware the FTxxx is a USB device and not a “normal”
+RS232 device as seen on a PC. As such the device operates on a packet
+basis as opposed to a byte basis.</em></p>
+</div></blockquote>
+<p>achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible.</p>
 </div>
 </div>
 
