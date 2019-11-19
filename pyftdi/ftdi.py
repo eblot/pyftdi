@@ -255,6 +255,8 @@ class Ftdi:
     BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift, in %
     BITBANG_CLOCK_MULTIPLIER = 4
 
+    FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
+
     # Latency
     LATENCY_MIN = 12
     LATENCY_MAX = 255
@@ -1629,92 +1631,61 @@ class Ftdi:
         packet_size = endpoint.wMaxPacketSize
         return packet_size
 
-    def _convert_baudrate(self, baudrate: int) -> int:
-        """Convert a requested baudrate into the closest possible baudrate
-           that can be assigned to the FTDI device"""
-        if baudrate < ((2*self.BAUDRATE_REF_BASE)//(2*16384+1)):
-            raise ValueError('Invalid baudrate (too low)')
+    def _convert_baudrate_legacy(self, baudrate: int) -> Tuple[int, int, int]:
         if baudrate > self.BAUDRATE_REF_BASE:
-            if not self.is_H_series or \
-                    baudrate > self.BAUDRATE_REF_HIGH:
-                raise ValueError('Invalid baudrate (too high)')
-            refclock = self.BAUDRATE_REF_HIGH
+            raise ValueError('Invalid baudrate (too high)')
+        div8 = int(round((8 * self.BAUDRATE_REF_BASE) / baudrate))
+        if (div8 & 0x7) == 7:
+            div8 += 1
+        div = div8 >> 3
+        div8 &= 0x7
+        if div8 == 1:
+            div |= 0xc000
+        elif div8 >= 4:
+            div |= 0x4000
+        elif div8 != 0:
+            div |= 0x8000
+        elif div == 1:
+            div = 0
+        value = div & 0xFFFF
+        index = (div >> 16) & 0xFFFF
+        estimate = int(((8 * self.BAUDRATE_REF_BASE) + (div8//2))//div8)
+        return estimate, value, index
+
+    def _convert_baudrate(self, baudrate: int) -> Tuple[int, int, int]:
+        """Convert a requested baudrate into the closest possible baudrate
+           that can be assigned to the FTDI device
+
+           :param baudrate: the baudrate in bps
+           :return: a 3-uple of the apprimated baudrate, the value and index
+                    to use as the USB configuration parameter
+        """
+        if self.ic_name.endswith('am'):
+            return self._convert_baudrate_legacy(baudrate)
+        if self.is_H_series and baudrate >= 1200:
             hispeed = True
+            clock = self.BAUDRATE_REF_HIGH
         else:
-            refclock = self.BAUDRATE_REF_BASE
             hispeed = False
-        # AM legacy device only supports 3 sub-integer dividers, where the
-        # other devices supports 8 sub-integer dividers
-        am_adjust_up = [0, 0, 0, 1, 0, 3, 2, 1]
-        am_adjust_dn = [0, 0, 0, 1, 0, 1, 2, 3]
-        # Sub-divider code are not ordered in the natural order
-        frac_code = [0, 3, 2, 4, 1, 5, 6, 7]
-        divisor = (refclock*8) // baudrate
-        if self.is_legacy:
-            # Round down to supported fraction (AM only)
-            divisor -= am_adjust_dn[divisor & 7]
-        # Try this divisor and the one above it (because division rounds down)
-        best_divisor = 0
-        best_baud = 0
-        best_baud_diff = 0
-        for i in range(2):
-            try_divisor = divisor + i
-            if not hispeed:
-                # Round up to supported divisor value
-                if try_divisor <= 8:
-                    # Round up to minimum supported divisor
-                    try_divisor = 8
-                elif self.is_legacy and \
-                        try_divisor < 12:
-                    # BM doesn't support divisors 9 through 11 inclusive
-                    try_divisor = 12
-                elif divisor < 16:
-                    # AM doesn't support divisors 9 through 15 inclusive
-                    try_divisor = 16
-                else:
-                    if self.is_legacy:
-                        # Round up to supported fraction (AM only)
-                        try_divisor += am_adjust_up[try_divisor & 7]
-                        if try_divisor > 0x1FFF8:
-                            # Round down to maximum supported div value (AM)
-                            try_divisor = 0x1FFF8
-                    else:
-                        if try_divisor > 0x1FFFF:
-                            # Round down to maximum supported div value (BM)
-                            try_divisor = 0x1FFFF
-            # Get estimated baud rate (to nearest integer)
-            baud_estimate = ((refclock*8) + (try_divisor//2))//try_divisor
-            # Get absolute difference from requested baud rate
-            if baud_estimate < baudrate:
-                baud_diff = baudrate - baud_estimate
-            else:
-                baud_diff = baud_estimate - baudrate
-            if (i == 0) or (baud_diff < best_baud_diff):
-                # Closest to requested baud rate so far
-                best_divisor = try_divisor
-                best_baud = baud_estimate
-                best_baud_diff = baud_diff
-                if baud_diff == 0:
-                    break
-        # Encode the best divisor value
-        encoded_divisor = (best_divisor >> 3) | \
-                          (frac_code[best_divisor & 7] << 14)
-        # Deal with special cases for encoded value
-        if encoded_divisor == 1:
-            encoded_divisor = 0  # 3000000 baud
-        elif encoded_divisor == 0x4001:
-            encoded_divisor = 1  # 2000000 baud (BM only)
-        # Split into "value" and "index" values
-        value = encoded_divisor & 0xFFFF
-        if self.has_mpsse:
-            index = (encoded_divisor >> 8) & 0xFFFF
-            index &= 0xFF00
-            index |= self.index
-        else:
-            index = (encoded_divisor >> 16) & 0xFFFF
+            clock = self.BAUDRATE_REF_BASE
+        if baudrate > clock:
+            raise ValueError('Invalid baudrate (too high)')
+        div8 = int(round((8 * clock) / baudrate))
+        div = div8 >> 3
+        div |= self.FRAC_DIV_CODE[div8 & 0x7] << 14
+        if div == 1:
+            div = 0
+        elif div == 0x4001:
+            div = 1
         if hispeed:
-            index |= 1 << 9  # use hispeed mode
-        return (best_baud, value, index)
+            div |= 0x00020000
+        value = div & 0xFFFF
+        index = (div >> 16) & 0xFFFF
+        if self.has_mpsse:
+            index <<= 8
+            index |= self.index
+        estimate = int(((8 * clock) + (div8//2))//div8)
+        return estimate, value, index
 
     def _set_frequency(self, frequency: float) -> float:
         """Convert a frequency value into a TCK divisor setting"""
