@@ -411,8 +411,8 @@ class UsbTools:
                              'No USB-Serial device has been detected')
         if idx is None:
             if len(candidates) > 1:
-                raise UsbToolsError('%d USB devices match URL' %
-                                    len(candidates))
+                raise UsbToolsError("%d USB devices match URL '%s'" %
+                                    (len(candidates), urlstr))
             idx = 0
         try:
             desc, _ = candidates[idx]
