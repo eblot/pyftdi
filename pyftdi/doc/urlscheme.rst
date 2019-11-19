@@ -68,13 +68,31 @@ Note that if there's only one FTDI device connected to the host, the FTDI URL
 can be as simple as ``ftdi:///n``, where n is the FTDI port to use, starting
 from 1.
 
-URL-based methods to open a connection:
+URL-based methods to open a connection
+......................................
 
 .. code-block:: python
 
    open_from_url()
    open_mpsse_from_url()
    open_bitbang_from_url()
+
+
+Device-based method to open a connection
+........................................
+
+You may also open an Ftdi device from an existing PyUSB_ device, with the help
+of the ``open_from_device()`` helper method.
+
+.. code-block:: python
+
+   open_from_device()
+   open_mpsse_from_device()
+   open_bitbang_from_device()
+
+
+Legacy methods to open a connection
+...................................
 
 The old, deprecated method to open a connection is to use the ``open()``
 methods without the ``_from_url`` suffix, which accept VID, PID, and serial
@@ -86,8 +104,6 @@ parameters (among others).
    open_mpsse()
    open_bitbang()
 
-You may also open an Ftdi device from an existing PyUSB_ device, with the help
-of the ``open_from_device()`` helper method.
 
 Tools
 ~~~~~
