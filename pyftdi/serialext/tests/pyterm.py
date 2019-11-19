@@ -29,23 +29,22 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from _thread import interrupt_main
 from argparse import ArgumentParser
-from array import array
 from atexit import register
 from collections import deque
-from logging import Formatter, DEBUG, ERROR
+from logging import Formatter, StreamHandler, DEBUG, ERROR
 from os import linesep, stat
-from pyftdi import FtdiLogger
-from pyftdi.misc import to_int
 from sys import modules, platform, stderr, stdin, stdout
-from term import getkey
 from time import sleep
 from threading import Event, Thread
 from traceback import format_exc
-mswin = platform == 'win32'
-if not mswin:
+from _thread import interrupt_main
+MSWIN = platform == 'win32'
+if not MSWIN:
     from termios import TCSANOW, tcgetattr, tcsetattr
+from pyftdi import FtdiLogger
+from pyftdi.misc import to_int
+from term import getkey
 
 
 class MiniTerm:
@@ -56,7 +55,7 @@ class MiniTerm:
     def __init__(self, device, baudrate=None, parity=None, rtscts=False,
                  debug=False):
         self._termstates = []
-        if not mswin and stdout.isatty():
+        if not MSWIN and stdout.isatty():
             self._termstates = [(fd, tcgetattr(fd)) for fd in
                                 (stdin.fileno(), stdout.fileno(),
                                  stderr.fileno())]
@@ -78,7 +77,7 @@ class MiniTerm:
         # wait forever, although Windows is stupid and does not signal Ctrl+C,
         # so wait use a 1/2-second timeout that gives some time to check for a
         # Ctrl+C break then polls again...
-        print('Entering minicom mode')
+        print('Entering minicom mode @ %d bps' % self._port.baudrate)
         stdout.flush()
         self._port.timeout = 0.5
         self._resume = True
@@ -166,7 +165,7 @@ class MiniTerm:
         while self._resume:
             try:
                 c = getkey(fullmode)
-                if mswin:
+                if MSWIN:
                     if ord(c) == 0x3:
                         raise KeyboardInterrupt()
                 if fullmode and ord(c) == 0x2:  # Ctrl+B
@@ -330,6 +329,7 @@ def main():
             formatter = Formatter('%(message)s')
         FtdiLogger.set_formatter(formatter)
         FtdiLogger.set_level(loglevel)
+        FtdiLogger.log.addHandler(StreamHandler(stderr))
 
         miniterm = MiniTerm(device=args.device,
                             baudrate=to_int(args.baudrate),
