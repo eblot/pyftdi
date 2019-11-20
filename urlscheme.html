@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.8
+                0.41.0
               </div>
             
           
@@ -90,12 +90,15 @@
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">URL Scheme</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#tools">Tools</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#custom-pid">Custom PID</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#custom-vid">Custom VID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#url-based-methods-to-open-a-connection">URL-based methods to open a connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device-based-method-to-open-a-connection">Device-based method to open a connection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#legacy-methods-to-open-a-connection">Legacy methods to open a connection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tools">Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-pid">Custom PID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-vid">Custom VID</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
@@ -238,12 +241,26 @@ FTDI URLs with serial number and/or bus:address selectors.</p>
 <p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
 can be as simple as <code class="docutils literal notranslate"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
 from 1.</p>
-<p>URL-based methods to open a connection:</p>
+<div class="section" id="url-based-methods-to-open-a-connection">
+<h2>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
 <span class="n">open_bitbang_from_url</span><span class="p">()</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="device-based-method-to-open-a-connection">
+<h2>Device-based method to open a connection<a class="headerlink" href="#device-based-method-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
+<p>You may also open an Ftdi device from an existing <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> device, with the help
+of the <code class="docutils literal notranslate"><span class="pre">open_from_device()</span></code> helper method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_device</span><span class="p">()</span>
+<span class="n">open_mpsse_from_device</span><span class="p">()</span>
+<span class="n">open_bitbang_from_device</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="legacy-methods-to-open-a-connection">
+<h2>Legacy methods to open a connection<a class="headerlink" href="#legacy-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
 <p>The old, deprecated method to open a connection is to use the <code class="docutils literal notranslate"><span class="pre">open()</span></code>
 methods without the <code class="docutils literal notranslate"><span class="pre">_from_url</span></code> suffix, which accept VID, PID, and serial
 parameters (among others).</p>
@@ -252,21 +269,21 @@ parameters (among others).</p>
 <span class="n">open_bitbang</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>You may also open an Ftdi device from an existing <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> device, with the help
-of the <code class="docutils literal notranslate"><span class="pre">open_from_device()</span></code> helper method.</p>
 <div class="section" id="tools">
-<h2>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h2>
+<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory contains a tiny script <code class="docutils literal notranslate"><span class="pre">ftdu_urls.py</span></code> to list the
 available FTDIs connected to the host, and the URLs than can be used to open a
 <code class="docutils literal notranslate"><span class="pre">Fdti()</span></code> instance with the <code class="docutils literal notranslate"><span class="pre">Ftdi.open_from_url()</span></code> method.</p>
 </div>
 <div class="section" id="supporting-custom-usb-vendor-and-product-ids">
-<h2>Supporting custom USB vendor and product IDs<a class="headerlink" href="#supporting-custom-usb-vendor-and-product-ids" title="Permalink to this headline">¶</a></h2>
+<h3>Supporting custom USB vendor and product IDs<a class="headerlink" href="#supporting-custom-usb-vendor-and-product-ids" title="Permalink to this headline">¶</a></h3>
 <p>PyFtdi only recognizes FTDI official vendor and product IDs.</p>
 <p>If you have an FTDI device with an EEPROM with customized IDs, you need to tell
 PyFtdi to support those custom USB identifiers.</p>
+</div>
+</div>
 <div class="section" id="custom-pid">
-<h3>Custom PID<a class="headerlink" href="#custom-pid" title="Permalink to this headline">¶</a></h3>
+<h2>Custom PID<a class="headerlink" href="#custom-pid" title="Permalink to this headline">¶</a></h2>
 <p>To support a custom product ID (16-bit integer) with the official FTDI ID, add
 the following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
@@ -276,7 +293,7 @@ the following code <strong>before</strong> any call to an FTDI <code class="docu
 </div>
 </div>
 <div class="section" id="custom-vid">
-<h3>Custom VID<a class="headerlink" href="#custom-vid" title="Permalink to this headline">¶</a></h3>
+<h2>Custom VID<a class="headerlink" href="#custom-vid" title="Permalink to this headline">¶</a></h2>
 <p>To support a custom vendor ID and product ID (16-bit integers), add the
 following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
@@ -295,7 +312,6 @@ a URL by custom vendor and product names instead of their numerical values:</p>
 <span class="n">f1</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="o">.</span><span class="n">create_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi://0x1234:0x5678/1&#39;</span><span class="p">)</span>
 <span class="n">f2</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="o">.</span><span class="n">create_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi://myvendor:myproduct/2&#39;</span><span class="p">)</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>

@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.8
+                0.41.0
               </div>
             
           
@@ -262,12 +262,12 @@ above 6 Mbps are barely usable.</p>
 <p>See the following table for details.</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 16%" />
+<col style="width: 17%" />
 <col style="width: 19%" />
-<col style="width: 18%" />
-<col style="width: 18%" />
-<col style="width: 18%" />
-<col style="width: 12%" />
+<col style="width: 17%" />
+<col style="width: 19%" />
+<col style="width: 17%" />
+<col style="width: 11%" />
 </colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Requ. bps</p></th>
@@ -279,49 +279,84 @@ above 6 Mbps are barely usable.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>6 Mbps</p></td>
-<td><p>6 Mbps</p></td>
-<td><p>1.49 µs</p></td>
-<td><p>6 Mbps</p></td>
+<tr class="row-even"><td><p>115.2 Kbps</p></td>
+<td><p>115.2 Kbps</p></td>
+<td><p>78.08 µs</p></td>
+<td><p>115.26 Kbps</p></td>
+<td><p>49.9%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>460.8 Kbps</p></td>
+<td><p>461.54 Kbps</p></td>
+<td><p>19.49 µs</p></td>
+<td><p>461.77 Kbps</p></td>
+<td><p>49.9%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>1 Mbps</p></td>
+<td><p>1 Mbps</p></td>
+<td><p>8.98 µs</p></td>
+<td><p>1.002 Mbps</p></td>
+<td><p>49.5%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>4 Mbps</p></td>
+<td><p>4 Mbps</p></td>
+<td><p>2.24 µs</p></td>
+<td><p>4.018 Mbps</p></td>
+<td><p>48%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>5 Mbps</p></td>
+<td><p>5.052 Mbps</p></td>
+<td><p>1.78 µs</p></td>
+<td><p>5.056 Mbps</p></td>
 <td><p>50%</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>7 Mbps</p></td>
+<tr class="row-odd"><td><p>6 Mbps</p></td>
+<td><p>6 Mbps</p></td>
+<td><p>1.49 µs</p></td>
+<td><p>6.040 Mbps</p></td>
+<td><p>48.5%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>7 Mbps</p></td>
 <td><p>6.857 Mbps</p></td>
-<td><p>1.13 µs</p></td>
-<td><p>7.964 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
 <td><p>44%</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>8 Mbps</p></td>
+<tr class="row-odd"><td><p>8 Mbps</p></td>
 <td><p>8 Mbps</p></td>
 <td><p>1.11 µs</p></td>
 <td><p>8.108 Mbps</p></td>
 <td><p>44%-48%</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>8.8 Mbps</p></td>
+<tr class="row-even"><td><p>8.8 Mbps</p></td>
 <td><p>8.727 Mbps</p></td>
 <td><p>1.13 µs</p></td>
 <td><p>7.964 Mbps</p></td>
 <td><p>44%</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>9.6 Mbps</p></td>
+<tr class="row-odd"><td><p>9.6 Mbps</p></td>
 <td><p>9.6 Mbps</p></td>
 <td><p>1.12 µs</p></td>
 <td><p>8.036 Mbps</p></td>
 <td><p>48%</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>10.5 Mbps</p></td>
+<tr class="row-even"><td><p>10.5 Mbps</p></td>
 <td><p>10.667 Mbps</p></td>
 <td><p>1.11 µs</p></td>
 <td><p>8.108 Mbps</p></td>
 <td><p>44%</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>12 Mbps</p></td>
+<tr class="row-odd"><td><p>12 Mbps</p></td>
 <td><p>12 Mbps</p></td>
 <td><p>0.75 µs</p></td>
 <td><p>12 Mbps</p></td>
@@ -335,13 +370,14 @@ above 6 Mbps are barely usable.</p>
 <li><p>9-bit time is the measured time &#64; FTDI output pins for a 8-bit character
 (start bit + 8 bit data)</p></li>
 <li><p>Duty cycle is the ratio between a low-bit duration and a high-bit duration,
-a good UART should have a duty cycle close to 50%.</p></li>
+a good UART should exhibit the same duration for low bits and high bits,
+<em>i.e.</em> a duty cycle close to 50%.</p></li>
 <li><p>Stability reports whether subsequent runs, with the very same HW settings,
 produce the same timings.</p></li>
 </ul>
 </div></blockquote>
 <p>Moreover, as the hardware flow control of the FTDI device is not a true HW
-flow control, quoting FTDI application note:</p>
+flow control. Quoting FTDI application note:</p>
 <blockquote>
 <div><p><em>If CTS# is logic 1 it is indicating the external device cannot accept more
 data. the FTxxx will stop transmitting within 0~3 characters, depending on
@@ -351,8 +387,10 @@ what is in the buffer.</em>
 RS232 device as seen on a PC. As such the device operates on a packet
 basis as opposed to a byte basis.</em></p>
 </div></blockquote>
-<p>achieving a reliable connection over 6 Mbps has proven difficult, if not
-impossible.</p>
+<p>Achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
+results into an actual baudrate of about 8 Mbps, and suffer from clock
+fluterring [7.95 .. 8.1Mbps].</p>
 </div>
 </div>
 

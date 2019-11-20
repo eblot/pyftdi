@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.8
+                0.41.0
               </div>
             
           
@@ -293,6 +293,24 @@ unit that allows the exact representation of the input value</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyftdi.misc.to_bps">
+<code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">to_bps</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse a string and convert it into a baudrate value.</p>
+<p>The function accepts common multipliers as K, M and G</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em><em> or </em><em>int</em><em> or </em><em>float</em>) – the value to parse and convert</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – if the input value cannot be converted into a float</p>
 </dd>
 </dl>
 </dd></dl>

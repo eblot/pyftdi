@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.40.8
+                0.41.0
               </div>
             
           
@@ -204,7 +204,7 @@ considered as a kludge, you’ve been warned.</p>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>Example: communication with a SPI data flash (half-duplex example)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the FTDI device as a SPI master</span>
@@ -218,7 +218,7 @@ considered as a kludge, you’ve been warned.</p>
 </pre></div>
 </div>
 <p>Example: communication with a remote SPI device using full-duplex mode</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
 <span class="c1"># We need want to use A*BUS4 for /CS, so at least 2 /CS lines should be</span>
 <span class="c1"># reserved for SPI, the remaining IO are available as GPIOs.</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">(</span><span class="n">cs_count</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
@@ -236,7 +236,7 @@ considered as a kludge, you’ve been warned.</p>
 </div>
 <p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
 <p>Example: communication with a SPI device and an extra GPIO</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instanciate a SPI controller</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 
 <span class="c1"># Configure the first interface (IF/1) of the first FTDI device as a</span>
@@ -290,6 +290,9 @@ considered as a kludge, you’ve been warned.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the /CS index (starting from 0)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -348,6 +351,20 @@ slave</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.spi.SpiPort.mode">
+<em class="property">property </em><code class="sig-name descname">mode</code><a class="headerlink" href="#pyftdi.spi.SpiPort.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the current SPI mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the SPI mode</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.spi.SpiPort.read">
 <code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">readlen=0</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read out bytes from the slave</p>
@@ -381,6 +398,24 @@ slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>frequency</strong> (<em>float</em>) – the new frequency in Hz</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.set_mode">
+<code class="sig-name descname">set_mode</code><span class="sig-paren">(</span><em class="sig-param">mode</em>, <em class="sig-param">cs_hold=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.set_mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set or change the SPI mode to communicate with the SPI slave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – new SPI mode</p></li>
+<li><p><strong>cs_hold</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – change the /CS hold duration (or keep using previous
+value)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -781,6 +816,20 @@ configured pin.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the bitfield of configured GPIO pins.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.is_inverted_cpha_supported">
+<em class="property">property </em><code class="sig-name descname">is_inverted_cpha_supported</code><a class="headerlink" href="#pyftdi.spi.SpiController.is_inverted_cpha_supported" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report whether it is possible to supported CPHA=1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>inverted CPHA supported (with a kludge)</p>
 </dd>
 </dl>
 </dd></dl>
