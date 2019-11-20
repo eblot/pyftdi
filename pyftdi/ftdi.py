@@ -883,7 +883,8 @@ class Ftdi:
             baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
-        self.log.debug('Actual baudrate: %d %.1f%%', actual, delta)
+        self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
+                       actual, delta, index, value)
         if delta > Ftdi.BAUDRATE_TOLERANCE:
             raise ValueError('Baudrate tolerance exceeded: %.02f%% '
                              '(wanted %d, achievable %d)' %

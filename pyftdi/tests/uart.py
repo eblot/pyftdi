@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,26 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
+import unittest
 from doctest import testmod
 from os import environ
 from multiprocessing import Process
-from pyftdi import FtdiLogger
-from pyftdi.serialext import serial_for_url
 from random import choice, seed
 from string import printable
 from sys import modules, platform, stdout
 from time import sleep
-import logging
-import unittest
+from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi
+from pyftdi.serialext import serial_for_url
 
+#pylint: disable-msg=missing-docstring
 
 # Specify the second port for multi port device
 # Unfortunately, auto detection triggers some issue in multiprocess test
-url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232/2')
-URL = ''.join((url[:-1], '1'))
-IFCOUNT = int(url[-1])
+URL_BASE = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232/2')
+URL = ''.join((URL_BASE[:-1], '1'))
+IFCOUNT = int(URL_BASE[-1])
 
 
 class UartTestCase(unittest.TestCase):
@@ -139,7 +141,7 @@ class UartTestCase(unittest.TestCase):
            same FTDI device from the same Python process
         """
         port = serial_for_url(URL, baudrate=1000000)
-        for cycle in range(10):
+        for _ in range(10):
             try:
                 if not port.is_open:
                     port.open()
@@ -196,19 +198,45 @@ class UartTestCase(unittest.TestCase):
         return '%s%d' % (url[:-1], iface)
 
 
+class BaudrateTestCase(unittest.TestCase):
+    """Simple test to check clock stretching cannot be overwritten with
+       GPIOs.
+    """
+
+    BAUDRATES = (300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200,
+                 230400, 460800, 576000, 921600, 1000000, 1500000, 1843200,
+                 2000000, 2500000, 3000000, 4000000, 6000000, 8000000,
+                 12000000)
+
+    def test(self):
+        ftdi = Ftdi()
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        ftdi.open_from_url(url)
+        for baudrate in self.BAUDRATES:
+            actual, value, index = ftdi._convert_baudrate(baudrate)
+            ratio = baudrate/actual
+            # print('%d bps, ratio: %.3f div %04x %04x' %
+            #      (baudrate, ratio, index, value))
+            self.assertTrue(0.97 <= ratio <= 1.03, "Invalid baudrate")
+
+
 def suite():
     suite_ = unittest.TestSuite()
+    suite_.addTest(unittest.makeSuite(BaudrateTestCase, 'test'))
     suite_.addTest(unittest.makeSuite(UartTestCase, 'test'))
     return suite_
 
 
-if __name__ == '__main__':
+def main():
     testmod(modules[__name__])
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
-        raise ValueError('Invalid log level: %s', level)
+        raise ValueError('Invalid log level: %s' % level)
     FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
+
+if __name__ == '__main__':
+    main()
