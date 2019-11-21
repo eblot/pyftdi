@@ -42,6 +42,9 @@ from .usbtools import UsbDeviceDescriptor, UsbTools
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=invalid-name
 
+# pylint: disable=too-many-arguments
+# pylint: disable=consider-using-ternary
+
 
 class FtdiError(IOError):
     """Base class error for all FTDI device"""
@@ -53,6 +56,10 @@ class FtdiMpsseError(FtdiError):
 
 class FtdiFeatureError(FtdiError):
     """Requested feature is not available on FTDI device"""
+
+
+class FtdiEepromError(FtdiError):
+    """FTDI EEPROM access errors"""
 
 
 class Ftdi:
@@ -260,6 +267,9 @@ class Ftdi:
     # Latency
     LATENCY_MIN = 12
     LATENCY_MAX = 255
+
+    # EEPROM Properties
+    EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
 
     def __init__(self):
         self.log = getLogger('pyftdi.ftdi')
@@ -982,6 +992,125 @@ class Ftdi:
             raise FtdiError('Unable to set bitmode')
         self.bitmode = mode
 
+    @classmethod
+    def calc_eeprom_checksum(cls, data):
+        """Calculate EEPROM checksum over the data
+
+           :param bytes data: data to compute checksum over. Must be
+                              an even number of bytes
+           :return: checksum
+           :rtype: int
+        """
+        if not isinstance(data, bytes):
+            data = data.tobytes()
+        length = len(data)
+        if length & 0x1:
+            raise ValueError('Length not even')
+        # NOTE: checksum is computed using 16-bit values in little endian
+        # ordering
+        checksum = 0xaaaa
+        for idx in range(0, length, 2):
+            val = ((data[idx+1] << 8) + data[idx]) & 0xffff
+            checksum = val ^ checksum
+            checksum = ((checksum << 1) & 0xffff) | ((checksum >> 15) & 0xffff)
+        return checksum
+
+    def read_eeprom(self, addr=0, length=None, eeprom_sz=None):
+        """Read the EEPROM starting at byte address, addr, and returning
+           length bytes. Here, addr and length are in bytes but we
+           access a 16-bit word at a time, so automatically update
+           addr and length to work with word accesses.
+
+           :param int addr: byte address that desire to read.
+           :param int length: byte length to read or None
+           :param int eeprom_sz: total size in bytes of the eeprom or None
+           :return: eeprom bytes, as an array of bytes
+           :rtype: array
+        """
+        if eeprom_sz is None:
+            eeprom_sz = self.EEPROM_SIZES[-1]
+        if eeprom_sz not in self.EEPROM_SIZES:
+            raise ValueError('Invalid EEPROM size')
+        if length is None:
+            length = eeprom_sz
+        if addr < 0 or (addr+length) > eeprom_sz:
+            raise ValueError('Invalid address/length')
+        word_addr = addr >> 1
+        word_count = length >> 1
+        if (addr & 0x1) | (length & 0x1):
+            word_count += 1
+        try:
+            data = array('B')
+            while word_count:
+                buf = self.usb_dev.ctrl_transfer(
+                    Ftdi.REQ_IN, Ftdi.SIO_READ_EEPROM, 0,
+                    word_addr, 2, self.usb_read_timeout)
+                if not buf:
+                    raise FtdiEepromError('EEPROM read error @ %d' %
+                                          (word_addr << 1))
+                data.extend(buf)
+                word_count -= 1
+                word_addr += 1
+            start = addr & 0x1
+            return data[start:start+length].tobytes()
+        except usb.core.USBError as ex:
+            raise FtdiError('UsbError: %s' % ex)
+
+    def write_eeprom(self, addr, data, eeprom_sz=None):
+        """Write multiple bytes to the EEPROM starting at byte address,
+           addr. This function also updates the checksum
+           automatically.
+
+           .. note:: You can brick your device with invalid size or content.
+                     Use this function at your own risk, and RTFM.
+
+           :param int addr: starting byte address to start writing
+           :param bytes data: data to be written
+           :param int eeprom_sz: total size in bytes of the eeprom or None
+        """
+        if eeprom_sz is None:
+            eeprom_sz = self.EEPROM_SIZES[-1]
+        if eeprom_sz not in self.EEPROM_SIZES:
+            raise ValueError('Invalid EEPROM size')
+        if not data:
+            return
+        if not isinstance(data, array):
+            data = array('B', data)
+        length = len(data)
+        if addr < 0 or (addr+length) > eeprom_sz:
+            # accept up to eeprom_sz, even if the last two bytes are
+            # overwritten with a locally computed checksum
+            raise ValueError('Invalid address/length')
+        # First, read out the entire EEPROM, based on eeprom_sz.
+        eeprom = array('B', self.read_eeprom(0, eeprom_sz))
+        # patch in the new data
+        eeprom[addr:addr+len(data)] = data
+        # compute new checksum
+        chksum = self.calc_eeprom_checksum(eeprom[:-2])
+        # insert updated checksum - it is last 16-bits in EEPROM
+        eeprom[-2] = chksum & 0x0ff
+        eeprom[-1] = chksum >> 8
+        # Write back the new data and checksum back to
+        # EEPROM. Only write data that is changing instead of writing
+        # everything in EEPROM, even if the data does not change.
+        #
+        # Compute start and end sections of eeprom baring in mind that
+        # they must be even since it is a 16-bit EEPROM.
+        # If start addr is odd, back it up one.
+        start = addr
+        size = length
+        if start & 0x1:
+            start -= 1
+            size += 1
+        if size & 0x1:
+            size += 1
+        if size > eeprom_sz-2:
+            size = eeprom_sz-2
+        # finally, write new section of data and ...
+        self._write_eeprom_raw(start, eeprom[start:start+size])
+        # ... updated checksum
+        self._write_eeprom_raw((eeprom_sz-2), eeprom[-2:])
+
     def read_pins(self) -> int:
         """Directly read pin state, circumventing the read buffer.
            Useful for bitbang mode.
@@ -1617,6 +1746,30 @@ class Ftdi:
             if self._tracer and len(data) > 2:
                 self._tracer.receive(data[2:])
         return data
+
+    def _write_eeprom_raw(self, addr, data):
+        """Write multiple bytes to the EEPROM starting at byte address,
+           addr. Length of data must be a multiple of 2 since the
+           EEPROM is 16-bits. So automatically extend data by 1 byte
+           if this is not the case.
+
+           :param int addr: starting byte address to start writing
+           :param bytes data: data to be written
+
+        """
+        length = len(data)
+        if addr & 0x1 or length & 0x1:
+            raise ValueError('Address/length not even')
+        word_addr = addr >> 1
+        for word in sunpack('<%dH' % (length//2), data):
+            #out = self.usb_dev.ctrl_transfer(
+            #    Ftdi.REQ_OUT, Ftdi.SIO_WRITE_EEPROM, word, addr,
+            #    array('B'), self.usb_read_timeout)
+            out = None
+            print('Write 0x%04x @ %02x' % (word, word_addr << 1))
+            if out:
+                raise FtdiError('EEPROM Write Error @ %d' % (word_addr << 1))
+            word_addr += 1
 
     def _get_max_packet_size(self) -> int:
         """Retrieve the maximum length of a data packet"""
