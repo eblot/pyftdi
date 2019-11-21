@@ -269,6 +269,16 @@ class Ftdi:
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
 
+    RELEASES = {0x0200: 'ft232am',
+                0x0400: 'ft232bm',
+                0x0500: 'ft2232d',
+                0x0600: 'ft232r',
+                0x0700: 'ft2232h',
+                0x0800: 'ft4232h',
+                0x0900: 'ft232h',
+                0x1000: 'ft230x'}
+    # Supported FT*232* devices
+
     # Latency
     LATENCY_MIN = 12
     LATENCY_MAX = 255
@@ -746,17 +756,9 @@ class Ftdi:
 
            :return: the identified FTDI device as a string
         """
-        types = {0x0200: 'ft232am',
-                 0x0400: 'ft232bm',
-                 0x0500: 'ft2232d',
-                 0x0600: 'ft232r',
-                 0x0700: 'ft2232h',
-                 0x0800: 'ft4232h',
-                 0x0900: 'ft232h',
-                 0x1000: 'ft230x'}
         if not self.usb_dev:
             return 'unknown'
-        return types[self.usb_dev.bcdDevice]
+        return self.RELEASES[self.usb_dev.bcdDevice]
 
     @property
     def has_mpsse(self) -> bool:
@@ -1310,8 +1312,7 @@ class Ftdi:
         self.write_data(bytearray((Ftdi.LOOPBACK_START if loopback else
                                    Ftdi.LOOPBACK_END,)))
 
-    @classmethod
-    def calc_eeprom_checksum(cls, data: Union[bytes, bytearray]) -> int:
+    def calc_eeprom_checksum(self, data: Union[bytes, bytearray]) -> int:
         """Calculate EEPROM checksum over the data
 
            :param data: data to compute checksum over. Must be an even number
@@ -1323,8 +1324,12 @@ class Ftdi:
             raise ValueError('Length not even')
         # NOTE: checksum is computed using 16-bit values in little endian
         # ordering
-        checksum = 0xaaaa
+        checksum = 0XAAAA
+        mtp = self.usb_dev.bcdDevice == 0x1000  # FT230X
         for idx in range(0, length, 2):
+            if mtp and 12 <= idx < 40:
+                # special MTP user section which is not considered for the CRC
+                continue
             val = ((data[idx+1] << 8) + data[idx]) & 0xffff
             checksum = val ^ checksum
             checksum = ((checksum << 1) & 0xffff) | ((checksum >> 15) & 0xffff)
@@ -1372,7 +1377,8 @@ class Ftdi:
             raise FtdiError('UsbError: %s' % ex)
 
     def write_eeprom(self, addr: int, data: Union[bytes, bytearray],
-                     eeprom_size: Optional[int] = None) -> None:
+                     eeprom_size: Optional[int] = None,
+                     dry_run: bool = True) -> None:
         """Write multiple bytes to the EEPROM starting at byte address,
            addr. This function also updates the checksum
            automatically.
@@ -1383,6 +1389,8 @@ class Ftdi:
            :param addr: starting byte address to start writing
            :param data: data to be written
            :param eeprom_size: total size in bytes of the eeprom or None
+           :param dry_run: log what should be written, do not actually
+                           change the EEPROM content
         """
         if eeprom_size is None:
             eeprom_size = self.EEPROM_SIZES[-1]
@@ -1422,9 +1430,25 @@ class Ftdi:
         if size > eeprom_size-2:
             size = eeprom_size-2
         # finally, write new section of data and ...
-        self._write_eeprom_raw(start, eeprom[start:start+size])
+        self._write_eeprom_raw(start, eeprom[start:start+size],
+                               dry_run=dry_run)
         # ... updated checksum
-        self._write_eeprom_raw((eeprom_size-2), eeprom[-2:])
+        self._write_eeprom_raw((eeprom_size-2), eeprom[-2:], dry_run=dry_run)
+
+    def overwrite_eeprom(self, data: Union[bytes, bytearray],
+                         dry_run: bool = True) -> None:
+        """Write the whole EEPROM content, from first to last byte.
+
+           .. warning:: You can brick your device with invalid size or content.
+                        Use this function at your own risk, and RTFM.
+
+           :param data: data to be written (should include the checksum)
+           :param dry_run: log what should be written, do not actually
+                           change the EEPROM content
+        """
+        if len(data) not in self.EEPROM_SIZES:
+            raise ValueError('Invalid EEPROM size')
+        self._write_eeprom_raw(0, data, dry_run=dry_run)
 
     def write_data(self, data: Union[bytes, bytearray]) -> int:
         """Write data to the FTDI port.
