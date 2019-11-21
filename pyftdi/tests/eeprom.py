@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2018, Stephen Goadhouse <sgoadhouse@virginia.edu>
+# Copyright (c) 2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,11 +27,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import unittest
+from doctest import testmod
 from os import environ
-from sys import modules
-from pyftdi.ftdi import Ftdi, FtdiEepromError
-from pyftdi.misc import hexdump
+from sys import modules, stdout
+from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi
+from pyftdi.misc import hexdump, to_bool
+
+#pylint: disable-msg=missing-docstring
 
 
 class EepromTestCase(unittest.TestCase):
@@ -41,6 +47,7 @@ class EepromTestCase(unittest.TestCase):
         """Default values"""
         cls.eeprom_size = int(environ.get('FTDI_EEPROM_SIZE', '256'))
         cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+
 
     def setUp(self):
         """Open a connection to the FTDI, defining which pins are configured as
@@ -63,9 +70,10 @@ class EepromTestCase(unittest.TestCase):
         self.ftdi.close()
 
     def test_eeprom_read(self):
-        """Simple test to demonstrate can read EEPROM.
+        """Simple test to demonstrate EEPROM read out.
         """
-        ref_data = self.ftdi.read_eeprom(eeprom_sz=self.eeprom_size)
+        ref_data = self.ftdi.read_eeprom(eeprom_size=self.eeprom_size)
+        print(hexdump(ref_data))
         # check that the right number of bytes were read
         self.assertEqual(len(ref_data), self.eeprom_size)
         # Pull out actual checksum from EEPROM data
@@ -87,10 +95,11 @@ class EepromTestCase(unittest.TestCase):
         for start, size in segments:
             self.assertRaises(ValueError, self.ftdi.read_eeprom, start, size)
 
-    def test_eeprom_write(self):
-        """Simple test to demonstrate can read EEPROM by checking its checksum.
+    def test_eeprom_write_reject(self):
+        """Simple test to demonstrate rejection of invalid EEPROM write
+           requests.
         """
-        ref_data = self.ftdi.read_eeprom(eeprom_sz=self.eeprom_size)
+        ref_data = self.ftdi.read_eeprom(eeprom_size=self.eeprom_size)
         # check that the right number of bytes were read
         self.assertEqual(len(ref_data), self.eeprom_size)
         # verify reject access to various invalid data segments
@@ -99,6 +108,11 @@ class EepromTestCase(unittest.TestCase):
             self.assertRaises(ValueError, self.ftdi.write_eeprom, start,
                               [0] * size, self.eeprom_size)
 
+    def test_eeprom_write(self):
+        """Simple test to demonstrate EEPROM write requests.
+        """
+        self.ftdi.write_eeprom(0x80, b'test', eeprom_size=self.eeprom_size)
+
 
 def suite():
     suite_ = unittest.TestSuite()
@@ -106,7 +120,18 @@ def suite():
     return suite_
 
 
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(modules[__name__])
+def main():
+    if to_bool(environ.get('FTDI_DEBUG', 'off')):
+        FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError('Invalid log level: %s' %level)
+    FtdiLogger.set_level(loglevel)
+    testmod(modules[__name__])
     unittest.main(defaultTest='suite')
+
+
+if __name__ == '__main__':
+    main()
