@@ -105,3 +105,7 @@ Contributors
  * etherfi:
 
   * Fix issue with I2C write after API refactoring
+
+ * sgoadhouse:
+
+  * EEPROM access code and unit test

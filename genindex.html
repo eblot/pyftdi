@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.41.0
+                0.42.0
               </div>
             
           
@@ -91,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
@@ -216,14 +217,20 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.calc_eeprom_checksum">calc_eeprom_checksum() (pyftdi.ftdi.Ftdi method)</a>
+</li>
       <li><a href="api/spi.html#pyftdi.spi.SpiController.channels">channels() (pyftdi.spi.SpiController property)</a>
 </li>
-      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.close">close() (pyftdi.ftdi.Ftdi method)</a>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.close">close() (pyftdi.eeprom.FtdiEeprom method)</a>
 
       <ul>
+        <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.close">(pyftdi.ftdi.Ftdi method)</a>
+</li>
         <li><a href="api/gpio.html#pyftdi.gpio.GpioController.close">(pyftdi.gpio.GpioController method)</a>
 </li>
       </ul></li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.commit">commit() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.configure">configure() (pyftdi.gpio.GpioController method)</a>
 
       <ul>
@@ -252,8 +259,16 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.data">data() (pyftdi.eeprom.FtdiEeprom property)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.decode_modem_status">decode_modem_status() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.device_version">device_version() (pyftdi.eeprom.FtdiEeprom property)</a>
+
+      <ul>
+        <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.device_version">(pyftdi.ftdi.Ftdi property)</a>
+</li>
+      </ul></li>
       <li><a href="api/gpio.html#pyftdi.gpio.GpioController.direction">direction() (pyftdi.gpio.GpioController property)</a>
 
       <ul>
@@ -266,6 +281,10 @@
         <li><a href="api/spi.html#pyftdi.spi.SpiGpioPort.direction">(pyftdi.spi.SpiGpioPort property)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.dump_config">dump_config() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -282,6 +301,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.erase">erase() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.exchange">exchange() (pyftdi.i2c.I2cController method)</a>
 
       <ul>
@@ -339,6 +360,10 @@
 </li>
       </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi">Ftdi (class in pyftdi.ftdi)</a>
+</li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom">FtdiEeprom (class in pyftdi.eeprom)</a>
+</li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEepromError">FtdiEepromError</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.FtdiError">FtdiError</a>
 </li>
@@ -450,6 +475,8 @@
         <li><a href="api/gpio.html#pyftdi.gpio.GpioController.is_connected">(pyftdi.gpio.GpioController property)</a>
 </li>
       </ul></li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.is_empty">is_empty() (pyftdi.eeprom.FtdiEeprom property)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.is_H_series">is_H_series() (pyftdi.ftdi.Ftdi property)</a>
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiController.is_inverted_cpha_supported">is_inverted_cpha_supported() (pyftdi.spi.SpiController property)</a>
@@ -480,8 +507,12 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open">open() (pyftdi.ftdi.Ftdi method)</a>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.open">open() (pyftdi.eeprom.FtdiEeprom method)</a>
+
+      <ul>
+        <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open">(pyftdi.ftdi.Ftdi method)</a>
 </li>
+      </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open_bitbang">open_bitbang() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open_bitbang_from_device">open_bitbang_from_device() (pyftdi.ftdi.Ftdi method)</a>
@@ -503,6 +534,8 @@
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open_mpsse_from_device">open_mpsse_from_device() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.open_mpsse_from_url">open_mpsse_from_url() (pyftdi.ftdi.Ftdi method)</a>
+</li>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.overwrite_eeprom">overwrite_eeprom() (pyftdi.ftdi.Ftdi method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -534,6 +567,8 @@
       </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.poll_modem_status">poll_modem_status() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.port_width">port_width() (pyftdi.ftdi.Ftdi property)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/misc.html#pyftdi.misc.pretty_size">pretty_size() (in module pyftdi.misc)</a>
@@ -543,6 +578,8 @@
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_rx_buffer">purge_rx_buffer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_tx_buffer">purge_tx_buffer() (pyftdi.ftdi.Ftdi method)</a>
+</li>
+      <li><a href="api/eeprom.html#module-pyftdi.eeprom">pyftdi.eeprom (module)</a>
 </li>
       <li><a href="api/ftdi.html#module-pyftdi.ftdi">pyftdi.ftdi (module)</a>
 </li>
@@ -586,6 +623,8 @@
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.read_data_set_chunksize">read_data_set_chunksize() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.read_eeprom">read_eeprom() (pyftdi.ftdi.Ftdi method)</a>
+</li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.read_from">read_from() (pyftdi.i2c.I2cPort method)</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.read_gpio">read_gpio() (pyftdi.i2c.I2cController method)</a>
@@ -606,6 +645,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.save_config">save_config() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_baudrate">set_baudrate() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_bitmode">set_bitmode() (pyftdi.ftdi.Ftdi method)</a>
@@ -638,27 +679,35 @@
         <li><a href="api/spi.html#pyftdi.spi.SpiPort.set_frequency">(pyftdi.spi.SpiPort method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.set_gpio_direction">set_gpio_direction() (pyftdi.i2c.I2cController method)</a>
 
       <ul>
         <li><a href="api/spi.html#pyftdi.spi.SpiController.set_gpio_direction">(pyftdi.spi.SpiController method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_latency_timer">set_latency_timer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_line_property">set_line_property() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.set_manufacturer_name">set_manufacturer_name() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
       <li><a href="api/spi.html#pyftdi.spi.SpiPort.set_mode">set_mode() (pyftdi.spi.SpiPort method)</a>
+</li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.set_product_name">set_product_name() (pyftdi.eeprom.FtdiEeprom method)</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.set_retry_count">set_retry_count() (pyftdi.i2c.I2cController method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_rts">set_rts() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.set_serial_number">set_serial_number() (pyftdi.eeprom.FtdiEeprom method)</a>
+</li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.shift_address">shift_address() (pyftdi.i2c.I2cPort method)</a>
 </li>
       <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.show_devices">show_devices() (pyftdi.usbtools.UsbTools class method)</a>
+</li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.size">size() (pyftdi.eeprom.FtdiEeprom property)</a>
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiController">SpiController (class in pyftdi.spi)</a>
 </li>
@@ -712,6 +761,8 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.validate_mpsse">validate_mpsse() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.VAR_STRINGS">VAR_STRINGS (pyftdi.eeprom.FtdiEeprom attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -751,6 +802,8 @@
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.write_data_get_chunksize">write_data_get_chunksize() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.write_data_set_chunksize">write_data_set_chunksize() (pyftdi.ftdi.Ftdi method)</a>
+</li>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.write_eeprom">write_eeprom() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.write_gpio">write_gpio() (pyftdi.i2c.I2cController method)</a>
 

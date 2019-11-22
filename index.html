@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.41.0
+                0.42.0
               </div>
             
           
@@ -91,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
@@ -191,10 +192,11 @@ not been tested with <a class="reference external" href="https://www.github.com/
 <ul class="simple">
 <li><p>UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
 capability)</p></li>
-<li><p>Bitbang/GPIO support</p></li>
-<li><p>SPI master</p></li>
-<li><p>I<sup>2</sup>C master</p></li>
+<li><p>Bitbang/GPIO legacy support, 8 pins per port</p></li>
+<li><p>SPI master, with simultanous GPIO support, up to 12 pins per port</p></li>
+<li><p>I<sup>2</sup>C master, with simultanous GPIO support, up to 14 pins per port</p></li>
 <li><p>(JTAG master)</p></li>
+<li><p>Prelimiary EEPROM support (R/O access + R/W for serial/product/manufacturer)</p></li>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> provides a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices.</p>
@@ -211,11 +213,17 @@ with <em>v0.22+</em> series.</p>
 <h3>Major changes<a class="headerlink" href="#major-changes" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><ul class="simple">
-<li><p>read() functions now return <code class="docutils literal notranslate"><span class="pre">bytearray</span></code> instead of <cite>Array(‘B’)</cite> so that
+<li><p><em>read</em> methods now return <code class="docutils literal notranslate"><span class="pre">bytearray</span></code> instead of <cite>Array(‘B’)</cite> so that
 pyserial <code class="docutils literal notranslate"><span class="pre">readline()</span></code> may be used. It also brings some performance
-improvements</p></li>
+improvements.</p></li>
 <li><p>PyFtdi URLs now supports <code class="docutils literal notranslate"><span class="pre">bus:address</span></code> alternative specifiers, which
 required to augment the <code class="docutils literal notranslate"><span class="pre">open_*()</span></code> methods with new, optional parameters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SpiController</span></code> reserves only one slave line (<em>/CS</em>) where it used to
+reserve 4 slave lines in previous releases. This frees more GPIOs when
+default value is used - it is nevertheless still possible to reserve up to 5
+slave lines.</p></li>
+<li><p>type hinting is used for most, if not all, public methods.</p></li>
+<li><p>simplified baudrate divider calculation.</p></li>
 </ul>
 </div></blockquote>
 </div>
@@ -230,6 +238,7 @@ required to augment the <code class="docutils literal notranslate"><span class="
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>

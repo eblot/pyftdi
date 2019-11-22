@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.41.0
+                0.42.0
               </div>
             
           
@@ -103,11 +103,13 @@
 <li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="eeprom.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">eeprom</span></code> - EEPROM API</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../licenses.html">Licenses</a></li>
@@ -245,6 +247,24 @@ bitbanging</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.calc_eeprom_checksum">
+<code class="sig-name descname">calc_eeprom_checksum</code><span class="sig-paren">(</span><em class="sig-param">data</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.calc_eeprom_checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate EEPROM checksum over the data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]) – data to compute checksum over. Must be an even number
+of bytes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>checksum</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.close">
 <code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.close" title="Permalink to this definition">¶</a></dt>
 <dd><p>Close the FTDI interface/port.</p>
@@ -289,6 +309,23 @@ bitbanging</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>a tuple of status identifiers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.device_version">
+<em class="property">property </em><code class="sig-name descname">device_version</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.device_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the device version, i.e. the kind of device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">See</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.Ftdi.ic_name" title="pyftdi.ftdi.Ftdi.ic_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ic_name()</span></code></a> for a product version of this information.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the device version (16-bit integer)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -955,6 +992,29 @@ values than the default, as it triggers data loss in FTDI.</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.overwrite_eeprom">
+<code class="sig-name descname">overwrite_eeprom</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">dry_run=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.overwrite_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the whole EEPROM content, from first to last byte.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You can brick your device with invalid size or content.
+Use this function at your own risk, and RTFM.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]) – data to be written (should include the checksum)</p></li>
+<li><p><strong>dry_run</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – log what should be written, do not actually
+change the EEPROM content</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.poll_modem_status">
 <code class="sig-name descname">poll_modem_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.poll_modem_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Poll modem status information.</p>
@@ -970,6 +1030,23 @@ control endpoint.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>modem status, as a proprietary bitfield</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.port_width">
+<em class="property">property </em><code class="sig-name descname">port_width</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.port_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report the width of a single port / interface</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the width of the port, in bits</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1086,6 +1163,30 @@ be use for a regular usage.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.read_eeprom">
+<code class="sig-name descname">read_eeprom</code><span class="sig-paren">(</span><em class="sig-param">addr=0</em>, <em class="sig-param">length=None</em>, <em class="sig-param">eeprom_size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the EEPROM starting at byte address, addr, and returning
+length bytes. Here, addr and length are in bytes but we
+access a 16-bit word at a time, so automatically update
+addr and length to work with word accesses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>addr</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – byte address that desire to read.</p></li>
+<li><p><strong>length</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – byte length to read or None</p></li>
+<li><p><strong>eeprom_size</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – total size in bytes of the eeprom or None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>eeprom bytes, as an array of bytes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1457,6 +1558,33 @@ be use for a regular usage.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>chunksize</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the size of the write buffer in bytes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.write_eeprom">
+<code class="sig-name descname">write_eeprom</code><span class="sig-paren">(</span><em class="sig-param">addr</em>, <em class="sig-param">data</em>, <em class="sig-param">eeprom_size=None</em>, <em class="sig-param">dry_run=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.write_eeprom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write multiple bytes to the EEPROM starting at byte address,
+addr. This function also updates the checksum
+automatically.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You can brick your device with invalid size or content.
+Use this function at your own risk, and RTFM.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>addr</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – starting byte address to start writing</p></li>
+<li><p><strong>data</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]) – data to be written</p></li>
+<li><p><strong>eeprom_size</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – total size in bytes of the eeprom or None</p></li>
+<li><p><strong>dry_run</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – log what should be written, do not actually
+change the EEPROM content</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>

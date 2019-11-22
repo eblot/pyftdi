@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.41.0
+                0.42.0
               </div>
             
           
@@ -107,11 +107,13 @@
 <li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="eeprom.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">eeprom</span></code> - EEPROM API</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../licenses.html">Licenses</a></li>
@@ -234,7 +236,7 @@ considered as a kludge, you’ve been warned.</p>
 <span class="n">read_buf</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">write_buf</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a class="reference external" href="https://github.com/eblot/pyftdi/blob/master/pyftdi/tests/spi.py">tests/spi.py</a></p>
+<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <a href="#id1"><span class="problematic" id="id2">`tests/spi.py`_</span></a></p>
 <p>Example: communication with a SPI device and an extra GPIO</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>

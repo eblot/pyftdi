@@ -1,0 +1,318 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>EEPROM management &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
+    <link rel="prev" title="FTDI device pinout" href="pinout.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.42.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">EEPROM management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supported-features">Supported features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ftconf-py"><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Licenses</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>EEPROM management</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/eeprom.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="eeprom-management">
+<h1>EEPROM management<a class="headerlink" href="#eeprom-management" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Writing to the EEPROM can cause very <strong>undesired</strong> effects if the wrong
+value is written in the wrong place. You can even essentially <strong>brick</strong> your
+FTDI device. Use this function only with <strong>extreme</strong> caution.</p>
+<p>If using a Hi-Speed Mini Module and you brick for FTDI device, see
+<a class="reference external" href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf">FTDI_Recovery</a></p>
+</div>
+<div class="section" id="supported-features">
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
+<p>EEPROM support is experimental. For now, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> mostly supports read-only
+feature to report EEPROM configuration.</p>
+<p>Some features may be wrongly decoded, as each FTDI model implements a different
+feature map, and more test/validation is required.</p>
+<p>Write access is limited to modifying the variable length strings of the EEPROM,
+that is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>manufacturer name, <em>e.g.</em> <cite>FTDI</cite></p></li>
+<li><p>product description string, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">FT2232H</span> <span class="pre">MiniModule</span></code></p></li>
+<li><p>serial number, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">FT123ABC</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Changing the product description may help to distinguish a specific FTDI device
+when several of them are connected to a host, while changing the serial number
+may help selecting a specific FTDI device from the command line, as the serial
+number may be specified in the <a class="reference internal" href="urlscheme.html"><span class="doc">URL</span></a>.</p>
+<p>The <a class="reference internal" href="api/eeprom.html"><span class="doc">EEPROM API</span></a> implements the upper API to access the
+EEPROM content.</p>
+</div>
+<div class="section" id="ftconf-py">
+<h2><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code><a class="headerlink" href="#ftconf-py" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pyftdi/bin/ftconf.py</span></code> is a companion script to help managing the content of
+the FTDI EEPROM from the command line.</p>
+<blockquote>
+<div><p>$ pyftdi/bin/ftconf.py
+usage: ftconf.py [-h] [-x] [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER]</p>
+<blockquote>
+<div><p>[-p PRODUCT] [-e] [-u] [-v] [-d]
+[device]</p>
+</div></blockquote>
+<p>Simple FTDI EEPROM configurator.</p>
+<dl>
+<dt>positional arguments:</dt><dd><p>device                serial port device name</p>
+</dd>
+<dt>optional arguments:</dt><dd><dl class="option-list">
+<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
+<dd><p>show this help message and exit</p>
+</dd>
+<dt><kbd><span class="option">-x</span>, <span class="option">--hexdump</span></kbd></dt>
+<dd><p>dump EEPROM content as ASCII</p>
+</dd>
+<dt><kbd><span class="option">-o <var>OUTPUT</var></span>, <span class="option">--output <var>OUTPUT</var></span></kbd></dt>
+<dd><p>output ini file to save EEPROM content</p>
+</dd>
+<dt><kbd><span class="option">-s <var>SERIAL_NUMBER</var></span>, <span class="option">--serial-number <var>SERIAL_NUMBER</var></span></kbd></dt>
+<dd><p>set serial number</p>
+</dd>
+<dt><kbd><span class="option">-m <var>MANUFACTURER</var></span>, <span class="option">--manufacturer <var>MANUFACTURER</var></span></kbd></dt>
+<dd><p>set manufacturer name</p>
+</dd>
+<dt><kbd><span class="option">-p <var>PRODUCT</var></span>, <span class="option">--product <var>PRODUCT</var></span></kbd></dt>
+<dd><p>set product name</p>
+</dd>
+<dt><kbd><span class="option">-e</span>, <span class="option">--erase</span></kbd></dt>
+<dd><p>erase the whole EEPROM content</p>
+</dd>
+<dt><kbd><span class="option">-u</span>, <span class="option">--update</span></kbd></dt>
+<dd><p>perform actual update, use w/ care</p>
+</dd>
+<dt><kbd><span class="option">-v</span>, <span class="option">--verbose</span></kbd></dt>
+<dd><p>increase verbosity</p>
+</dd>
+<dt><kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></dt>
+<dd><p>enable debug mode</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+<p><strong>Again, please read the</strong> <a class="reference internal" href="licenses.html"><span class="doc">Licenses</span></a> <strong>terms before using the EEPROM API
+or this script. You may brick your device if something goes wrong, and there
+may be no way to recover your device.</strong></p>
+<p>Note that to protect the EEPROM content of unexpected modification, it is
+mandatory to specify the <code class="docutils literal notranslate"><span class="pre">-u</span></code> flag along any alteration/change of the EEPROM
+content. Without this flag, the script performs a dry-run execution of the
+changes, <em>i.e.</em> all actions but the write request to the EEPROM are executed.</p>
+<p>Once updated, you need to unplug/plug back the device to use the new EEPROM
+configuration.</p>
+<p>It is recommended to first save the current content of the EEPROM, using the
+<code class="docutils literal notranslate"><span class="pre">-o</span></code> flag, to have a working copy of the EEPROM data before any attempt to
+modify it. It can help restoring the EEPROM if something gets wrong during a
+subsequence update.</p>
+<p>Most FTDI device can run without an EEPROM. If something goes wrong, try to
+erase the EEPROM content, then restore the original content. For now,
+<code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> does not support EEPROM restoration, but a Windows-only
+application <a class="reference external" href="https://www.ftdichip.com/Support/Utilities.htm#FT_PROG">FT_PROG</a> is available from FTDI web site.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pinout.html" class="btn btn-neutral float-left" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
