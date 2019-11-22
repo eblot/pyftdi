@@ -94,7 +94,7 @@ class I2cPort:
             self._format = self.FORMATS[width]
         except KeyError:
             raise I2cIOError('Unsupported integer width')
-        self._endian = bigendian and '>' or '<'
+        self._endian = '>' if bigendian else '<'
 
     def shift_address(self, offset: int):
         """Tweak the I2C slave address, as required with some devices
