@@ -57,11 +57,17 @@ with *v0.22+* series.
 Major changes
 ~~~~~~~~~~~~~
 
- * read() functions now return ``bytearray`` instead of `Array('B')` so that
+ * *read* methods now return ``bytearray`` instead of `Array('B')` so that
    pyserial ``readline()`` may be used. It also brings some performance
-   improvements
+   improvements.
  * PyFtdi URLs now supports ``bus:address`` alternative specifiers, which
    required to augment the ``open_*()`` methods with new, optional parameters.
+ * ``SpiController`` reserves only one slave line (*/CS*) where it used to
+   reserve 4 slave lines in previous releases. This frees more GPIOs when
+   default value is used - it is nevertheless still possible to reserve up to 5
+   slave lines.
+ * type hinting is used for most, if not all, public methods.
+ * simplified baudrate divider calculation.
 
 PyFTDI in details
 -----------------
