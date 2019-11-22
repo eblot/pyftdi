@@ -29,43 +29,51 @@ class FtdiEeprom:
     """FTDI EEPROM management
     """
 
-    PROPS = namedtuple('PROPS', 'size user dynoff')
+    _PROPS = namedtuple('PROPS', 'size user dynoff')
+    """Properties for each FTDI device release."""
 
-    PROPERTIES = {
-        0x0200: PROPS(0, None, 0x94),
-        0x0400: PROPS(256, 0x14, 0x94),
-        0x0500: PROPS(256, 0x16, 0x96),
-        0x0600: PROPS(128, None, 0x98),
-        0x0700: PROPS(256, 0x1A, 0x9A),
-        0x0800: PROPS(256, 0x1A, 0x9A),
-        0x0900: PROPS(256, 0x1A, 0xA0),
-        0x1000: PROPS(256, 0x1A, 0xA0),
+    _PROPERTIES = {
+        0x0200: _PROPS(0, None, 0x94),
+        0x0400: _PROPS(256, 0x14, 0x94),
+        0x0500: _PROPS(256, 0x16, 0x96),
+        0x0600: _PROPS(128, None, 0x98),
+        0x0700: _PROPS(256, 0x1A, 0x9A),
+        0x0800: _PROPS(256, 0x1A, 0x9A),
+        0x0900: _PROPS(256, 0x1A, 0xA0),
+        0x1000: _PROPS(256, 0x1A, 0xA0),
     }
-    """EEPROM sizes."""
+    """EEPROM properties."""
 
-    CBUS = IntEnum('CBUS', 'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 '
-                           'CLK12 CLK6 IOMODE BB_WR BB_R', start=0)
+    _CBUS = IntEnum('CBUS', 'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 '
+                            'CLK12 CLK6 IOMODE BB_WR BB_R', start=0)
+    """Alternate features for legacy FT232R devices."""
 
-    CBUSH = IntEnum('CBUSH', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
+    _CBUSH = IntEnum('CBUSH', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
                              'DRIVE1 IOMODE TXDEN CLK30 CLK15 CLK7_5', start=0)
+    """Alternate features for FT232H/FT2232H/FT4232H devices."""
 
-    CBUSX = IntEnum('CBUSX', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
+    _CBUSX = IntEnum('CBUSX', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
                              'DRIVE1 IOMODE TXDEN CLK24 CLK12 CLK6 BAT_DETECT '
                              'BAT_DETECT_NEG I2C_TXE I2C_RXF VBUS_SENSE BB_WR '
                              'BB_RD TIME_STAMP AWAKE', start=0)
+    """Alternate features for FT230X devices."""
 
-    INVERT = IntFlag('INVERT', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    _INVERT = IntFlag('INVERT', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    """Inversion flags for FT232R devices."""
 
-    CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
+    _CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
+    """Alternate port mode."""
 
-    DRIVE = IntEnum('DRIVE', 'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 '
+    _DRIVE = IntEnum('DRIVE', 'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 '
                              'PWRSAVE_DIS')
+    """Driver options for I/O pins."""
 
-    CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
-                           'HIGH_CURRENT_DRIVE _20 _40 SUSPEND_DBUS7')
+    _CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
+                            'HIGH_CURRENT_DRIVE _20 _40 SUSPEND_DBUS7')
+    """Configuration bits stored @ 0x01."""
 
     VAR_STRINGS = ('manufacturer', 'product', 'serial')
-    # variable length strings
+    """EEPROM strings with variable length."""
 
     def __init__(self):
         self.log = getLogger('pyftdi.eeprom')
@@ -120,7 +128,7 @@ class FtdiEeprom:
            :return: the size in bytes
         """
         try:
-            eeprom_size = self.PROPERTIES[self.release].size
+            eeprom_size = self._PROPERTIES[self.release].size
         except (AttributeError, KeyError):
             raise FtdiError('No EEPROM')
         return eeprom_size
@@ -184,7 +192,7 @@ class FtdiEeprom:
 
     def _generate_var_strings(self, fill=True) -> None:
         stream = bytearray()
-        dynpos = self.PROPERTIES[self.release].dynoff
+        dynpos = self._PROPERTIES[self.release].dynoff
         data_pos = dynpos
         tbl_pos = 0x0e
         for name in self.VAR_STRINGS:
@@ -258,17 +266,17 @@ class FtdiEeprom:
         for bit in self.INVERT:
             value = self._eeprom[0x0B]
             cfg['invert_%s' % self.INVERT(bit).name] = bool(value & bit)
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        max_drive = self._DRIVE.LOW | self._DRIVE.HIGH
         value = self._eeprom[0x0c]
         for grp in range(2):
             conf = value &0xF
             cfg['group_%d_drive' % grp] = bool((conf & max_drive) == max_drive)
-            cfg['group_%d_schmitt' % grp] = conf & self.DRIVE.SCHMITT
-            cfg['group_%d_slew' % grp] = conf & self.DRIVE.SLOW_SLEW
+            cfg['group_%d_schmitt' % grp] = conf & self._DRIVE.SCHMITT
+            cfg['group_%d_slew' % grp] = conf & self._DRIVE.SLOW_SLEW
             value >>= 4
         for bix in range(4):
             value = self._eeprom[0x1A + bix]
-            cfg['cbus_func_%d' % bix] = self.CBUSX(value).name
+            cfg['cbus_func_%d' % bix] = self._CBUSX(value).name
         cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232h(self):
@@ -276,23 +284,23 @@ class FtdiEeprom:
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_type'] = cfg0 & 0x0F
         cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 4)) else ''
-        cfg['clock_polarity'] = 'high' if (cfg1 & self.CFG1.CLK_IDLE_STATE) \
+        cfg['clock_polarity'] = 'high' if (cfg1 & self._CFG1.CLK_IDLE_STATE) \
                                 else 'low'
-        cfg['lsb_data'] = bool(cfg1 & self.CFG1.DATA_LSB)
-        cfg['flow_control'] = 'on' if (cfg1 & self.CFG1.FLOW_CONTROL) \
+        cfg['lsb_data'] = bool(cfg1 & self._CFG1.DATA_LSB)
+        cfg['flow_control'] = 'on' if (cfg1 & self._CFG1.FLOW_CONTROL) \
                               else 'off'
-        cfg['powersave'] = bool(cfg1 & self.DRIVE.PWRSAVE_DIS)
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        cfg['powersave'] = bool(cfg1 & self._DRIVE.PWRSAVE_DIS)
+        max_drive = self._DRIVE.LOW | self._DRIVE.HIGH
         for grp in range(2):
             conf = self._eeprom[0x0c+grp]
             cfg['group_%d_drive' % grp] = bool((conf & max_drive) == max_drive)
-            cfg['group_%d_schmitt' % grp] = conf & self.DRIVE.SCHMITT
-            cfg['group_%d_slew' % grp] = conf & self.DRIVE.SLOW_SLEW
+            cfg['group_%d_schmitt' % grp] = conf & self._DRIVE.SCHMITT
+            cfg['group_%d_slew' % grp] = conf & self._DRIVE.SLOW_SLEW
         for bix in range(5):
             value = self._eeprom[0x18 + bix]
             low, high = value & 0x0F, value >> 4
-            cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUSH(low).name
-            cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUSH(high).name
+            cfg['cbus_func_%d' % ((2*bix)+0)] = self._CBUSH(low).name
+            cfg['cbus_func_%d' % ((2*bix)+1)] = self._CBUSH(high).name
         cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232r(self):
@@ -308,19 +316,19 @@ class FtdiEeprom:
         while True:
             value = self._eeprom[0x14 + bix]
             low, high = value & 0x0F, value >> 4
-            cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUS(low).name
+            cfg['cbus_func_%d' % ((2*bix)+0)] = self._CBUS(low).name
             if bix == 2:
                 break
-            cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUS(high).name
+            cfg['cbus_func_%d' % ((2*bix)+1)] = self._CBUS(high).name
             bix += 1
 
     def _decode_2232h(self):
         cfg = self._config
         self._decode_x232h(cfg)
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
-        cfg['channel_a_type'] = self.CHANNEL(cfg0 & 0x7).name or 'UART'
-        cfg['channel_b_type'] = self.CHANNEL(cfg1 & 0x7).name or 'UART'
-        cfg['suspend_dbus7'] = cfg1 & self.CFG1.SUSPEND_DBUS7
+        cfg['channel_a_type'] = self._CHANNEL(cfg0 & 0x7).name or 'UART'
+        cfg['channel_b_type'] = self._CHANNEL(cfg1 & 0x7).name or 'UART'
+        cfg['suspend_dbus7'] = cfg1 & self._CFG1.SUSPEND_DBUS7
 
     def _decode_4232h(self):
         cfg = self._config
@@ -329,7 +337,7 @@ class FtdiEeprom:
         cfg['channel_c_driver'] = 'VCP' if ((cfg0 >> 4) & (1 << 3)) else ''
         cfg['channel_d_driver'] = 'VCP' if ((cfg1 >> 4) & (1 << 3)) else ''
         conf = self._eeprom[0x0B]
-        rs485 = self.CHANNEL.RS485
+        rs485 = self._CHANNEL.RS485
         for ch in range(4):
             cfg['channel_%x_rs485' % (0xa+ch)] = bool(conf & (rs485 << ch))
 
@@ -338,13 +346,13 @@ class FtdiEeprom:
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else ''
         cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else ''
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        max_drive = self._DRIVE.LOW | self._DRIVE.HIGH
         for bix in range(4):
             if not bix & 1:
                 val = self._eeprom[0x0c + bix//2]
             else:
                 val >>= 4
             cfg['group_%d_drive' % bix] = bool(val & max_drive)
-            cfg['group_%d_schmitt' % bix] = bool(val & self.DRIVE.SCHMITT)
-            cfg['group_%d_slew' % bix] = bool(val & self.DRIVE.SLOW_SLEW)
+            cfg['group_%d_schmitt' % bix] = bool(val & self._DRIVE.SCHMITT)
+            cfg['group_%d_slew' % bix] = bool(val & self._DRIVE.SLOW_SLEW)
         cfg['chip'] = Hex2Int(self._eeprom[0x18])

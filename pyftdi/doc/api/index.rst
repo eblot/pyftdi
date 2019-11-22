@@ -17,3 +17,4 @@ API documentation
    uart
    usbtools
    misc
+   eeprom

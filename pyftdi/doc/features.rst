@@ -72,6 +72,13 @@ JTAG
 
 JTAG is under development and is not fully supported yet.
 
+EEPROM
+......
+
+The ``pyftdi/bin/ftconf.py`` script helps to manage the content of the FTDI
+companion EEPROM.
+
+
 Status
 ~~~~~~
 

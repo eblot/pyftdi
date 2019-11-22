@@ -34,10 +34,11 @@ PyFtdi_ currently supports the following features:
 
 * UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
   capability)
-* Bitbang/GPIO support
-* SPI master
-* |I2C| master
+* Bitbang/GPIO legacy support, 8 pins per port
+* SPI master, with simultanous GPIO support, up to 12 pins per port
+* |I2C| master, with simultanous GPIO support, up to 14 pins per port
 * (JTAG master)
+* Prelimiary EEPROM support (R/O access + R/W for serial/product/manufacturer)
 
 PyFtdi_ provides a pyserial_ compliant API, so it can be used as a drop-in
 module to access USB-serial converters based on FTDI_ devices.
@@ -75,6 +76,7 @@ PyFTDI in details
    urlscheme
    api/index
    pinout
+   eeprom
    troubleshooting
    authors
    licenses
