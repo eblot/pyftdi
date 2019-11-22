@@ -33,16 +33,17 @@ class FtdiEeprom:
     """Properties for each FTDI device release."""
 
     _PROPERTIES = {
-        0x0200: _PROPS(0, None, 0x94),
-        0x0400: _PROPS(256, 0x14, 0x94),
-        0x0500: _PROPS(256, 0x16, 0x96),
-        0x0600: _PROPS(128, None, 0x98),
-        0x0700: _PROPS(256, 0x1A, 0x9A),
-        0x0800: _PROPS(256, 0x1A, 0x9A),
-        0x0900: _PROPS(256, 0x1A, 0xA0),
-        0x1000: _PROPS(256, 0x1A, 0xA0),
+        0x0200: _PROPS(0, None, 0x94),    # FT232AM
+        0x0400: _PROPS(256, 0x14, 0x94),  # FT232BM
+        0x0500: _PROPS(256, 0x16, 0x96),  # FT2232D
+        0x0600: _PROPS(128, None, 0x98),  # FT232R
+        0x0700: _PROPS(256, 0x1A, 0x9A),  # FT2232H
+        0x0800: _PROPS(256, 0x1A, 0x9A),  # FT4232H
+        0x0900: _PROPS(256, 0x1A, 0xA0),  # FT232H
+        0x1000: _PROPS(256, 0x1A, 0xA0),  # FT230X
     }
     """EEPROM properties."""
+
 
     _CBUS = IntEnum('CBUS', 'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 '
                             'CLK12 CLK6 IOMODE BB_WR BB_R', start=0)
@@ -79,7 +80,7 @@ class FtdiEeprom:
         self.log = getLogger('pyftdi.eeprom')
         self._ftdi = Ftdi()
         self._eeprom = b''
-        self._release = 0
+        self._dev_ver = 0
         self._valid = False
         self._config = OrderedDict()
         self._dirty = set()
@@ -104,7 +105,7 @@ class FtdiEeprom:
         if self._ftdi.is_connected:
             self._ftdi.close()
             self._eeprom = b''
-            self._release = 0
+            self._dev_ver = 0
             self._config.clear()
 
     @property
@@ -113,11 +114,11 @@ class FtdiEeprom:
 
            :return: the release
         """
-        if not self._release:
+        if not self._dev_ver:
             if not self._ftdi.is_connected:
                 raise FtdiError('Not connected')
-            self._release = self._ftdi.usb_dev.bcdDevice
-        return self._release
+            self._dev_ver = self._ftdi.device_version
+        return self._dev_ver
 
     @property
     def size(self) -> int:
@@ -181,6 +182,7 @@ class FtdiEeprom:
         if any([x in self._dirty for x in self.VAR_STRINGS]):
             self._generate_var_strings()
         self._ftdi.overwrite_eeprom(self._eeprom, dry_run=dry_run)
+        return dry_run
 
     def _update_var_string(self, name: str, value: str) -> None:
         if name not in self.VAR_STRINGS:
@@ -243,7 +245,7 @@ class FtdiEeprom:
         cfg['serial'] = self._decode_string(0x12)
 
         try:
-            name = Ftdi.RELEASES[cfg['type']]
+            name = Ftdi.DEVICE_NAMES[cfg['type']]
             func = getattr(self, '_decode_%s' % name[2:])
         except (KeyError, AttributeError):
             pass

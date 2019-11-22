@@ -269,14 +269,15 @@ class Ftdi:
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
 
-    RELEASES = {0x0200: 'ft232am',
-                0x0400: 'ft232bm',
-                0x0500: 'ft2232d',
-                0x0600: 'ft232r',
-                0x0700: 'ft2232h',
-                0x0800: 'ft4232h',
-                0x0900: 'ft232h',
-                0x1000: 'ft230x'}
+    DEVICE_NAMES = {
+        0x0200: 'ft232am',
+        0x0400: 'ft232bm',
+        0x0500: 'ft2232d',
+        0x0600: 'ft232r',
+        0x0700: 'ft2232h',
+        0x0800: 'ft4232h',
+        0x0900: 'ft232h',
+        0x1000: 'ft230x'}
     # Supported FT*232* devices
 
     # Latency
@@ -748,6 +749,18 @@ class Ftdi:
         self.purge_buffers()
 
     @property
+    def device_version(self) -> int:
+        """Report the device version, i.e. the kind of device.
+
+           :see: :py:meth:`ic_name` for a product version of this information.
+
+           :return: the device version (16-bit integer)
+        """
+        if not self.usb_dev:
+            raise FtdiError('Device characteristics not yet known')
+        return self.usb_dev.bcdDevice
+
+    @property
     def ic_name(self) -> str:
         """Return the current type of the FTDI device as a string
 
@@ -758,7 +771,7 @@ class Ftdi:
         """
         if not self.usb_dev:
             return 'unknown'
-        return self.RELEASES[self.usb_dev.bcdDevice]
+        return self.DEVICE_NAMES.get(self.device_version, 'undefined')
 
     @property
     def has_mpsse(self) -> bool:
@@ -769,7 +782,22 @@ class Ftdi:
         """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
-        return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0800, 0x0900)
+        return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900)
+
+    @property
+    def port_width(self) -> int:
+        """Report the width of a single port / interface
+
+           :return: the width of the port, in bits
+           :raise FtdiError: if no FTDI port is open
+        """
+        if not self.usb_dev:
+            raise FtdiError('Device characteristics not yet known')
+        if self.device_version in (0x0500, 0x0700, 0x0900):
+            return 16
+        if self.device_version in (0x0500, ):
+            return 12
+        return 8
 
     @property
     def has_wide_port(self) -> bool:
@@ -778,9 +806,7 @@ class Ftdi:
            :return: True if the FTDI device supports wide GPIO port
            :raise FtdiError: if no FTDI port is open
         """
-        if not self.usb_dev:
-            raise FtdiError('Device characteristics not yet known')
-        return self.usb_dev.bcdDevice in (0x0500, 0x0700, 0x0900)
+        return self.port_width > 8
 
     @property
     def is_legacy(self) -> bool:
@@ -792,7 +818,7 @@ class Ftdi:
         """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
-        return self.usb_dev.bcdDevice <= 0x0200
+        return self.device_version <= 0x0200
 
     @property
     def is_H_series(self) -> bool:
@@ -803,7 +829,7 @@ class Ftdi:
         """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
-        return self.usb_dev.bcdDevice in (0x0700, 0x0800, 0x0900)
+        return self.device_version in (0x0700, 0x0800, 0x0900)
 
     @property
     def has_drivezero(self) -> bool:
@@ -816,7 +842,7 @@ class Ftdi:
         """
         if not self.usb_dev:
             raise FtdiError('Device characteristics not yet known')
-        return self.usb_dev.bcdDevice in (0x0900, )
+        return self.device_version in (0x0900, )
 
     @property
     def is_mpsse(self) -> bool:
@@ -863,7 +889,7 @@ class Ftdi:
                  0x0800: (2048, 2048),  # TX: 2KiB, RX: 2KiB
                  0x0900: (1024, 1024),  # TX: 1KiB, RX: 1KiB
                  0x1000: (512, 512)}    # TX: 512, RX: 512
-        return sizes.get(self.usb_dev.bcdDevice, (128, 128))  # default sizes
+        return sizes.get(self.device_version, (128, 128))  # default sizes
 
     @property
     def mpsse_bit_delay(self) -> float:
@@ -1301,7 +1327,7 @@ class Ftdi:
             raise FtdiFeatureError('This device does not support drive-zero '
                                    'mode')
         self.write_data(bytearray([Ftdi.DRIVE_ZERO, lines & 0xff,
-                                    (lines >> 8) & 0xff]))
+                                   (lines >> 8) & 0xff]))
 
     def enable_loopback_mode(self, loopback: bool = False) -> None:
         """Enable loopback, i.e. connect DO to DI in FTDI MPSSE port for test
@@ -1325,7 +1351,7 @@ class Ftdi:
         # NOTE: checksum is computed using 16-bit values in little endian
         # ordering
         checksum = 0XAAAA
-        mtp = self.usb_dev.bcdDevice == 0x1000  # FT230X
+        mtp = self.device_version == 0x1000  # FT230X
         for idx in range(0, length, 2):
             if mtp and 12 <= idx < 40:
                 # special MTP user section which is not considered for the CRC
