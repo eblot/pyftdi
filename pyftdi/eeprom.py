@@ -1,10 +1,11 @@
 from binascii import hexlify
 from collections import OrderedDict, namedtuple
+from configparser import ConfigParser
 from enum import IntEnum, IntFlag
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import stdout
-from typing import Any, BinaryIO, Iterable, Mapping, Optional, Tuple, Union
+from typing import BinaryIO, Optional, TextIO, Union
 from usb.core import Device as UsbDevice
 
 from .ftdi import Ftdi, FtdiError
@@ -14,15 +15,15 @@ class FtdiEepromError(FtdiError):
 
 
 class Hex2Int(int):
-
+    """Hexa representation of a byte."""
     def __str__(self):
-        return '%02x' % int(self)
+        return '0x%02x' % int(self)
 
 
 class Hex4Int(int):
-
+    """Hexa representation of a half-word."""
     def __str__(self):
-        return '%04x' % int(self)
+        return '0x%04x' % int(self)
 
 
 class FtdiEeprom:
@@ -45,18 +46,21 @@ class FtdiEeprom:
     """EEPROM properties."""
 
 
-    _CBUS = IntEnum('CBUS', 'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 '
-                            'CLK12 CLK6 IOMODE BB_WR BB_R', start=0)
+    _CBUS = IntEnum('CBUS',
+                    'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
+                    'CLK6 IOMODE BB_WR BB_R', start=0)
     """Alternate features for legacy FT232R devices."""
 
-    _CBUSH = IntEnum('CBUSH', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
-                             'DRIVE1 IOMODE TXDEN CLK30 CLK15 CLK7_5', start=0)
+    _CBUSH = IntEnum('CBUSH',
+                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
+                     'IOMODE TXDEN CLK30 CLK15 CLK7_5', start=0)
     """Alternate features for FT232H/FT2232H/FT4232H devices."""
 
-    _CBUSX = IntEnum('CBUSX', 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 '
-                             'DRIVE1 IOMODE TXDEN CLK24 CLK12 CLK6 BAT_DETECT '
-                             'BAT_DETECT_NEG I2C_TXE I2C_RXF VBUS_SENSE BB_WR '
-                             'BB_RD TIME_STAMP AWAKE', start=0)
+    _CBUSX = IntEnum('CBUSX',
+                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
+                     'IOMODE TXDEN CLK24 CLK12 CLK6 BAT_DETECT BAT_DETECT_NEG '
+                     'I2C_TXE I2C_RXF VBUS_SENSE BB_WR BB_RD TIME_STAMP AWAKE',
+                     start=0)
     """Alternate features for FT230X devices."""
 
     _INVERT = IntFlag('INVERT', 'TXD RXD RTS CTS DTR DSR DCD RI')
@@ -65,8 +69,8 @@ class FtdiEeprom:
     _CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
     """Alternate port mode."""
 
-    _DRIVE = IntEnum('DRIVE', 'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 '
-                             'PWRSAVE_DIS')
+    _DRIVE = IntEnum('DRIVE',
+                     'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 PWRSAVE_DIS')
     """Driver options for I/O pins."""
 
     _CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
@@ -84,6 +88,11 @@ class FtdiEeprom:
         self._valid = False
         self._config = OrderedDict()
         self._dirty = set()
+
+    def __getattr__(self, name):
+        if name in self._config:
+            return self._config[name]
+        raise AttributeError('No such attribute: %s' % name)
 
     def open(self, device: Union[str, UsbDevice]) -> None:
         """Open a new connection to the FTDI USB device.
@@ -157,10 +166,22 @@ class FtdiEeprom:
                 return False
         return True
 
-    def __getattr__(self, name):
-        if name in self._config:
-            return self._config[name]
-        raise AttributeError('No such attribute: %s' % name)
+    def save_config(self, file: TextIO) -> None:
+        """Save the EEPROM content as an INI stream.
+
+           :param file: output stream
+        """
+        cfg = ConfigParser()
+        cfg.add_section('values')
+        for name, value in self._config.items():
+            cfg.set('values', name, str(value))
+        cfg.add_section('raw')
+        length = 16
+        for i in range(0, len(self._eeprom), length):
+            chunk = self._eeprom[i:i+length]
+            hexa = hexlify(chunk).decode()
+            cfg.set('raw', '@%02x' % i, hexa)
+        cfg.write(file)
 
     def set_serial_number(self, serial: str) -> None:
         """Define a new serial number."""
@@ -363,8 +384,8 @@ class FtdiEeprom:
         cfg['channel_d_driver'] = 'VCP' if ((cfg1 >> 4) & (1 << 3)) else ''
         conf = self._eeprom[0x0B]
         rs485 = self._CHANNEL.RS485
-        for ch in range(4):
-            cfg['channel_%x_rs485' % (0xa+ch)] = bool(conf & (rs485 << ch))
+        for chix in range(4):
+            cfg['channel_%x_rs485' % (0xa+chix)] = bool(conf & (rs485 << chix))
 
     def _decode_x232h(self, cfg):
         # common code for2232h and 4232h

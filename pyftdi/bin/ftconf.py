@@ -28,7 +28,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, DEBUG, ERROR
 from sys import modules, stderr
 from traceback import format_exc
@@ -45,6 +45,8 @@ def main():
                                help='serial port device name')
         argparser.add_argument('-x', '--hexdump', action='store_true',
                                help='dump EEPROM content as ASCII')
+        argparser.add_argument('-o', '--output', type=FileType('wt'),
+                               help='output ini file to save EEPROM content')
         argparser.add_argument('-s', '--serial-number',
                                help='set serial number')
         argparser.add_argument('-m', '--manufacturer',
@@ -89,11 +91,11 @@ def main():
         if args.hexdump:
             print(hexdump(eeprom.data))
         if args.update:
-            #print(hexdump(eeprom.data))
             eeprom.commit(False)
-            #print(hexdump(eeprom.data))
         if args.verbose > 0:
             eeprom.dump_config()
+        if args.output:
+            eeprom.save_config(args.output)
 
     except (IOError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
