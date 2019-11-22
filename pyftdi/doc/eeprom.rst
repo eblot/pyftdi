@@ -44,27 +44,30 @@ EEPROM content.
 the FTDI EEPROM from the command line.
 
   $ pyftdi/bin/ftconf.py
-    usage: ftconf.py [-h] [-x] [-s SERIAL_NUMBER] [-m MANUFACTURER] [-p PRODUCT]
-                     [-u] [-v] [-d]
-                     [device]
+  usage: ftconf.py [-h] [-x] [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER]
+                   [-p PRODUCT] [-e] [-u] [-v] [-d]
+                   [device]
 
-    Simple FTDI EEPROM configurator.
+  Simple FTDI EEPROM configurator.
 
-    positional arguments:
-      device                serial port device name
+  positional arguments:
+    device                serial port device name
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -x, --hexdump         dump EEPROM content as ASCII
-      -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
-                            set serial number
-      -m MANUFACTURER, --manufacturer MANUFACTURER
-                            set manufacturer name
-      -p PRODUCT, --product PRODUCT
-                            set product name
-      -u, --update          perform actual update, use w/ care
-      -v, --verbose         increase verbosity
-      -d, --debug           enable debug mode
+  optional arguments:
+    -h, --help            show this help message and exit
+    -x, --hexdump         dump EEPROM content as ASCII
+    -o OUTPUT, --output OUTPUT
+                          output ini file to save EEPROM content
+    -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
+                          set serial number
+    -m MANUFACTURER, --manufacturer MANUFACTURER
+                          set manufacturer name
+    -p PRODUCT, --product PRODUCT
+                          set product name
+    -e, --erase           erase the whole EEPROM content
+    -u, --update          perform actual update, use w/ care
+    -v, --verbose         increase verbosity
+    -d, --debug           enable debug mode
 
 **Again, please read the** :doc:`licenses` **terms before using the EEPROM API
 or this script. You may brick your device if something goes wrong, and there
@@ -77,3 +80,13 @@ changes, *i.e.* all actions but the write request to the EEPROM are executed.
 
 Once updated, you need to unplug/plug back the device to use the new EEPROM
 configuration.
+
+It is recommended to first save the current content of the EEPROM, using the
+``-o`` flag, to have a working copy of the EEPROM data before any attempt to
+modify it. It can help restoring the EEPROM if something gets wrong during a
+subsequence update.
+
+Most FTDI device can run without an EEPROM. If something goes wrong, try to
+erase the EEPROM content, then restore the original content. For now,
+``ftconf.py`` does not support EEPROM restoration, but a Windows-only
+application FT_PROG_ is available from FTDI web site.
