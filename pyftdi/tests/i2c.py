@@ -119,7 +119,7 @@ class I2cReadTest(TestCase):
         address = environ.get('I2C_ADDRESS', '0x36').lower()
         addr = int(address, 16 if address.startswith('0x') else 10)
         port = self._i2c.get_port(addr)
-        data = port.read(32).tobytes()
+        data = port.read(32)
         print(hexlify(data).decode(), data.decode('utf8', errors='replace'))
 
     def _close(self):
@@ -167,7 +167,7 @@ class I2cReadGpioTest(TestCase):
     def _execute_sequence(self):
         # reset EEPROM read pointer position
         self._port.write(b'\x00\x00')
-        ref = self._port.read(32).tobytes()
+        ref = self._port.read(32)
         for dout in range(1 << self.GPIO_WIDTH):
             self._gpio.write(dout << self.GPIO_OUT_OFFSET)
             din = self._gpio.read() >> self.GPIO_IN_OFFSET
@@ -177,19 +177,19 @@ class I2cReadGpioTest(TestCase):
         self._gpio.write(0)
         # reset EEPROM read pointer position
         self._port.write(b'\x00\x00')
-        data = self._port.read(32).tobytes()
+        data = self._port.read(32)
         if data != ref:
             raise AssertionError("I2C data mismatch")
 
     def _execute_interleave(self):
         # reset EEPROM read pointer position
         self._port.write(b'\x00\x00')
-        ref = self._port.read(32).tobytes()
+        ref = self._port.read(32)
         for dout in range(1 << self.GPIO_WIDTH):
             self._gpio.write(dout << self.GPIO_OUT_OFFSET)
             # reset EEPROM read pointer position
             self._port.write(b'\x00\x00')
-            data = self._port.read(32).tobytes()
+            data = self._port.read(32)
             din = self._gpio.read() >> self.GPIO_IN_OFFSET
             if data != ref:
                 raise AssertionError("I2C data mismatch")
@@ -229,8 +229,8 @@ def suite():
        bridge -or any unsupported setup!! You've been warned.
     """
     ste = TestSuite()
-    ste.addTest(I2cTca9555TestCase('test'))
-    ste.addTest(I2cAccelTest('test'))
+    #ste.addTest(I2cTca9555TestCase('test'))
+    #ste.addTest(I2cAccelTest('test'))
     ste.addTest(I2cReadTest('test'))
     ste.addTest(I2cReadGpioTest('test'))
     ste.addTest(I2cClockStrechingGpioCheck('test'))
