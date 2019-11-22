@@ -79,7 +79,7 @@ class FtdiEeprom:
     def __init__(self):
         self.log = getLogger('pyftdi.eeprom')
         self._ftdi = Ftdi()
-        self._eeprom = b''
+        self._eeprom = bytearray()
         self._dev_ver = 0
         self._valid = False
         self._config = OrderedDict()
@@ -97,19 +97,20 @@ class FtdiEeprom:
         else:
             self._ftdi.open_from_device(device)
         self._read_eeprom()
-        self._decode_eeprom()
+        if self._valid:
+            self._decode_eeprom()
 
     def close(self) -> None:
         """Close the current connection to the FTDI USB device,
         """
         if self._ftdi.is_connected:
             self._ftdi.close()
-            self._eeprom = b''
+            self._eeprom = bytearray()
             self._dev_ver = 0
             self._config.clear()
 
     @property
-    def release(self) -> int:
+    def device_version(self) -> int:
         """Report the version of the FTDI device.
 
            :return: the release
@@ -129,7 +130,7 @@ class FtdiEeprom:
            :return: the size in bytes
         """
         try:
-            eeprom_size = self._PROPERTIES[self.release].size
+            eeprom_size = self._PROPERTIES[self.device_version].size
         except (AttributeError, KeyError):
             raise FtdiError('No EEPROM')
         return eeprom_size
@@ -141,6 +142,20 @@ class FtdiEeprom:
            :return: the content as bytes.
         """
         return bytes(self._eeprom)
+
+    @property
+    def is_empty(self) -> bool:
+        """Reports whether the EEPROM has been erased, or no EEPROM is
+           connected to the FTDI EEPROM port.
+
+           :return: True if no content is detected
+        """
+        if len(self._eeprom) != self._PROPERTIES[self.device_version].size:
+            return False
+        for byte in self._eeprom:
+            if byte != 0xFF:
+                return False
+        return True
 
     def __getattr__(self, name):
         if name in self._config:
@@ -158,6 +173,11 @@ class FtdiEeprom:
     def set_product_name(self, product: str) -> None:
         """Define a new product name."""
         self._update_var_string('product', product)
+
+    def erase(self) -> None:
+        """Erase the whole EEPROM."""
+        self._eeprom = bytearray([0xFF] * self.size)
+        self._config.clear()
 
     def dump_config(self, file: Optional[BinaryIO] = None) -> None:
         """Dump the configuration to a file.
@@ -194,7 +214,7 @@ class FtdiEeprom:
 
     def _generate_var_strings(self, fill=True) -> None:
         stream = bytearray()
-        dynpos = self._PROPERTIES[self.release].dynoff
+        dynpos = self._PROPERTIES[self.device_version].dynoff
         data_pos = dynpos
         tbl_pos = 0x0e
         for name in self.VAR_STRINGS:
@@ -221,8 +241,11 @@ class FtdiEeprom:
                                                         eeprom_size=self.size))
         crc = self._ftdi.calc_eeprom_checksum(self._eeprom)
         if crc:
-            self.log.error('Invalid CRC or EEPROM content')
-        self._valid = bool(crc)
+            if self.is_empty:
+                self.log.info('No EEPROM or EEPROM erased')
+            else:
+                self.log.error('Invalid CRC or EEPROM content')
+        self._valid = not bool(crc)
 
     def _decode_eeprom(self):
         cfg = self._config

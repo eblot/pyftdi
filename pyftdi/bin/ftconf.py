@@ -51,6 +51,8 @@ def main():
                                help='set manufacturer name')
         argparser.add_argument('-p', '--product',
                                help='set product name')
+        argparser.add_argument('-e', '--erase', action='store_true',
+                               help='erase the whole EEPROM content')
         argparser.add_argument('-u', '--update', action='store_true',
                                help='perform actual update, use w/ care')
         argparser.add_argument('-v', '--verbose', action='count', default=0,
@@ -76,8 +78,8 @@ def main():
 
         eeprom = FtdiEeprom()
         eeprom.open(args.device)
-        if args.verbose > 0:
-            eeprom.dump_config()
+        if args.erase:
+            eeprom.erase()
         if args.serial_number:
             eeprom.set_serial_number(args.serial_number)
         if args.manufacturer:
@@ -90,6 +92,8 @@ def main():
             #print(hexdump(eeprom.data))
             eeprom.commit(False)
             #print(hexdump(eeprom.data))
+        if args.verbose > 0:
+            eeprom.dump_config()
 
     except (IOError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
