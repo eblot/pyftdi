@@ -133,14 +133,14 @@ class SpiTestCase(unittest.TestCase):
         self.assertEqual(jedec_id, 'c22016')
         spi.close()
 
-    def test_spi2(self):
+    def _test_spi2(self):
         spi = SpiAccelTest()
         spi.open()
         device_id = spi.read_device_id()
         self.assertEqual(device_id, 'e5')
         spi.close()
 
-    def test_spi3(self):
+    def _test_spi3(self):
         spi = SpiRfda2125Test()
         spi.open()
         slope = 1
