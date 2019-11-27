@@ -44,6 +44,7 @@ EEPROM content.
 the FTDI EEPROM from the command line.
 
   $ pyftdi/bin/ftconf.py
+
   usage: ftconf.py [-h] [-x] [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER]
                    [-p PRODUCT] [-e] [-u] [-v] [-d]
                    [device]
