@@ -32,7 +32,7 @@ Primary goals
 
 PyFtdi_ currently supports the following features:
 
-* UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
+* UART/Serial USB converter, up to 6 Mbps (depending on the FTDI device
   capability)
 * Bitbang/GPIO legacy support, 8 pins per port
 * SPI master, with simultanous GPIO support, up to 12 pins per port

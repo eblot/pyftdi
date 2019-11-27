@@ -24,7 +24,8 @@ FTDI device pinout
  ``ACBUS7``   ``BCBUS7``                   GPIO15         GPIO15
 ============ ============= ======= ====== ============== ========== ====== ============
 
-.. [#ih]  16-bit port (ACBUS, BCBUS) is not available with FT4232H_ series
+.. [#ih]  16-bit port (ACBUS, BCBUS) is not available with FT4232H_ series, and
+          FTDI2232C/D only support 12-bit ports.
 .. [#i2c] FTDI pins are either configured as input or output. As |I2C| SDA line
           is bi-directional, two FTDI pins are required to provide the SDA
           feature, and they should be connected together and to the SDA |I2C|

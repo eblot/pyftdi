@@ -8,7 +8,7 @@ Python_ 3.5 or above is required. (see next section for Python 2.x support)
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
 
-* libusb_, currently tested with 1.0.21
+* libusb_, currently tested with 1.0.23
 
 PyFtdi_ does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_ and pyserial_.
@@ -21,7 +21,7 @@ PyFtdi_ has been tested with PyUSB_ 1.0.0.
 
    If you have no choice but using previous releases of software, such as
 
-   * Python_ (2.6+, 3.3+),
+   * Python_ (2.6+, 3.3 or 3.4),
    * other PyUSB_ backends such as the deprecated libusb-0.1, or openusb,
    * PyUSB_ 1.0.0b1 or below,
    * pyserial_ 2.6+ (previous versions of pyserial_ will NOT work)
