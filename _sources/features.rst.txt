@@ -8,8 +8,8 @@ Devices
 
 * All FTDI device ports (UART, MPSSE) can be used simultaneously.
 
-  * However, it is not yet possible to use both GPIO and MPSSE modes on the
-    same port at once
+  * SPI and |I2C| SPI support simultaneous GPIO R/W access for all pins that
+    are not used for SPI/|I2C| feature.
 
 * Several FTDI adapters can be accessed simultaneously from the same Python
   runtime instance.
@@ -20,7 +20,7 @@ Supported features
 UART
 ....
 
-Serial port, up to 12 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
+Serial port, up to 6 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
 offers transparent access to the FTDI serial ports through a pyserial_-
 compliant API. The ``serialext`` directory contains a minimal serial terminal
 demonstrating the use of this extension, and a dispatcher automatically
@@ -47,10 +47,10 @@ PyFtdi_ can be used with pyspiflash_ module that demonstrates how to
 use the FTDI SPI master with a pure-Python serial flash device driver for
 several common devices.
 
-Half-duplex (write or read) and full-duplex (synchronous write and read)
+Both Half-duplex (write or read) and full-duplex (synchronous write and read)
 communication modes are supported.
 
-GPIOs can be used while SPI mode is enabled.
+Note: FTDI*232* HW cannot be used as an SPI slave.
 
 |I2C| master
 ............
@@ -67,10 +67,17 @@ are connected to the FTDI I2C bus.
 Initial clock stretching support has been added and should be considered as
 experimental.
 
+The pyi2cflash_ module demonstrates how to use the FTDI |I2C| master to access
+serial EEPROMS.
+
+Note: FTDI*232* HW cannot be used as an |I2C| slave.
+
 JTAG
 ....
 
-JTAG is under development and is not fully supported yet.
+JTAG API is limited to low-level access. It is not intented to be used for
+any flashing or debugging purpose, but may be used as a base to perform SoC
+tests and boundary scans.
 
 EEPROM
 ......

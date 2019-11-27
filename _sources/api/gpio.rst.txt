@@ -21,7 +21,7 @@ Direct drive GPIO pins of FTDI device.
 Quickstart
 ~~~~~~~~~~
 
-See `tests/gpio.py`_ example
+See ``tests/gpio.py`` example
 
 
 Classes

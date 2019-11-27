@@ -78,8 +78,8 @@ URL-based methods to open a connection
    open_bitbang_from_url()
 
 
-Device-based method to open a connection
-........................................
+Device-based methods to open a connection
+.........................................
 
 You may also open an Ftdi device from an existing PyUSB_ device, with the help
 of the ``open_from_device()`` helper method.

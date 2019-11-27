@@ -65,7 +65,7 @@ Example: communication with a remote SPI device using full-duplex mode
     write_buf = b'\x01\x02\x03'
     read_buf = slave.exchange(write_buf, duplex=True)
 
-See also pyspiflash_ module and `tests/spi.py`_
+See also pyspiflash_ module and ``tests/spi.py``
 
 Example: communication with a SPI device and an extra GPIO
 
