@@ -913,10 +913,13 @@ class Ftdi:
            the deviation from the requested baudrate is too high, it rejects
            the configuration.
 
-           see :py:attr:`baudrate` for the exact selected baudrate.
+           :py:attr:`baudrate` attribute can be used to retrieve the exact
+           selected baudrate.
 
-           :py:const:`BAUDRATE_TOLERANCE` defines the maximum deviation, which
-                matches standard UART clock drift (3%)
+           :py:const:`BAUDRATE_TOLERANCE` defines the maximum deviation between
+           the requested baudrate and the closest FTDI achieveable baudrate,
+           which matches standard UART clock drift (3%). If the achievable
+           baudrate is not within limits, baudrate setting is rejected.
 
            :param baudrate: the new baudrate for the UART.
            :raise ValueError: if deviation from selected baudrate is too large
