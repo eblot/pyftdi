@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ftdi - FTDI driver &mdash; PyFtdi  documentation</title>
+  <title>ftdi - FTDI low-level driver &mdash; PyFtdi  documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.42.1
+                0.42.2
               </div>
             
           
@@ -92,7 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI low-level driver</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 </ul>
@@ -160,7 +160,7 @@
         
           <li><a href="index.html">API documentation</a> &raquo;</li>
         
-      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</li>
+      <li><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI low-level driver</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -180,7 +180,10 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-pyftdi.ftdi">
-<span id="ftdi-ftdi-driver"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver<a class="headerlink" href="#module-pyftdi.ftdi" title="Permalink to this headline">¶</a></h1>
+<span id="ftdi-ftdi-low-level-driver"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI low-level driver<a class="headerlink" href="#module-pyftdi.ftdi" title="Permalink to this headline">¶</a></h1>
+<p>This module implements access to the low level FTDI hardware. There are very
+few reasons to use this module directly. Most of <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> features are available
+through the dedicated <a class="reference internal" href="index.html"><span class="doc">APIs</span></a>.</p>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
@@ -1215,11 +1218,12 @@ internal dividors are only able to achieve some baudrates.</p>
 <p>PyFtdi attemps to find the closest configurable baudrate and if
 the deviation from the requested baudrate is too high, it rejects
 the configuration.</p>
-<p>see <code class="xref py py-attr docutils literal notranslate"><span class="pre">baudrate</span></code> for the exact selected baudrate.</p>
-<dl class="simple">
-<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">BAUDRATE_TOLERANCE</span></code> defines the maximum deviation, which</dt><dd><p>matches standard UART clock drift (3%)</p>
-</dd>
-</dl>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">baudrate</span></code> attribute can be used to retrieve the exact
+selected baudrate.</p>
+<p><code class="xref py py-const docutils literal notranslate"><span class="pre">BAUDRATE_TOLERANCE</span></code> defines the maximum deviation between
+the requested baudrate and the closest FTDI achieveable baudrate,
+which matches standard UART clock drift (3%). If the achievable
+baudrate is not within limits, baudrate setting is rejected.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>baudrate</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the new baudrate for the UART.</p>
