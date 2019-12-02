@@ -923,7 +923,7 @@ class Ftdi:
 
            :param baudrate: the new baudrate for the UART.
            :raise ValueError: if deviation from selected baudrate is too large
-           :rause FtdiError: on IO Error
+           :raise FtdiError: on IO Error
         """
         if self.bitbang_enabled:
             baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
