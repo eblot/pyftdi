@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
-import unittest
-
 from doctest import testmod
+from os import environ
+from sys import modules
+from time import sleep, time as now
+from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi.ftdi import Ftdi
-from time import sleep
+from pyftdi.usbtools import UsbTools, UsbToolsError
 
 
-class FtdiTestCase(unittest.TestCase):
+class FtdiTestCase(TestCase):
     """FTDI driver test case"""
 
     def test_multiple_interface(self):
@@ -52,12 +53,34 @@ class FtdiTestCase(unittest.TestCase):
         ftdi2.close()
 
 
+class HotplugTestCase(TestCase):
+
+    def test_hotplug_discovery(self):
+        """Demonstrate how to connect to an hotplugged FTDI device, i.e.
+           an FTDI device that is connected after the initial attempt to
+           enumerate it on the USB bus."""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        ftdi = Ftdi()
+        timeout = now() + 5.0  # sanity check: bail out after 10 seconds
+        while now() < timeout:
+            try:
+                ftdi.open_from_url(url)
+                break
+            except UsbToolsError:
+                UsbTools.flush_cache()
+                sleep(0.05)
+                continue
+        self.assertTrue(ftdi.is_connected, 'Unable to connect to FTDI')
+        print('Connected to FTDI', url)
+
+
 def suite():
-    suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(FtdiTestCase, 'test'))
+    suite_ = TestSuite()
+    suite_.addTest(makeSuite(FtdiTestCase, 'test'))
+    suite_.addTest(makeSuite(HotplugTestCase, 'test'))
     return suite_
 
 
 if __name__ == '__main__':
-    testmod(sys.modules[__name__])
-    unittest.main(defaultTest='suite')
+    testmod(modules[__name__])
+    ut_main(defaultTest='suite')
