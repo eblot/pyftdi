@@ -55,12 +55,12 @@ class FtdiError(IOError):
     """Base class error for all FTDI device"""
 
 
-class FtdiMpsseError(FtdiError):
-    """MPSSE mode not supported on FTDI device"""
-
-
 class FtdiFeatureError(FtdiError):
     """Requested feature is not available on FTDI device"""
+
+
+class FtdiMpsseError(FtdiFeatureError):
+    """MPSSE mode not supported on FTDI device"""
 
 
 class FtdiEepromError(FtdiError):
@@ -633,9 +633,9 @@ class Ftdi:
            :return: actual bus frequency in Hz
         """
         self.open_from_device(device, interface)
-        if not self.has_mpsse:
+        if not self.is_mpsse_interface(interface):
             self.close()
-            raise FtdiMpsseError('This device does not support MPSSE')
+            raise FtdiMpsseError('This interface does not support MPSSE')
         if to_bool(debug):
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer()
@@ -902,6 +902,18 @@ class Ftdi:
         # left as a variable so it could be tweaked base on the FTDI bcd type,
         # the frequency, or ... whatever else
         return 0.5E-6  # seems to vary between 5 and 6.5 us
+
+    def is_mpsse_interface(self, interface: int) -> bool:
+        """Tell whether the interface supports MPSSE (I2C, SPI, JTAG, ...)
+
+           :return: True if the FTDI interface supports MPSSE
+           :raise FtdiError: if no FTDI port is open
+        """
+        if not self.has_mpsse:
+            return False
+        if self.device_version == 0x0800 and interface > 2:
+            return False
+        return True
 
     def set_baudrate(self, baudrate: int) -> None:
         """Change the current UART baudrate.
