@@ -216,6 +216,23 @@ class I2cClockStrechingGpioCheck(TestCase):
         self.assertRaises(I2cIOError, gpio.set_direction, 1 << 7, 0)
 
 
+class I2cDualMaster(TestCase):
+    """Check the behaviour of 2 I2C masters. Requires a multi port FTDI device,
+       i.e. FT2232H or FT4232H. See issue #159.
+    """
+
+    def test(self):
+        url1 = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        i2c1 = I2cController()
+        i2c1.configure(url1, frequency=100000)
+        url2 = '%s%d' % (url1[:-1], int(url1[-1])+1)
+        i2c2 = I2cController()
+        i2c2.configure(url2, frequency=100000)
+        port = i2c2.get_port(0x76)
+        print(port.read_from(0x00, 2))
+        print(port.read_from(0x00, 2))
+
+
 def suite():
     """FTDI I2C driver test suite
 
@@ -234,6 +251,7 @@ def suite():
     ste.addTest(I2cReadTest('test'))
     ste.addTest(I2cReadGpioTest('test'))
     ste.addTest(I2cClockStrechingGpioCheck('test'))
+    ste.addTest(I2cDualMaster('test'))
     return ste
 
 
