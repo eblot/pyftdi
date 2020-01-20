@@ -225,10 +225,102 @@ class SpiGpioTestCase(unittest.TestCase):
         self.assertRaises(SpiIOError, self._io.write, ac_pins)
 
 
+class SpiUnalignedTestCase(unittest.TestCase):
+    """Basic test for SPI with non 8-bit multiple transfer
+
+       It expects the following I/O setup:
+
+       MOSI (AD1) connected to MISO (AD2)
+    """
+
+    def setUp(self):
+        self._spi = SpiController(cs_count=1)
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._spi.configure(url)
+        self._port = self._spi.get_port(0, freq=1E6, mode=0)
+
+    def tearDown(self):
+        """Close the SPI connection"""
+        self._spi.terminate()
+
+    def test_invalid_write(self):
+        buf = b'\xff\xff'
+        self.assertRaises(ValueError, self._port.write, buf, droptail=8)
+
+    def test_bit_write(self):
+        buf = b'\x0f'
+        for loop in range(7):
+            self._port.write(buf, droptail=loop+1)
+
+    def test_bytebit_write(self):
+        buf = b'\xff\xff\x0f'
+        for loop in range(7):
+            self._port.write(buf, droptail=loop+1)
+
+    def _test_invalid_read(self):
+        self.assertRaises(ValueError, self._port.read, 1, droptail=8)
+        self.assertRaises(ValueError, self._port.read, 2, droptail=8)
+
+    def _test_bit_read(self):
+        # make MOSI stay to low level, so MISO samples 0
+        self._port.write([0x00])
+        for loop in range(7):
+            data = self._port.read(1, droptail=loop+1)
+            self.assertEqual(len(data), 1)
+        # make MOSI stay to high level, so MISO samples 1
+        self._port.write([0x01])
+        for loop in range(7):
+            data = self._port.read(1, droptail=loop+1)
+            self.assertEqual(len(data), 1)
+
+    def _test_bytebit_read(self):
+        self._port.write([0x00])
+        for loop in range(7):
+            data = self._port.read(3, droptail=loop+1)
+            self.assertEqual(len(data), 3)
+            self.assertEqual(data[-1], 0)
+        self._port.write([0x01])
+        for loop in range(7):
+            data = self._port.read(3, droptail=loop+1)
+            print(f'{data[-1]:08b}')
+            self.assertEqual(len(data), 3)
+
+    def test_invalid_duplex(self):
+        buf = b'\xff\xff'
+        self.assertRaises(ValueError, self._port.exchange, buf,
+                          duplex=False, droptail=8)
+        self.assertRaises(ValueError, self._port.exchange, buf,
+                          duplex=False, droptail=8)
+        self.assertRaises(ValueError, self._port.exchange, buf,
+                          duplex=True, droptail=8)
+        self.assertRaises(ValueError, self._port.exchange, buf,
+                          duplex=True, droptail=8)
+
+    def test_bit_duplex(self):
+        buf = b'\xcf'
+        for loop in range(7):
+            data = self._port.exchange(buf, duplex=True, droptail=loop+1)
+            self.assertEqual(len(data), 1)
+            exp = buf[0] & ~((1<<(loop+1))-1)
+            # print(f'{data[0]:08b} {exp:08b}')
+            self.assertEqual(data[0], exp)
+
+    def test_bytebit_duplex(self):
+        buf = b'\xff\xcf'
+        for loop in range(7):
+            data = self._port.exchange(buf, duplex=True, droptail=loop+1)
+            self.assertEqual(len(data), 2)
+            exp = buf[-1] & ~((1<<(loop+1))-1)
+            # print(f'{data[-1]:08b} {exp:08b}')
+            self.assertEqual(data[0], 0xFF)
+            self.assertEqual(data[-1], exp)
+
+
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
-    suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
     return suite_
 
 

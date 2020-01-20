@@ -95,6 +95,28 @@ Example: communication with a SPI device and an extra GPIO
     pin = bool(gpio.read() & 0x20)
 
 
+Example: managing non-byte aligned transfers
+
+.. code-block:: python
+
+    # Instantiate a SPI controller
+    spi = SpiController()
+
+    # Configure the first interface (IF/1) of the first FTDI device as a
+    # SPI master
+    spi.configure('ftdi://::/1')
+
+    # Get a SPI port to a SPI slave w/ /CS on A*BUS3
+    slave = spi.get_port(cs=0)
+
+    # write 6 first bits of a byte buffer
+    slave.write(b'\xff', droptail=2)
+
+    # read only 13 bits from a slave (13 clock cycles)
+    # only the 5 MSBs of the last byte are valid, 3 LSBs are force to zero
+    slave.read(2, droptail=3)
+
+
 Classes
 ~~~~~~~
 

@@ -77,7 +77,7 @@ class SpiPort:
 
     def exchange(self, out: Union[bytes, bytearray, Iterable[int]] = b'',
                  readlen: int = 0, start: bool = True, stop: bool = True,
-                 duplex: bool = False, droptrail: int = 0) -> bytes:
+                 duplex: bool = False, droptail: int = 0) -> bytes:
         """Perform an exchange or a transaction with the SPI slave
 
            :param out: data to send to the SPI slave, may be empty to read out
@@ -92,7 +92,7 @@ class SpiPort:
                        further call to exchange()
            :param duplex: perform a full-duplex exchange (vs. half-duplex),
                           i.e. bits are clocked in and out at once.
-           :param droptrail: ignore up to 7 last bits (for non-byte sized SPI
+           :param droptail: ignore up to 7 last bits (for non-byte sized SPI
                                accesses)
            :return: an array of bytes containing the data read out from the
                     slave
@@ -101,10 +101,10 @@ class SpiPort:
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
                                          self._cpol, self._cpha,
-                                         duplex, droptrail)
+                                         duplex, droptail)
 
     def read(self, readlen: int = 0, start: bool = True, stop: bool = True,
-             droptrail: int = 0) -> bytes:
+             droptail: int = 0) -> bytes:
         """Read out bytes from the slave
 
            :param readlen: count of bytes to read out from the slave,
@@ -115,7 +115,7 @@ class SpiPort:
            :param stop: whether to desactivete the /CS line for the slave.
                        Use False if the transaction should complete with a
                        further call to exchange()
-           :param droptrail: ignore up to 7 last bits (for non-byte sized SPI
+           :param droptail: ignore up to 7 last bits (for non-byte sized SPI
                                accesses)
            :return: an array of bytes containing the data read out from the
                     slave
@@ -124,10 +124,10 @@ class SpiPort:
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
                                          self._cpol, self._cpha, False,
-                                         droptrail)
+                                         droptail)
 
     def write(self, out: Union[bytes, bytearray, Iterable[int]],
-              start: bool = True, stop: bool = True, droptrail: int = 0) \
+              start: bool = True, stop: bool = True, droptail: int = 0) \
         -> None:
         """Write bytes to the slave
 
@@ -139,14 +139,14 @@ class SpiPort:
            :param stop: whether to desactivete the /CS line for the slave.
                         Use False if the transaction should complete with a
                         further call to exchange()
-           :param droptrail: ignore up to 7 last bits (for non-byte sized SPI
+           :param droptail: ignore up to 7 last bits (for non-byte sized SPI
                                accesses)
         """
         return self._controller.exchange(self._frequency, out, 0,
                                          start and self._cs_prolog,
                                          stop and self._cs_epilog,
                                          self._cpol, self._cpha, False,
-                                         droptrail)
+                                         droptail)
 
     def flush(self) -> None:
         """Force the flush of the HW FIFOs"""
@@ -566,7 +566,7 @@ class SpiController:
                  cs_prolog: Optional[bytes] = None,
                  cs_epilog: Optional[bytes] = None,
                  cpol: bool = False, cpha: bool = False,
-                 duplex: bool = False, droptrail: int = 0) -> bytes:
+                 duplex: bool = False, droptail: int = 0) -> bytes:
         """Perform an exchange or a transaction with the SPI slave
 
            :param out: data to send to the SPI slave, may be empty to read out
@@ -582,11 +582,11 @@ class SpiController:
            :param duplex: perform a full-duplex exchange (vs. half-duplex),
                           i.e. bits are clocked in and out at once or
                           in a write-then-read manner.
-           :param droptrail: ignore up to 7 last bits (for non-byte sized SPI
+           :param droptail: ignore up to 7 last bits (for non-byte sized SPI
                              accesses)
            :return: bytes containing the data read out from the slave, if any
         """
-        if not 0 <= droptrail <= 7:
+        if not 0 <= droptail <= 7:
             raise ValueError('Invalid skip bit count')
         if duplex:
             if readlen > len(out):
@@ -599,11 +599,11 @@ class SpiController:
             if duplex:
                 data = self._exchange_full_duplex(frequency, out,
                                                   cs_prolog, cs_epilog,
-                                                  cpol, cpha, droptrail)
+                                                  cpol, cpha, droptail)
                 return data[:readlen]
             return self._exchange_half_duplex(frequency, out, readlen,
                                               cs_prolog, cs_epilog,
-                                              cpol, cpha, droptrail)
+                                              cpol, cpha, droptail)
 
     def flush(self) -> None:
         """Flush the HW FIFOs.
@@ -702,7 +702,7 @@ class SpiController:
                               out: Union[bytes, bytearray, Iterable[int]],
                               readlen: int, cs_prolog: bool, cs_epilog: bool,
                               cpol: bool, cpha: bool,
-                              droptrail: int) -> bytes:
+                              droptail: int) -> bytes:
         if not self._ftdi.is_connected:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -744,7 +744,7 @@ class SpiController:
             self._ftdi.enable_3phase_clock(cpha)
             self._clock_phase = cpha
         if writelen:
-            if not droptrail:
+            if not droptail:
                 wcmd = (Ftdi.WRITE_BYTES_NVE_MSB if not cpol else
                         Ftdi.WRITE_BYTES_PVE_MSB)
                 write_cmd = spack('<BH', wcmd, writelen-1)
@@ -760,10 +760,10 @@ class SpiController:
                     cmd.extend(out[:-1])
                 wcmd = (Ftdi.WRITE_BITS_NVE_MSB if not cpol else
                         Ftdi.WRITE_BITS_PVE_MSB)
-                write_cmd = spack('<BBB', wcmd, 8-droptrail, out[-1])
+                write_cmd = spack('<BBB', wcmd, 7-droptail, out[-1])
                 cmd.extend(write_cmd)
         if readlen:
-            if not droptrail:
+            if not droptail:
                 rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
                         Ftdi.READ_BYTES_PVE_MSB)
                 read_cmd = spack('<BH', rcmd, readlen-1)
@@ -777,7 +777,7 @@ class SpiController:
                     cmd.extend(read_cmd)
                 rcmd = (Ftdi.READ_BITS_NVE_MSB if not cpol else
                         Ftdi.READ_BITS_PVE_MSB)
-                read_cmd = spack('<BB', rcmd, 8-droptrail)
+                read_cmd = spack('<BB', rcmd, 7-droptail)
                 cmd.extend(read_cmd)
             cmd.extend(self._immediate)
             if self._turbo:
@@ -792,6 +792,8 @@ class SpiController:
             # sent the data, so try to read more than once if no data is
             # actually received
             data = self._ftdi.read_data_bytes(readlen, 4)
+            if droptail:
+                data[-1] = 0xff & (data[-1] << droptail)
         else:
             if writelen:
                 if self._turbo:
@@ -809,7 +811,7 @@ class SpiController:
                               out: Union[bytes, bytearray, Iterable[int]],
                               cs_prolog: bool, cs_epilog: bool,
                               cpol: bool, cpha: bool,
-                              droptrail: int) -> bytes:
+                              droptail: int) -> bytes:
         if not self._ftdi.is_connected:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
@@ -848,7 +850,7 @@ class SpiController:
         if self._clock_phase != cpha:
             self._ftdi.enable_3phase_clock(cpha)
             self._clock_phase = cpha
-        if not droptrail:
+        if not droptail:
             wcmd = (Ftdi.RW_BYTES_PVE_NVE_MSB if not cpol else
                     Ftdi.RW_BYTES_NVE_PVE_MSB)
             write_cmd = spack('<BH', wcmd, exlen-1)
@@ -864,7 +866,7 @@ class SpiController:
                 cmd.extend(out[:-1])
             wcmd = (Ftdi.RW_BITS_PVE_NVE_MSB if not cpol else
                     Ftdi.RW_BITS_NVE_PVE_MSB)
-            write_cmd = spack('<BBB', wcmd, 8-droptrail, out[-1])
+            write_cmd = spack('<BBB', wcmd, 7-droptail, out[-1])
             cmd.extend(write_cmd)
         cmd.extend(self._immediate)
         if self._turbo:
@@ -879,6 +881,8 @@ class SpiController:
         # sent the data, so try to read more than once if no data is
         # actually received
         data = self._ftdi.read_data_bytes(exlen, 4)
+        if droptail:
+            data[-1] = 0xff & (data[-1] << droptail)
         return data
 
     def _flush(self) -> None:
