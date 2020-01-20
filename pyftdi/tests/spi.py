@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -236,7 +236,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
     def setUp(self):
         self._spi = SpiController(cs_count=1)
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
+        self._spi.configure(url, debug=True)
         self._port = self._spi.get_port(0, freq=1E6, mode=0)
 
     def tearDown(self):
