@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.42.2
+                0.43.0
               </div>
             
           
@@ -92,7 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI low-level driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a><ul>
@@ -236,7 +236,6 @@ considered as a kludge, you’ve been warned.</p>
 <span class="n">read_buf</span> <span class="o">=</span> <span class="n">slave</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">write_buf</span><span class="p">,</span> <span class="n">duplex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <code class="docutils literal notranslate"><span class="pre">tests/spi.py</span></code></p>
 <p>Example: communication with a SPI device and an extra GPIO</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
 <span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
@@ -262,6 +261,27 @@ considered as a kludge, you’ve been warned.</p>
 <span class="n">pin</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span> <span class="o">&amp;</span> <span class="mh">0x20</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Example: managing non-byte aligned transfers</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiate a SPI controller</span>
+<span class="n">spi</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+
+<span class="c1"># Configure the first interface (IF/1) of the first FTDI device as a</span>
+<span class="c1"># SPI master</span>
+<span class="n">spi</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://::/1&#39;</span><span class="p">)</span>
+
+<span class="c1"># Get a SPI port to a SPI slave w/ /CS on A*BUS3</span>
+<span class="n">slave</span> <span class="o">=</span> <span class="n">spi</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="n">cs</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># write 6 first bits of a byte buffer</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\xff</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">droptail</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># read only 13 bits from a slave (13 clock cycles)</span>
+<span class="c1"># only the 5 MSBs of the last byte are valid, 3 LSBs are force to zero</span>
+<span class="n">slave</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">droptail</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See also <a class="reference external" href="https://github.com/eblot/pyspiflash/">pyspiflash</a> module and <code class="docutils literal notranslate"><span class="pre">tests/spi.py</span></code>, which provide more detailed
+examples on how to use the SPI API.</p>
 </div>
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
@@ -301,7 +321,7 @@ considered as a kludge, you’ve been warned.</p>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiPort.exchange">
-<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">out=b''</em>, <em class="sig-param">readlen=0</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em>, <em class="sig-param">duplex=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.exchange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">out=b''</em>, <em class="sig-param">readlen=0</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em>, <em class="sig-param">duplex=False</em>, <em class="sig-param">droptail=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform an exchange or a transaction with the SPI slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -318,6 +338,8 @@ Use False if the transaction should complete with a
 further call to exchange()</p></li>
 <li><p><strong>duplex</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – perform a full-duplex exchange (vs. half-duplex),
 i.e. bits are clocked in and out at once.</p></li>
+<li><p><strong>droptail</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – ignore up to 7 last bits (for non-byte sized SPI
+accesses)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -368,7 +390,7 @@ slave</p>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiPort.read">
-<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">readlen=0</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">readlen=0</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em>, <em class="sig-param">droptail=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read out bytes from the slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -381,6 +403,8 @@ resume a previously started transaction</p></li>
 <li><p><strong>stop</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to desactivete the /CS line for the slave.
 Use False if the transaction should complete with a
 further call to exchange()</p></li>
+<li><p><strong>droptail</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – ignore up to 7 last bits (for non-byte sized SPI
+accesses)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -424,7 +448,7 @@ value)</p></li>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiPort.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">out</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">out</em>, <em class="sig-param">start=True</em>, <em class="sig-param">stop=True</em>, <em class="sig-param">droptail=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write bytes to the slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -437,6 +461,8 @@ resume a previously started transaction</p></li>
 <li><p><strong>stop</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to desactivete the /CS line for the slave.
 Use False if the transaction should complete with a
 further call to exchange()</p></li>
+<li><p><strong>droptail</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – ignore up to 7 last bits (for non-byte sized SPI
+accesses)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -693,7 +719,7 @@ SPI slave devices, starting from A*BUS3 pin</p></li>
 
 <dl class="method">
 <dt id="pyftdi.spi.SpiController.exchange">
-<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">frequency</em>, <em class="sig-param">out</em>, <em class="sig-param">readlen</em>, <em class="sig-param">cs_prolog=None</em>, <em class="sig-param">cs_epilog=None</em>, <em class="sig-param">cpol=False</em>, <em class="sig-param">cpha=False</em>, <em class="sig-param">duplex=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.exchange" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">frequency</em>, <em class="sig-param">out</em>, <em class="sig-param">readlen</em>, <em class="sig-param">cs_prolog=None</em>, <em class="sig-param">cs_epilog=None</em>, <em class="sig-param">cpol=False</em>, <em class="sig-param">cpha=False</em>, <em class="sig-param">duplex=False</em>, <em class="sig-param">droptail=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.exchange" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform an exchange or a transaction with the SPI slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -711,6 +737,8 @@ after the actual exchange.</p></li>
 <li><p><strong>duplex</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – perform a full-duplex exchange (vs. half-duplex),
 i.e. bits are clocked in and out at once or
 in a write-then-read manner.</p></li>
+<li><p><strong>droptail</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – ignore up to 7 last bits (for non-byte sized SPI
+accesses)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>

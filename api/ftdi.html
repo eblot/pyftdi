@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.42.2
+                0.43.0
               </div>
             
           
@@ -705,6 +705,23 @@ bridge</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>True if the FTDI interface is configured in MPSSE mode</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.is_mpsse_interface">
+<code class="sig-name descname">is_mpsse_interface</code><span class="sig-paren">(</span><em class="sig-param">interface</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_mpsse_interface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the interface supports MPSSE (I2C, SPI, JTAG, …)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI interface supports MPSSE</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
 </dd>
 </dl>
 </dd></dl>

@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.42.2
+                0.43.0
               </div>
             
           
@@ -244,6 +244,9 @@ use the FTDI SPI master with a pure-Python serial flash device driver for
 several common devices.</p>
 <p>Both Half-duplex (write or read) and full-duplex (synchronous write and read)
 communication modes are supported.</p>
+<p>Experimental support for non-byte aligned access, where up to 7 trailing bits
+can be discarded: no clock pulse is generated for those bits, so that SPI
+transfer of non byte-sized can be performed.</p>
 <p>Note: FTDI*232* HW cannot be used as an SPI slave.</p>
 </div>
 <div class="section" id="i2c-master">

@@ -50,6 +50,10 @@ several common devices.
 Both Half-duplex (write or read) and full-duplex (synchronous write and read)
 communication modes are supported.
 
+Experimental support for non-byte aligned access, where up to 7 trailing bits
+can be discarded: no clock pulse is generated for those bits, so that SPI
+transfer of non byte-sized can be performed.
+
 Note: FTDI*232* HW cannot be used as an SPI slave.
 
 |I2C| master
