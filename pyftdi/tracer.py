@@ -72,8 +72,8 @@ class FtdiMpsseTracer:
         self._last_codes = deque()
         self._expect_resp = deque()  # positive: byte, negative: bit count
 
-    def send(self, buffer: Union[bytes, bytearray]) -> None:
-        self._trace_tx.extend(buffer)
+    def send(self, buf: Union[bytes, bytearray]) -> None:
+        self._trace_tx.extend(buf)
         while self._trace_tx:
             try:
                 code = self._trace_tx[0]
@@ -87,6 +87,8 @@ class FtdiMpsseTracer:
                     self._last_codes.append(code)
                 if self._cmd_decoded:
                     continue
+                # not enough data in buffer to decode a whole command
+                return
             except IndexError:
                 self.log.warning('Empty buffer')
             except KeyError:
@@ -100,9 +102,9 @@ class FtdiMpsseTracer:
             self._trace_rx = bytearray()
             self._last_codes.clear()
 
-    def receive(self, buffer: Union[bytes, bytearray]) -> None:
-        self.log.info(' .. %s', hexlify(buffer).decode())
-        self._trace_rx.extend(buffer)
+    def receive(self, buf: Union[bytes, bytearray]) -> None:
+        self.log.info(' .. %s', hexlify(buf).decode())
+        self._trace_rx.extend(buf)
         while self._trace_rx:
             code = None
             try:
@@ -112,6 +114,8 @@ class FtdiMpsseTracer:
                 self._resp_decoded = resp_decoder()
                 if self._resp_decoded:
                     continue
+                # not enough data in buffer to decode a whole response
+                return
             except IndexError:
                 self.log.warning('Empty buffer')
             except KeyError:
