@@ -34,6 +34,7 @@ from os import environ
 from sys import modules, stderr, stdout
 from time import sleep
 from pyftdi import FtdiLogger
+from pyftdi.misc import to_bool
 from pyftdi.spi import SpiController, SpiIOError
 
 
@@ -48,7 +49,8 @@ class SpiDataFlashTest(object):
     def open(self):
         """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
+        debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+        self._spi.configure(url, debug=debug)
 
     def read_jedec_id(self):
         port = self._spi.get_port(0, freq=3E6, mode=0)
@@ -73,7 +75,8 @@ class SpiAccelTest(object):
     def open(self):
         """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
+        debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+        self._spi.configure(url, debug=debug)
 
     def read_device_id(self):
         port = self._spi.get_port(1, freq=6E6, mode=3)
@@ -99,7 +102,8 @@ class SpiRfda2125Test(object):
     def open(self):
         """Open an SPI connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
+        debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+        self._spi.configure(url, debug=debug)
         self._port = self._spi.get_port(2, freq=1E6, mode=0)
 
     def change_attenuation(self, value):
@@ -171,10 +175,14 @@ class SpiGpioTestCase(unittest.TestCase):
     AC_OFFSET = 8
     PIN_COUNT = 4
 
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+
     def setUp(self):
         self._spi = SpiController(cs_count=1)
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url)
+        self._spi.configure(self.url, debug=self.debug)
         self._port = self._spi.get_port(0, freq=1E6, mode=0)
         self._io = self._spi.get_gpio()
 
@@ -233,10 +241,14 @@ class SpiUnalignedTestCase(unittest.TestCase):
        MOSI (AD1) connected to MISO (AD2)
     """
 
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+
     def setUp(self):
         self._spi = SpiController(cs_count=1)
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._spi.configure(url, debug=True)
+        self._spi.configure(self.url, debug=self.debug)
         self._port = self._spi.get_port(0, freq=1E6, mode=0)
 
     def tearDown(self):
@@ -316,11 +328,60 @@ class SpiUnalignedTestCase(unittest.TestCase):
             self.assertEqual(data[-1], exp)
 
 
+class SpiCsForceTestCase(unittest.TestCase):
+    """Basic test for exercing direct /CS control.
+
+       It requires a scope or a digital analyzer to validate the signal
+       waveforms.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+
+    def setUp(self):
+        self._spi = SpiController(cs_count=1)
+        self._spi.configure(self.url, debug=self.debug)
+        self._port = self._spi.get_port(0, freq=1E6, mode=0)
+
+    def tearDown(self):
+        """Close the SPI connection"""
+        self._spi.terminate()
+
+    def test_cs_default_pulse(self):
+        for _ in range(5):
+            self._port.force_select()
+
+    def test_cs_long_pulse(self):
+        for _ in range(5):
+            self._port.force_select(cs_hold=200)
+
+    def test_cs_manual_pulse(self):
+        for _ in range(5):
+            self._port.force_select(level=False)
+            self._port.force_select(level=True)
+            # beware that random USB bus access does not allow to create
+            # precise delays. This is only the shorter bound, longer one is
+            # not defined
+            sleep(100e-6)
+
+    def test_cs_pulse_write(self):
+        self._port.force_select()
+        self._port.write([0x00, 0x01, 0x02])
+
+    def test_cs_default_pulse_rev_clock(self):
+        self._port.set_mode(3)
+        for _ in range(5):
+            self._port.force_select()
+
+
 def suite():
     suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
-    suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
     # suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiCsForceTestCase, 'test'))
     return suite_
 
 
