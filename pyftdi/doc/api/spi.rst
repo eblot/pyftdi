@@ -65,8 +65,6 @@ Example: communication with a remote SPI device using full-duplex mode
     write_buf = b'\x01\x02\x03'
     read_buf = slave.exchange(write_buf, duplex=True)
 
-See also pyspiflash_ module and ``tests/spi.py``
-
 Example: communication with a SPI device and an extra GPIO
 
 .. code-block:: python
@@ -115,6 +113,9 @@ Example: managing non-byte aligned transfers
     # read only 13 bits from a slave (13 clock cycles)
     # only the 5 MSBs of the last byte are valid, 3 LSBs are force to zero
     slave.read(2, droptail=3)
+
+See also pyspiflash_ module and ``tests/spi.py``, which provide more detailed
+examples on how to use the SPI API.
 
 
 Classes

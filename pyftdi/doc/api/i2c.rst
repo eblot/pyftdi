@@ -53,7 +53,8 @@ Example: mastering the |I2C| bus with a complex transaction
    # read 4 bytes, without emitting the start sequence, and release the bus
    port.read(4, start=False)
 
-See also pyi2cflash_ module and ``tests/i2c.py``
+See also pyi2cflash_ module and ``tests/i2c.py``, which provide more detailed
+examples on how to use the |I2C| API.
 
 
 Classes

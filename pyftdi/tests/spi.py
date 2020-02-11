@@ -257,11 +257,11 @@ class SpiUnalignedTestCase(unittest.TestCase):
         for loop in range(7):
             self._port.write(buf, droptail=loop+1)
 
-    def _test_invalid_read(self):
+    def test_invalid_read(self):
         self.assertRaises(ValueError, self._port.read, 1, droptail=8)
         self.assertRaises(ValueError, self._port.read, 2, droptail=8)
 
-    def _test_bit_read(self):
+    def test_bit_read(self):
         # make MOSI stay to low level, so MISO samples 0
         self._port.write([0x00])
         for loop in range(7):
@@ -273,7 +273,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
             data = self._port.read(1, droptail=loop+1)
             self.assertEqual(len(data), 1)
 
-    def _test_bytebit_read(self):
+    def test_bytebit_read(self):
         self._port.write([0x00])
         for loop in range(7):
             data = self._port.read(3, droptail=loop+1)
@@ -318,9 +318,9 @@ class SpiUnalignedTestCase(unittest.TestCase):
 
 def suite():
     suite_ = unittest.TestSuite()
-    # suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
-    # suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
-    suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
     return suite_
 
 
