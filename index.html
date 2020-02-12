@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.43.0
+                0.43.1
               </div>
             
           
@@ -161,54 +161,67 @@
             
   <div class="section" id="pyftdi">
 <h1>PyFtdi<a class="headerlink" href="#pyftdi" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="documentation">
+<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+<p>PyFtdi documentation is available from <a class="reference external" href="https://eblot.github.io/pyftdi/">https://eblot.github.io/pyftdi/</a></p>
+</div>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> aims at providing a user-space driver for modern <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices,
+<p>PyFtdi aims at providing a user-space driver for modern FTDI devices,
 implemented in pure Python language.</p>
-<p>Modern <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices include:</p>
+<p>Modern FTDI devices include:</p>
 <ul class="simple">
 <li><p>UART-only bridges</p>
 <ul>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232R.htm">FT232R</a> (single port, clock up to 6 MHz, 3Mbps)</p></li>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT230X.html">FT230X</a> (single port, clock up to 48 Mhz, 3Mbps)</p></li>
+<li><p>FT232R (single port, 3Mbps)</p></li>
+<li><p>FT230X/FT231X/FT234X/ (single port, 3Mbps)</p></li>
 </ul>
 </li>
 <li><p>UART and multi-serial protocols (SPI, I<sup>2</sup>C, JTAG) bridges</p>
 <ul>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232D.htm">FT2232D</a> (dual port, clock up to 6 MHz)</p></li>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> (single port, clock up to 30 MHz)</p></li>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a> (dual port, clock up to 30 MHz)</p></li>
-<li><p><a class="reference external" href="http://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> (quad port, clock up to 30 MHz)</p></li>
+<li><p>FT2232C/D (dual port, clock up to 6 MHz)</p></li>
+<li><p>FT232H (single port, clock up to 30 MHz)</p></li>
+<li><p>FT2232H (dual port, clock up to 30 MHz)</p></li>
+<li><p>FT4232H (quad port, clock up to 30 MHz)</p></li>
 </ul>
 </li>
 </ul>
-<p>Other <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices could also be supported (including FT232* devices),
-although these devices are not a primary goal for <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>, and therefore have
-not been tested with <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>.</p>
 </div>
-<div class="section" id="primary-goals">
-<h2>Primary goals<a class="headerlink" href="#primary-goals" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> currently supports the following features:</p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<p>PyFtdi currently supports the following features:</p>
 <ul class="simple">
-<li><p>UART/Serial USB converter, up to 6 Mbps (depending on the FTDI device
+<li><p>UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
 capability)</p></li>
 <li><p>Bitbang/GPIO legacy support, 8 pins per port</p></li>
-<li><p>SPI master, with simultanous GPIO support, up to 12 pins per port</p></li>
+<li><p>SPI master, with simultanous GPIO support, up to 12 pins per port,
+with support for non-byte sized transfer</p></li>
 <li><p>I<sup>2</sup>C master, with simultanous GPIO support, up to 14 pins per port</p></li>
-<li><p>(JTAG master)</p></li>
-<li><p>Prelimiary EEPROM support (R/O access + R/W for serial/product/manufacturer)</p></li>
+<li><p>Basic JTAG master capabilities</p></li>
+<li><p>Basic EEPROM support (R/O access + R/W for serial/product/manufacturer)</p></li>
 </ul>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> provides a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> compliant API, so it can be used as a drop-in
-module to access USB-serial converters based on <a class="reference external" href="http://www.ftdichip.com/">FTDI</a> devices.</p>
 </div>
-<div class="section" id="potential-api-break">
-<h2>Potential API break<a class="headerlink" href="#potential-api-break" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="supported-host-oses">
+<h2>Supported host OSes<a class="headerlink" href="#supported-host-oses" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>macOS</p></li>
+<li><p>Linux</p></li>
+<li><p>FreeBSD</p></li>
+<li><p>Windows, although not officially supported</p></li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="warning">
+<h2>Warning<a class="headerlink" href="#warning" title="Permalink to this headline">¶</a></h2>
 <p>Starting with version <em>v0.40.0</em>, several API changes are being introduced.
 While PyFtdi tries to maintain backward compatibility with previous versions,
-so of these changes may require existing clients to update calls to PyFtdi.</p>
+some of these changes may require existing clients to update calls to PyFtdi.</p>
 <p>Do not upgrade to <em>v0.40.0</em> or above without testing your client against the
 new PyFtdi releases. PyFtdi versions up to <em>v0.39.9</em> keep a stable API
 with <em>v0.22+</em> series.</p>
+<p>See the <em>Major Changes</em> section on the online documentation for details about
+potential API breaks.</p>
 <div class="section" id="major-changes">
 <h3>Major changes<a class="headerlink" href="#major-changes" title="Permalink to this headline">¶</a></h3>
 <blockquote>
@@ -265,7 +278,7 @@ slave lines.</p></li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+        &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
