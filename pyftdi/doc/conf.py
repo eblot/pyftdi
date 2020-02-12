@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 project = find_meta('title')
 contact = '%s <%s>' % (find_meta('author'), find_meta('email'))
-copyright = '2019, %s' % contact
+copyright = '2010-2020, %s' % contact
 show_authors = True
 
 html_theme = 'sphinx_rtd_theme'
