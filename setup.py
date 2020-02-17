@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
@@ -64,8 +64,16 @@ def read(*parts):
     Build an absolute path from *parts* and and return the contents of the
     resulting file.  Assume UTF-8 encoding.
     """
-    with codecs.open(os.path.join(HERE, *parts), 'rb', 'utf-8') as f:
-        return f.read()
+    with codecs.open(os.path.join(HERE, *parts), 'rb', 'utf-8') as dfp:
+        return dfp.read()
+
+
+def read_desc(*parts):
+    """Read and filter long description
+    """
+    text = read(*parts)
+    text = re.split(r'\.\.\sEOT', text)[0]
+    return text
 
 
 META_FILE = read(META_PATH)
@@ -96,7 +104,7 @@ if __name__ == '__main__':
         maintainer=find_meta('author'),
         maintainer_email=find_meta('email'),
         keywords=KEYWORDS,
-        long_description=read('README.rst'),
+        long_description=read_desc('pyftdi/doc/index.rst'),
         packages=PACKAGES,
         scripts=['pyftdi/bin/i2cscan.py',
                  'pyftdi/bin/ftdi_urls.py',

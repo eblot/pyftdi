@@ -1,7 +1,7 @@
 PyFtdi
 ======
 
-.. include:: defs.rst
+.. |I2C| replace:: I\ :sup:`2`\ C
 
 Documentation
 -------------
@@ -49,6 +49,8 @@ Supported host OSes
   * Linux
   * FreeBSD
   * Windows, although not officially supported
+
+.. EOT
 
 Warning
 -------
