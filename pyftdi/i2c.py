@@ -446,6 +446,7 @@ class I2cController:
            * ``frequency`` float value the I2C bus frequency in Hz
            * ``clockstretching`` boolean value to enable clockstreching.
              xD7 (GPIO7) pin should be connected back to xD0 (SCK)
+           * ``debug`` to increase log verbosity, using MPSSE tracer
         """
         if 'frequency' in kwargs:
             frequency = kwargs['frequency']

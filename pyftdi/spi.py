@@ -366,7 +366,7 @@ class SpiController:
            * ``cs_count`` count of chip select signals dedicated to select
              SPI slave devices, starting from A*BUS3 pin
            * ``turbo`` whether to enable or disable turbo mode
-           * ``debug`` for extra debug output
+           * ``debug`` to increase log verbosity, using MPSSE tracer
         """
         # it is better to specify CS and turbo in configure, but the older
         # API where these parameters are specified at instanciation has been

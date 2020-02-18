@@ -41,7 +41,8 @@ class FtdiMpsseTracer:
        Far from being complete for now
     """
 
-    COMMAND_PREFIX = 'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND'
+    COMMAND_PREFIX = \
+        'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND DRIVE'
 
     def build_commands(prefix: str):
         commands = {}
@@ -58,6 +59,7 @@ class FtdiMpsseTracer:
         return commands
 
     COMMANDS = build_commands(COMMAND_PREFIX)
+    print(COMMANDS)
 
     ST_IDLE = range(1)
 
@@ -173,6 +175,15 @@ class FtdiMpsseTracer:
     def _cmd_disable_clk_3phase(self):
         self.log.info(' Disable 3-phase clock')
         self._trace_tx[:] = self._trace_tx[1:]
+        return True
+
+    def _cmd_drive_zero(self):
+        if len(self._trace_tx) < 3:
+            return False
+        value, = sunpack('H', self._trace_tx[1:3])
+        self.log.info(' Open collector [15:0] %04x %s',
+                      value, f'{value:016b}')
+        self._trace_tx[:] = self._trace_tx[3:]
         return True
 
     def _cmd_send_immediate(self):
