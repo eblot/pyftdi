@@ -59,7 +59,6 @@ class FtdiMpsseTracer:
         return commands
 
     COMMANDS = build_commands(COMMAND_PREFIX)
-    print(COMMANDS)
 
     ST_IDLE = range(1)
 
@@ -92,7 +91,7 @@ class FtdiMpsseTracer:
                 # not enough data in buffer to decode a whole command
                 return
             except IndexError:
-                self.log.warning('Empty buffer')
+                self.log.warning('Empty buffer on %02X: %s', code, cmd)
             except KeyError:
                 self.log.warning('Unknown command code: %02X', code)
             except AttributeError:
@@ -374,7 +373,7 @@ class FtdiMpsseTracer:
     def _decode_input_mpsse_bit_request(self):
         if len(self._trace_tx) < 2:
             return False
-        bitlen = self._trace_rx[1] + 1
+        bitlen = self._trace_tx[1] + 1
         self._expect_resp.append(-bitlen)
         self._trace_tx[:] = self._trace_tx[2:]
         return True
