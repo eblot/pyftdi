@@ -124,6 +124,38 @@ class I2cReadTest(TestCase):
         self._i2c.terminate()
 
 
+class I2cEepromTest(TestCase):
+    """Simple test to read a sequence of bytes I2C bus @ address 0x50,
+       from an I2C data flash
+    """
+
+    def test(self):
+        self._i2c = I2cController()
+        self._open()
+        self._read()
+        self._close()
+
+    def _open(self):
+        """Open an I2c connection to a slave"""
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        self._i2c.configure(url, clockstretching=True, debug=True)
+
+    def _read(self):
+        address = environ.get('I2C_ADDRESS', '0x50').lower()
+        addr = int(address, 16 if address.startswith('0x') else 10)
+        print('addr', addr)
+        port = self._i2c.get_port(addr)
+        port.write(b'\x00\x08')
+        data = port.read(4)
+        text = data.decode('utf8', errors='replace')
+        print(hexlify(data).decode(), text)
+        self.assertEqual(text, 'Worl')
+
+    def _close(self):
+        """Close the I2C connection"""
+        self._i2c.terminate()
+
+
 class I2cReadGpioTest(TestCase):
     """Simple test to exercise I2C + GPIO mode.
 
@@ -230,6 +262,28 @@ class I2cDualMaster(TestCase):
         print(port.read_from(0x00, 2))
 
 
+class I2cIssue143(TestCase):
+    """#143.
+    """
+
+    def test(self):
+        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        address = environ.get('I2C_ADDRESS', '0x50').lower()
+        addr = int(address, 16 if address.startswith('0x') else 10)
+        i2c = I2cController()
+        i2c.configure(url)
+        slave = i2c.get_port(addr)
+        io = i2c.get_gpio()
+        io.set_direction(0x0010, 0x0010)
+        io.write(0)
+        io.write(1<<4)
+        io.write(0)
+        slave.write([0x12, 0x34])
+        io.write(0)
+        io.write(1<<4)
+        io.write(0)
+
+
 def suite():
     """FTDI I2C driver test suite
 
@@ -246,9 +300,11 @@ def suite():
     #ste.addTest(I2cTca9555TestCase('test'))
     #ste.addTest(I2cAccelTest('test'))
     ste.addTest(I2cReadTest('test'))
-    ste.addTest(I2cReadGpioTest('test'))
-    ste.addTest(I2cClockStrechingGpioCheck('test'))
-    ste.addTest(I2cDualMaster('test'))
+    #ste.addTest(I2cEepromTest('test'))
+    #ste.addTest(I2cReadGpioTest('test'))
+    #ste.addTest(I2cClockStrechingGpioCheck('test'))
+    #ste.addTest(I2cDualMaster('test'))
+    #ste.addTest(I2cIssue143('test'))
     return ste
 
 

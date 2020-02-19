@@ -407,7 +407,7 @@ class I2cController:
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
         self._ck_delay = 1
-        self._clk_lo_data_input = None
+        self._fake_tristate = False
         self._tx_size = 1
         self._rx_size = 1
         self._ck_hd_sta = 0
@@ -519,8 +519,7 @@ class I2cController:
                 # when open collector feature is not available (FT2232, FT4232)
                 # SDA line is temporary move to high-z to enable ACK/NACK
                 # read back from slave
-                self._clk_lo_data_input = (Ftdi.SET_BITS_LOW,
-                                           self.LOW, self.SCL_BIT)
+                self._fake_tristate = True
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
                 self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
@@ -930,6 +929,12 @@ class I2cController:
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
+    def _clk_lo_data_input(self) -> Tuple[int]:
+        return (Ftdi.SET_BITS_LOW,
+                self.LOW | self._gpio_low,
+                self.SCL_BIT | (self._gpio_dir & 0xFF))
+
+    @property
     def _clk_lo_data_lo(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self._gpio_low,
@@ -1012,7 +1017,7 @@ class I2cController:
 
     def _send_check_ack(self, cmd: bytearray):
         # note: cmd is modified
-        if self._clk_lo_data_input:
+        if self._fake_tristate:
             # SCL low, SDA high-Z (input)
             cmd.extend(self._clk_lo_data_input)
             # read SDA (ack from slave)
@@ -1041,7 +1046,7 @@ class I2cController:
             self._ftdi.write_data(cmd)
             self._ftdi.read_data_bytes(0, 4)
             return bytearray()
-        if self._clk_lo_data_input:
+        if self._fake_tristate:
             read_byte = (self._clk_lo_data_input +
                          self._read_byte +
                          self._clk_lo_data_hi)
