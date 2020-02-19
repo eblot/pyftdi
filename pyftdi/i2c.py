@@ -1026,20 +1026,18 @@ class I2cController:
             self._ftdi.read_data_bytes(0, 4)
             return bytearray()
         if self._tristate:
-            read_byte = self._tristate + \
-                        self._read_byte + \
-                        self._clk_lo_data_hi
-            read_not_last = \
-                read_byte + self._ack + self._clk_lo_data_lo * self._ck_delay
-            read_last = \
-                read_byte + self._nack + self._clk_lo_data_hi * self._ck_delay
+            read_byte = (self._tristate +
+                         self._read_byte +
+                         self._clk_lo_data_hi)
+            read_not_last = (read_byte + self._ack +
+                             self._clk_lo_data_lo * self._ck_delay)
+            read_last = (read_byte + self._nack +
+                         self._clk_lo_data_hi * self._ck_delay)
         else:
-            read_not_last = \
-                self._read_byte + self._ack + \
-                self._clk_lo_data_hi * self._ck_delay
-            read_last = \
-                self._read_byte + self._nack + \
-                self._clk_lo_data_hi * self._ck_delay
+            read_not_last = (self._read_byte + self._ack +
+                             self._clk_lo_data_hi * self._ck_delay)
+            read_last = (self._read_byte + self._nack +
+                         self._clk_lo_data_hi * self._ck_delay)
         # maximum RX size to fit in FTDI FIFO, minus 2 status bytes
         chunk_size = self._rx_size-2
         cmd_size = len(read_last)
