@@ -107,9 +107,6 @@ class I2cReadTest(TestCase):
         self._read()
         self._close()
 
-    def ___init__(self):
-        self._i2c = I2cController()
-
     def _open(self):
         """Open an I2c connection to a slave"""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')

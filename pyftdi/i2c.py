@@ -407,7 +407,7 @@ class I2cController:
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
         self._ck_delay = 1
-        self._tristate = None
+        self._clk_lo_data_input = None
         self._tx_size = 1
         self._rx_size = 1
         self._ck_hd_sta = 0
@@ -516,7 +516,11 @@ class I2cController:
                                                  self.SDA_O_BIT |
                                                  self.SDA_I_BIT)
             except FtdiFeatureError:
-                self._tristate = (Ftdi.SET_BITS_LOW, self.LOW, self.SCL_BIT)
+                # when open collector feature is not available (FT2232, FT4232)
+                # SDA line is temporary move to high-z to enable ACK/NACK
+                # read back from slave
+                self._clk_lo_data_input = (Ftdi.SET_BITS_LOW,
+                                           self.LOW, self.SCL_BIT)
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
                 self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
@@ -993,21 +997,11 @@ class I2cController:
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
-        if self._tristate:
-            cmd.extend(self._tristate)
-            cmd.extend(self._read_bit)
-            cmd.extend(self._clk_lo_data_hi)
-        else:
-            cmd.extend(self._clk_lo_data_hi)
-            cmd.extend(self._read_bit)
-        cmd.extend(self._immediate)
-        self._ftdi.write_data(cmd)
-        ack = self._ftdi.read_data_bytes(1, 4)
-        if not ack:
-            raise I2cIOError('No answer from FTDI')
-        if ack[0] & self.BIT0:
+        try:
+            self._send_check_ack(cmd)
+        except I2cNackError:
             self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
-            raise I2cNackError('NACK from slave')
+            raise
 
     def _do_epilog(self) -> None:
         self.log.debug('   epilog')
@@ -1015,6 +1009,28 @@ class I2cController:
         self._ftdi.write_data(cmd)
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
+
+    def _send_check_ack(self, cmd: bytearray):
+        # note: cmd is modified
+        if self._clk_lo_data_input:
+            # SCL low, SDA high-Z (input)
+            cmd.extend(self._clk_lo_data_input)
+            # read SDA (ack from slave)
+            cmd.extend(self._read_bit)
+            # leave SCL low, restore SDA as output
+            cmd.extend(self._clk_lo_data_hi)
+        else:
+            # SCL low, SDA high-Z
+            cmd.extend(self._clk_lo_data_hi)
+            # read SDA (ack from slave)
+            cmd.extend(self._read_bit)
+        cmd.extend(self._immediate)
+        self._ftdi.write_data(cmd)
+        ack = self._ftdi.read_data_bytes(1, 4)
+        if not ack:
+            raise I2cIOError('No answer from FTDI')
+        if ack[0] & self.BIT0:
+            raise I2cNackError('NACK from slave')
 
     def _do_read(self, readlen: int) -> bytes:
         self.log.debug('- read %d byte(s)', readlen)
@@ -1025,8 +1041,8 @@ class I2cController:
             self._ftdi.write_data(cmd)
             self._ftdi.read_data_bytes(0, 4)
             return bytearray()
-        if self._tristate:
-            read_byte = (self._tristate +
+        if self._clk_lo_data_input:
+            read_byte = (self._clk_lo_data_input +
                          self._read_byte +
                          self._clk_lo_data_hi)
             read_not_last = (read_byte + self._ack +
@@ -1078,21 +1094,4 @@ class I2cController:
         for byte in out:
             cmd = bytearray(self._write_byte)
             cmd.append(byte)
-            if self._tristate:
-                cmd.extend(self._tristate)
-                cmd.extend(self._read_bit)
-                cmd.extend(self._clk_lo_data_hi)
-            else:
-                cmd.extend(self._clk_lo_data_hi)
-                cmd.extend(self._read_bit)
-            cmd.extend(self._immediate)
-            self._ftdi.write_data(cmd)
-            ack = self._ftdi.read_data_bytes(1, 4)
-            if not ack:
-                msg = 'No answer from FTDI'
-                self.log.critical(msg)
-                raise I2cIOError(msg)
-            if ack[0] & self.BIT0:
-                msg = 'NACK from slave'
-                self.log.warning(msg)
-                raise I2cNackError(msg)
+            self._send_check_ack(cmd)
