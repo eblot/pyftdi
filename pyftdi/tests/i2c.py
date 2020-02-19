@@ -27,7 +27,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-from unittest import TestCase, TestSuite, makeSuite, main as testmain
+from unittest import TestCase, TestSuite, main as testmain
 from binascii import hexlify
 from doctest import testmod
 from os import environ
