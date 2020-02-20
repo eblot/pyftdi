@@ -98,16 +98,83 @@ See :doc:`../pinout` for FTDI wiring.
    # be sure to connect the appropriate I2C slaves to the FTDI I2C bus and run
    PYTHONPATH=. python3 pyftdi/tests/i2c.py
 
+
+.. _i2c_limitations:
+
 Caveats
 ~~~~~~~
 
-* Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
-  slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
-  acknowledged by the peer, a I2C byte cannot be written to the slave before
-  the previous byte has been acknowledged by the slave and read back by the
-  I2C master, that is the host. This requires several USB transfer for each
-  byte, on top of each latency of the USB stack may add up. PyFtdi_ is
-  therefore not recommended if you need to achieve medium to high speed
-  communication with a slave (relative to the I2C clock...), nor than FTDI
-  devices are for this kind of usage.
+Open-collector bus
+..................
 
+|I2C| uses only two bidirectional open collector (or open drain) lines, pulled
+up with resistors. These resistors are also required on an |I2C| bus when an
+FTDI master is used.
+
+However, most FTDI devices do not use open collector outputs. Some software
+tricks are used to fake open collector mode when possible, for example to
+sample for slave ACK/NACK, but most communication (R/W, addressing, data)
+cannot use open collector mode. This means that most FTDI devices source
+current to the SCL and SDA lines. FTDI HW is able to cope with conflicting
+signalling, where FTDI HW forces a line the high logical level while a slave
+forces it to the low logical level, and limits the sourced current. You may
+want to check your schematics if the slave is not able to handle 4 .. 16 mA
+input current in SCL and SDA, for example. The maximal source current depends
+on the FTDI device and the attached EEPROM configuration which may be used to
+limit further down the sourced current.
+
+Fortunately, FT232H device is fitted with real open collector outputs, and
+PyFtdi always enable this mode on SCL and SDA lines when a FT232H device is
+used.
+
+Other FTDI devices such as FT2232H and FT4232H do not support open collector
+mode, and source current to SCL and SDA lines.
+
+Clock streching
+...............
+
+Clock stretching is supported through a hack that re-uses the JTAG adaptative
+clock mode designed for ARM devices. FTDI HW drives SCL on ``AD0`` (`BD0`), and
+samples the SCL line on : the 8\ :sup:`th` pin of a port ``AD7`` (``BD7``).
+
+When a FTDI device without an open collector capability is used (FT2232H,
+FT4232H) the current sourced from AD0 may prevent proper sampling of the SCL
+line when the slave attempts to strech the clock. It is therefore recommended
+to add a low forward voltage drop diode to `AD0` to prevent AD0 to source
+current to the SCL bus. See the wiring section.
+
+Speed
+.....
+
+Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
+slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
+acknowledged by the peer, a I2C byte cannot be written to the slave before
+the previous byte has been acknowledged by the slave and read back by the
+I2C master, that is the host. This requires several USB transfer for each
+byte, on top of each latency of the USB stack may add up. PyFtdi_ is
+therefore not recommended if you need to achieve medium to high speed
+communication with a slave (relative to the I2C clock...), nor than FTDI
+devices are for this kind of usage.
+
+.. _i2c_wiring:
+
+Wiring
+~~~~~~
+
+.. figure:: ../images/i2c_wiring.png
+   :scale: 50 %
+   :alt: I2C wiring
+   :align: right
+
+   Fig.1: FT2232H with clock stretching
+
+* ``AD0`` should be connected to the SCL bus
+* ``AD1`` and ``AD2`` should be both connected to the SDA bus
+* ``AD7`` should be connected to the SCL bus, if clock streching is required
+* remaining pins can be freely used as regular GPIOs.
+
+*Fig.1*:
+
+* ``D1`` is only required when clock streching is used along with
+  FT2232H or FT4232H devices. It should not be fit with an FT232H.
+* ``AD7`` may be used as a regular GPIO with clock stretching is not required.
