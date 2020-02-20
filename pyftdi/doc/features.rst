@@ -73,9 +73,9 @@ are connected to the FTDI I2C bus.
 The pyi2cflash_ module demonstrates how to use the FTDI |I2C| master to access
 serial EEPROMS.
 
-Note: FTDI*232* HW cannot be used as an |I2C| slave.
-
 See :ref:`i2c_wiring` and :ref:`i2c_limitations`.
+
+Note: FTDI*232* devices cannot be used as an |I2C| slave.
 
 JTAG
 ....

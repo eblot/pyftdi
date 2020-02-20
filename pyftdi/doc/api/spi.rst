@@ -5,27 +5,6 @@
 
 .. module :: pyftdi.spi
 
-Limitations
-~~~~~~~~~~~
-
-FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
-Application Node 114: *It is recommended that designers review the SPI Slave
-data sheet to determine the SPI mode implementation. **FTDI device can only
-support mode 0 and mode 2 due to the limitation of MPSSE engine.** *
-
-Mode 1 & Mode 3
-...............
-
-Support for mode 1 and mode 3 is implemented with some workarounds, but
-generated signals may not be reliable: YMMV. It is only available with -H
-series (232H, 2232H, 4232H).
-
-The 3-clock phase mode which has initially be designed to cope with |I2C|
-signalling is used to delay the data lines from the clock signals. A direct
-consequence of this workaround is that SCLK duty cycle is not longer 50% but
-25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
-considered as a kludge, you've been warned.
-
 Quickstart
 ~~~~~~~~~~
 
@@ -158,19 +137,39 @@ See :doc:`../pinout` for FTDI wiring.
 
 .. _spi_limitations:
 
-Caveats
-~~~~~~~
+Limitations
+~~~~~~~~~~~
 
-* Due to the MPSSE engine limitation, it is not possible to achieve
-  time-controlled request sequence. In other words, if the SPI slave needs to
-  receive command sequences at precise instants - for example ADC or DAC
-  devices - PyFtdi_ use is not recommended. This limitation is likely to apply
-  to any library that relies on FTDI device. The USB bus latency and the lack
-  of timestamped commands always add jitter and delays, with no easy known
-  workaround.
+SPI Modes 1 & 3
+................
 
-* FTDI devices are documented to only support SPI mode 0 and mode 2. Mode 1
-  may work in some cases, but mode 3 is known to fail.
+FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
+Application Node 114:
+
+   "*It is recommended that designers review the SPI Slave
+   data sheet to determine the SPI mode implementation. FTDI device can only
+   support mode 0 and mode 2 due to the limitation of MPSSE engine.*".
+
+Support for mode 1 and mode 3 is implemented with some workarounds, but
+generated signals may not be reliable: YMMV. It is only available with -H
+series (232H, 2232H, 4232H).
+
+The 3-clock phase mode which has initially be designed to cope with |I2C|
+signalling is used to delay the data lines from the clock signals. A direct
+consequence of this workaround is that SCLK duty cycle is not longer 50% but
+25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
+considered as a kludge, you've been warned.
+
+Time-sensitive usage
+....................
+
+Due to the MPSSE engine limitation, it is not possible to achieve
+time-controlled request sequence. In other words, if the SPI slave needs to
+receive command sequences at precise instants - for example ADC or DAC
+devices - PyFtdi_ use is not recommended. This limitation is likely to apply
+to any library that relies on FTDI device. The USB bus latency and the lack
+of timestamped commands always add jitter and delays, with no easy known
+workaround.
 
 .. _spi_wiring:
 
