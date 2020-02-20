@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.43.2'
+__version__ = '0.43.3'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
