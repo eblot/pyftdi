@@ -1,1 +1,2 @@
 exclude README.md
+include pyftdi/doc/images/*.png
