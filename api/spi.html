@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.43.2
+                0.44.0
               </div>
             
           
@@ -96,12 +96,12 @@
 <li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#caveats">Caveats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wiring">Wiring</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="uart.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a></li>
@@ -185,24 +185,6 @@
             
   <div class="section" id="module-pyftdi.spi">
 <span id="spi-spi-api"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API<a class="headerlink" href="#module-pyftdi.spi" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="limitations">
-<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
-<p>FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
-Application Node 114: <em>It is recommended that designers review the SPI Slave
-data sheet to determine the SPI mode implementation. **FTDI device can only
-support mode 0 and mode 2 due to the limitation of MPSSE engine.*</em> *</p>
-<div class="section" id="mode-1-mode-3">
-<h3>Mode 1 &amp; Mode 3<a class="headerlink" href="#mode-1-mode-3" title="Permalink to this headline">¶</a></h3>
-<p>Support for mode 1 and mode 3 is implemented with some workarounds, but
-generated signals may not be reliable: YMMV. It is only available with -H
-series (232H, 2232H, 4232H).</p>
-<p>The 3-clock phase mode which has initially be designed to cope with I<sup>2</sup>C
-signalling is used to delay the data lines from the clock signals. A direct
-consequence of this workaround is that SCLK duty cycle is not longer 50% but
-25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
-considered as a kludge, you’ve been warned.</p>
-</div>
-</div>
 <div class="section" id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h2>
 <p>Example: communication with a SPI data flash (half-duplex example)</p>
@@ -292,7 +274,7 @@ examples on how to use the SPI API.</p>
 <p>An SPI port is never instanciated directly: use
 <a class="reference internal" href="#pyftdi.spi.SpiController.get_port" title="pyftdi.spi.SpiController.get_port"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SpiController.get_port()</span></code></a> method to obtain an SPI port.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">SpiController</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spi</span><span class="o">.</span><span class="n">set_frequency</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
@@ -682,7 +664,7 @@ frequency.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cs_count</span></code> count of chip select signals dedicated to select
 SPI slave devices, starting from A*BUS3 pin</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">turbo</span></code> whether to enable or disable turbo mode</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">debug</span></code> for extra debug output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug</span></code> to increase log verbosity, using MPSSE tracer</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -967,18 +949,56 @@ configured pin.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="caveats">
-<h2>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Due to the MPSSE engine limitation, it is not possible to achieve
+<div class="section" id="limitations">
+<span id="spi-limitations"></span><h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="spi-modes-1-3">
+<h3>SPI Modes 1 &amp; 3<a class="headerlink" href="#spi-modes-1-3" title="Permalink to this headline">¶</a></h3>
+<p>FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
+Application Node 114:</p>
+<blockquote>
+<div><p>“<em>It is recommended that designers review the SPI Slave
+data sheet to determine the SPI mode implementation. FTDI device can only
+support mode 0 and mode 2 due to the limitation of MPSSE engine.</em>”.</p>
+</div></blockquote>
+<p>Support for mode 1 and mode 3 is implemented with some workarounds, but
+generated signals may not be reliable: YMMV. It is only available with -H
+series (232H, 2232H, 4232H).</p>
+<p>The 3-clock phase mode which has initially be designed to cope with I<sup>2</sup>C
+signalling is used to delay the data lines from the clock signals. A direct
+consequence of this workaround is that SCLK duty cycle is not longer 50% but
+25% (mode 1) or 75% (mode 3). Again, support for mode 1 and mode 3 should be
+considered as a kludge, you’ve been warned.</p>
+</div>
+<div class="section" id="time-sensitive-usage">
+<h3>Time-sensitive usage<a class="headerlink" href="#time-sensitive-usage" title="Permalink to this headline">¶</a></h3>
+<p>Due to the MPSSE engine limitation, it is not possible to achieve
 time-controlled request sequence. In other words, if the SPI slave needs to
 receive command sequences at precise instants - for example ADC or DAC
 devices - <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> use is not recommended. This limitation is likely to apply
 to any library that relies on FTDI device. The USB bus latency and the lack
 of timestamped commands always add jitter and delays, with no easy known
-workaround.</p></li>
-<li><p>FTDI devices are documented to only support SPI mode 0 and mode 2. Mode 1
-may work in some cases, but mode 3 is known to fail.</p></li>
+workaround.</p>
+</div>
+</div>
+<div class="section" id="wiring">
+<span id="spi-wiring"></span><h2>Wiring<a class="headerlink" href="#wiring" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right" id="id1">
+<a class="reference internal image-reference" href="../_images/spi_wiring.png"><img alt="SPI wiring" src="../_images/spi_wiring.png" style="width: 262.0px; height: 269.0px;" /></a>
+<p class="caption"><span class="caption-text">Fig.1: FT2232H with two SPI slaves</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AD0</span></code> should be connected to SCLK</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD1</span></code> should be connected to MOSI</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD2</span></code> should be connected to MISO</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD3</span></code> should be connected to the first slave /CS.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD4</span></code> should be connected to the second slave /CS, if any</p></li>
+<li><p>remaining pins can be freely used as regular GPIOs.</p></li>
+</ul>
+<p><em>Fig.1</em>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AD4</span></code> may be used as a regular GPIO if a single SPI slave is used</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD5</span></code> may be used as another /CS signal for a third slave, in this case
+the first available GPIO is <code class="docutils literal notranslate"><span class="pre">AD6</span></code>, etc.</p></li>
 </ul>
 </div>
 </div>

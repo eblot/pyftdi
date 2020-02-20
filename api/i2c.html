@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../_static/jquery.js"></script>
-        <script type="text/javascript" src="../_static/underscore.js"></script>
-        <script type="text/javascript" src="../_static/doctools.js"></script>
-        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.43.2
+                0.44.0
               </div>
             
           
@@ -100,6 +100,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#tests">Tests</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#caveats">Caveats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wiring">Wiring</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a></li>
@@ -241,7 +242,7 @@ from releasing the I2C bus, if some further data should be exchanged
 with the slave device. Note that in case of any error, the I2C bus is
 released and the <code class="docutils literal notranslate"><span class="pre">relax</span></code> parameter is ignored in such an event.</p>
 <p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ctrl</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:232h/1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">i2c</span> <span class="o">=</span> <span class="n">ctrl</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># send 2 bytes</span>
@@ -657,6 +658,7 @@ useful to setup default IOs at start up, use
 <li><p><code class="docutils literal notranslate"><span class="pre">frequency</span></code> float value the I2C bus frequency in Hz</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">clockstretching</span></code> boolean value to enable clockstreching.
 xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug</span></code> to increase log verbosity, using MPSSE tracer</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -1081,9 +1083,43 @@ be added as the first (byte)s of the output buffer.</p>
 </div>
 </div>
 <div class="section" id="caveats">
-<h2>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
+<span id="i2c-limitations"></span><h2>Caveats<a class="headerlink" href="#caveats" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="open-collector-bus">
+<h3>Open-collector bus<a class="headerlink" href="#open-collector-bus" title="Permalink to this headline">¶</a></h3>
+<p>I<sup>2</sup>C uses only two bidirectional open collector (or open drain) lines, pulled
+up with resistors. These resistors are also required on an I<sup>2</sup>C bus when an
+FTDI master is used.</p>
+<p>However, most FTDI devices do not use open collector outputs. Some software
+tricks are used to fake open collector mode when possible, for example to
+sample for slave ACK/NACK, but most communication (R/W, addressing, data)
+cannot use open collector mode. This means that most FTDI devices source
+current to the SCL and SDA lines. FTDI HW is able to cope with conflicting
+signalling, where FTDI HW forces a line the high logical level while a slave
+forces it to the low logical level, and limits the sourced current. You may
+want to check your schematics if the slave is not able to handle 4 .. 16 mA
+input current in SCL and SDA, for example. The maximal source current depends
+on the FTDI device and the attached EEPROM configuration which may be used to
+limit further down the sourced current.</p>
+<p>Fortunately, FT232H device is fitted with real open collector outputs, and
+PyFtdi always enable this mode on SCL and SDA lines when a FT232H device is
+used.</p>
+<p>Other FTDI devices such as FT2232H and FT4232H do not support open collector
+mode, and source current to SCL and SDA lines.</p>
+</div>
+<div class="section" id="clock-streching">
+<h3>Clock streching<a class="headerlink" href="#clock-streching" title="Permalink to this headline">¶</a></h3>
+<p>Clock stretching is supported through a hack that re-uses the JTAG adaptative
+clock mode designed for ARM devices. FTDI HW drives SCL on <code class="docutils literal notranslate"><span class="pre">AD0</span></code> (<cite>BD0</cite>), and
+samples the SCL line on : the 8<sup>th</sup> pin of a port <code class="docutils literal notranslate"><span class="pre">AD7</span></code> (<code class="docutils literal notranslate"><span class="pre">BD7</span></code>).</p>
+<p>When a FTDI device without an open collector capability is used (FT2232H,
+FT4232H) the current sourced from AD0 may prevent proper sampling of the SCL
+line when the slave attempts to strech the clock. It is therefore recommended
+to add a low forward voltage drop diode to <cite>AD0</cite> to prevent AD0 to source
+current to the SCL bus. See the wiring section.</p>
+</div>
+<div class="section" id="speed">
+<h3>Speed<a class="headerlink" href="#speed" title="Permalink to this headline">¶</a></h3>
+<p>Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
 slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
 acknowledged by the peer, a I2C byte cannot be written to the slave before
 the previous byte has been acknowledged by the slave and read back by the
@@ -1091,7 +1127,26 @@ I2C master, that is the host. This requires several USB transfer for each
 byte, on top of each latency of the USB stack may add up. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is
 therefore not recommended if you need to achieve medium to high speed
 communication with a slave (relative to the I2C clock…), nor than FTDI
-devices are for this kind of usage.</p></li>
+devices are for this kind of usage.</p>
+</div>
+</div>
+<div class="section" id="wiring">
+<span id="i2c-wiring"></span><h2>Wiring<a class="headerlink" href="#wiring" title="Permalink to this headline">¶</a></h2>
+<div class="figure align-right" id="id1">
+<a class="reference internal image-reference" href="../_images/i2c_wiring.png"><img alt="I2C wiring" src="../_images/i2c_wiring.png" style="width: 358.0px; height: 268.0px;" /></a>
+<p class="caption"><span class="caption-text">Fig.1: FT2232H with clock stretching</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AD0</span></code> should be connected to the SCL bus</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD1</span></code> and <code class="docutils literal notranslate"><span class="pre">AD2</span></code> should be both connected to the SDA bus</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD7</span></code> should be connected to the SCL bus, if clock streching is required</p></li>
+<li><p>remaining pins can be freely used as regular GPIOs.</p></li>
+</ul>
+<p><em>Fig.1</em>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">D1</span></code> is only required when clock streching is used along with
+FT2232H or FT4232H devices. It should not be fit with an FT232H.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AD7</span></code> may be used as a regular GPIO with clock stretching is not required.</p></li>
 </ul>
 </div>
 </div>

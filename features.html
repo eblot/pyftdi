@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.43.2
+                0.44.0
               </div>
             
           
@@ -247,7 +247,8 @@ communication modes are supported.</p>
 <p>Experimental support for non-byte aligned access, where up to 7 trailing bits
 can be discarded: no clock pulse is generated for those bits, so that SPI
 transfer of non byte-sized can be performed.</p>
-<p>Note: FTDI*232* HW cannot be used as an SPI slave.</p>
+<p>See <a class="reference internal" href="api/spi.html#spi-wiring"><span class="std std-ref">Wiring</span></a> and <a class="reference internal" href="api/spi.html#spi-limitations"><span class="std std-ref">Limitations</span></a>.</p>
+<p>Note: FTDI*232* devices cannot be used as an SPI slave.</p>
 </div>
 <div class="section" id="i2c-master">
 <h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Permalink to this headline">¶</a></h3>
@@ -256,11 +257,10 @@ transfer of non byte-sized can be performed.</p>
 <p>GPIOs can be used while I<sup>2</sup>C mode is enabled.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">pyftdi/bin/i2cscan.py</span></code> script helps to discover which I2C devices
 are connected to the FTDI I2C bus.</p>
-<p>Initial clock stretching support has been added and should be considered as
-experimental.</p>
 <p>The <a class="reference external" href="https://github.com/eblot/pyi2cflash/">pyi2cflash</a> module demonstrates how to use the FTDI I<sup>2</sup>C master to access
 serial EEPROMS.</p>
-<p>Note: FTDI*232* HW cannot be used as an I<sup>2</sup>C slave.</p>
+<p>See <a class="reference internal" href="api/i2c.html#i2c-wiring"><span class="std std-ref">Wiring</span></a> and <a class="reference internal" href="api/i2c.html#i2c-limitations"><span class="std std-ref">Caveats</span></a>.</p>
+<p>Note: FTDI*232* devices cannot be used as an I<sup>2</sup>C slave.</p>
 </div>
 <div class="section" id="jtag">
 <h3>JTAG<a class="headerlink" href="#jtag" title="Permalink to this headline">¶</a></h3>
