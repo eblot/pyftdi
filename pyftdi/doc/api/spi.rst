@@ -189,6 +189,7 @@ Wiring
 * ``AD2`` should be connected to MISO
 * ``AD3`` should be connected to the first slave /CS.
 * ``AD4`` should be connected to the second slave /CS, if any
+* remaining pins can be freely used as regular GPIOs.
 
 *Fig.1*:
 
