@@ -24,7 +24,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = '0.43.3'
+__version__ = '0.44.0'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
@@ -33,7 +33,7 @@ __author__ = 'Emmanuel Blot'
 # For all support requests, please open a new issue on GitHub
 __email__ = 'emmanuel.blot@free.fr'
 __license__ = 'Modified BSD'
-__copyright__ = 'Copyright (c) 2011-2019 Emmanuel Blot'
+__copyright__ = 'Copyright (c) 2011-2020 Emmanuel Blot'
 
 
 from logging import WARNING, NullHandler, getLogger
