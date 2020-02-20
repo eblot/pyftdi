@@ -156,6 +156,8 @@ See :doc:`../pinout` for FTDI wiring.
    # be sure to connect the appropriate SPI slaves to the FTDI SPI bus and run
    PYTHONPATH=. python3 pyftdi/tests/spi.py
 
+.. _spi_limitations:
+
 Caveats
 ~~~~~~~
 
@@ -169,3 +171,27 @@ Caveats
 
 * FTDI devices are documented to only support SPI mode 0 and mode 2. Mode 1
   may work in some cases, but mode 3 is known to fail.
+
+.. _spi_wiring:
+
+Wiring
+~~~~~~
+
+.. figure:: ../images/spi_wiring.png
+   :scale: 50 %
+   :alt: SPI wiring
+   :align: right
+
+   Fig.1: FT2232H with two SPI slaves
+
+* ``AD0`` should be connected to SCLK
+* ``AD1`` should be connected to MOSI
+* ``AD2`` should be connected to MISO
+* ``AD3`` should be connected to the first slave /CS.
+* ``AD4`` should be connected to the second slave /CS, if any
+
+*Fig.1*:
+
+* ``AD4`` may be used as a regular GPIO if a single SPI slave is used
+* ``AD5`` may be used as another /CS signal for a third slave, in this case
+  the first available GPIO is ``AD6``, etc.

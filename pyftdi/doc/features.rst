@@ -54,7 +54,9 @@ Experimental support for non-byte aligned access, where up to 7 trailing bits
 can be discarded: no clock pulse is generated for those bits, so that SPI
 transfer of non byte-sized can be performed.
 
-Note: FTDI*232* HW cannot be used as an SPI slave.
+See :ref:`spi_wiring` and :ref:`spi_limitations`.
+
+Note: FTDI*232* devices cannot be used as an SPI slave.
 
 |I2C| master
 ............
@@ -68,13 +70,12 @@ GPIOs can be used while |I2C| mode is enabled.
 The ``pyftdi/bin/i2cscan.py`` script helps to discover which I2C devices
 are connected to the FTDI I2C bus.
 
-Initial clock stretching support has been added and should be considered as
-experimental.
-
 The pyi2cflash_ module demonstrates how to use the FTDI |I2C| master to access
 serial EEPROMS.
 
 Note: FTDI*232* HW cannot be used as an |I2C| slave.
+
+See :ref:`i2c_wiring` and :ref:`i2c_limitations`.
 
 JTAG
 ....
