@@ -1,5 +1,5 @@
-Licenses
---------
+PyFtdi License
+--------------
 
 .. include:: defs.rst
 
@@ -16,9 +16,9 @@ or commercial projects as long as you comply with the BSD 3-clause license.
 BSD 3-clause
 ~~~~~~~~~~~~
 
-.. code-block:: none
+::
 
-  Copyright (c) 2008-2017 Emmanuel Blot <emmanuel.blot@free.fr>
+  Copyright (c) 2008-2020 Emmanuel Blot <emmanuel.blot@free.fr>
   All Rights Reserved.
 
   Redistribution and use in source and binary forms, with or without
