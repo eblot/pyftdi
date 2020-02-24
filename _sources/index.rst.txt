@@ -98,4 +98,4 @@ PyFTDI in details
    eeprom
    troubleshooting
    authors
-   licenses
+   license
