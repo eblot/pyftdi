@@ -70,7 +70,7 @@ the FTDI EEPROM from the command line.
     -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
 
-**Again, please read the** :doc:`licenses` **terms before using the EEPROM API
+**Again, please read the** :doc:`license` **terms before using the EEPROM API
 or this script. You may brick your device if something goes wrong, and there
 may be no way to recover your device.**
 
