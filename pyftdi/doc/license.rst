@@ -1,5 +1,5 @@
-PyFtdi License
---------------
+License
+-------
 
 .. include:: defs.rst
 
