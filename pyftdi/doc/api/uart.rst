@@ -49,7 +49,7 @@ Quickstart
 Mini serial terminal example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``serialext/tests/pyterm.py`` is a simple serial terminal that can be used
+``pyftdi/bin/pyterm.py`` is a simple serial terminal that can be used
 to test the serial port feature.::
 
   Usage: pyterm.py [-h] [-f] [-p DEVICE] [-b BAUDRATE] [-w] [-e] [-r] [-l] [-s]
@@ -76,7 +76,7 @@ to test the serial port feature.::
 If the PyFtdi module is not yet installed and ``pyterm.py`` is run from the
 archive directory, ``PYTHONPATH`` should be defined to the current directory::
 
-    PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi:///?
+    PYTHONPATH=$PWD pyftdi/bin/pyterm.py -p ftdi:///?
 
 The above command lists all the available FTDI device ports.
 
@@ -86,9 +86,9 @@ the proper port, for example:
 .. code-block:: shell
 
     # detect all FTDI connected devices
-    PYTHONPATH=. python3 pyftdi/serialext/tests/pyterm.py -p ftdi:///?
+    PYTHONPATH=. python3 pyftdi/bin/ftdi_urls.py
     # use the first interface of the first FT2232H as a serial port
-    PYTHONPATH=$PWD pyftdi/serialext/tests/pyterm.py -p ftdi://ftdi:2232/1
+    PYTHONPATH=$PWD pyftdi/bin/pyterm.py -p ftdi://ftdi:2232/1
 
 
 .. _uart-limitations:
