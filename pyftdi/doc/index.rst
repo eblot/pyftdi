@@ -6,7 +6,17 @@ PyFtdi
 Documentation
 -------------
 
-PyFtdi documentation is available from https://eblot.github.io/pyftdi/
+PyFtdi online documentation is available
+`here <https://eblot.github.io/pyftdi>`_.
+
+Source code
+-----------
+
+PyFtdi releases are available from the Python Package Index from
+`PyPi <https://pypi.org/project/pyftdi>`_.
+
+PyFtdi development code is available from
+`GitHub <https://github.com/eblot/pyftdi>`_.
 
 Overview
 --------
