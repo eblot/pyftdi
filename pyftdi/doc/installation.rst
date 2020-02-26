@@ -112,7 +112,7 @@ Open a *shell*, or a *CMD* on Windows
 
     python3  # or 'python' on Windows
     from pyftdi.ftdi import Ftdi
-    Ftdi().open_from_url('ftdi:///?')
+    Ftdi.show_devices()
 
 should list all the FTDI devices available on your host.
 

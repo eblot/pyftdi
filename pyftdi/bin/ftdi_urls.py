@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,8 @@ from pyftdi.ftdi import Ftdi
 
 
 def main():
-    ftdi = Ftdi()
-    ftdi.open_from_url('ftdi:///?')
+    """Simple way to list URLs and descriptors."""
+    Ftdi.show_devices()
 
 
 if __name__ == '__main__':
