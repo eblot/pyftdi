@@ -26,6 +26,7 @@
 
 """USB Helpers"""
 
+from importlib import import_module
 from string import printable as printablechars
 from sys import platform, stdout
 from threading import RLock
@@ -73,6 +74,9 @@ class UsbToolsError(Exception):
 
 class UsbTools:
     """Helpers to obtain information about connected USB devices."""
+
+    # Supported back ends, in preference order
+    BACKENDS = ('usb.backend.libusb1', 'usb.backend.libusb0')
 
     # Need to maintain a list of reference USB devices, to circumvent a
     # limitation in pyusb that prevents from opening several times the same
@@ -252,14 +256,8 @@ class UsbTools:
         cls.Lock.acquire()
         try:
             backend = None
-            candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01')
-            usbmod = __import__('usb.backend', globals(), locals(),
-                                candidates, 0)
-            for candidate in candidates:
-                try:
-                    mod = getattr(usbmod, candidate)
-                except AttributeError:
-                    continue
+            for candidate in cls.BACKENDS:
+                mod = import_module(candidate)
                 backend = mod.get_backend()
                 if backend is not None:
                     break
