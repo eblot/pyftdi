@@ -1,0 +1,33 @@
+name: Python package
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.5, 3.6, 3.7, 3.8]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install setuptools wheel sphinx
+        # Shpinx Read the Doc theme seems to never get a release w/ fixed issues 
+        pip install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg=sphinx_rtd_theme
+    - name: Build package
+      run: |
+        python setup.py sdist bdist_wheel
+    - name: Build documentation
+      run: |
+        mkdir doc
+        cd doc
+        sphinx-build -b html ../pyftdi/doc .
