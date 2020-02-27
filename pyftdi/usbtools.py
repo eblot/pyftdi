@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -252,8 +252,7 @@ class UsbTools:
         cls.Lock.acquire()
         try:
             backend = None
-            candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01',
-                          'openusb')
+            candidates = ('libusb1', 'libusb10', 'libusb0', 'libusb01')
             usbmod = __import__('usb.backend', globals(), locals(),
                                 candidates, 0)
             for candidate in candidates:
