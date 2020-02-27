@@ -39,10 +39,10 @@ PyFtdi currently supports the following features:
 
 ## Supported host OSes
 
-  * macOS
-  * Linux
-  * FreeBSD
-  * Windows, although not officially supported
+* macOS
+* Linux
+* FreeBSD
+* Windows, although not officially supported
 
 ## Warning
 
