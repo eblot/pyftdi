@@ -1,0 +1,2 @@
+pyftdi
+pyusb>=1.0
