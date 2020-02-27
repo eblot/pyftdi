@@ -1,5 +1,7 @@
 # PyFtdi
 
+![Python package](https://github.com/eblot/pyftdi/workflows/Python%20package/badge.svg)
+
 ## Documentation
 
 PyFtdi documentation is available from https://eblot.github.io/pyftdi/
