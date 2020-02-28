@@ -1,0 +1,42 @@
+devices:
+  - bus: 1
+    address: 1
+    speed: 3
+    port_number: 1
+    port_numbers: 1
+    descriptor:
+      usb: 0x200
+      class: 0
+      subclass: 0
+      protocol: 0
+      maxpacketsize: 8
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT232H
+      serialnumber: FT_1234
+    configurations:
+      - descriptor:
+          attributes:
+            - selfpowered
+          maxpower: 150
+        interfaces:
+          - alternatives:
+              - descriptor:
+                  class: 0xff
+                  subclass: 0xff
+                  protocol: 0xff
+                endpoints:
+                  - descriptor:
+                      number: 1
+                      maxpacketsize: 64
+                      interval: 0
+                      direction: in
+                      type: bulk
+                  - descriptor:
+                      number: 2
+                      maxpacketsize: 64
+                      interval: 0
+                      direction: out
+                      type: bulk

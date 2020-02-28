@@ -14,7 +14,7 @@ from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbTools
-
+from pyftdi.tests.backend.usbmock import MockLoader
 
 class MockTestCase(TestCase):
     """
@@ -53,9 +53,22 @@ class MockTestCase(TestCase):
         ftdi.close()
 
 
+class MockLoaderTestCase(TestCase):
+    """
+    """
+
+    def test_1(self):
+        loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///?')
+
+
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(MockTestCase, 'test'))
+    # suite_.addTest(makeSuite(MockTestCase, 'test'))
+    suite_.addTest(makeSuite(MockLoaderTestCase, 'test'))
     return suite_
 
 
