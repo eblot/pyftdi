@@ -1,4 +1,4 @@
-# Copyright (C) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (C) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -84,6 +84,8 @@ class Ftdi:
              '4232': 0x6011,
              '4232h': 0x6011,
              '230x': 0x6015,
+             '231x': 0x6015,
+             '234x': 0x6015,
              'ft232': 0x6001,
              'ft232r': 0x6001,
              'ft232h': 0x6014,
@@ -92,7 +94,9 @@ class Ftdi:
              'ft2232h': 0x6010,
              'ft4232': 0x6011,
              'ft4232h': 0x6011,
-             'ft230x': 0x6015}
+             'ft230x': 0x6015,
+             'ft231x': 0x6015,
+             'ft234x': 0x6015}
         }
     DEFAULT_VENDOR = FTDI_VENDOR
 
@@ -195,24 +199,24 @@ class Ftdi:
                                 CTRL_RECIPIENT_DEVICE)
 
     # Requests
-    SIO_RESET = 0               # Reset the port
-    SIO_SET_MODEM_CTRL = 1      # Set the modem control register
-    SIO_SET_FLOW_CTRL = 2       # Set flow control register
-    SIO_SET_BAUDRATE = 3        # Set baud rate
-    SIO_SET_DATA = 4            # Set the data characteristics of the port
-    SIO_POLL_MODEM_STATUS = 5   # Get line status
-    SIO_SET_EVENT_CHAR = 6      # Change event character
-    SIO_SET_ERROR_CHAR = 7      # Change error character
-    SIO_SET_LATENCY_TIMER = 9   # Change latency timer
-    SIO_GET_LATENCY_TIMER = 10  # Get latency timer
-    SIO_SET_BITMODE = 11        # Change bit mode
-    SIO_READ_PINS = 12          # Read GPIO pin value
+    SIO_REQ_RESET = 0               # Reset the port
+    SIO_REQ_SET_MODEM_CTRL = 1      # Set the modem control register
+    SIO_REQ_SET_FLOW_CTRL = 2       # Set flow control register
+    SIO_REQ_SET_BAUDRATE = 3        # Set baud rate
+    SIO_REQ_SET_DATA = 4            # Set the data characteristics of the port
+    SIO_REQ_POLL_MODEM_STATUS = 5   # Get line status
+    SIO_REQ_SET_EVENT_CHAR = 6      # Change event character
+    SIO_REQ_SET_ERROR_CHAR = 7      # Change error character
+    SIO_REQ_SET_LATENCY_TIMER = 9   # Change latency timer
+    SIO_REQ_GET_LATENCY_TIMER = 10  # Get latency timer
+    SIO_REQ_SET_BITMODE = 11        # Change bit mode
+    SIO_REQ_READ_PINS = 12          # Read GPIO pin value
 
     # Eeprom requests
-    SIO_EEPROM = 0x90
-    SIO_READ_EEPROM = SIO_EEPROM + 0   # Read EEPROM content
-    SIO_WRITE_EEPROM = SIO_EEPROM + 1  # Write EEPROM content
-    SIO_ERASE_EEPROM = SIO_EEPROM + 2  # Erase EEPROM content
+    SIO_REQ_EEPROM = 0x90
+    SIO_REQ_READ_EEPROM = SIO_REQ_EEPROM + 0   # Read EEPROM content
+    SIO_REQ_WRITE_EEPROM = SIO_REQ_EEPROM + 1  # Write EEPROM content
+    SIO_REQ_ERASE_EEPROM = SIO_REQ_EEPROM + 2  # Erase EEPROM content
 
     # Reset commands
     SIO_RESET_SIO = 0          # Reset device
@@ -949,7 +953,7 @@ class Ftdi:
                              (delta, baudrate, actual))
         try:
             if self.usb_dev.ctrl_transfer(
-                    Ftdi.REQ_OUT, Ftdi.SIO_SET_BAUDRATE, value, index,
+                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_BAUDRATE, value, index,
                     bytearray(), self.usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             self.baudrate = actual
@@ -973,7 +977,8 @@ class Ftdi:
 
     def purge_rx_buffer(self) -> None:
         """Clear the read buffer on the chip and the internal read buffer."""
-        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_RX):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
+                                   Ftdi.SIO_RESET_PURGE_RX):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self.readoffset = 0
@@ -981,7 +986,8 @@ class Ftdi:
 
     def purge_tx_buffer(self) -> None:
         """Clear the write buffer on the chip."""
-        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_PURGE_TX):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
+                                   Ftdi.SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to flush TX buffer')
 
     def purge_buffers(self) -> None:
@@ -1036,7 +1042,7 @@ class Ftdi:
            Switch the FTDI interface to bitbang mode.
         """
         value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_BITMODE, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self.bitmode = mode
 
@@ -1046,7 +1052,7 @@ class Ftdi:
 
            :return: bitfield of FTDI interface input GPIO
         """
-        pins = self._ctrl_transfer_in(Ftdi.SIO_READ_PINS, 1)
+        pins = self._ctrl_transfer_in(Ftdi.SIO_REQ_READ_PINS, 1)
         if not pins:
             raise FtdiError('Unable to read pins')
         return pins[0]
@@ -1065,7 +1071,7 @@ class Ftdi:
         """
         if not Ftdi.LATENCY_MIN <= latency <= Ftdi.LATENCY_MAX:
             raise ValueError("Latency out of range")
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_LATENCY_TIMER, latency):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_LATENCY_TIMER, latency):
             raise FtdiError('Unable to latency timer')
 
     def get_latency_timer(self) -> int:
@@ -1073,7 +1079,7 @@ class Ftdi:
 
            :return: the current latency (unspecified unit)
         """
-        latency = self._ctrl_transfer_in(Ftdi.SIO_GET_LATENCY_TIMER, 1)
+        latency = self._ctrl_transfer_in(Ftdi.SIO_REQ_GET_LATENCY_TIMER, 1)
         if not latency:
             raise FtdiError('Unable to get latency')
         return latency[0]
@@ -1092,7 +1098,7 @@ class Ftdi:
 
            :return: modem status, as a proprietary bitfield
         """
-        value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
+        value = self._ctrl_transfer_in(Ftdi.SIO_REQ_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
         status, = sunpack('<H', value)
@@ -1103,7 +1109,7 @@ class Ftdi:
 
            :return: decodede modem status as short strings
         """
-        value = self._ctrl_transfer_in(Ftdi.SIO_POLL_MODEM_STATUS, 2)
+        value = self._ctrl_transfer_in(Ftdi.SIO_REQ_POLL_MODEM_STATUS, 2)
         if not value or len(value) != 2:
             raise FtdiError('Unable to get modem status')
         return self.decode_modem_status(value)
@@ -1159,7 +1165,7 @@ class Ftdi:
             raise ValueError('Unknown flow control: %s' % flowctrl)
         try:
             if self.usb_dev.ctrl_transfer(
-                    Ftdi.REQ_OUT, Ftdi.SIO_SET_FLOW_CTRL, 0, value, bytearray(),
+                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_FLOW_CTRL, 0, value, bytearray(),
                     self.usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except USBError as exc:
@@ -1171,7 +1177,7 @@ class Ftdi:
            :param state: new DTR logical level
         """
         value = Ftdi.SIO_SET_DTR_HIGH if state else Ftdi.SIO_SET_DTR_LOW
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set DTR line')
 
     def set_rts(self, state: bool) -> None:
@@ -1180,7 +1186,7 @@ class Ftdi:
            :param state: new RTS logical level
         """
         value = Ftdi.SIO_SET_RTS_HIGH if state else Ftdi.SIO_SET_RTS_LOW
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_MODEM_CTRL, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set RTS line')
 
     def set_dtr_rts(self, dtr: bool, rts: bool) -> None:
@@ -1192,7 +1198,7 @@ class Ftdi:
         value = 0
         value |= Ftdi.SIO_SET_DTR_HIGH if dtr else Ftdi.SIO_SET_DTR_LOW
         value |= Ftdi.SIO_SET_RTS_HIGH if rts else Ftdi.SIO_SET_RTS_LOW
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_FLOW_CTRL, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_FLOW_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_break(self, break_: bool) -> None:
@@ -1202,11 +1208,11 @@ class Ftdi:
         """
         if break_:
             value = self.lineprop | (0x01 << 14)
-            if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
+            if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_DATA, value):
                 raise FtdiError('Unable to start break sequence')
         else:
             value = self.lineprop & ~(0x01 << 14)
-            if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
+            if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_DATA, value):
                 raise FtdiError('Unable to stop break sequence')
         self.lineprop = value
 
@@ -1215,7 +1221,7 @@ class Ftdi:
         value = eventch
         if enable:
             value |= 1 << 8
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_EVENT_CHAR, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_EVENT_CHAR, value):
             raise FtdiError('Unable to set event char')
 
     def set_error_char(self, errorch: int, enable: bool) -> None:
@@ -1223,7 +1229,7 @@ class Ftdi:
         value = errorch
         if enable:
             value |= 1 << 8
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_ERROR_CHAR, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_ERROR_CHAR, value):
             raise FtdiError('Unable to set error char')
 
     def set_line_property(self, bits: int, stopbit: Union[int, float],
@@ -1287,7 +1293,7 @@ class Ftdi:
                 value |= 0x01 << 14
         except KeyError:
             raise ValueError('Invalid line property')
-        if self._ctrl_transfer_out(Ftdi.SIO_SET_DATA, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_DATA, value):
             raise FtdiError('Unable to set line property')
         self.lineprop = value
 
@@ -1404,7 +1410,7 @@ class Ftdi:
             data = bytearray()
             while word_count:
                 buf = self.usb_dev.ctrl_transfer(
-                    Ftdi.REQ_IN, Ftdi.SIO_READ_EEPROM, 0,
+                    Ftdi.REQ_IN, Ftdi.SIO_REQ_READ_EEPROM, 0,
                     word_addr, 2, self.usb_read_timeout)
                 if not buf:
                     raise FtdiEepromError('EEPROM read error @ %d' %
@@ -1768,7 +1774,8 @@ class Ftdi:
 
     def _reset_device(self):
         """Reset the ftdi device"""
-        if self._ctrl_transfer_out(Ftdi.SIO_RESET, Ftdi.SIO_RESET_SIO):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
+                                   Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
         # Reset feature mode
         self.set_bitmode(0, Ftdi.BITMODE_RESET)
@@ -1832,7 +1839,7 @@ class Ftdi:
         for word in sunpack('<%dH' % (length//2), data):
             if not dry_run:
                 out = self.usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
-                                                 Ftdi.SIO_WRITE_EEPROM,
+                                                 Ftdi.SIO_REQ_WRITE_EEPROM,
                                                  word, addr >> 1, b'',
                                                  self.usb_write_timeout)
                 if out:
