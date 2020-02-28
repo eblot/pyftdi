@@ -7,6 +7,8 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack
 from typing import Optional
 from usb.backend import IBackend
+from pyftdi.ftdi import Ftdi
+from pyftdi.tracer import FtdiMpsseTracer
 
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=invalid-name
@@ -53,6 +55,8 @@ class EasyDict(dict):
 
 
 class UsbConstants:
+    """
+    """
 
     DEVICE_REQUESTS = {
         (True, 0x0): 'get_status',
@@ -134,7 +138,53 @@ class UsbConstants:
         return self._desc_type[desctype & self._desc_type_mask]
 
 
+
+class FtdiConstants:
+    """
+    """
+
+    def __init__(self):
+        self._cache = {}
+
+
+    @classmethod
+    def _load_constants(cls, prefix: str, reverse=False):
+        prefix = prefix.upper()
+        if not prefix.endswith('_'):
+            prefix = f'{prefix}_'
+        mapping = EasyDict()
+        plen = len(prefix)
+        for entry in dir(Ftdi):
+            if not entry.startswith(prefix):
+                continue
+            if not reverse:
+                mapping[getattr(Ftdi, entry)] = entry[plen:].lower()
+            else:
+                mapping[entry[plen:].lower()] = getattr(Ftdi, entry)
+        return mapping
+
+    def translate(self, prefix: str, value: int) -> str:
+        if prefix not in self._cache:
+            self._cache[prefix] = self._load_constants(prefix)
+        try:
+            return self._cache[prefix][value]
+        except KeyError:
+            return f'x?{value:04x}'
+
+    def dec_req_name(self, request: int) -> str:
+        return self.translate('sio_req', request)
+
+
 Constants = UsbConstants()
+FtdiConst = FtdiConstants()
+
+class MockMpsseTracer(FtdiMpsseTracer):
+    """
+    """
+
+    def __init__(self):
+        super().__init__(self)
+        self.log = getLogger('pyftdi.mock.mpsse')
 
 
 class MockEndpoint:
@@ -255,8 +305,8 @@ class MockDevice:
             bDeviceProtocol=0,
             bMaxPacketSize0=8,
             idVendor=0x403,
-            idProduct=0x6015,
-            bcdDevice=0x1000,
+            idProduct=0x6014,
+            bcdDevice=0x900,
             iManufacturer=self.STRINGS.MANUFACTURER,
             iProduct=self.STRINGS.PRODUCT,
             iSerialNumber=self.STRINGS.SERIAL_NUMBER,
@@ -292,6 +342,8 @@ class MockDevice:
 
 
 class MockDeviceHandle(EasyDict):
+    """
+    """
 
     def __init__(self, dev, handle):
         super().__init__(handle=handle,
@@ -307,7 +359,7 @@ class MockBackend(IBackend):
         self._devices = list()
         self._device_handles = dict()
         self._device_handle_count = 0
-        self.log = getLogger('pyftdi.tests.backend')
+        self.log = getLogger('pyftdi.mock.backend')
         interface = MockInterface()
         interface.add_bulk_pair()
         config = MockConfiguration()
@@ -317,6 +369,7 @@ class MockBackend(IBackend):
                          serial_number='SN_1234', product='FT232H')
         dev.add_configuration(config)
         self._devices.append(dev)
+        self._mpsse = None
 
     def enumerate_devices(self):
         for dev in self._devices:
@@ -330,6 +383,14 @@ class MockBackend(IBackend):
 
     def close_device(self, dev_handle: MockDeviceHandle) -> None:
         del self._device_handles[dev_handle.handle]
+
+    def claim_interface(self, dev_handle: MockDeviceHandle, intf: int):
+        self.log.info('> claim interface h:%d: if:%d',
+                      dev_handle.handle, intf)
+
+    def release_interface(self, dev_handle: MockDeviceHandle, intf: int):
+        self.log.info('> release interface h:%d: if:%d',
+                      dev_handle.handle, intf)
 
     def get_configuration(self,
                           dev_handle: MockDeviceHandle) -> MockConfiguration:
@@ -370,7 +431,7 @@ class MockBackend(IBackend):
                       wValue: int,
                       wIndex: int,
                       data: array,
-                      timeout: int):
+                      timeout: int) -> int:
         req_type = Constants.dec_req_type(bmRequestType)
         if req_type == 'standard':
             return self._ctrl_standard(dev_handle, bmRequestType, bRequest,
@@ -380,6 +441,21 @@ class MockBackend(IBackend):
                                    wValue, wIndex, data, timeout)
         self.log.error('Unknown request')
 
+    def bulk_write(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
+                   data: array, timeout: int) -> int:
+        self.log.info('> write h:%d ep:%0x02x if:%d, d:%s, to:%d',
+                      dev_handle.handle, ep, intf, hexlify(data).decode(),
+                      timeout)
+        if self._mpsse:
+            self._mpsse.send(data)
+        return len(data)
+
+    def bulk_read(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
+                  buff: array, timeout: int) -> int:
+        self.log.info('> read h:%d ep:0x%02x if:%d, l:%d, to:%d',
+                      dev_handle.handle, ep, intf, len(buff), timeout)
+        return 0
+
     def _ctrl_standard(self,
                        dev_handle: MockDeviceHandle,
                        bmRequestType: int,
@@ -387,7 +463,7 @@ class MockBackend(IBackend):
                        wValue: int,
                        wIndex: int,
                        data: array,
-                       timeout: int):
+                       timeout: int) -> int:
         req_ctrl = Constants.dec_req_ctrl(bmRequestType)
         req_type = Constants.dec_req_type(bmRequestType)
         req_rcpt = Constants.dec_req_rcpt(bmRequestType)
@@ -396,9 +472,9 @@ class MockBackend(IBackend):
         dstr = (hexlify(data).decode() if Constants.is_req_out(bmRequestType)
                 else f'({len(data)})')
         self.log.debug('> ctrl_transfer hdl %d, %s, %s, '
-                        'val 0x%04x, idx 0x%04x, data %s, to %d',
-                        dev_handle.handle, req_desc, req_name,
-                        wValue, wIndex, dstr, timeout)
+                       'val 0x%04x, idx 0x%04x, data %s, to %d',
+                       dev_handle.handle, req_desc, req_name,
+                       wValue, wIndex, dstr, timeout)
         size = 0
         if req_name == 'get_descriptor':
             desc_idx = wValue & 0xFF
@@ -421,8 +497,60 @@ class MockBackend(IBackend):
                    wValue: int,
                    wIndex: int,
                    data: array,
-                   timeout: int):
-        self.log.warning('Unknown FTDI request')
+                   timeout: int) -> int:
+        req_ctrl = Constants.dec_req_ctrl(bmRequestType)
+        req_type = Constants.dec_req_type(bmRequestType)
+        req_rcpt = Constants.dec_req_rcpt(bmRequestType)
+        req_desc = ':'.join([req_ctrl, req_type, req_rcpt])
+        req_name = FtdiConst.dec_req_name(bRequest)
+        dstr = (hexlify(data).decode() if Constants.is_req_out(bmRequestType)
+                else f'({len(data)})')
+        self.log.debug('> ctrl_ftdi hdl %d, %s, %s, '
+                       'val 0x%04x, idx 0x%04x, data %s, to %d',
+                       dev_handle.handle, req_desc, req_name,
+                       wValue, wIndex, dstr, timeout)
+        size = 0
+        try:
+            handler = getattr(self, f'_ctrl_ftdi_{req_name}')
+        except AttributeError:
+            self.log.warning('Unknown request: %s', req_name)
+            return size
+        buf = handler(wValue, wIndex, data) or b''
+        size = len(buf)
+        data[:size] = array('B', buf)
+        self.log.debug('< (%d) %s', size, hexlify(data[:size]).decode())
+        return size
+
+    def _ctrl_ftdi_reset(self, wValue: int, wIndex: int,
+                         data: array) -> None:
+        reset = FtdiConst.translate('sio_reset', wValue)
+        self.log.info('> ftdi reset %s', reset)
+
+    def _ctrl_ftdi_set_bitmode(self, wValue: int, wIndex: int,
+                               data: array) -> None:
+        direction = wValue & 0xff
+        bitmode = (wValue >> 8) & 0x7F
+        mode = FtdiConst.translate('bitmode', bitmode)
+        self.log.info('> ftdi bitmode %s: %s', mode, f'{direction:08b}')
+        self._mpsse = FtdiMpsseTracer() if mode == 'mpsse' else None
+
+    def _ctrl_ftdi_set_latency_timer(self, wValue: int, wIndex: int,
+                                     data: array) -> None:
+        self.log.info('> ftdi latency timer: %d', wValue)
+
+    def _ctrl_ftdi_set_event_char(self, wValue: int, wIndex: int,
+                                     data: array) -> None:
+        char = wValue & 0xFF
+        enable = bool(wValue >> 8)
+        self.log.info('> ftdi %sable event char: 0x%02x',
+                      'en' if enable else 'dis', char)
+
+    def _ctrl_ftdi_set_error_char(self, wValue: int, wIndex: int,
+                                     data: array) -> None:
+        char = wValue & 0xFF
+        enable = bool(wValue >> 8)
+        self.log.info('> ftdi %sable error char: 0x%02x',
+                      'en' if enable else 'dis', char)
 
 
 Backend = MockBackend()

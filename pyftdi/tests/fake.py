@@ -21,7 +21,7 @@ class FakeTestCase(TestCase):
     """
     """
 
-    def test_enumerate(self):
+    def _test_enumerate(self):
         ftdi = Ftdi()
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
@@ -35,9 +35,15 @@ class FakeTestCase(TestCase):
         self.assertTrue(lines[1].split(' ')[0].endswith('/1'))
         line_count = len(lines)
 
-    def _test_load(self):
+    def _test_open(self):
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
+        ftdi.close()
+
+    def test_open_mpsse(self):
+        ftdi = Ftdi()
+        ftdi.open_mpsse_from_url('ftdi:///1')
+        ftdi.close()
 
 def suite():
     suite_ = TestSuite()
