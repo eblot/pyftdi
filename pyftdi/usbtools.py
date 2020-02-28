@@ -26,9 +26,9 @@
 
 """USB Helpers"""
 
+import sys
 from importlib import import_module
 from string import printable as printablechars
-from sys import platform, stdout
 from threading import RLock
 from typing import (IO, List, Mapping, NamedTuple, Optional, Sequence, Set,
                     Tuple)
@@ -282,7 +282,7 @@ class UsbTools:
                         if products and (device.idProduct not in products):
                             continue
                         devs.add(device)
-                if platform == 'win32':
+                if sys.platform == 'win32':
                     # ugly kludge for a boring OS:
                     # on Windows, the USB stack may enumerate the very same
                     # devices several times: a real device with N interface
@@ -458,7 +458,7 @@ class UsbTools:
         if not candidates:
             return
         if not out:
-            out = stdout
+            out = sys.stdout
         indices = {}
         print("Available interfaces:", file=out)
         serial_ifaces = []
