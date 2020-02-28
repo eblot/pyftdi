@@ -1,3 +1,9 @@
+"""PyUSB virtual USB backend to intercept all USB requests.
+
+   The role of this module is to enable PyFtdi API testing w/o any FTDI
+   hardware.
+"""
+
 from array import array
 from binascii import hexlify
 from copy import deepcopy
@@ -55,7 +61,8 @@ class EasyDict(dict):
 
 
 class UsbConstants:
-    """
+    """Expose useful constants defined in PyUSB and allow reverse search, i.e.
+       retrieve constant literals from integral values.
     """
 
     DEVICE_REQUESTS = {
@@ -140,7 +147,8 @@ class UsbConstants:
 
 
 class FtdiConstants:
-    """
+    """Expose useful constants defined in Ftdi and allow reverse search, i.e.
+       retrieve constant literals from integral values.
     """
 
     def __init__(self):
@@ -176,10 +184,14 @@ class FtdiConstants:
 
 
 Constants = UsbConstants()
+"""Unique instance of USB constant container."""
+
 FtdiConst = FtdiConstants()
+"""Unique instances of FTDI constant container."""
+
 
 class MockMpsseTracer(FtdiMpsseTracer):
-    """
+    """Reuse MPSSE tracer as a MPSSE command decoder engine.
     """
 
     def __init__(self):
@@ -188,14 +200,15 @@ class MockMpsseTracer(FtdiMpsseTracer):
 
 
 class MockEndpoint:
-    """
+    """Fake USB interface endpoint.
     """
 
     DESCRIPTOR_FORMAT = '<4BHB'
 
     def __init__(self, direction: str, type_: str, index: int,
                  extra: Optional[bytes] = None):
-        class EndpointDescriptor(EasyDict): pass
+        class EndpointDescriptor(EasyDict):
+            pass
         self.desc = EndpointDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.ENDPOINT,
@@ -207,15 +220,19 @@ class MockEndpoint:
             bSynchAddress=0,
             extra_descriptors=extra or b'')
 
+    def get_length(self) -> int:
+        return self.desc.bLength
+
 
 class MockInterface:
-    """
+    """Fake USB configuration interface.
     """
 
     DESCRIPTOR_FORMAT = '<9B'
 
     def __init__(self, extra: Optional[bytes] = None):
-        class InterfaceDescriptor(EasyDict): pass
+        class InterfaceDescriptor(EasyDict):
+            pass
         desc = InterfaceDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.INTERFACE,
@@ -242,6 +259,14 @@ class MockInterface:
         ep = MockEndpoint('out', 'bulk', len(endpoints)+1)
         self.add_endpoint(ep)
 
+    def get_length(self) -> int:
+        length = 0
+        for desc, endpoints in self.altsettings:
+            length += desc.bLength
+            for endpoint in endpoints:
+                length += endpoint.get_length()
+        return length
+
     @property
     def num_altsetting(self):
         return len(self.altsetting)
@@ -256,13 +281,14 @@ class MockInterface:
 
 
 class MockConfiguration:
-    """
+    """Fake USB device configuration.
     """
 
     DESCRIPTOR_FORMAT = '<2BH5B'
 
     def __init__(self, extra: Optional[bytes] = None):
-        class ConfigDescriptor(EasyDict): pass
+        class ConfigDescriptor(EasyDict):
+            pass
         self.desc = ConfigDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.CONFIG,
@@ -280,12 +306,23 @@ class MockConfiguration:
         self.interfaces.append(interface)
         self.desc.bNumInterfaces = len(self.interfaces)
 
+    def update(self):
+        # wTotalLength needs to be updated to the actual length of the
+        # sub-objects
+        self.desc.wTotalLength = self.get_length()
+
+    def get_length(self) -> int:
+        length = self.desc.bLength
+        for iface in self.interfaces:
+            length += iface.get_length()
+        return length
+
     def __getattr__(self, name):
         return getattr(self.desc, name)
 
 
 class MockDevice:
-    """
+    """Fake USB device.
     """
 
     DESCRIPTOR_FORMAT = '<2BH4B3H4B'
@@ -295,7 +332,8 @@ class MockDevice:
     STRINGS = IntEnum('Strings', 'MANUFACTURER PRODUCT SERIAL_NUMBER', start=1)
 
     def __init__(self, **kwargs):
-        class DeviceDescriptor(EasyDict): pass
+        class DeviceDescriptor(EasyDict):
+            pass
         self.desc = DeviceDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.DEVICE,
@@ -342,7 +380,7 @@ class MockDevice:
 
 
 class MockDeviceHandle(EasyDict):
-    """
+    """Device handle wrapper as expected by PyUSB APIs.
     """
 
     def __init__(self, dev, handle):
@@ -352,7 +390,10 @@ class MockDeviceHandle(EasyDict):
 
 
 class MockBackend(IBackend):
-    """
+    """Fake PyUSB backend.
+
+       Implement a subset of PyUSB IBackend interface so that PyFTDI can
+       execute w/o a real FTDI HW.
     """
 
     def __init__(self):
@@ -364,6 +405,7 @@ class MockBackend(IBackend):
         interface.add_bulk_pair()
         config = MockConfiguration()
         config.add_interface(interface)
+        config.update()
         dev = MockDevice(bus=1, address=1, speed=3,
                          port_number=1, port_numbers=1,
                          serial_number='SN_1234', product='FT232H')
@@ -440,6 +482,7 @@ class MockBackend(IBackend):
             return self._ctrl_ftdi(dev_handle, bmRequestType, bRequest,
                                    wValue, wIndex, data, timeout)
         self.log.error('Unknown request')
+        return 0
 
     def bulk_write(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
                    data: array, timeout: int) -> int:
@@ -539,22 +582,25 @@ class MockBackend(IBackend):
         self.log.info('> ftdi latency timer: %d', wValue)
 
     def _ctrl_ftdi_set_event_char(self, wValue: int, wIndex: int,
-                                     data: array) -> None:
+                                  data: array) -> None:
         char = wValue & 0xFF
         enable = bool(wValue >> 8)
         self.log.info('> ftdi %sable event char: 0x%02x',
                       'en' if enable else 'dis', char)
 
     def _ctrl_ftdi_set_error_char(self, wValue: int, wIndex: int,
-                                     data: array) -> None:
+                                  data: array) -> None:
         char = wValue & 0xFF
         enable = bool(wValue >> 8)
         self.log.info('> ftdi %sable error char: 0x%02x',
                       'en' if enable else 'dis', char)
 
 
+
 Backend = MockBackend()
+"""Unique instance of PyUSB mock backend."""
 
 
 def get_backend(*args):
+    """PyUSB API implementation."""
     return Backend

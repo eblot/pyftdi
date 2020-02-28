@@ -5,23 +5,23 @@
 # All rights reserved.
 
 import logging
-from binascii import hexlify
 from contextlib import redirect_stdout
 from doctest import testmod
 from io import StringIO
 from os import environ
-from sys import modules, stderr, stdout
+from sys import modules, stdout
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbTools
 
 
-class FakeTestCase(TestCase):
+class MockTestCase(TestCase):
     """
     """
 
-    def _test_enumerate(self):
+    def test_enumerate(self):
+        """Check simple enumeration of a single FTDI device."""
         ftdi = Ftdi()
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
@@ -33,25 +33,33 @@ class FakeTestCase(TestCase):
         self.assertTrue(lines[1].startswith('ftdi://'))
         # skip description, i.e. consider URL only
         self.assertTrue(lines[1].split(' ')[0].endswith('/1'))
-        line_count = len(lines)
 
-    def _test_open(self):
+    def test_open_close(self):
+        """Check simple open/close sequence."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
         ftdi.close()
 
+    def test_open_bitbang(self):
+        """Check simple open/close BitBang sequence."""
+        ftdi = Ftdi()
+        ftdi.open_bitbang_from_url('ftdi:///1')
+        ftdi.close()
+
     def test_open_mpsse(self):
+        """Check simple open/close MPSSE sequence."""
         ftdi = Ftdi()
         ftdi.open_mpsse_from_url('ftdi:///1')
         ftdi.close()
 
+
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(FakeTestCase, 'test'))
+    suite_.addTest(makeSuite(MockTestCase, 'test'))
     return suite_
 
 
-if __name__ == '__main__':
+def main():
     testmod(modules[__name__])
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
@@ -63,3 +71,7 @@ if __name__ == '__main__':
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('pyftdi.tests.backend.usbmock' ,)
     ut_main(defaultTest='suite')
+
+
+if __name__ == '__main__':
+    main()
