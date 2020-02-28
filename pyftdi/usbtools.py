@@ -99,10 +99,12 @@ class UsbTools:
         """
         devs = set()
         for vid, pid in vps:
+            # TODO optimize useless loops
             devs.update(UsbTools._find_devices(vid, pid, nocache))
         devices = set()
         for dev in devs:
             ifcount = max([cfg.bNumInterfaces for cfg in dev])
+            # TODO: handle / is serial number strings
             sernum = UsbTools.get_string(dev, dev.iSerialNumber)
             description = UsbTools.get_string(dev, dev.iProduct)
             descriptor = UsbDeviceDescriptor(dev.idVendor, dev.idProduct,
