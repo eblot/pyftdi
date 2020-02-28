@@ -61,5 +61,5 @@ if __name__ == '__main__':
         raise ValueError('Invalid log level: %s', level)
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
-    UsbTools.BACKENDS = ('pyftdi.tests.backend.dummy' ,)
+    UsbTools.BACKENDS = ('pyftdi.tests.backend.usbmock' ,)
     ut_main(defaultTest='suite')
