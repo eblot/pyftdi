@@ -5,7 +5,15 @@ from enum import IntEnum
 from importlib import import_module
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack
+from typing import Optional
 from usb.backend import IBackend
+
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=attribute-defined-outside-init
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=too-many-instance-attributes
 
 
 class EasyDict(dict):
@@ -13,6 +21,7 @@ class EasyDict(dict):
     """
 
     def __init__(self, dictionary=None, **kwargs):
+        super().__init__(self)
         if dictionary is not None:
             self.update(dictionary)
         self.update(kwargs)
@@ -43,87 +52,7 @@ class EasyDict(dict):
         return EasyDict({v: k for k, v in self.items()})
 
 
-class DummyDevice(EasyDict):
-    """
-    """
-
-
-class DummyDeviceDescriptor(EasyDict):
-    """
-    """
-
-    DEFAULT_LANGUAGE = 0x0409  # en_US
-
-    STRINGS = IntEnum('Strings', 'MANUFACTURER PRODUCT SERIAL_NUMBER', start=1)
-
-    def __init__(self, **kwargs):
-        super().__init__(bLength=18,
-                         bDescriptorType=0x01,
-                         bcdUSB=0x200,
-                         bDeviceClass=0xff,
-                         bDeviceSubClass=0,
-                         bDeviceProtocol=0,
-                         bMaxPacketSize0=8,
-                         idVendor=0x403,
-                         idProduct=0x6014,
-                         bcdDevice=0x1000,
-                         iManufacturer=self.STRINGS.MANUFACTURER,
-                         iProduct=self.STRINGS.PRODUCT,
-                         iSerialNumber=self.STRINGS.SERIAL_NUMBER,
-                         bNumConfigurations=1,
-                         **kwargs)
-
-    def get_string(self, type_: int, index: int) -> str:
-        if index == 0:
-            # request for list of supported languages
-            # only support one
-            fmt = '<BBH'
-            size = scalc(fmt)
-            buf = spack(fmt, size, type_, self.DEFAULT_LANGUAGE)
-            # note: return b'' here to simulate unauthorized access to
-            # the USB device
-            return buf
-        name = self.STRINGS(index).name.lower()
-        value = self.get(name, '')
-        print(name, value)
-        ms_str = value.encode('utf-16-le')
-        fmt = '<BB'
-        size = scalc(fmt) + len(ms_str)
-        buf = bytearray(spack('<BB', size, type_))
-        buf.extend(ms_str)
-        return buf
-
-
-class DummyConfigDescriptor(EasyDict):
-    """
-    """
-
-    FMT = '<2BH5B'
-
-    def __init__(self, **kwargs):
-        super().__init__(bLength=scalc(self.FMT),
-                         bDescriptorType=0x02,
-                         wTotalLength=0,  # to compute
-                         bNumInterfaces=1,
-                         bConfigurationValue=0,
-                         iConfiguration=0,
-                         bmAttributes=0x80,  # bus-powered
-                         bMaxPower=150//2,  # 150 mA
-                         interface=0,  # ref interface
-                         extra=b'',  # byte buffer
-                         extra_length=0)
-        self.extra_descriptors = self.extra[:self.extra_length]
-
-
-class DummyDeviceHandle(EasyDict):
-
-    def __init__(self, dev, handle):
-        super().__init__(handle=handle,
-                         devid=0,
-                         device=dev)
-
-
-class UsbDecoder:
+class UsbConstants:
 
     DEVICE_REQUESTS = {
         (True, 0x0): 'get_status',
@@ -147,9 +76,17 @@ class UsbDecoder:
         self._ctrl_recipient_mask = self._mask(self._ctrl_recipient)
         self._endpoint_type = self._load_constants('endpoint_type')
         self._endpoint_type_mask = self._mask(self._endpoint_type)
+        self._descriptors = EasyDict({v.upper(): k
+                                      for k, v in self._desc_type.items()})
+        self.endpoints = self._load_constants('endpoint', True)
+        self.endpoint_types = self._load_constants('endpoint_type', True)
+
+    @property
+    def descriptors(self):
+        return self._descriptors
 
     @classmethod
-    def _load_constants(cls, prefix: str):
+    def _load_constants(cls, prefix: str, reverse=False):
         prefix = prefix.upper()
         if not prefix.endswith('_'):
             prefix = f'{prefix}_'
@@ -161,7 +98,10 @@ class UsbDecoder:
                 continue
             if '_' in entry[plen:]:
                 continue
-            mapping[getattr(mod, entry)] = entry[plen:].lower()
+            if not reverse:
+                mapping[getattr(mod, entry)] = entry[plen:].lower()
+            else:
+                mapping[entry[plen:].lower()] = getattr(mod, entry)
         return mapping
 
     @classmethod
@@ -172,7 +112,7 @@ class UsbDecoder:
         return mask
 
     def is_req_out(self, reqtype: int) -> str:
-        return not (reqtype & self._ctrl_dir_mask)
+        return not reqtype & self._ctrl_dir_mask
 
     def dec_req_ctrl(self, reqtype: int) -> str:
         return self._ctrl_dir[reqtype & self._ctrl_dir_mask]
@@ -194,9 +134,172 @@ class UsbDecoder:
         return self._desc_type[desctype & self._desc_type_mask]
 
 
-Decoder = UsbDecoder()
+Constants = UsbConstants()
 
-class DummyBackend(IBackend):
+
+class MockEndpoint:
+    """
+    """
+
+    DESCRIPTOR_FORMAT = '<4BHB'
+
+    def __init__(self, direction: str, type_: str, index: int,
+                 extra: Optional[bytes] = None):
+        class EndpointDescriptor(EasyDict): pass
+        self.desc = EndpointDescriptor(
+            bLength=scalc(self.DESCRIPTOR_FORMAT),
+            bDescriptorType=Constants.descriptors.ENDPOINT,
+            bEndpointAddress=Constants.endpoints[direction.lower()] | index,
+            bmAttributes=Constants.endpoint_types[type_.lower()],
+            wMaxPacketSize=64,
+            bInterval=0,
+            bRefresh=0,
+            bSynchAddress=0,
+            extra_descriptors=extra or b'')
+
+
+class MockInterface:
+    """
+    """
+
+    DESCRIPTOR_FORMAT = '<9B'
+
+    def __init__(self, extra: Optional[bytes] = None):
+        class InterfaceDescriptor(EasyDict): pass
+        desc = InterfaceDescriptor(
+            bLength=scalc(self.DESCRIPTOR_FORMAT),
+            bDescriptorType=Constants.descriptors.INTERFACE,
+            bInterfaceNumber=0,
+            bAlternateSetting=0,
+            bNumEndpoints=0,
+            bInterfaceClass=0xFF,
+            bInterfaceSubClass=0xFF,
+            bInterfaceProtocol=0xFF,
+            iInterface=None,  # String desc index
+            extra_descriptors=extra or  b'')
+        self.alt = 0
+        self.altsettings = [(desc, [])]
+
+    def add_endpoint(self, endpoint: MockEndpoint):
+        altsetting = self.altsettings[self.alt]
+        altsetting[1].append(endpoint)
+        altsetting[0].bNumEndpoints = len(altsetting[1])
+
+    def add_bulk_pair(self):
+        endpoints = self.altsettings[self.alt][1]
+        ep = MockEndpoint('in', 'bulk', len(endpoints)+1)
+        self.add_endpoint(ep)
+        ep = MockEndpoint('out', 'bulk', len(endpoints)+1)
+        self.add_endpoint(ep)
+
+    @property
+    def num_altsetting(self):
+        return len(self.altsetting)
+
+    def __getitem__(self, item):
+        if isinstance(item, int):
+            return self.altsettings[item]
+        raise IndexError('Invalid alternate setting')
+
+    def __getattr__(self, name):
+        return getattr(self.altsettings[self.alt][0], name)
+
+
+class MockConfiguration:
+    """
+    """
+
+    DESCRIPTOR_FORMAT = '<2BH5B'
+
+    def __init__(self, extra: Optional[bytes] = None):
+        class ConfigDescriptor(EasyDict): pass
+        self.desc = ConfigDescriptor(
+            bLength=scalc(self.DESCRIPTOR_FORMAT),
+            bDescriptorType=Constants.descriptors.CONFIG,
+            wTotalLength=0,
+            bNumInterfaces=0,
+            bConfigurationValue=0,
+            iConfiguration=0,
+            bmAttributes=0x80,  # bus-powered
+            bMaxPower=150//2,  # 150 mA
+            extra_descriptors=extra or  b'')
+        self.interfaces = []
+
+    def add_interface(self, interface: MockInterface):
+        interface.bInterfaceNumber = len(self.interfaces)
+        self.interfaces.append(interface)
+        self.desc.bNumInterfaces = len(self.interfaces)
+
+    def __getattr__(self, name):
+        return getattr(self.desc, name)
+
+
+class MockDevice:
+    """
+    """
+
+    DESCRIPTOR_FORMAT = '<2BH4B3H4B'
+
+    DEFAULT_LANGUAGE = 0x0409  # en_US
+
+    STRINGS = IntEnum('Strings', 'MANUFACTURER PRODUCT SERIAL_NUMBER', start=1)
+
+    def __init__(self, **kwargs):
+        class DeviceDescriptor(EasyDict): pass
+        self.desc = DeviceDescriptor(
+            bLength=scalc(self.DESCRIPTOR_FORMAT),
+            bDescriptorType=Constants.descriptors.DEVICE,
+            bcdUSB=0x200,  # USB 2.0
+            bDeviceClass=0,
+            bDeviceSubClass=0,
+            bDeviceProtocol=0,
+            bMaxPacketSize0=8,
+            idVendor=0x403,
+            idProduct=0x6015,
+            bcdDevice=0x1000,
+            iManufacturer=self.STRINGS.MANUFACTURER,
+            iProduct=self.STRINGS.PRODUCT,
+            iSerialNumber=self.STRINGS.SERIAL_NUMBER,
+            bNumConfigurations=0,  # updated later
+            **kwargs)
+        self.configurations = []
+
+    def add_configuration(self, config: MockConfiguration):
+        self.configurations.append(config)
+        self.desc.bNumConfigurations = len(self.configurations)
+
+    def get_string(self, type_: int, index: int) -> str:
+        if index == 0:
+            # request for list of supported languages
+            # only support one
+            fmt = '<BBH'
+            size = scalc(fmt)
+            buf = spack(fmt, size, type_, self.DEFAULT_LANGUAGE)
+            # note: return b'' here to simulate unauthorized access to
+            # the USB device
+            return buf
+        name = self.STRINGS(index).name.lower()
+        value = self.get(name, '')
+        ms_str = value.encode('utf-16-le')
+        fmt = '<BB'
+        size = scalc(fmt) + len(ms_str)
+        buf = bytearray(spack('<BB', size, type_))
+        buf.extend(ms_str)
+        return buf
+
+    def __getattr__(self, name):
+        return getattr(self.desc, name)
+
+
+class MockDeviceHandle(EasyDict):
+
+    def __init__(self, dev, handle):
+        super().__init__(handle=handle,
+                         devid=0,
+                         device=dev)
+
+
+class MockBackend(IBackend):
     """
     """
 
@@ -205,80 +308,125 @@ class DummyBackend(IBackend):
         self._device_handles = dict()
         self._device_handle_count = 0
         self.log = getLogger('pyftdi.tests.backend')
-        dev = DummyDevice()
-        desc = DummyDeviceDescriptor(bus=1,
-                                     address=1,
-                                     speed=3,
-                                     port_number=1,
-                                     port_numbers=1,
-                                     serial_number='SN_1234',
-                                     product='FT232H')
-        dev.device_descriptor = desc
+        interface = MockInterface()
+        interface.add_bulk_pair()
+        config = MockConfiguration()
+        config.add_interface(interface)
+        dev = MockDevice(bus=1, address=1, speed=3,
+                         port_number=1, port_numbers=1,
+                         serial_number='SN_1234', product='FT232H')
+        dev.add_configuration(config)
         self._devices.append(dev)
-
 
     def enumerate_devices(self):
         for dev in self._devices:
             yield dev
 
-    def get_device_descriptor(self, dev):
-        return dev.device_descriptor
-
-    def get_configuration_descriptor(self, dev, config):
-        cfg = DummyConfigDescriptor()
-        return cfg
-
-    def open_device(self, dev: DummyDevice) -> DummyDeviceHandle:
+    def open_device(self, dev: MockDevice) -> MockDeviceHandle:
         self._device_handle_count += 1
-        devhdl = DummyDeviceHandle(dev, self._device_handle_count)
+        devhdl = MockDeviceHandle(dev, self._device_handle_count)
         self._device_handles[devhdl.handle] = devhdl
         return devhdl
 
-    def close_device(self, dev_handle: DummyDeviceHandle) -> None:
+    def close_device(self, dev_handle: MockDeviceHandle) -> None:
         del self._device_handles[dev_handle.handle]
 
+    def get_configuration(self,
+                          dev_handle: MockDeviceHandle) -> MockConfiguration:
+        dev = dev_handle.device
+        return dev.configurations[0]
+
+    def set_configuration(self, dev_handle: MockDeviceHandle,
+                          config_value) -> None:
+        # config_value = ConfigDesc.bConfigurationValue
+        pass
+
+    def get_device_descriptor(self, dev):
+        return dev.desc
+
+    def get_configuration_descriptor(self, dev, config):
+        return dev.configurations[config].desc
+
+    def get_interface_descriptor(self, dev: MockDevice,
+                                 intf: int, alt: int, config: int) -> EasyDict:
+        cfg = dev.configurations[config]
+        iface = cfg.interfaces[intf]
+        intf_desc = iface[alt][0]
+        return intf_desc
+
+    def get_endpoint_descriptor(self, dev: MockDevice,
+                                ep: int, intf: int, alt: int, config: int) \
+            -> EasyDict:
+        cfg = dev.configurations[config]
+        iface = cfg.interfaces[intf]
+        endpoints = iface[alt][1]
+        ep_desc = endpoints[ep].desc
+        return ep_desc
+
     def ctrl_transfer(self,
-                      dev_handle,
-                      bmRequestType,
-                      bRequest,
-                      wValue,
-                      wIndex,
-                      data,
-                      timeout):
-        req_ctrl = Decoder.dec_req_ctrl(bmRequestType)
-        req_type = Decoder.dec_req_type(bmRequestType)
-        req_rcpt = Decoder.dec_req_rcpt(bmRequestType)
+                      dev_handle: MockDeviceHandle,
+                      bmRequestType: int,
+                      bRequest: int,
+                      wValue: int,
+                      wIndex: int,
+                      data: array,
+                      timeout: int):
+        req_type = Constants.dec_req_type(bmRequestType)
+        if req_type == 'standard':
+            return self._ctrl_standard(dev_handle, bmRequestType, bRequest,
+                                       wValue, wIndex, data, timeout)
+        if req_type == 'vendor':
+            return self._ctrl_ftdi(dev_handle, bmRequestType, bRequest,
+                                   wValue, wIndex, data, timeout)
+        self.log.error('Unknown request')
+
+    def _ctrl_standard(self,
+                       dev_handle: MockDeviceHandle,
+                       bmRequestType: int,
+                       bRequest: int,
+                       wValue: int,
+                       wIndex: int,
+                       data: array,
+                       timeout: int):
+        req_ctrl = Constants.dec_req_ctrl(bmRequestType)
+        req_type = Constants.dec_req_type(bmRequestType)
+        req_rcpt = Constants.dec_req_rcpt(bmRequestType)
         req_desc = ':'.join([req_ctrl, req_type, req_rcpt])
-        req_name = Decoder.dec_req_name(bmRequestType, bRequest)
-        dstr = (hexlify(data).decode() if Decoder.is_req_out(bmRequestType)
+        req_name = Constants.dec_req_name(bmRequestType, bRequest)
+        dstr = (hexlify(data).decode() if Constants.is_req_out(bmRequestType)
                 else f'({len(data)})')
-        self.log.info('> ctrl_transfer hdl %d, %s, %s, '
-                      'val 0x%04x, idx 0x%04x, data %s, to %d',
-                      dev_handle.handle, req_desc, req_name,
-                      wValue, wIndex, dstr, timeout)
+        self.log.debug('> ctrl_transfer hdl %d, %s, %s, '
+                        'val 0x%04x, idx 0x%04x, data %s, to %d',
+                        dev_handle.handle, req_desc, req_name,
+                        wValue, wIndex, dstr, timeout)
         size = 0
         if req_name == 'get_descriptor':
             desc_idx = wValue & 0xFF
             desc_type = wValue >> 8
-            self.log.info('  %s: 0x%02x',
-                          Decoder.dec_desc_type(desc_type), desc_idx)
-            devdesc = dev_handle.device.device_descriptor
-            buf = devdesc.get_string(desc_type, desc_idx)
+            self.log.debug('  %s: 0x%02x',
+                           Constants.dec_desc_type(desc_type), desc_idx)
+            dev = dev_handle.device
+            buf = dev.get_string(desc_type, desc_idx)
             size = len(buf)
             data[:size] = array('B', buf)
         else:
             self.log.warning('Unknown request')
-        self.log.info('< (%d) %s', size, hexlify(data[:size]).decode())
+        self.log.debug('< (%d) %s', size, hexlify(data[:size]).decode())
         return size
 
-    def _get_devhandle_by_handle(self, handle: int) -> DummyDeviceHandle:
-        return self._device_handles[handle]
+    def _ctrl_ftdi(self,
+                   dev_handle: MockDeviceHandle,
+                   bmRequestType: int,
+                   bRequest: int,
+                   wValue: int,
+                   wIndex: int,
+                   data: array,
+                   timeout: int):
+        self.log.warning('Unknown FTDI request')
 
-    def _get_device_by_handle(self, handle: int) -> DummyDevice:
-        devhdl = self._get_devhandle_by_handle(handle)
-        return devhdl.device
+
+Backend = MockBackend()
 
 
 def get_backend(*args):
-
-    return DummyBackend()
+    return Backend
