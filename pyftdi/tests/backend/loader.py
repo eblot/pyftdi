@@ -43,6 +43,10 @@ class MockLoader:
         backend = get_backend()
         backend.flush_devices()
 
+    @property
+    def virtual_ftdi(self):
+        return get_backend().virtual_ftdi
+
     def _validate(self):
         locations = set()
         for device in get_backend().devices:
