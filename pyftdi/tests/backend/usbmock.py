@@ -6,10 +6,11 @@
 
 from array import array
 from binascii import hexlify
+from collections import defaultdict
 from functools import partial
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack
-from typing import Optional
+from typing import List, Optional
 from usb.backend import IBackend
 from pyftdi.misc import EasyDict
 from .consts import USBCONST
@@ -291,7 +292,7 @@ class MockBackend(IBackend):
         self._devices = list()
         self._device_handles = dict()
         self._device_handle_count = 0
-        self._ftdi = MockFtdi()
+        self._ftdis = defaultdict(MockFtdi)
 
     def add_device(self, device: MockDevice):
         self._devices.append(device)
@@ -300,14 +301,16 @@ class MockBackend(IBackend):
         self._devices.clear()
 
     @property
-    def devices(self):
+    def devices(self) -> List[MockDevice]:
         return self._devices
 
-    @property
-    def virtual_ftdi(self):
-        return self._ftdi
+    def get_virtual_ftdi(self, bus: int, address: int) -> MockFtdi:
+        for dev in self._devices:
+            if dev.bus == bus and dev.address == address:
+                return self._ftdis[(bus, address)]
+        raise ValueError('No FTDI @ {bus:address}')
 
-    def enumerate_devices(self):
+    def enumerate_devices(self) -> MockDevice:
         for dev in self._devices:
             yield dev
 
@@ -320,11 +323,13 @@ class MockBackend(IBackend):
     def close_device(self, dev_handle: MockDeviceHandle) -> None:
         del self._device_handles[dev_handle.handle]
 
-    def claim_interface(self, dev_handle: MockDeviceHandle, intf: int):
+    def claim_interface(self, dev_handle: MockDeviceHandle, intf: int) \
+            -> None:
         self.log.info('> claim interface h:%d: if:%d',
                       dev_handle.handle, intf)
 
-    def release_interface(self, dev_handle: MockDeviceHandle, intf: int):
+    def release_interface(self, dev_handle: MockDeviceHandle, intf: int) \
+            -> None:
         self.log.info('> release interface h:%d: if:%d',
                       dev_handle.handle, intf)
 
@@ -334,14 +339,15 @@ class MockBackend(IBackend):
         return dev.configurations[0]
 
     def set_configuration(self, dev_handle: MockDeviceHandle,
-                          config_value) -> None:
+                          config_value: int) -> None:
         # config_value = ConfigDesc.bConfigurationValue
         pass
 
-    def get_device_descriptor(self, dev):
+    def get_device_descriptor(self, dev: MockDevice) -> EasyDict:
         return dev.desc
 
-    def get_configuration_descriptor(self, dev, config):
+    def get_configuration_descriptor(self, dev: MockDevice, config: int) \
+            -> EasyDict:
         return dev.configurations[config].desc
 
     def get_interface_descriptor(self, dev: MockDevice,
@@ -373,8 +379,9 @@ class MockBackend(IBackend):
             return self._ctrl_standard(dev_handle, bmRequestType, bRequest,
                                        wValue, wIndex, data, timeout)
         if req_type == 'vendor':
-            return self._ftdi.control(dev_handle, bmRequestType,
-                                      bRequest, wValue, wIndex, data, timeout)
+            ftdi = self._get_ftdi_from_handle(dev_handle)
+            return ftdi.control(dev_handle, bmRequestType, bRequest,
+                                wValue, wIndex, data, timeout)
         self.log.error('Unknown request')
         return 0
 
@@ -383,14 +390,15 @@ class MockBackend(IBackend):
         self.log.info('> write h:%d ep:%0x02x if:%d, d:%s, to:%d',
                       dev_handle.handle, ep, intf, hexlify(data).decode(),
                       timeout)
-        return self._ftdi.write(dev_handle, ep, intf, data, timeout)
-        return len(data)
+        ftdi = self._get_ftdi_from_handle(dev_handle)
+        return ftdi.write(dev_handle, ep, intf, data, timeout)
 
     def bulk_read(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
                   buff: array, timeout: int) -> int:
         self.log.info('> read h:%d ep:0x%02x if:%d, l:%d, to:%d',
                       dev_handle.handle, ep, intf, len(buff), timeout)
-        return self._ftdi.read(dev_handle, ep, intf, buff, timeout)
+        ftdi = self._get_ftdi_from_handle(dev_handle)
+        return ftdi.read(dev_handle, ep, intf, buff, timeout)
 
     def _ctrl_standard(self,
                        dev_handle: MockDeviceHandle,
@@ -426,6 +434,10 @@ class MockBackend(IBackend):
         self.log.debug('< (%d) %s', size, hexlify(data[:size]).decode())
         return size
 
+    def _get_ftdi_from_handle(self, dev_handle: MockDeviceHandle) -> MockFtdi:
+        bus = dev_handle.device.bus
+        address = dev_handle.device.address
+        return self._ftdis[(bus, address)]
 
 
 _MockBackend = MockBackend()
