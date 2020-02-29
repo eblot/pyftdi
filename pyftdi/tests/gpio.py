@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2017, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,7 @@ class GpioTest(object):
            output and input"""
         out_pins &= 0xFF
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._gpio.open_from_url(url, direction=out_pins)
+        self._gpio.configure(url, direction=out_pins)
 
     def close(self):
         """Close the GPIO connection"""
