@@ -745,8 +745,6 @@ class Ftdi:
         # Set chunk size
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
-        # Disable loopback
-        self.write_data(bytearray((Ftdi.LOOPBACK_END,)))
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
         # Drain input buffer
@@ -1352,7 +1350,7 @@ class Ftdi:
 
     def enable_loopback_mode(self, loopback: bool = False) -> None:
         """Enable loopback, i.e. connect DO to DI in FTDI MPSSE port for test
-        purposes only. It does not support UART (TX to RX) mode.
+           purposes only. It does not support UART (TX to RX) mode.
 
            :param loopback: whether to enable or disable this mode
         """
