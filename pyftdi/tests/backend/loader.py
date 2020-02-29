@@ -12,6 +12,8 @@ from .consts import USBCONST
 
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=too-few-public-methods
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=no-self-use
 
 
 class MockLoader:
@@ -72,7 +74,7 @@ class MockLoader:
         if not devdesc:
             raise ValueError('Missing device descriptor')
         if not configs:
-            raise ValueError('Missing device config')
+            configs = [self._build_configuration({})]
         device = MockDevice(devdesc, **properties)
         for config in configs:
             device.add_configuration(config)
@@ -104,7 +106,7 @@ class MockLoader:
     def _build_configuration(self, container):
         if not isinstance(container, dict):
             raise ValueError('Invalid configuration entry')
-        cfgdesc = None
+        cfgdesc = {}
         interfaces = []
         for ykey, yval in container.items():
             if ykey == 'descriptor':
@@ -114,14 +116,12 @@ class MockLoader:
                 continue
             if ykey == 'interfaces':
                 if not isinstance(yval, list):
-                    raise ValueError('Configurations not a list')
+                    raise ValueError('Interfaces not a list')
                 interfaces = [self._build_interface(conf) for conf in yval]
                 continue
             raise ValueError(f'Unknown config entry {ykey}')
-        if not cfgdesc:
-            raise ValueError('Missing config descriptor')
         if not interfaces:
-            raise ValueError('Missing config interface')
+            interfaces = [self._build_interface({})]
         config = MockConfiguration(cfgdesc)
         for iface in interfaces:
             config.add_interface(iface)
@@ -168,7 +168,9 @@ class MockLoader:
             if not isinstance(ival, list):
                 raise ValueError(f'Invalid interface entry {ikey}')
             alternatives.extend([self._build_alternative(alt) for alt in ival])
-        if len(alternatives) != 1:
+        if not alternatives:
+            alternatives = [self._build_alternative({})]
+        if len(alternatives) > 1:
             raise ValueError('Unsupported alternative count')
         ifdesc, endpoints = alternatives[0]
         iface = MockInterface(ifdesc)
@@ -179,7 +181,7 @@ class MockLoader:
     def _build_alternative(self, container):
         if not isinstance(container, dict):
             raise ValueError('Invalid alternative entry')
-        ifdesc = None
+        ifdesc = {}
         endpoints = []
         for ikey, ival in container.items():
             if ikey == 'descriptor':
@@ -191,10 +193,12 @@ class MockLoader:
                 if not isinstance(ival, list):
                     raise ValueError('Interface encpoints not a list')
                 endpoints = [self._build_endpoint(ep) for ep in ival]
-        if not ifdesc:
-            raise ValueError('Missing interface descriptor')
         if not endpoints:
-            raise ValueError('Missing interface endpoint')
+            desc = {'descriptor': {'direction': 'in', 'number': 1}}
+            ep0 = self._build_endpoint(desc)
+            desc = {'descriptor': {'direction': 'out', 'number': 2}}
+            ep1 = self._build_endpoint(desc)
+            endpoints = [ep0, ep1]
         return ifdesc, endpoints
 
     def _build_interface_descriptor(self, container) -> dict:
@@ -231,6 +235,13 @@ class MockLoader:
 
     def _build_endpoint_descriptor(self, container) -> dict:
         kwargs = {}
+        if 'number' not in container:
+            raise ValueError('Missing endpoint number')
+        if 'direction' not in container:
+            raise ValueError('Missing endpoint direction')
+        if 'type' not in container:
+            container = dict(container)
+            container['type'] = 'bulk'
         for ekey, val in container.items():
             if ekey == 'maxpacketsize':
                 kwargs['wMaxPacketSize'] = val

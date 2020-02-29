@@ -48,8 +48,6 @@ class MockEndpoint:
         self.desc = EndpointDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=USBCONST.descriptors.ENDPOINT,
-            # bEndpointAddress=USBCONST.endpoints[direction.lower()] | index,
-            # bmAttributes=USBCONST.endpoint_types[type_.lower()],
             bEndpointAddress=0,
             bmAttributes=0,
             wMaxPacketSize=64,
