@@ -14,6 +14,7 @@ from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
+from pyftdi.gpio import GpioController
 from pyftdi.usbtools import UsbTools
 from pyftdi.tests.backend.loader import MockLoader
 
@@ -261,6 +262,36 @@ class MockSimpleMpsseTestCase(TestCase):
         ftdi.close()
 
 
+class MockSimpleGpioTestCase(TestCase):
+    """
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test(self):
+        """Check simple open/close sequence."""
+        gpio = GpioController()
+        # access to the virtual GPIO port
+        vftdi = self.loader.virtual_ftdi
+        out_pins = 0xAA
+        gpio.configure('ftdi://:232h/1', direction=out_pins)
+        gpio.write_port(0xF3)
+        self.assertEqual(vftdi.gpio, 0xAA & 0xF3)
+        vftdi.gpio = 0x0c
+        vio = gpio.read_port()
+        self.assertEqual(vio, (0xAA & 0xF3) | (~0xAA & 0x0c))
+        gpio.close()
+
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
@@ -270,6 +301,7 @@ def suite():
     suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
     return suite_
 
 
