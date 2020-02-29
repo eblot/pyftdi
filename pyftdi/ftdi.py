@@ -751,6 +751,16 @@ class Ftdi:
         self.purge_buffers()
 
     @property
+    def location(self) -> Tuple[int, int]:
+        """Provide the physical location on the USB topology.
+
+           :return: a tuple of bus, address location, if connected
+        """
+        if not self.is_connected:
+            raise FtdiError('Not connected')
+        return self.usb_dev.bus, self.usb_dev.address
+
+    @property
     def device_version(self) -> int:
         """Report the device version, i.e. the kind of device.
 
