@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@ from pyftdi.i2c import I2cController, I2cIOError
 
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=missing-docstring
+#pylint: disable-msg=no-self-use
 
 
 class I2cTca9555TestCase(TestCase):
@@ -201,8 +202,7 @@ class I2cReadGpioTest(TestCase):
             self._gpio.write(dout << self.GPIO_OUT_OFFSET)
             din = self._gpio.read() >> self.GPIO_IN_OFFSET
             if dout != din:
-                raise AssertionError("GPIO mismatch 0x%04x != 0x%04x",
-                                     din, dout)
+                raise AssertionError(f'GPIO mismatch {din:04x} != {dout:04x}')
         self._gpio.write(0)
         # reset EEPROM read pointer position
         self._port.write(b'\x00\x00')
@@ -223,8 +223,7 @@ class I2cReadGpioTest(TestCase):
             if data != ref:
                 raise AssertionError("I2C data mismatch")
             if dout != din:
-                raise AssertionError("GPIO mismatch 0x%04x != 0x%04x",
-                                     din, dout)
+                raise AssertionError(f'GPIO mismatch {din:04x} != {dout:04x}')
         self._gpio.write(0)
 
     def _close(self):
@@ -273,15 +272,15 @@ class I2cIssue143(TestCase):
         i2c = I2cController()
         i2c.configure(url)
         slave = i2c.get_port(addr)
-        io = i2c.get_gpio()
-        io.set_direction(0x0010, 0x0010)
-        io.write(0)
-        io.write(1<<4)
-        io.write(0)
+        gpio = i2c.get_gpio()
+        gpio.set_direction(0x0010, 0x0010)
+        gpio.write(0)
+        gpio.write(1<<4)
+        gpio.write(0)
         slave.write([0x12, 0x34])
-        io.write(0)
-        io.write(1<<4)
-        io.write(0)
+        gpio.write(0)
+        gpio.write(1<<4)
+        gpio.write(0)
 
 
 def suite():
@@ -315,7 +314,7 @@ def main():
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
-        raise ValueError('Invalid log level: %s' %level)
+        raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     testmain(defaultTest='suite')
 

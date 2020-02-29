@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2011-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
 from os import environ
+from unittest import TestCase, main as ut_main, makeSuite
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
+
+#pylint: disable-msg=missing-docstring
 
 
 # Should match the tested device
@@ -39,7 +41,7 @@ JTAG_INSTR = {'SAMPLE': BitSequence('0001', msb=True, length=4),
               'BYPASS': BitSequence('1111', msb=True, length=4)}
 
 
-class JtagTestCase(unittest.TestCase):
+class JtagTestCase(TestCase):
 
     def setUp(self):
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
@@ -74,7 +76,8 @@ class JtagTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(JtagTestCase, '_test')
+    return makeSuite(JtagTestCase, '_test')
+
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    ut_main(defaultTest='suite')

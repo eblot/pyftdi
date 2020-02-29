@@ -29,11 +29,14 @@
 import unittest
 import sys
 from os import environ
-from pyftdi.gpio import GpioController, GpioException
 from time import sleep
+from pyftdi.gpio import GpioController, GpioException
+
+#pylint: disable-msg=empty-docstring
+#pylint: disable-msg=missing-docstring
 
 
-class GpioTest(object):
+class GpioTest:
     """
     """
 
@@ -98,24 +101,24 @@ class GpioTestCase(unittest.TestCase):
         gpio = GpioTest()
         mask = 0xE0  # Out, Out, Out, In, In, In, In, In
         gpio.open(mask)
-        for gp in range(8):
-            gpio.get_gpio(gp)
+        for pin in range(8):
+            gpio.get_gpio(pin)
             try:
-                gpio.set_gpio(gp, True)
+                gpio.set_gpio(pin, True)
             except GpioException:
-                self.assertFalse(bool((1 << gp) & mask))
+                self.assertFalse(bool((1 << pin) & mask))
             else:
-                self.assertTrue(bool((1 << gp) & mask))
+                self.assertTrue(bool((1 << pin) & mask))
             sleep(0.2)
-        for gp in range(8):
+        for pin in range(8):
             try:
-                gpio.set_gpio(gp, False)
+                gpio.set_gpio(pin, False)
             except GpioException:
-                self.assertFalse(bool((1 << gp) & mask))
+                self.assertFalse(bool((1 << pin) & mask))
             sleep(0.2)
-        self.assertRaises(GpioException, gpio.set_gpio, gp+1, True)
+        self.assertRaises(GpioException, gpio.set_gpio, pin+1, True)
         gpio.close()
-        self.assertRaises(GpioException, gpio.set_gpio, gp, True)
+        self.assertRaises(GpioException, gpio.set_gpio, pin, True)
 
 
 def suite():

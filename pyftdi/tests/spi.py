@@ -36,8 +36,11 @@ from time import sleep
 from pyftdi import FtdiLogger
 from pyftdi.spi import SpiController, SpiIOError
 
+#pylint: disable-msg=empty-docstring
+#pylint: disable-msg=missing-docstring
 
-class SpiDataFlashTest(object):
+
+class SpiDataFlashTest:
     """Basic test for a MX25L1606E data flash device selected as CS0,
        SPI mode 0
     """
@@ -62,7 +65,7 @@ class SpiDataFlashTest(object):
         self._spi.terminate()
 
 
-class SpiAccelTest(object):
+class SpiAccelTest:
     """Basic test for an ADXL345 device selected as CS1,
        SPI mode 3
     """
@@ -87,7 +90,7 @@ class SpiAccelTest(object):
         self._spi.terminate()
 
 
-class SpiRfda2125Test(object):
+class SpiRfda2125Test:
     """Basic test for a RFDA2125 Digital Controlled Variable Gain Amplifier
        selected as CS2,
        SPI mode 0
@@ -324,13 +327,17 @@ def suite():
     return suite_
 
 
-if __name__ == '__main__':
+def main():
     testmod(modules[__name__])
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
-        raise ValueError('Invalid log level: %s', level)
+        raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
+
+
+if __name__ == '__main__':
+    main()
