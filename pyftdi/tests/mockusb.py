@@ -14,7 +14,8 @@ from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbTools
-from pyftdi.tests.backend.usbmock import MockLoader
+from pyftdi.tests.backend.loader import MockLoader
+
 
 class MockTestCase(TestCase):
     """

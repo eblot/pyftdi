@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -27,6 +27,7 @@
 """Miscelleanous helpers"""
 
 from array import array
+from copy import deepcopy
 from re import match
 from typing import Any, Iterable, Union
 
@@ -262,3 +263,39 @@ def pretty_size(size, sep: str = ' ',
         if floor or (ssize << 10) == size:
             return '%d%sKiB' % (ssize, sep)
     return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))
+
+
+class EasyDict(dict):
+    """Dictionary whose members can be accessed as instance members
+    """
+
+    def __init__(self, dictionary=None, **kwargs):
+        super().__init__(self)
+        if dictionary is not None:
+            self.update(dictionary)
+        self.update(kwargs)
+
+    def __getattr__(self, name):
+        try:
+            return self.__getitem__(name)
+        except KeyError:
+            raise AttributeError("'%s' object has no attribute '%s'" %
+                                 (self.__class__.__name__, name))
+
+    def __setattr__(self, name, value):
+        self.__setitem__(name, value)
+
+    @classmethod
+    def copy(cls, dictionary):
+
+        def _deep_copy(obj):
+            if isinstance(obj, list):
+                return [_deep_copy(v) for v in obj]
+            if isinstance(obj, dict):
+                return EasyDict({k: _deep_copy(obj[k]) for k in obj})
+            return deepcopy(obj)
+        return cls(_deep_copy(dictionary))
+
+    def mirror(self) -> 'EasyDict':
+        """Instanciate a mirror EasyDict."""
+        return EasyDict({v: k for k, v in self.items()})

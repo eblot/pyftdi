@@ -2,7 +2,7 @@ devices:
   - bus: 1
     address: 1
     speed: 3
-    noaccess: yes
+    noaccess: no
     descriptor:
       usb: 0x200
       class: 0
