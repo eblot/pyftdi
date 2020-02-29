@@ -227,6 +227,7 @@ class MockDevice:
         self.strings = ['']  # slot 0 is reserved
 
     def add_configuration(self, config: MockConfiguration):
+        config.update()
         self.configurations.append(config)
         self.desc.bNumConfigurations = len(self.configurations)
 

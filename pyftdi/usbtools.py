@@ -174,7 +174,7 @@ class UsbTools:
                     # same device. Indexing should be reworked
                     devs = list(devs)
                 try:
-                    dev = devs[devdesc.index]
+                    dev = devs[devdesc.index or 0]
                 except IndexError:
                     raise IOError("No such device")
             else:
@@ -525,11 +525,11 @@ class UsbTools:
         print('', file=out)
 
     @classmethod
-    def get_string(cls, device: UsbDevice, strname: str) -> str:
+    def get_string(cls, device: UsbDevice, stridx: int) -> str:
         """Retrieve a string from the USB device, dealing with PyUSB API breaks
 
            :param device: USB device instance
-           :param strname: the string identifier
+           :param stridx: the string identifier
            :return: the string read from the USB device
         """
         if cls.UsbApi is None:
@@ -541,5 +541,5 @@ class UsbTools:
             else:
                 cls.UsbApi = 2
         if cls.UsbApi == 2:
-            return usb_get_string(device, strname)
-        return usb_get_string(device, 64, strname)
+            return usb_get_string(device, stridx)
+        return usb_get_string(device, 64, stridx)

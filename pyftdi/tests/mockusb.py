@@ -25,6 +25,49 @@ from pyftdi.tests.backend.loader import MockLoader
 #pylint: disable-msg=no-self-use
 
 
+class MockUsbToolsTestCase(TestCase):
+    """
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_enumerate(self):
+        """Enumerate FTDI devices."""
+        ftdis = [(0x403, pid)
+                 for pid in (0x6001, 0x6010, 0x6011, 0x6014, 0x6015)]
+        count = len(UsbTools.find_all(ftdis))
+        self.assertEqual(count, 6)
+
+    def test_device(self):
+        """Access and release FTDI device."""
+        ftdis = [(0x403, 0x6001)]
+        ft232rs = UsbTools.find_all(ftdis)
+        self.assertEqual(len(ft232rs), 1)
+        devdesc, ifcount = ft232rs[0]
+        self.assertEqual(ifcount, 1)
+        dev = UsbTools.get_device(devdesc)
+        self.assertIsNotNone(dev)
+        UsbTools.release_device(dev)
+
+    def test_string(self):
+        """Retrieve a string from its identifier."""
+        ftdis = [(0x403, 0x6010)]
+        ft2232h = UsbTools.find_all(ftdis)[0]
+        devdesc, _ = ft2232h
+        dev = UsbTools.get_device(devdesc)
+        serialn = UsbTools.get_string(dev, dev.iSerialNumber)
+        self.assertEqual(serialn, 'FT2DEF')
+
+
 class MockSimpleDeviceTestCase(TestCase):
     """
     """
@@ -177,7 +220,7 @@ class MockManyDevicesTestCase(TestCase):
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
-        self.assertEqual(len(lines), 9)
+        self.assertEqual(len(lines), 10)
         for line in lines:
             self.assertTrue(line.startswith('ftdi://'))
             # skip description, i.e. consider URL only
@@ -333,6 +376,7 @@ class MockSimpleUartTestCase(TestCase):
 
 def suite():
     suite_ = TestSuite()
+    suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))

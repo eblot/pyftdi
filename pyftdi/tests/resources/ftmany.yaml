@@ -49,5 +49,16 @@ devices:
     configurations:
       - interfaces:
         - repeat: 4
+  - bus: 3
+    address: 4
+    descriptor:
+      vid: 0x403
+      pid: 0x6001
+      version: 0x600
+      manufacturer: FTDI
+      product: FT2232R
+      serialnumber: FT1OPQ
+
+
 
 
