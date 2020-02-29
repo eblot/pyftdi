@@ -4,20 +4,20 @@
    hardware.
 """
 
-import sys
 from array import array
 from binascii import hexlify
 from copy import deepcopy
-from enum import IntEnum
+from functools import partial
 from importlib import import_module
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack
 from typing import BinaryIO, Optional
-from usb.backend import IBackend
-from pyftdi.ftdi import Ftdi
-from pyftdi.tracer import FtdiMpsseTracer
 from ruamel.yaml import load_all as yaml_load
 from ruamel.yaml.loader import Loader
+from usb.backend import IBackend
+from pyftdi.ftdi import Ftdi
+from pyftdi.misc import to_bool
+from pyftdi.tracer import FtdiMpsseTracer
 
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=invalid-name
@@ -212,6 +212,8 @@ class MockEndpoint:
                  extra: Optional[bytes] = None):
         class EndpointDescriptor(EasyDict):
             pass
+        if extra and not isinstance(extra, (bytes, bytearray)):
+            raise ValueError('Invalid extra payload')
         self.desc = EndpointDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.ENDPOINT,
@@ -226,6 +228,9 @@ class MockEndpoint:
             extra_descriptors=extra or b'')
         self.desc.update(defs)
 
+    def build_strings(self, func):
+        func(self.desc)
+
     def get_length(self) -> int:
         return self.desc.bLength
 
@@ -239,6 +244,8 @@ class MockInterface:
     def __init__(self, defs: dict, extra: Optional[bytes] = None):
         class InterfaceDescriptor(EasyDict):
             pass
+        if extra and not isinstance(extra, (bytes, bytearray)):
+            raise ValueError('Invalid extra payload')
         desc = InterfaceDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.INTERFACE,
@@ -248,7 +255,7 @@ class MockInterface:
             bInterfaceClass=0xFF,
             bInterfaceSubClass=0xFF,
             bInterfaceProtocol=0xFF,
-            iInterface=None,  # String desc index
+            iInterface=0,  # String desc index
             extra_descriptors=extra or  b'')
         desc.update(defs)
         self.alt = 0
@@ -258,6 +265,13 @@ class MockInterface:
         altsetting = self.altsettings[self.alt]
         altsetting[1].append(endpoint)
         altsetting[0].bNumEndpoints = len(altsetting[1])
+
+    def build_strings(self, func):
+        for desc, _ in self.altsettings:
+            func(desc)
+        for _, endpoints in self.altsettings:
+            for endpoint in endpoints:
+                endpoint.build_strings(func)
 
     def add_bulk_pair(self):
         endpoints = self.altsettings[self.alt][1]
@@ -301,25 +315,34 @@ class MockConfiguration:
 
     DESCRIPTOR_FORMAT = '<2BH5B'
 
-    def __init__(self, extra: Optional[bytes] = None):
+    def __init__(self, defs: dict, extra: Optional[bytes] = None):
         class ConfigDescriptor(EasyDict):
             pass
+        if extra and not isinstance(extra, (bytes, bytearray)):
+            raise ValueError('Invalid extra payload')
         self.desc = ConfigDescriptor(
             bLength=scalc(self.DESCRIPTOR_FORMAT),
             bDescriptorType=Constants.descriptors.CONFIG,
             wTotalLength=0,
             bNumInterfaces=0,
             bConfigurationValue=0,
-            iConfiguration=0,
+            iConfiguration=0, # string index
             bmAttributes=0x80,  # bus-powered
             bMaxPower=150//2,  # 150 mA
             extra_descriptors=extra or  b'')
+        self.desc.update(defs)
         self.interfaces = []
 
     def add_interface(self, interface: MockInterface):
         interface.bInterfaceNumber = len(self.interfaces)
         self.interfaces.append(interface)
         self.desc.bNumInterfaces = len(self.interfaces)
+
+    def build_strings(self, func):
+        print(f'build strings on {self.desc}')
+        func(self.desc)
+        for iface in self.interfaces:
+            iface.build_strings(func)
 
     def update(self):
         # wTotalLength needs to be updated to the actual length of the
@@ -344,8 +367,6 @@ class MockDevice:
 
     DEFAULT_LANGUAGE = 0x0409  # en_US
 
-    STRINGS = IntEnum('Strings', 'MANUFACTURER PRODUCT SERIAL_NUMBER', start=1)
-
     def __init__(self, defs: dict, **kwargs):
         class DeviceDescriptor(EasyDict):
             pass
@@ -360,34 +381,58 @@ class MockDevice:
             idVendor=0,
             idProduct=0,
             bcdDevice=0,
-            iManufacturer=self.STRINGS.MANUFACTURER,
-            iProduct=self.STRINGS.PRODUCT,
-            iSerialNumber=self.STRINGS.SERIAL_NUMBER,
+            iManufacturer=0,
+            iProduct=0,
+            iSerialNumber=0,
             bNumConfigurations=0,  # updated later
-            **kwargs)
+            port_number=None,  # unsupported
+            port_numbers=None,  # unsupported
+            bus=0,
+            address=0,
+            speed=3)
         self.desc.update(defs)
+        for key in kwargs:
+            if key not in defs:
+                self.desc[key] = kwargs[key]
         self.configurations = []
-        self._strings = []
+        self.strings = ['']  # slot 0 is reserved
 
     def add_configuration(self, config: MockConfiguration):
         self.configurations.append(config)
         self.desc.bNumConfigurations = len(self.configurations)
 
-    def add_string(self, name: str, value: str):
-        pass
+    def build(self):
+        func = partial(MockDevice._store_strings, self)
+        self.build_strings(func)
+
+    def build_strings(self, func):
+        func(self.desc)
+        for config in self.configurations:
+            config.build_strings(func)
+
+    @staticmethod
+    def _store_strings(obj, desc):
+        for dkey in sorted(desc):
+            if isinstance(desc[dkey], str):
+                stridx = len(obj.strings)
+                obj.strings.append(desc[dkey])
+                desc[dkey] = stridx
 
     def get_string(self, type_: int, index: int) -> str:
         if index == 0:
+            if self.desc.get('noaccess', False):
+                # simulate unauthorized access to the USB device
+                return b''
             # request for list of supported languages
             # only support one
             fmt = '<BBH'
             size = scalc(fmt)
             buf = spack(fmt, size, type_, self.DEFAULT_LANGUAGE)
-            # note: return b'' here to simulate unauthorized access to
-            # the USB device
             return buf
-        name = self.STRINGS(index).name.lower()
-        value = self._strings(name, '')
+        try:
+            value = self.strings[index]
+        except IndexError:
+            return b''
         ms_str = value.encode('utf-16-le')
         fmt = '<BB'
         size = scalc(fmt) + len(ms_str)
@@ -421,16 +466,6 @@ class MockBackend(IBackend):
         self._device_handles = dict()
         self._device_handle_count = 0
         self.log = getLogger('pyftdi.mock.backend')
-        # interface = MockInterface()
-        # interface.add_bulk_pair()
-        # config = MockConfiguration()
-        # config.add_interface(interface)
-        # config.update()
-        # dev = MockDevice(bus=1, address=1, speed=3,
-        #                  port_number=1, port_numbers=1,
-        #                  serial_number='SN_1234', product='FT232H')
-        # dev.add_configuration(config)
-        # self._devices.append(dev)
         self._mpsse = None
 
     def add_device(self, device: MockDevice):
@@ -655,6 +690,7 @@ class MockLoader:
                 if not isinstance(container, dict):
                     raise ValueError('Device not a dict')
                 device = self._build_device(yitem)
+                device.build()
                 _Backend.add_device(device)
 
     def _build_device(self, container):
@@ -672,6 +708,8 @@ class MockLoader:
                     raise ValueError('Configurations not a list')
                 configs = [self._build_configuration(conf) for conf in yval]
                 continue
+            if ykey == 'noaccess':
+                yval = to_bool(yval)
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')
@@ -735,13 +773,14 @@ class MockLoader:
         kmap = {
             'attributes': 'bmAttributes',
             'maxpower': 'bMaxPower',
+            'configuration': 'iConfiguration'
         }
         kwargs = {}
         for ckey, cval in container.items():
             try:
                 dkey = kmap[ckey]
             except KeyError:
-                raise ValueError(f'Unknown descriptor field {dkey}')
+                raise ValueError(f'Unknown descriptor field {ckey}')
             if ckey == 'maxpower':
                 cval //= 2
             elif ckey == 'attributes':
@@ -754,6 +793,8 @@ class MockLoader:
                     if feature == 'wakeup':
                         aval |= 1 << 5
                 cval = aval
+            elif ckey == 'configuration':
+                pass
             else:
                 raise ValueError(f'Unknown config descriptor {ckey}')
             kwargs[dkey] = cval
@@ -803,13 +844,14 @@ class MockLoader:
             'class': 'bDeviceClass',
             'subclass': 'bDeviceSubClass',
             'protocol': 'bDeviceProtocol',
+            'interface': 'iInterface',
         }
         kwargs = {}
         for ckey, cval in container.items():
             try:
                 dkey = kmap[ckey]
             except KeyError:
-                raise ValueError(f'Unknown descriptor field {dkey}')
+                raise ValueError(f'Unknown descriptor field {ckey}')
             kwargs[dkey] = cval
         return kwargs
 
@@ -858,6 +900,9 @@ class MockLoader:
                         Constants.endpoint_types[val.lower()]
                 except KeyError:
                     raise ValueError('Unknown endpoint type')
+                continue
+            if ekey == 'endpoint':
+                kwargs['iEndpoint'] = val
                 continue
             raise ValueError(f'Unknown endpoint entry {ekey}')
         return kwargs
