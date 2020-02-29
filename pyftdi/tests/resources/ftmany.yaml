@@ -1,0 +1,53 @@
+devices:
+  - bus: 1
+    address: 2
+    descriptor:
+      vid: 0x403
+      pid: 0x6015
+      version: 0x1000
+      manufacturer: FTDI
+      product: FT230X
+      serialnumber: FT1XYZ
+  - bus: 2
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT232H
+      serialnumber: FT1ABC1
+  - bus: 2
+    address: 2
+    descriptor:
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT232H
+      serialnumber: FT1ABC2
+  - bus: 3
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6010
+      version: 0x700
+      manufacturer: FTDI
+      product: FT2232H
+      serialnumber: FT2DEF
+    configurations:
+      - interfaces:
+        - repeat: 2
+  - bus: 3
+    address: 3
+    descriptor:
+      vid: 0x403
+      pid: 0x6011
+      version: 0x800
+      manufacturer: FTDI
+      product: FT4232H
+    configurations:
+      - interfaces:
+        - repeat: 4
+
+

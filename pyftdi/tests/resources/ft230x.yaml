@@ -1,0 +1,11 @@
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6015
+      version: 0x1000
+      manufacturer: FTDI
+      product: FT230Z
+      serialnumber: FT1XYZ
+

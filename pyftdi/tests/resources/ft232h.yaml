@@ -20,7 +20,7 @@ devices:
       version: 0x900
       manufacturer: FTDI
       product: FT232H
-      serialnumber: FT_1234
+      serialnumber: FT1ABC
     configurations:
       - descriptor:
           attributes:

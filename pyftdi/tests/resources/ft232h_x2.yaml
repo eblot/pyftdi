@@ -7,7 +7,7 @@ devices:
       version: 0x900
       manufacturer: FTDI
       product: FT232H
-      serialnumber: FT_1234
+      serialnumber: FT1ABC1
   - bus: 1
     address: 2
     descriptor:
@@ -16,4 +16,4 @@ devices:
       version: 0x900
       manufacturer: FTDI
       product: FT232H
-      serialnumber: FT_1235
+      serialnumber: FT1ABC2

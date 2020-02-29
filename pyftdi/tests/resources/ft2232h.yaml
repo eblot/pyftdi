@@ -3,12 +3,12 @@ devices:
     address: 1
     descriptor:
       vid: 0x403
-      pid: 0x6011
-      version: 0x800
+      pid: 0x6010
+      version: 0x700
       manufacturer: FTDI
-      product: FT4232H
-      serialnumber: FT3GHI
+      product: FT2232H
+      serialnumber: FT2DEF
     configurations:
       - interfaces:
-        - repeat: 4
+        - repeat: 2
 
