@@ -18,7 +18,7 @@ from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
-from pyftdi.tests.backend.loader import MockLoader
+from backend.loader import MockLoader
 
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
@@ -399,7 +399,7 @@ def main():
         raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
-    UsbTools.BACKENDS = ('pyftdi.tests.backend.usbmock', )
+    UsbTools.BACKENDS = ('backend.usbmock', )
     ut_main(defaultTest='suite')
 
 
