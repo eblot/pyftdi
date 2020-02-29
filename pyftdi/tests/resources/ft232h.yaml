@@ -5,8 +5,8 @@
 # expliclty defined.
 
 devices:
-  - bus: 1
-    address: 1
+  - bus: 4
+    address: 5
     speed: high
     noaccess: no
     descriptor:

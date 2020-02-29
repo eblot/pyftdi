@@ -18,6 +18,10 @@ from pyftdi.gpio import GpioController
 from pyftdi.usbtools import UsbTools
 from pyftdi.tests.backend.loader import MockLoader
 
+#pylint: disable-msg=empty-docstring
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=no-self-use
+
 
 class MockSimpleDeviceTestCase(TestCase):
     """
@@ -80,7 +84,6 @@ class MockDualDeviceTestCase(TestCase):
             self.assertTrue(line.startswith('ftdi://'))
             # skip description, i.e. consider URL only
             self.assertTrue(line.split(' ')[0].endswith('/1'))
-
 
 
 class MockTwoPortDeviceTestCase(TestCase):
@@ -212,6 +215,7 @@ class MockSimpleUartTestCase(TestCase):
         """Check simple open/close sequence."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
+        self.assertEqual(ftdi.location, (1, 1))
         ftdi.close()
 
     def test_open_bitbang(self):
@@ -247,6 +251,7 @@ class MockSimpleMpsseTestCase(TestCase):
         """Check simple open/close sequence."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
+        self.assertEqual(ftdi.location, (4, 5))
         ftdi.close()
 
     def test_open_bitbang(self):
@@ -281,9 +286,11 @@ class MockSimpleGpioTestCase(TestCase):
         """Check simple open/close sequence."""
         gpio = GpioController()
         # access to the virtual GPIO port
-        vftdi = self.loader.virtual_ftdi
         out_pins = 0xAA
         gpio.configure('ftdi://:232h/1', direction=out_pins)
+        bus, address = gpio.ftdi.location
+        self.assertEqual((bus, address), (4, 5))
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
         gpio.write_port(0xF3)
         self.assertEqual(vftdi.gpio, 0xAA & 0xF3)
         vftdi.gpio = 0x0c
@@ -312,10 +319,10 @@ def main():
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
-        raise ValueError('Invalid log level: %s', level)
+        raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
-    UsbTools.BACKENDS = ('pyftdi.tests.backend.usbmock' ,)
+    UsbTools.BACKENDS = ('pyftdi.tests.backend.usbmock', )
     ut_main(defaultTest='suite')
 
 
