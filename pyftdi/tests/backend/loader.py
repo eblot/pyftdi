@@ -45,9 +45,6 @@ class MockLoader:
 
     def _validate(self):
         locations = set()
-        configs = set()
-        ifaces = set()
-        epaddrs = set()
         for device in get_backend().devices:
             # check location on buses
             location = (device.bus, device.address)
@@ -55,6 +52,9 @@ class MockLoader:
                 raise ValueError('Two devices on same USB location '
                                  f'{location}')
             locations.add(location)
+            configs = set()
+            ifaces = set()
+            epaddrs = set()
             for config in device.configurations:
                 cfgval = config.bConfigurationValue
                 if cfgval in configs:
@@ -75,7 +75,6 @@ class MockLoader:
 
     def _build_root(self, backend, container):
         backend.flush_devices()
-        self._last_ep_idx = 0
         if not isinstance(container, dict):
             raise ValueError('Top-level not a dict')
         for ykey, yval in container.items():
@@ -86,6 +85,7 @@ class MockLoader:
             for yitem in yval:
                 if not isinstance(container, dict):
                     raise ValueError('Device not a dict')
+                self._last_ep_idx = 0
                 device = self._build_device(yitem)
                 device.build()
                 backend.add_device(device)
@@ -316,7 +316,7 @@ class MockLoader:
                 continue
             if ekey == 'number':
                 if not isinstance(val, int) or not 0 < val < 16:
-                    raise ValueError('Invalid endpoint number')
+                    raise ValueError(f'Invalid endpoint number {val}')
                 kwargs.setdefault('bEndpointAddress', 0)
                 kwargs['bEndpointAddress'] |= val
                 continue
