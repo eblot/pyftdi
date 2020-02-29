@@ -1,0 +1,14 @@
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT4232H
+      serialnumber: FT_1234
+    configurations:
+      - interfaces:
+        - repeat: 4
+

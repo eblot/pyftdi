@@ -22,6 +22,7 @@ class MockLoader:
 
     def __init__(self):
         self.log = getLogger('pyftdi.mock.backend')
+        self._last_ep_idx = 0
 
     def load(self, yamlfp: BinaryIO) -> None:
         """Load a YaML configuration stream.
@@ -44,15 +45,37 @@ class MockLoader:
 
     def _validate(self):
         locations = set()
+        configs = set()
+        ifaces = set()
+        epaddrs = set()
         for device in get_backend().devices:
+            # check location on buses
             location = (device.bus, device.address)
             if location in locations:
                 raise ValueError('Two devices on same USB location '
                                  f'{location}')
             locations.add(location)
+            for config in device.configurations:
+                cfgval = config.bConfigurationValue
+                if cfgval in configs:
+                    raise ValueError(f'Config {cfgval} assigned twice')
+                configs.add(cfgval)
+                for iface in config.interfaces:
+                    ifval = iface.bInterfaceNumber
+                    if ifval in ifaces:
+                        raise ValueError(f'Interface {ifval} assigned twice')
+                    ifaces.add(iface)
+                    # check endpoint addresses
+                    for endpoint in iface.endpoints:
+                        epaddr = endpoint.bEndpointAddress
+                        if epaddr in epaddrs:
+                            raise ValueError(f'EP 0x{epaddr:02x} '
+                                             'assigned twice')
+                        epaddrs.add(epaddr)
 
     def _build_root(self, backend, container):
         backend.flush_devices()
+        self._last_ep_idx = 0
         if not isinstance(container, dict):
             raise ValueError('Top-level not a dict')
         for ykey, yval in container.items():
@@ -136,11 +159,12 @@ class MockLoader:
             if ykey == 'interfaces':
                 if not isinstance(yval, list):
                     raise ValueError('Interfaces not a list')
-                interfaces = [self._build_interface(conf) for conf in yval]
+                for conf in yval:
+                    interfaces.extend(self._build_interfaces(conf))
                 continue
             raise ValueError(f'Unknown config entry {ykey}')
         if not interfaces:
-            interfaces = [self._build_interface({})]
+            interfaces.extend(self._build_interfaces({}))
         config = MockConfiguration(cfgdesc)
         for iface in interfaces:
             config.add_interface(iface)
@@ -177,25 +201,36 @@ class MockLoader:
             kwargs[dkey] = cval
         return kwargs
 
-    def _build_interface(self, container):
+    def _build_interfaces(self, container):
         if not isinstance(container, dict):
             raise ValueError('Invalid interface entry')
-        alternatives = []
+        repeat = 1
+        altdef = [{}]
         for ikey, ival in container.items():
-            if ikey != 'alternatives':
+            if ikey == 'alternatives':
+                if not isinstance(ival, list):
+                    raise ValueError(f'Invalid interface entry {ikey}')
+                if len(ival) > 1:
+                    raise ValueError('Unsupported alternative count')
+                if ival:
+                    altdef = ival
+            elif ikey == 'repeat':
+                if not isinstance(ival, int):
+                    raise ValueError(f'Invalid repeat count {ival}')
+                repeat = ival
+            else:
                 raise ValueError(f'Invalid interface entry {ikey}')
-            if not isinstance(ival, list):
-                raise ValueError(f'Invalid interface entry {ikey}')
-            alternatives.extend([self._build_alternative(alt) for alt in ival])
-        if not alternatives:
-            alternatives = [self._build_alternative({})]
-        if len(alternatives) > 1:
-            raise ValueError('Unsupported alternative count')
-        ifdesc, endpoints = alternatives[0]
-        iface = MockInterface(ifdesc)
-        for endpoint in endpoints:
-            iface.add_endpoint(endpoint)
-        return iface
+        ifaces = []
+        while  repeat:
+            repeat -= 1
+            ifdesc, endpoints = self._build_alternative(altdef[0])
+            self._last_ep_idx = max([ep.bEndpointAddress & 0x7F
+                                     for ep in endpoints])
+            iface = MockInterface(ifdesc)
+            for endpoint in endpoints:
+                iface.add_endpoint(endpoint)
+            ifaces.append(iface)
+        return ifaces
 
     def _build_alternative(self, container):
         if not isinstance(container, dict):
@@ -213,9 +248,12 @@ class MockLoader:
                     raise ValueError('Interface encpoints not a list')
                 endpoints = [self._build_endpoint(ep) for ep in ival]
         if not endpoints:
-            desc = {'descriptor': {'direction': 'in', 'number': 1}}
+            epidx = self._last_ep_idx
+            epidx += 1
+            desc = {'descriptor': {'direction': 'in', 'number': epidx}}
             ep0 = self._build_endpoint(desc)
-            desc = {'descriptor': {'direction': 'out', 'number': 2}}
+            epidx += 1
+            desc = {'descriptor': {'direction': 'out', 'number': epidx}}
             ep1 = self._build_endpoint(desc)
             endpoints = [ep0, ep1]
         return ifdesc, endpoints

@@ -63,6 +63,9 @@ class MockEndpoint:
     def get_length(self) -> int:
         return self.desc.bLength
 
+    def __getattr__(self, name):
+        return getattr(self.desc, name)
+
 
 class MockInterface:
     """Fake USB configuration interface.
@@ -94,6 +97,10 @@ class MockInterface:
         altsetting = self.altsettings[self.alt]
         altsetting[1].append(endpoint)
         altsetting[0].bNumEndpoints = len(altsetting[1])
+
+    @property
+    def endpoints(self):
+        return self.altsettings[self.alt][1]
 
     def build_strings(self, func):
         for desc, _ in self.altsettings:
