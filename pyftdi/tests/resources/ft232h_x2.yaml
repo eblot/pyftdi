@@ -1,0 +1,19 @@
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT232H
+      serialnumber: FT_1234
+  - bus: 1
+    address: 2
+    descriptor:
+      vid: 0x403
+      pid: 0x6014
+      version: 0x900
+      manufacturer: FTDI
+      product: FT232H
+      serialnumber: FT_1235

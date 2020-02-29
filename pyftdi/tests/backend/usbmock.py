@@ -302,6 +302,10 @@ class MockBackend(IBackend):
     def flush_devices(self):
         self._devices.clear()
 
+    @property
+    def devices(self):
+        return self._devices
+
     def enumerate_devices(self):
         for dev in self._devices:
             yield dev

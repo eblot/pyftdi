@@ -28,16 +28,30 @@ class MockLoader:
 
            :param yamlfp: YaML stream to be parsed
         """
+        backend = get_backend()
         with yamlfp:
             ydefs = yaml_load(yamlfp, Loader=Loader)
             try:
                 for ydef in ydefs:
-                    self._build_root(ydef)
+                    self._build_root(backend, ydef)
             except Exception as exc:
                 raise ValueError(f'Invalid configuration: {exc}')
+        self._validate()
 
-    def _build_root(self, container):
+    def unload(self):
         backend = get_backend()
+        backend.flush_devices()
+
+    def _validate(self):
+        locations = set()
+        for device in get_backend().devices:
+            location = (device.bus, device.address)
+            if location in locations:
+                raise ValueError('Two devices on same USB location '
+                                 f'{location}')
+            locations.add(location)
+
+    def _build_root(self, backend, container):
         backend.flush_devices()
         if not isinstance(container, dict):
             raise ValueError('Top-level not a dict')

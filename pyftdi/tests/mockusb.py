@@ -17,9 +17,19 @@ from pyftdi.usbtools import UsbTools
 from pyftdi.tests.backend.loader import MockLoader
 
 
-class MockTestCase(TestCase):
+class MockSimpleDeviceTestCase(TestCase):
     """
     """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a single FTDI device."""
@@ -28,9 +38,10 @@ class MockTestCase(TestCase):
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
         lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
-        self.assertEqual(len(lines), 2)
+        self.assertEqual(len(lines), 1)
         self.assertTrue(lines[1].startswith('ftdi://'))
         # skip description, i.e. consider URL only
         self.assertTrue(lines[1].split(' ')[0].endswith('/1'))
@@ -54,22 +65,40 @@ class MockTestCase(TestCase):
         ftdi.close()
 
 
-class MockLoaderTestCase(TestCase):
+class MockDualDeviceTestCase(TestCase):
     """
     """
 
-    def test_1(self):
-        loader = MockLoader()
-        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
-            loader.load(yfp)
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_enumerate(self):
+        """Check simple enumeration of two similar FTDI device."""
         ftdi = Ftdi()
-        ftdi.open_from_url('ftdi:///?')
-
+        temp_stdout = StringIO()
+        with redirect_stdout(temp_stdout):
+            self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
+        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines.pop(0)  # "Available interfaces"
+        print(lines)
+        while lines and not lines[-1]:
+            lines.pop()
+        self.assertEqual(len(lines), 2)
+        self.assertTrue(lines[1].startswith('ftdi://'))
+        # skip description, i.e. consider URL only
+        self.assertTrue(lines[1].split(' ')[0].endswith('/1'))
 
 def suite():
     suite_ = TestSuite()
-    # suite_.addTest(makeSuite(MockTestCase, 'test'))
-    suite_.addTest(makeSuite(MockLoaderTestCase, 'test'))
+    # suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
+    suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
     return suite_
 
 

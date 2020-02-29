@@ -1,3 +1,9 @@
+# This file defines a regular FT232H virtual device
+# It also shows supported options and device definition structure
+# In most use cases, far simpler device definitions may be used, as the
+# MockLoader automatically generates sub device structures that are not
+# expliclty defined.
+
 devices:
   - bus: 1
     address: 1
@@ -39,12 +45,3 @@ devices:
                       interval: 0
                       direction: out
                       type: bulk
-  - bus: 1
-    address: 2
-    descriptor:
-      vid: 0x403
-      pid: 0x6014
-      version: 0x900
-      manufacturer: FTDI
-      product: FT232H
-      serialnumber: FT_1235
