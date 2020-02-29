@@ -101,8 +101,8 @@ class FtdiConstants:
     """
 
     def __init__(self):
-        self._cache = {}
-
+        self._dcache = {}
+        self._rcache = {}
 
     @classmethod
     def _load_constants(cls, prefix: str, reverse=False):
@@ -120,16 +120,24 @@ class FtdiConstants:
                 mapping[entry[plen:].lower()] = getattr(Ftdi, entry)
         return mapping
 
-    def translate(self, prefix: str, value: int) -> str:
-        if prefix not in self._cache:
-            self._cache[prefix] = self._load_constants(prefix)
+    def get_name(self, prefix: str, value: int) -> str:
+        if prefix not in self._dcache:
+            self._dcache[prefix] = self._load_constants(prefix)
         try:
-            return self._cache[prefix][value]
+            return self._dcache[prefix][value]
         except KeyError:
             return f'x?{value:04x}'
 
+    def get_value(self, prefix: str, name: str) -> str:
+        if prefix not in self._rcache:
+            self._rcache[prefix] = self._load_constants(prefix, True)
+        try:
+            return self._rcache[prefix][name]
+        except KeyError:
+            raise ValueError(f'Unknown name {prefix}.{name}')
+
     def dec_req_name(self, request: int) -> str:
-        return self.translate('sio_req', request)
+        return self.get_name('sio_req', request)
 
 
 USBCONST = UsbConstants()
@@ -137,4 +145,3 @@ USBCONST = UsbConstants()
 
 FTDICONST = FtdiConstants()
 """Unique instances of FTDI constant container."""
-
