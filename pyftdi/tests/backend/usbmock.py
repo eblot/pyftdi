@@ -4,6 +4,9 @@
    hardware.
 """
 
+# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+
 from array import array
 from binascii import hexlify
 from collections import defaultdict
@@ -387,16 +390,16 @@ class MockBackend(IBackend):
 
     def bulk_write(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
                    data: array, timeout: int) -> int:
-        self.log.info('> write h:%d ep:%0x02x if:%d, d:%s, to:%d',
-                      dev_handle.handle, ep, intf, hexlify(data).decode(),
-                      timeout)
+        self.log.debug('> write h:%d ep:%0x02x if:%d, d:%s, to:%d',
+                       dev_handle.handle, ep, intf, hexlify(data).decode(),
+                       timeout)
         ftdi = self._get_ftdi_from_handle(dev_handle)
         return ftdi.write(dev_handle, ep, intf, data, timeout)
 
     def bulk_read(self, dev_handle: MockDeviceHandle, ep: int, intf: int,
                   buff: array, timeout: int) -> int:
-        self.log.info('> read h:%d ep:0x%02x if:%d, l:%d, to:%d',
-                      dev_handle.handle, ep, intf, len(buff), timeout)
+        self.log.debug('> read h:%d ep:0x%02x if:%d, l:%d, to:%d',
+                       dev_handle.handle, ep, intf, len(buff), timeout)
         ftdi = self._get_ftdi_from_handle(dev_handle)
         return ftdi.read(dev_handle, ep, intf, buff, timeout)
 

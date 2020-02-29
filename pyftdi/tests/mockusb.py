@@ -9,12 +9,14 @@ from contextlib import redirect_stdout
 from doctest import testmod
 from io import StringIO
 from os import environ
-from sys import modules, stdout, stderr
+from string import ascii_letters
+from sys import modules, stdout
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 from pyftdi.tests.backend.loader import MockLoader
 
@@ -171,7 +173,6 @@ class MockManyDevicesTestCase(TestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        # print(temp_stdout.getvalue(), file=stderr)
         lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
@@ -196,7 +197,7 @@ class MockManyDevicesTestCase(TestCase):
             self.assertRegex(urlparts.path, r'^/\d$')
 
 
-class MockSimpleUartTestCase(TestCase):
+class MockSimpleDirectTestCase(TestCase):
     """
     """
 
@@ -215,7 +216,7 @@ class MockSimpleUartTestCase(TestCase):
         """Check simple open/close sequence."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
-        self.assertEqual(ftdi.location, (1, 1))
+        self.assertEqual(ftdi.usb_path, (1, 1, 0))
         ftdi.close()
 
     def test_open_bitbang(self):
@@ -251,7 +252,7 @@ class MockSimpleMpsseTestCase(TestCase):
         """Check simple open/close sequence."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
-        self.assertEqual(ftdi.location, (4, 5))
+        self.assertEqual(ftdi.usb_path, (4, 5, 0))
         ftdi.close()
 
     def test_open_bitbang(self):
@@ -283,13 +284,13 @@ class MockSimpleGpioTestCase(TestCase):
         cls.loader.unload()
 
     def test(self):
-        """Check simple open/close sequence."""
+        """Check simple GPIO write and read sequence."""
         gpio = GpioController()
         # access to the virtual GPIO port
         out_pins = 0xAA
         gpio.configure('ftdi://:232h/1', direction=out_pins)
-        bus, address = gpio.ftdi.location
-        self.assertEqual((bus, address), (4, 5))
+        bus, address, iface = gpio.ftdi.usb_path
+        self.assertEqual((bus, address, iface), (4, 5, 0))
         vftdi = self.loader.get_virtual_ftdi(bus, address)
         gpio.write_port(0xF3)
         self.assertEqual(vftdi.gpio, 0xAA & 0xF3)
@@ -299,6 +300,37 @@ class MockSimpleGpioTestCase(TestCase):
         gpio.close()
 
 
+class MockSimpleUartTestCase(TestCase):
+    """
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test(self):
+        """Check simple TX/RX sequence."""
+        port = serial_for_url('ftdi:///1')
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        msg = ascii_letters
+        port.write(msg.encode())
+        buf = vftdi.uart_read(len(ascii_letters)+10).decode()
+        self.assertEqual(msg, buf)
+        msg = ''.join(reversed(msg))
+        vftdi.uart_write(msg.encode())
+        buf = port.read(len(ascii_letters)).decode()
+        self.assertEqual(msg, buf)
+        port.close()
+
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
@@ -306,16 +338,17 @@ def suite():
     suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
     return suite_
 
 
 def main():
     testmod(modules[__name__])
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:

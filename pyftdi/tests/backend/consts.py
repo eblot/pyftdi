@@ -1,5 +1,8 @@
 """Constant importer from existing modules."""
 
+# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+
 from importlib import import_module
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import EasyDict

@@ -182,7 +182,7 @@ class Ftdi:
     # FT232H only
     DRIVE_ZERO = 0x9e       # Drive-zero mode
 
-    BITMODE_RESET = 0x00    # switch off bitbang mode
+    BITMODE_RESET = 0x00    # switch off altnerative mode (default to UART)
     BITMODE_BITBANG = 0x01  # classical asynchronous bitbang mode
     BITMODE_MPSSE = 0x02    # MPSSE mode, available on 2232x chips
     BITMODE_SYNCBB = 0x04   # synchronous bitbang mode
@@ -751,14 +751,15 @@ class Ftdi:
         self.purge_buffers()
 
     @property
-    def location(self) -> Tuple[int, int]:
+    def usb_path(self) -> Tuple[int, int, int]:
         """Provide the physical location on the USB topology.
 
-           :return: a tuple of bus, address location, if connected
+           :return: a tuple of bus, address, interface; if connected
         """
         if not self.is_connected:
             raise FtdiError('Not connected')
-        return self.usb_dev.bus, self.usb_dev.address
+        return (self.usb_dev.bus, self.usb_dev.address,
+                self.interface.bInterfaceNumber)
 
     @property
     def device_version(self) -> int:

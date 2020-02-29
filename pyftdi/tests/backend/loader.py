@@ -1,6 +1,9 @@
 """Virtual USB backend loader.
 """
 
+# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+
 from logging import getLogger
 from typing import BinaryIO
 from ruamel.yaml import load_all as yaml_load

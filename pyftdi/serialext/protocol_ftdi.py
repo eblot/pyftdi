@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -120,9 +120,16 @@ class FtdiSerial(SerialBase):
         self.udev.set_dtr(self._dtr_state)
 
     @property
+    def ftdi(self) -> Ftdi:
+        """Return the Ftdi instance.
+
+           :return: the Ftdi instance
+        """
+        return self.udev
+
+    @property
     def usb_path(self):
-        """Return the physical location as a triplet, only for debugging
-           purposes.
+        """Return the physical location as a triplet.
              * bus is the USB bus
              * address is the address on the USB bus
              * interface is the interface number on the FTDI debice
@@ -130,8 +137,7 @@ class FtdiSerial(SerialBase):
            :return: (bus, address, interface)
            :rtype: tuple(int)
         """
-        return (self.udev.usb_dev.bus, self.udev.usb_dev.address,
-                self.udev.interface.bInterfaceNumber)
+        return self.udev.usb_path
 
     @property
     def cts(self):
