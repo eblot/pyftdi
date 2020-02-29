@@ -557,6 +557,14 @@ class I2cController:
             return self._gpio_port
 
     @property
+    def ftdi(self) -> Ftdi:
+        """Return the Ftdi instance.
+
+           :return: the Ftdi instance
+        """
+        return self._ftdi
+
+    @property
     def configured(self) -> bool:
         """Test whether the device has been properly configured.
 

@@ -46,6 +46,14 @@ class GpioController:
         self._direction = 0
 
     @property
+    def ftdi(self) -> Ftdi:
+        """Return the Ftdi instance.
+
+           :return: the Ftdi instance
+        """
+        return self._ftdi
+
+    @property
     def is_connected(self) -> bool:
         """Reports whether a connection exists with the FTDI interface.
 

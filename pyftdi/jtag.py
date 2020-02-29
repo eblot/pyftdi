@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -356,6 +356,14 @@ class JtagController:
         if len(bs) != length:
             raise ValueError("Internal error")
         return bs
+
+    @property
+    def ftdi(self) -> Ftdi:
+        """Return the Ftdi instance.
+
+           :return: the Ftdi instance
+        """
+        return self._ftdi
 
     def _stack_cmd(self, cmd: Union[bytes, bytearray]):
         if not isinstance(cmd, (bytes, bytearray)):
