@@ -1,7 +1,7 @@
 devices:
   - bus: 1
     address: 1
-    speed: 3
+    speed: high
     noaccess: no
     descriptor:
       usb: 0x200

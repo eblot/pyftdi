@@ -39,6 +39,7 @@ class UsbConstants:
                                       for k, v in self._desc_type.items()})
         self.endpoints = self._load_constants('endpoint', True)
         self.endpoint_types = self._load_constants('endpoint_type', True)
+        self.speeds = self._load_constants('speed', True)
 
     @property
     def descriptors(self):

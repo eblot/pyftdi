@@ -70,6 +70,11 @@ class MockLoader:
                 continue
             if ykey == 'noaccess':
                 yval = to_bool(yval)
+            if ykey == 'speed' and isinstance(yval, str):
+                try:
+                    yval = USBCONST.speeds[yval]
+                except KeyError:
+                    raise ValueError(f'Invalid device speed {yval}')
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')
