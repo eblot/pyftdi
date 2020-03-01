@@ -4,6 +4,10 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
+import sys
+from pprint import pprint
+pprint(sys.path, stream=sys.stderr)
+
 import logging
 from contextlib import redirect_stdout
 from doctest import testmod
@@ -404,7 +408,4 @@ def main():
 
 
 if __name__ == '__main__':
-    import sys
-    from pprint import pprint
-    pprint(sys.path, stream=sys.stderr)
     main()
