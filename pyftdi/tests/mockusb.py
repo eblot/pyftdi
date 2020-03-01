@@ -404,4 +404,7 @@ def main():
 
 
 if __name__ == '__main__':
+    import sys
+    from pprint import pprint
+    pprint(sys.path, stream=sys.stderr)
     main()
