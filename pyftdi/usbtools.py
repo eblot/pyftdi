@@ -30,9 +30,9 @@ import sys
 from importlib import import_module
 from string import printable as printablechars
 from threading import RLock
-from typing import (IO, List, Mapping, NamedTuple, Optional, Sequence, Set,
-                    Tuple)
-from urllib.parse import urlsplit
+from typing import (List, Mapping, NamedTuple, Optional, Sequence, Set,
+                    TextIO, Tuple)
+from urllib.parse import urlsplit, urlunsplit
 from usb.core import Device as UsbDevice, USBError
 from usb.util import dispose_resources, get_string as usb_get_string
 from .misc import to_int
@@ -310,6 +310,30 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
+    def list_devices(cls, urlstr: str,
+                     vdict: Mapping[str, int],
+                     pdict: Mapping[int, Mapping[str, int]],
+                     default_vendor: int) -> \
+            List[Tuple[UsbDeviceDescriptor, int]]:
+        """List candidates that match the device URL pattern.
+
+           :see: :py:meth:`show_devices` to generate the URLs from the
+                 candidates list
+
+           :param url: the URL to parse
+           :param vdict: vendor name map of USB vendor ids
+           :param pdict: vendor id map of product name map of product ids
+           :param default_vendor: default vendor id
+           :return: List of (UsbDeviceDescriptor, interface)
+        """
+        urlparts = urlsplit(urlstr)
+        if not urlparts.path:
+            raise UsbToolsError('URL string is missing device port')
+        candidates, _ = cls.enumerate_candidates(urlparts, vdict, pdict,
+                                                 default_vendor)
+        return candidates
+
+    @classmethod
     def parse_url(cls, urlstr: str, scheme: str,
                   vdict: Mapping[str, int],
                   pdict: Mapping[int, Mapping[str, int]],
@@ -321,13 +345,80 @@ class UsbTools:
            :param vdict: vendor name map of USB vendor ids
            :param pdict: vendor id map of product name map of product ids
            :param default_vendor: default vendor id
-           :return: UsbDeviceDescriptor, interface)
+           :return: UsbDeviceDescriptor, interface
+
+           ..note:
+
+              URL syntax:
+
+                  protocol://vendor:product[:serial|:index|:bus:addr]/interface
         """
         urlparts = urlsplit(urlstr)
         if scheme != urlparts.scheme:
             raise UsbToolsError("Invalid URL: %s" % urlstr)
-        # general syntax:
-        #   protocol://vendor:product[:serial|:index|:bus:addr]/interface
+        try:
+            if not urlparts.path:
+                raise UsbToolsError('URL string is missing device port')
+            path = urlparts.path.strip('/')
+            if path == '?' or (not path and urlstr.endswith('?')):
+                report_devices = True
+            else:
+                interface = to_int(path)
+                report_devices = False
+        except (IndexError, ValueError):
+            raise UsbToolsError('Invalid device URL: %s' % urlstr)
+        candidates, idx = cls.enumerate_candidates(urlparts, vdict, pdict,
+                                                   default_vendor)
+        if report_devices:
+            UsbTools.show_devices(scheme, vdict, pdict, candidates)
+            raise SystemExit(candidates and
+                             'Please specify the USB device' or
+                             'No USB-Serial device has been detected')
+        if idx is None:
+            if len(candidates) > 1:
+                raise UsbToolsError("%d USB devices match URL '%s'" %
+                                    (len(candidates), urlstr))
+            idx = 0
+        try:
+            desc, _ = candidates[idx]
+            vendor, product = desc[:2]
+        except IndexError:
+            raise UsbToolsError('No USB device matches URL %s' %
+                                urlstr)
+        if not vendor:
+            cvendors = {candidate[0] for candidate in candidates}
+            if len(cvendors) == 1:
+                vendor = cvendors.pop()
+        if vendor not in pdict:
+            raise UsbToolsError('Vendor ID %s not supported' %
+                                (vendor and '0x%04x' % vendor))
+        if not product:
+            cproducts = {candidate[1] for candidate in candidates
+                         if candidate[0] == vendor}
+            if len(cproducts) == 1:
+                product = cproducts.pop()
+        if product not in pdict[vendor].values():
+            raise UsbToolsError('Product ID %s not supported' %
+                                (product and '0x%04x' % product))
+        devdesc = UsbDeviceDescriptor(vendor, product, desc.bus, desc.address,
+                                      desc.sn, idx, desc.description)
+        return devdesc, interface
+
+    @classmethod
+    def enumerate_candidates(cls, urlparts: Tuple[str, str, str, str, str],
+                             vdict: Mapping[str, int],
+                             pdict: Mapping[int, Mapping[str, int]],
+                             default_vendor: int) -> \
+            Tuple[List[Tuple[UsbDeviceDescriptor, int]], Optional[int]]:
+        """Enumerate USB device URLs that match partial URL and VID/PID
+           criteria.
+
+           :param urlpart: splitted device specifier URL
+           :param vdict: vendor name map of USB vendor ids
+           :param pdict: vendor id map of product name map of product ids
+           :param default_vendor: default vendor id
+           :return: list of (usbdev, iface), parsed index if any
+        """
         specifiers = urlparts.netloc.split(':')
         plcomps = specifiers + [''] * 2
         try:
@@ -348,16 +439,9 @@ class UsbTools:
                                         plcomps[1])
             else:
                 product = None
-            if not urlparts.path:
-                raise UsbToolsError('URL string is missing device port')
-            path = urlparts.path.strip('/')
-            if path == '?' or (not path and urlstr.endswith('?')):
-                show_devices = True
-            else:
-                interface = to_int(path)
-                show_devices = False
         except (IndexError, ValueError):
-            raise UsbToolsError('Invalid device URL: %s' % urlstr)
+            raise UsbToolsError('Invalid device URL: %s' %
+                                urlunsplit(urlparts))
         sernum = None
         idx = None
         bus = None
@@ -403,47 +487,14 @@ class UsbTools:
                 if bus != desc.bus or address != desc.address:
                     continue
             candidates.append((desc, ifcount))
-        if show_devices:
-            UsbTools.show_devices(scheme, vdict, pdict, candidates)
-            raise SystemExit(candidates and
-                             'Please specify the USB device' or
-                             'No USB-Serial device has been detected')
-        if idx is None:
-            if len(candidates) > 1:
-                raise UsbToolsError("%d USB devices match URL '%s'" %
-                                    (len(candidates), urlstr))
-            idx = 0
-        try:
-            desc, _ = candidates[idx]
-            vendor, product = desc[:2]
-        except IndexError:
-            raise UsbToolsError('No USB device matches URL %s' %
-                                urlstr)
-        if not vendor:
-            cvendors = {candidate[0] for candidate in candidates}
-            if len(cvendors) == 1:
-                vendor = cvendors.pop()
-        if vendor not in pdict:
-            raise UsbToolsError('Vendor ID %s not supported' %
-                                (vendor and '0x%04x' % vendor))
-        if not product:
-            cproducts = {candidate[1] for candidate in candidates
-                         if candidate[0] == vendor}
-            if len(cproducts) == 1:
-                product = cproducts.pop()
-        if product not in pdict[vendor].values():
-            raise UsbToolsError('Product ID %s not supported' %
-                                (product and '0x%04x' % product))
-        devdesc = UsbDeviceDescriptor(vendor, product, desc.bus, desc.address,
-                                      desc.sn, idx, desc.description)
-        return devdesc, interface
+        return candidates, idx
 
     @classmethod
     def show_devices(cls, scheme: str,
                      vdict: Mapping[str, int],
                      pdict: Mapping[int, Mapping[str, int]],
-                     candidates: Sequence[Tuple[UsbDeviceDescriptor, int]],
-                     out: Optional[IO] = None):
+                     devdescs: Sequence[Tuple[UsbDeviceDescriptor, int]],
+                     out: Optional[TextIO] = None):
         """Show supported devices. When the joker url ``scheme://*/?`` is
            specified as an URL, it generates a list of connected USB devices
            that match the supported USB devices. It can be used to provide the
@@ -452,18 +503,38 @@ class UsbTools:
            :param scheme: scheme to match in the URL string (scheme://...)
            :param vdict: vendor name map of USB vendor ids
            :param pdict: vendor id map of product name map of product ids
-           :param candidates: candidate devices
+           :param devdescs: candidate devices
            :param out: output stream, none for stdout
         """
-        if not candidates:
+        if not devdescs:
             return
         if not out:
             out = sys.stdout
-        indices = {}
+        devstrs = cls.build_dev_strings(scheme, vdict, pdict, devdescs)
+        max_url_len = max([len(url) for url, _ in devstrs])
         print("Available interfaces:", file=out)
-        serial_ifaces = []
-        max_url_len = 0
-        for desc, ifcount in sorted(candidates):
+        for desc in devstrs:
+            print(('  %%-%ds   %%s' % max_url_len) % desc, file=out)
+        print('', file=out)
+
+    @classmethod
+    def build_dev_strings(cls, scheme: str,
+                          vdict: Mapping[str, int],
+                          pdict: Mapping[int, Mapping[str, int]],
+                          devdescs: Sequence[Tuple[UsbDeviceDescriptor,
+                                                   int]]) -> \
+            List[Tuple[str, str]]:
+        """Build URL and device descriptors from UsbDeviceDescriptors.
+
+           :param scheme: protocol part of the URLs to generate
+           :param vdict: vendor name map of USB vendor ids
+           :param pdict: vendor id map of product name map of product ids
+           :param devdescs: USB devices and interfaces
+           :return: list of (url, descriptors)
+        """
+        indices = {}
+        descs = []
+        for desc, ifcount in sorted(devdescs):
             ikey = (desc.vid, desc.pid)
             indices[ikey] = indices.get(ikey, 0) + 1
             # try to find a matching string for the current vendor
@@ -508,21 +579,16 @@ class UsbTools:
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format
                 try:
-                    serial_url = fmt % (scheme, ':'.join(parts), port)
+                    url = fmt % (scheme, ':'.join(parts), port)
                 except Exception:
-                    serial_url = fmt % (scheme,
-                                        ':'.join([vendor, product, '???']),
-                                        port)
+                    url = fmt % (scheme, ':'.join([vendor, product, '???']),
+                                 port)
                 try:
-                    serial_desc = '(%s)' % desc.description \
-                        if desc.description else ''
+                    description = f'({desc.description:s})' or ''
                 except Exception:
-                    serial_desc = ''
-                max_url_len = max(max_url_len, len(serial_url))
-                serial_ifaces.append((serial_url, serial_desc))
-        for iface in serial_ifaces:
-            print(('  %%-%ds   %%s' % max_url_len) % iface, file=out)
-        print('', file=out)
+                    description = ''
+                descs.append((url, description))
+        return descs
 
     @classmethod
     def get_string(cls, device: UsbDevice, stridx: int) -> str:

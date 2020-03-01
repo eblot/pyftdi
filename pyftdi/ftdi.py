@@ -31,7 +31,7 @@ from errno import ENODEV
 from logging import getLogger
 from struct import unpack as sunpack
 from sys import platform
-from typing import Optional, List, Sequence, Tuple, Union
+from typing import Optional, List, Sequence, TextIO, Tuple, Union
 from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
 from usb.util import (build_request_type, CTRL_IN, CTRL_OUT, CTRL_TYPE_VENDOR,
@@ -329,6 +329,31 @@ class Ftdi:
         device = Ftdi()
         device.open_from_url(url)
         return device
+
+    @classmethod
+    def list_devices(cls, url: Optional[str] = None) -> List[Tuple[str, str]]:
+        """List of URLs of connected FTDI devices.
+
+           :param url: a pattern URL to restrict the search
+           :return: list of (urls, descriptor string)
+        """
+        return UsbTools.list_devices(url or 'ftdi:///?',
+                                     cls.VENDOR_IDS, cls.PRODUCT_IDS,
+                                     cls.DEFAULT_VENDOR)
+
+    @classmethod
+    def show_devices(cls, url: Optional[str] = None,
+                     out: Optional[TextIO] = None) -> None:
+        """Print the URLs and descriptors of connected FTDI devices.
+
+           :param url: a pattern URL to restrict the search
+           :param out: output stream, default to stdout
+        """
+        devdescs = UsbTools.list_devices(url or 'ftdi:///?',
+                                         cls.VENDOR_IDS, cls.PRODUCT_IDS,
+                                         cls.DEFAULT_VENDOR)
+        UsbTools.show_devices('ftdi', cls.VENDOR_IDS, cls.PRODUCT_IDS,
+                              devdescs, out)
 
     @classmethod
     def get_identifiers(cls, url: str) -> Tuple[UsbDeviceDescriptor, int]:

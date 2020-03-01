@@ -64,9 +64,18 @@ You can also ask PyFtdi to enumerate all the compatible devices with the
 special ``ftdi:///?`` syntax. This syntax is useful to retrieve the available
 FTDI URLs with serial number and/or bus:address selectors.
 
-Note that if there's only one FTDI device connected to the host, the FTDI URL
-can be as simple as ``ftdi:///n``, where n is the FTDI port to use, starting
-from 1.
+There are several APIs available to enumerate/filter available FTDI device.
+See :doc:`api/ftdi`.
+
+Note that opening an FTDI connection with a URL ending with `?` is interpreted
+as a query for matching FTDI devices and immediately stop. With this special
+URL syntax, the avaialble devices are printed out to the standard output, and
+the Python interpreter is forced to exit (`SystemExit` is raised).
+
+When simple enumeration of the available FTDI devices is needed - so that
+execution is not interrupted, two helper methods are available as
+:py:meth:`pyftdi.ftdi.Ftdi.list_devices` and
+:py:meth:`pyftdi.ftdi.Ftdi.show_devices` and accept the same URL syntax.
 
 URL-based methods to open a connection
 ......................................

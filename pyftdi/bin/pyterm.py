@@ -3,7 +3,7 @@
 """Simple Python serial terminal
 """
 
-# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -33,7 +33,7 @@ from argparse import ArgumentParser
 from atexit import register
 from collections import deque
 from logging import Formatter, StreamHandler, DEBUG, ERROR
-from os import linesep, stat
+from os import environ, linesep, name as os_name, read as os_read, stat
 from sys import modules, platform, stderr, stdin, stdout
 from time import sleep
 from threading import Event, Thread
@@ -44,7 +44,12 @@ if not MSWIN:
     from termios import TCSANOW, tcgetattr, tcsetattr
 from pyftdi import FtdiLogger
 from pyftdi.misc import to_bps
-from term import getkey
+
+if os_name == 'nt':
+    import msvcrt
+else:
+    msvcrt = None
+global msvscrt
 
 
 class MiniTerm:
@@ -164,7 +169,7 @@ class MiniTerm:
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
-                c = getkey(fullmode)
+                c = getkey()
                 if MSWIN:
                     if ord(c) == 0x3:
                         raise KeyboardInterrupt()
@@ -261,6 +266,9 @@ class MiniTerm:
 
 
 def get_default_device():
+    envdev = environ.get('FTDI_DEVICE', '')
+    if envdev:
+        return envdev
     if platform == 'win32':
         device = 'COM1'
     elif platform == 'darwin':
@@ -276,6 +284,70 @@ def get_default_device():
     return device
 
 
+def init_term(fullterm: bool) -> None:
+    """Internal terminal initialization function"""
+    if os_name == 'nt':
+        return True
+    elif os_name == 'posix':
+        import termios
+        fd = stdin.fileno()
+        old = termios.tcgetattr(fd)
+        new = termios.tcgetattr(fd)
+        new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
+        new[6][termios.VMIN] = 1
+        new[6][termios.VTIME] = 0
+        if fullterm:
+            new[6][termios.VINTR] = 0
+            new[6][termios.VSUSP] = 0
+        termios.tcsetattr(fd, termios.TCSANOW, new)
+        def cleanup_console():
+            termios.tcsetattr(fd, termios.TCSAFLUSH, old)
+            # terminal modes have to be restored on exit...
+        register(cleanup_console)
+        return True
+    else:
+        return True
+
+
+def getkey() -> str:
+    """Return a key from the current console, in a platform independent way"""
+    # there's probably a better way to initialize the module without
+    # relying onto a singleton pattern. To be fixed
+    if os_name == 'nt':
+        # w/ py2exe, it seems the importation fails to define the global
+        # symbol 'msvcrt', to be fixed
+        while 1:
+            z = msvcrt.getch()
+            if z == '\3':
+                raise KeyboardInterrupt('Ctrl-C break')
+            if z == '\0':
+                msvcrt.getch()
+            else:
+                if z == '\r':
+                    return '\n'
+                return z
+    elif os_name == 'posix':
+        c = os_read(stdin.fileno(), 1)
+        return c
+    else:
+        import time
+        time.sleep(1)
+        return None
+
+
+def is_term():
+    """Tells whether the current stdout/stderr stream are connected to a
+    terminal (vs. a regular file or pipe)"""
+    return stdout.isatty()
+
+
+def is_colorterm():
+    """Tells whether the current terminal (if any) support colors escape
+    sequences"""
+    terms = ['xterm-color', 'ansi']
+    return stdout.isatty() and environ.get('TERM') in terms
+
+
 def main():
     """Main routine"""
     debug = False
@@ -289,10 +361,10 @@ def main():
                                         '[Ctrl]+B')
         argparser.add_argument('-p', '--device', default=default_device,
                                help='serial port device name (default: %s)' %
-                                    default_device)
+                               default_device)
         argparser.add_argument('-b', '--baudrate',
                                help='serial port baudrate (default: %d)' %
-                                    MiniTerm.DEFAULT_BAUDRATE,
+                               MiniTerm.DEFAULT_BAUDRATE,
                                default='%s' % MiniTerm.DEFAULT_BAUDRATE)
         argparser.add_argument('-w', '--hwflow',
                                action='store_true',
@@ -331,6 +403,7 @@ def main():
         FtdiLogger.set_level(loglevel)
         FtdiLogger.log.addHandler(StreamHandler(stderr))
 
+        init_term(args.fullmode)
         miniterm = MiniTerm(device=args.device,
                             baudrate=to_bps(args.baudrate),
                             parity='N',
@@ -339,8 +412,8 @@ def main():
         miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho,
                      args.crlf)
 
-    except (IOError, ValueError) as e:
-        print('\nError: %s' % e, file=stderr)
+    except (IOError, ValueError) as exc:
+        print('\nError: %s' % exc, file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
         exit(1)
