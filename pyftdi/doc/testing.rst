@@ -101,3 +101,10 @@ Examples
    in ``ft230x.yaml``.
  * An example of multiple FTDI device definitions can be found in
    ``ftmany.yaml``
+
+
+Availability
+~~~~~~~~~~~~
+
+Note that unit tests and mock infrastructure are not included in the
+distributed Python packages, they are only availabke from the git repository.
