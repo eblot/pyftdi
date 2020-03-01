@@ -7,24 +7,29 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
-from array import array
-from binascii import hexlify
-from collections import defaultdict
-from functools import partial
-from logging import getLogger
-from struct import calcsize as scalc, pack as spack
-from typing import List, Optional
-from usb.backend import IBackend
-from pyftdi.misc import EasyDict
-from .consts import USBCONST
-from .ftdimock import MockFtdi
-
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-instance-attributes
+
+from array import array
+from binascii import hexlify
+from collections import defaultdict
+from functools import partial
+from logging import getLogger
+from struct import calcsize as scalc, pack as spack
+from sys import version_info
+from typing import List, Optional
+from usb.backend import IBackend
+from pyftdi.misc import EasyDict
+from .consts import USBCONST
+from .ftdimock import MockFtdi
+
+# need support for f-string syntax
+if version_info[:2] < (3, 6):
+    raise AssertionError('Python 3.6 is required for this module')
 
 
 class MockEndpoint:
@@ -448,6 +453,6 @@ _MockBackend = MockBackend()
 """Unique instance of PyUSB mock backend."""
 
 
-def get_backend(*args):
+def get_backend(*_):
     """PyUSB API implementation."""
     return _MockBackend

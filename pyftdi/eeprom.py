@@ -206,7 +206,7 @@ class FtdiEeprom:
            :param file: the output file, default to stdout
         """
         for name, value in self._config.items():
-            print(f' {name}: {value}', file=file or stdout)
+            print('%s: %s' % (name, value), file=file or stdout)
 
     def commit(self, dry_run: bool = True) -> bool:
         """Commit any changes to the EEPROM.

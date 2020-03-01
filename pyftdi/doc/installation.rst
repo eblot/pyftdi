@@ -141,6 +141,8 @@ Dependencies should be automatically installed with PIP.
   * pyusb >= 1.0.0
   * pyserial >= 3.0
 
+Do *not* install PyUSB_ from GitHub development branch (``master``, ...).
+Always prefer a stable, tagged release.
 
 Installing with PIP
 ~~~~~~~~~~~~~~~~~~~

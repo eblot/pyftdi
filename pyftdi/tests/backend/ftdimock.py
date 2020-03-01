@@ -3,13 +3,6 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
-from array import array
-from binascii import hexlify
-from collections import deque
-from logging import getLogger
-from pyftdi.tracer import FtdiMpsseTracer
-from .consts import FTDICONST, USBCONST
-
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=unused-argument
 #pylint: disable-msg=invalid-name
@@ -17,6 +10,18 @@ from .consts import FTDICONST, USBCONST
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
+
+from array import array
+from binascii import hexlify
+from collections import deque
+from logging import getLogger
+from sys import version_info
+from pyftdi.tracer import FtdiMpsseTracer
+from .consts import FTDICONST, USBCONST
+
+# need support for f-string syntax
+if version_info[:2] < (3, 6):
+    raise AssertionError('Python 3.6 is required for this module')
 
 
 class MockMpsseTracer(FtdiMpsseTracer):

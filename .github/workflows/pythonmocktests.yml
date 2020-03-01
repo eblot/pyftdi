@@ -1,4 +1,4 @@
-name: Python mock tests
+name: Python USB mock tests
 
 on: [push]
 

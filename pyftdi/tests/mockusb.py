@@ -4,13 +4,17 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
+#pylint: disable-msg=empty-docstring
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=no-self-use
+
 import logging
 from contextlib import redirect_stdout
 from doctest import testmod
 from io import StringIO
 from os import environ
 from string import ascii_letters
-from sys import modules, stdout
+from sys import modules, stdout, version_info
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
@@ -20,9 +24,9 @@ from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 from backend.loader import MockLoader
 
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=no-self-use
+# need support for f-string syntax
+if version_info[:2] < (3, 6):
+    raise AssertionError('Python 3.6 is required for this module')
 
 
 class MockUsbToolsTestCase(TestCase):

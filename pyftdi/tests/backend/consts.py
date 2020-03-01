@@ -3,12 +3,18 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=too-many-instance-attributes
+
 from importlib import import_module
+from sys import version_info
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import EasyDict
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=invalid-name
+# need support for f-string syntax
+if version_info[:2] < (3, 6):
+    raise AssertionError('Python 3.6 is required for this module')
 
 
 class UsbConstants:

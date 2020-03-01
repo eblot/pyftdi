@@ -4,7 +4,13 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=too-few-public-methods
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=no-self-use
+
 from logging import getLogger
+from sys import version_info
 from typing import BinaryIO
 from ruamel.yaml import load_all as yaml_load
 from ruamel.yaml.loader import Loader
@@ -13,10 +19,9 @@ from .usbmock import (MockConfiguration, MockDevice, MockInterface,
                       MockEndpoint, get_backend)
 from .consts import USBCONST
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=too-few-public-methods
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=no-self-use
+# need support for f-string syntax
+if version_info[:2] < (3, 6):
+    raise AssertionError('Python 3.6 is required for this module')
 
 
 class MockLoader:

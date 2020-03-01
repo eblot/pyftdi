@@ -3,7 +3,8 @@
 Requirements
 ------------
 
-Python_ 3.6 or above is required.
+Python_ 3.5 or above is required; new tests require 3.6 or above, as they rely
+on fstring_ syntax.
 
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
