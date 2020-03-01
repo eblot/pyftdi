@@ -96,6 +96,7 @@ PyFTDI in details
    api/index
    pinout
    eeprom
+   testing
    troubleshooting
    authors
    license
