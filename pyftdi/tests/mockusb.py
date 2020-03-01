@@ -4,13 +4,6 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
-import sys
-from pprint import pprint
-pprint(sys.path, stream=sys.stderr)
-import pyftdi.misc
-print(pyftdi.misc.__file__, file=sys.stderr)
-pprint(dir(pyftdi.misc), stream=sys.stderr)
-
 import logging
 from contextlib import redirect_stdout
 from doctest import testmod
