@@ -9,6 +9,7 @@
 #pylint: disable-msg=no-self-use
 
 import logging
+from collections import defaultdict
 from contextlib import redirect_stdout
 from doctest import testmod
 from io import StringIO
@@ -30,7 +31,7 @@ if version_info[:2] < (3, 6):
 
 
 class MockUsbToolsTestCase(TestCase):
-    """
+    """Test UsbTools APIs.
     """
 
     @classmethod
@@ -71,9 +72,92 @@ class MockUsbToolsTestCase(TestCase):
         serialn = UsbTools.get_string(dev, dev.iSerialNumber)
         self.assertEqual(serialn, 'FT2DEF')
 
+    def test_list_devices(self):
+        """List FTDI devices."""
+        vid = 0x403
+        vids = {'ftdi': vid}
+        pids = {
+            vid: {
+                '230x': 0x6015,
+                '232r': 0x6001,
+                '232h': 0x6014,
+                '2232h': 0x6010,
+                '4232h': 0x6011,
+            }
+        }
+        devs = UsbTools.list_devices('ftdi:///?', vids, pids, vid)
+        self.assertEqual(len(devs), 6)
+        ifmap = {
+            0x6001: 1,
+            0x6010: 2,
+            0x6011: 4,
+            0x6014: 1,
+            0x6015: 1
+        }
+        for dev, desc in devs:
+            strings = UsbTools.build_dev_strings('ftdi', vids, pids,
+                                                 [(dev, desc)])
+            self.assertEqual(len(strings), ifmap[dev.pid])
+            for url, _ in strings:
+                parts, _ = UsbTools.parse_url(url, 'ftdi', vids, pids, vid)
+                self.assertEqual(parts.vid, dev.vid)
+                self.assertEqual(parts.pid, dev.pid)
+                self.assertEqual(parts.bus, dev.bus)
+                self.assertEqual(parts.address, dev.address)
+                self.assertEqual(parts.sn, dev.sn)
+        devs = UsbTools.list_devices('ftdi://:232h/?', vids, pids, vid)
+        self.assertEqual(len(devs), 2)
+        devs = UsbTools.list_devices('ftdi://:2232h/?', vids, pids, vid)
+        self.assertEqual(len(devs), 1)
+
+
+class MockFtdiDiscoveryTestCase(TestCase):
+    """Test FTDI device discovery APIs.
+       These APIs are FTDI wrappers for UsbTools APIs.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_list_devices(self):
+        """List FTDI devices."""
+        devs = Ftdi.list_devices('ftdi:///?')
+        self.assertEqual(len(devs), 6)
+        devs = Ftdi.list_devices('ftdi://:232h/?')
+        self.assertEqual(len(devs), 2)
+        devs = Ftdi.list_devices('ftdi://:2232h/?')
+        self.assertEqual(len(devs), 1)
+        devs = Ftdi.list_devices('ftdi://:4232h/?')
+        self.assertEqual(len(devs), 1)
+        out = StringIO()
+        Ftdi.show_devices('ftdi:///?', out)
+        lines = [l.strip() for l in out.getvalue().split('\n')]
+        lines.pop(0)  # "Available interfaces"
+        while lines and not lines[-1]:
+            lines.pop()
+        self.assertEqual(len(lines), 10)
+        portmap = defaultdict(int)
+        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, '230x': 1}
+        for line in lines:
+            url = line.split(' ')[0].strip()
+            parts = urlsplit(url)
+            self.assertEqual(parts.scheme, 'ftdi')
+            self.assertRegex(parts.path, r'^/[1-4]$')
+            product = parts.netloc.split(':')[1]
+            portmap[product] += 1
+        self.assertEqual(portmap, reference)
+
 
 class MockSimpleDeviceTestCase(TestCase):
-    """
+    """Test FTDI APIs with a single-port FTDI device (FT232H)
     """
 
     @classmethod
@@ -104,7 +188,7 @@ class MockSimpleDeviceTestCase(TestCase):
 
 
 class MockDualDeviceTestCase(TestCase):
-    """
+    """Test FTDI APIs with two similar single-port FTDI devices (FT232H)
     """
 
     @classmethod
@@ -136,7 +220,7 @@ class MockDualDeviceTestCase(TestCase):
 
 
 class MockTwoPortDeviceTestCase(TestCase):
-    """
+    """Test FTDI APIs with a dual-port FTDI device (FT2232H)
     """
 
     @classmethod
@@ -168,7 +252,7 @@ class MockTwoPortDeviceTestCase(TestCase):
 
 
 class MockFourPortDeviceTestCase(TestCase):
-    """
+    """Test FTDI APIs with a quad-port FTDI device (FT4232H)
     """
 
     @classmethod
@@ -200,7 +284,7 @@ class MockFourPortDeviceTestCase(TestCase):
 
 
 class MockManyDevicesTestCase(TestCase):
-    """
+    """Test FTDI APIs with several, mixed type FTDI devices
     """
 
     @classmethod
@@ -245,7 +329,7 @@ class MockManyDevicesTestCase(TestCase):
 
 
 class MockSimpleDirectTestCase(TestCase):
-    """
+    """Test FTDI open/close APIs with a basic featured FTDI device (FT230H)
     """
 
     @classmethod
@@ -281,7 +365,7 @@ class MockSimpleDirectTestCase(TestCase):
 
 
 class MockSimpleMpsseTestCase(TestCase):
-    """
+    """Test FTDI open/close APIs with a MPSSE featured FTDI device (FT232H)
     """
 
     @classmethod
@@ -316,7 +400,7 @@ class MockSimpleMpsseTestCase(TestCase):
 
 
 class MockSimpleGpioTestCase(TestCase):
-    """
+    """Test FTDI GPIO APIs
     """
 
     @classmethod
@@ -348,7 +432,7 @@ class MockSimpleGpioTestCase(TestCase):
 
 
 class MockSimpleUartTestCase(TestCase):
-    """
+    """Test FTDI UART APIs
     """
 
     @classmethod
@@ -381,6 +465,7 @@ class MockSimpleUartTestCase(TestCase):
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
+    suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
     suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
