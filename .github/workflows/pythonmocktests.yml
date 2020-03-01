@@ -21,10 +21,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install setuptools wheel ruamel.yaml
-    - name: Build package
+    - name: Install package
       run: |
         python setup.py install
     - name: Run tests
       run: |
-        export PYTHONPATH=./pyftdi/tests
-        python3 pyftdi/tests/mockusb.py
+        python pyftdi/tests/mockusb.py
