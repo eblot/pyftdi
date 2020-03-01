@@ -1,6 +1,7 @@
 # PyFtdi
 
 ![Python package](https://github.com/eblot/pyftdi/workflows/Python%20package/badge.svg)
+![Mock tests](https://github.com/eblot/pyftdi/workflows/Python%20mock%20tests/badge.svg)
 
 ## Documentation
 
