@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyFtdi
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -104,6 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -112,6 +115,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -150,7 +154,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>URL Scheme</li>
     
@@ -239,9 +243,16 @@ match. Therefore, if you have a single FTDI device connected to your system,
 <p>You can also ask PyFtdi to enumerate all the compatible devices with the
 special <code class="docutils literal notranslate"><span class="pre">ftdi:///?</span></code> syntax. This syntax is useful to retrieve the available
 FTDI URLs with serial number and/or bus:address selectors.</p>
-<p>Note that if there’s only one FTDI device connected to the host, the FTDI URL
-can be as simple as <code class="docutils literal notranslate"><span class="pre">ftdi:///n</span></code>, where n is the FTDI port to use, starting
-from 1.</p>
+<p>There are several APIs available to enumerate/filter available FTDI device.
+See <a class="reference internal" href="api/ftdi.html"><span class="doc">ftdi - FTDI low-level driver</span></a>.</p>
+<p>Note that opening an FTDI connection with a URL ending with <cite>?</cite> is interpreted
+as a query for matching FTDI devices and immediately stop. With this special
+URL syntax, the avaialble devices are printed out to the standard output, and
+the Python interpreter is forced to exit (<cite>SystemExit</cite> is raised).</p>
+<p>When simple enumeration of the available FTDI devices is needed - so that
+execution is not interrupted, two helper methods are available as
+<a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.list_devices" title="pyftdi.ftdi.Ftdi.list_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.list_devices()</span></code></a> and
+<a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.show_devices" title="pyftdi.ftdi.Ftdi.show_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.show_devices()</span></code></a> and accept the same URL syntax.</p>
 <div class="section" id="url-based-methods-to-open-a-connection">
 <h2>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
@@ -337,11 +348,14 @@ a URL by custom vendor and product names instead of their numerical values:</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -352,7 +366,6 @@ a URL by custom vendor and product names instead of their numerical values:</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

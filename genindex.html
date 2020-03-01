@@ -2,8 +2,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -18,7 +17,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -50,7 +51,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyFtdi
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -77,6 +78,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -92,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -100,6 +103,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -138,7 +142,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Index</li>
     
@@ -170,6 +174,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
@@ -212,6 +217,10 @@
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.bitbang_enabled">bitbang_enabled() (pyftdi.ftdi.Ftdi property)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.build_dev_strings">build_dev_strings() (pyftdi.usbtools.UsbTools class method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
@@ -249,6 +258,8 @@
         <li><a href="api/spi.html#pyftdi.spi.SpiController.configured">(pyftdi.spi.SpiController property)</a>
 </li>
       </ul></li>
+      <li><a href="api/misc.html#pyftdi.misc.EasyDict.copy">copy() (pyftdi.misc.EasyDict class method)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.create_from_url">create_from_url() (pyftdi.ftdi.Ftdi class method)</a>
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiPort.cs">cs() (pyftdi.spi.SpiPort property)</a>
@@ -291,6 +302,8 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/misc.html#pyftdi.misc.EasyDict">EasyDict (class in pyftdi.misc)</a>
+</li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.enable_3phase_clock">enable_3phase_clock() (pyftdi.ftdi.Ftdi method)</a>
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.enable_adaptive_clock">enable_adaptive_clock() (pyftdi.ftdi.Ftdi method)</a>
@@ -301,6 +314,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.enumerate_candidates">enumerate_candidates() (pyftdi.usbtools.UsbTools class method)</a>
+</li>
       <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.erase">erase() (pyftdi.eeprom.FtdiEeprom method)</a>
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cController.exchange">exchange() (pyftdi.i2c.I2cController method)</a>
@@ -361,6 +376,14 @@
       </ul></li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi">Ftdi (class in pyftdi.ftdi)</a>
 </li>
+      <li><a href="api/gpio.html#pyftdi.gpio.GpioController.ftdi">ftdi() (pyftdi.gpio.GpioController property)</a>
+
+      <ul>
+        <li><a href="api/i2c.html#pyftdi.i2c.I2cController.ftdi">(pyftdi.i2c.I2cController property)</a>
+</li>
+        <li><a href="api/spi.html#pyftdi.spi.SpiController.ftdi">(pyftdi.spi.SpiController property)</a>
+</li>
+      </ul></li>
       <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom">FtdiEeprom (class in pyftdi.eeprom)</a>
 </li>
       <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEepromError">FtdiEepromError</a>
@@ -492,9 +515,23 @@
   </ul></td>
 </tr></table>
 
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.list_devices">list_devices() (pyftdi.ftdi.Ftdi class method)</a>
+
+      <ul>
+        <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.list_devices">(pyftdi.usbtools.UsbTools class method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/misc.html#pyftdi.misc.EasyDict.mirror">mirror() (pyftdi.misc.EasyDict method)</a>
+</li>
       <li><a href="api/spi.html#pyftdi.spi.SpiPort.mode">mode() (pyftdi.spi.SpiPort property)</a>
 </li>
   </ul></td>
@@ -707,8 +744,12 @@
 </li>
       <li><a href="api/i2c.html#pyftdi.i2c.I2cPort.shift_address">shift_address() (pyftdi.i2c.I2cPort method)</a>
 </li>
-      <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.show_devices">show_devices() (pyftdi.usbtools.UsbTools class method)</a>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.show_devices">show_devices() (pyftdi.ftdi.Ftdi class method)</a>
+
+      <ul>
+        <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.show_devices">(pyftdi.usbtools.UsbTools class method)</a>
 </li>
+      </ul></li>
       <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.size">size() (pyftdi.eeprom.FtdiEeprom property)</a>
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiController">SpiController (class in pyftdi.spi)</a>
@@ -745,10 +786,12 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools">UsbTools (class in pyftdi.usbtools)</a>
+      <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.usb_path">usb_path() (pyftdi.ftdi.Ftdi property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools">UsbTools (class in pyftdi.usbtools)</a>
+</li>
       <li><a href="api/usbtools.html#pyftdi.usbtools.UsbToolsError">UsbToolsError</a>
 </li>
   </ul></td>
@@ -840,11 +883,14 @@
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -855,7 +901,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

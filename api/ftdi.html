@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> PyFtdi
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -110,6 +112,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
@@ -118,6 +121,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -156,7 +160,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API documentation</a> &raquo;</li>
         
@@ -397,16 +401,12 @@ not capable of drive-zero mode</p>
 <code class="sig-name descname">enable_loopback_mode</code><span class="sig-paren">(</span><em class="sig-param">loopback=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.enable_loopback_mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Enable loopback, i.e. connect DO to DI in FTDI MPSSE port for test
 purposes only. It does not support UART (TX to RX) mode.</p>
-<blockquote>
-<div><dl class="field-list simple">
-<dt class="field-odd">param loopback</dt>
-<dd class="field-odd"><p>whether to enable or disable this mode</p>
-</dd>
-</dl>
-</div></blockquote>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>loopback</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to enable or disable this mode</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -722,6 +722,23 @@ bridge</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.list_devices">
+<em class="property">classmethod </em><code class="sig-name descname">list_devices</code><span class="sig-paren">(</span><em class="sig-param">url=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.list_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>List of URLs of connected FTDI devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>url</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a pattern URL to restrict the search</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of (urls, descriptor string)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1519,6 +1536,37 @@ definitions.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.show_devices">
+<em class="property">classmethod </em><code class="sig-name descname">show_devices</code><span class="sig-paren">(</span><em class="sig-param">url=None</em>, <em class="sig-param">out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.show_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the URLs and descriptors of connected FTDI devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a pattern URL to restrict the search</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TextIO</span></code>]) – output stream, default to stdout</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.usb_path">
+<em class="property">property </em><code class="sig-name descname">usb_path</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide the physical location on the USB topology.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a tuple of bus, address, interface; if connected</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.validate_mpsse">
 <code class="sig-name descname">validate_mpsse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.validate_mpsse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check that the previous MPSSE request has been accepted by the FTDI
@@ -1659,11 +1707,14 @@ change the EEPROM content</p></li>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -1674,7 +1725,6 @@ change the EEPROM content</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

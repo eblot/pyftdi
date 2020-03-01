@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Testing &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
+    <link rel="prev" title="EEPROM management" href="eeprom.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.46.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Testing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hardware-tests">Hardware tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mock-tests">Mock tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#beware-wip">Beware: WIP</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#availability">Availability</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Testing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/testing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="testing">
+<h1>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Testing PyFTDI is challenging because it relies on several pieces of hardware:</p>
+<ul class="simple">
+<li><p>one or more FTDI device</p></li>
+<li><p>I<sup>2</sup>C, SPI, JTAG bus slaves or communication equipment for UART</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">tests</span></code> directory contain several tests files, which are primarily aimed
+at demonstrating usage of PyFTDI in common use cases.</p>
+<p>Most unit tests are disabled, as they require specific slaves, with a dedicated
+HW wiring. Reproducing such test environments can be challenging, as it
+requires dedicated test benchs.</p>
+<p>This is a growing concern as PyFTDI keeps evolving, and up to now, regression
+tests were hard to run.</p>
+</div>
+<div class="section" id="hardware-tests">
+<h2>Hardware tests<a class="headerlink" href="#hardware-tests" title="Permalink to this headline">¶</a></h2>
+<p>Please refer to the <code class="docutils literal notranslate"><span class="pre">pyftdi/tests</span></code> directory. There is one file dedicated to
+each feature to test. Note that you need to read and edit these tests files to
+fit your actual test environment, and enable the proper unit test cases, as
+most are actually disabled by default.</p>
+<p>You need specific bus slaves to perform most of these tests.</p>
+</div>
+<div class="section" id="mock-tests">
+<h2>Mock tests<a class="headerlink" href="#mock-tests" title="Permalink to this headline">¶</a></h2>
+<p>With PyFTDI v0.45, a new test module enables PyFTDI API partial testing using a
+pure software environment with no hardware. This also eases automatic testing
+within a continuous integration environment.</p>
+<p>This new module implements a virtual USB backend for PyUSB, which creates some
+kind of virtual, limited USB stack. The PyUSB can be told to substitute the
+native platform’s libusb with this module.</p>
+<p>This module, <code class="docutils literal notranslate"><span class="pre">usbmock</span></code> can be dynamically confifured with the help of YaML
+definition files to create one or more virtual FTDI devices on a virtual USB
+bus topology. This enables to test <code class="docutils literal notranslate"><span class="pre">usbtools</span></code> module to enumerate, detect,
+report and access FTDI devices using the regular <a class="reference internal" href="urlscheme.html"><span class="doc">URL Scheme</span></a> syntax.</p>
+<p><code class="docutils literal notranslate"><span class="pre">usbmock</span></code> also routes all vendor-specific USB API calls to a secondary
+<code class="docutils literal notranslate"><span class="pre">ftdimock</span></code> module, which is in charge of handling all FTDI USB requests.</p>
+<p>This module enables testing <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> APIs. It also re-uses the MPSSE tracker
+engine to decode and verify MPSSE requests used to support I<sup>2</sup>C, SPI and UART
+features.</p>
+<div class="section" id="beware-wip">
+<h3>Beware: WIP<a class="headerlink" href="#beware-wip" title="Permalink to this headline">¶</a></h3>
+<p>This is an experimental work in progress, which is its early inception stage.</p>
+<p>It has nevertheless already revealed a couple of bugs that had been hiding
+within <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> for years.</p>
+<p>There is a large work effort ahead to be able to support more use cases and
+tests more APIs, and many unit tests to write.</p>
+<p>It cannot replace hardware tests with actual boards and slaves, but should
+simplify test setup and help avoiding regression issues.</p>
+</div>
+<div class="section" id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<p>No hardware is required to run these tests, to even a single FTDI device.</p>
+<p>This new test framework require Python 3.6+, as it uses the <a class="reference external" href="https://www.python.org/dev/peps/pep-0498">fstring</a> syntax.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">PYTHONPATH</span><span class="o">=.</span> <span class="n">FTDI_LOGLEVEL</span><span class="o">=</span><span class="n">info</span> <span class="n">pyftdi</span><span class="o">/</span><span class="n">tests</span><span class="o">/</span><span class="n">mockusb</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">pyftdi/tests/resources</span></code> directory contains definition files which are
+loaded by the mock unit tests.</p>
+<p>Although it is possible to create fine grained USB device definitions, the
+configuration loader tries to automatically define missing parts to match the
+USB device topology of FTDI devices.</p>
+<p>This enables to create simple definition files without having to mess with low
+level USB definitions whenever possible.</p>
+<div class="section" id="examples">
+<h4>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><ul class="simple">
+<li><p>An example of a nearly comprehensive syntax can be found in <code class="docutils literal notranslate"><span class="pre">ft232h.yaml</span></code>.</p></li>
+<li><p>Another, much more simple example with only mandatory settings can be found
+in <code class="docutils literal notranslate"><span class="pre">ft230x.yaml</span></code>.</p></li>
+<li><p>An example of multiple FTDI device definitions can be found in
+<code class="docutils literal notranslate"><span class="pre">ftmany.yaml</span></code></p></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+</div>
+<div class="section" id="availability">
+<h2>Availability<a class="headerlink" href="#availability" title="Permalink to this headline">¶</a></h2>
+<p>Note that unit tests and mock infrastructure are not included in the
+distributed Python packages, they are only availabke from the git repository.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="eeprom.html" class="btn btn-neutral float-left" title="EEPROM management" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+
+    </p>
+  </div>
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

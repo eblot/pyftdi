@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> PyFtdi
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -109,6 +111,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
@@ -117,6 +120,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -155,7 +159,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API documentation</a> &raquo;</li>
         
@@ -183,6 +187,28 @@
 <div class="section" id="module-pyftdi.misc">
 <span id="functions"></span><h2>Functions<a class="headerlink" href="#module-pyftdi.misc" title="Permalink to this headline">¶</a></h2>
 <p>Miscelleanous helpers</p>
+<dl class="class">
+<dt id="pyftdi.misc.EasyDict">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">EasyDict</code><span class="sig-paren">(</span><em class="sig-param">dictionary=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary whose members can be accessed as instance members</p>
+<dl class="method">
+<dt id="pyftdi.misc.EasyDict.copy">
+<em class="property">classmethod </em><code class="sig-name descname">copy</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; a shallow copy of D<a class="headerlink" href="#pyftdi.misc.EasyDict.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.misc.EasyDict.mirror">
+<code class="sig-name descname">mirror</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict.mirror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instanciate a mirror EasyDict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.misc.EasyDict" title="pyftdi.misc.EasyDict"><code class="xref py py-class docutils literal notranslate"><span class="pre">EasyDict</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="pyftdi.misc.hexdump">
 <code class="sig-prename descclassname">pyftdi.misc.</code><code class="sig-name descname">hexdump</code><span class="sig-paren">(</span><em class="sig-param">data</em>, <em class="sig-param">full=False</em>, <em class="sig-param">abbreviate=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexdump" title="Permalink to this definition">¶</a></dt>
@@ -385,11 +411,14 @@ unit that allows the exact representation of the input value</p></li>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -400,7 +429,6 @@ unit that allows the exact representation of the input value</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

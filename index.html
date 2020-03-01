@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -50,7 +51,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> PyFtdi
+            <a href="#" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -77,6 +78,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -92,6 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -100,6 +103,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -138,7 +142,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="#">Docs</a> &raquo;</li>
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
         
       <li>PyFtdi</li>
     
@@ -163,7 +167,15 @@
 <h1>PyFtdi<a class="headerlink" href="#pyftdi" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<p>PyFtdi documentation is available from <a class="reference external" href="https://eblot.github.io/pyftdi/">https://eblot.github.io/pyftdi/</a></p>
+<p>PyFtdi online documentation is available
+<a class="reference external" href="https://eblot.github.io/pyftdi">here</a>.</p>
+</div>
+<div class="section" id="source-code">
+<h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h2>
+<p>PyFtdi releases are available from the Python Package Index from
+<a class="reference external" href="https://pypi.org/project/pyftdi">PyPi</a>.</p>
+<p>PyFtdi development code is available from
+<a class="reference external" href="https://github.com/eblot/pyftdi">GitHub</a>.</p>
 </div>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
@@ -203,14 +215,12 @@ with support for non-byte sized transfer</p></li>
 </div>
 <div class="section" id="supported-host-oses">
 <h2>Supported host OSes<a class="headerlink" href="#supported-host-oses" title="Permalink to this headline">¶</a></h2>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li><p>macOS</p></li>
 <li><p>Linux</p></li>
 <li><p>FreeBSD</p></li>
 <li><p>Windows, although not officially supported</p></li>
 </ul>
-</div></blockquote>
 </div>
 <div class="section" id="warning">
 <h2>Warning<a class="headerlink" href="#warning" title="Permalink to this headline">¶</a></h2>
@@ -252,6 +262,7 @@ slave lines.</p></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -278,11 +289,14 @@ slave lines.</p></li>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -293,7 +307,6 @@ slave lines.</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

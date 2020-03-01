@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="../index.html" class="icon icon-home"> PyFtdi
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -110,6 +112,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
@@ -118,6 +121,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -156,7 +160,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../index.html">Docs</a> &raquo;</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="index.html">API documentation</a> &raquo;</li>
         
@@ -187,6 +191,51 @@
 <dt id="pyftdi.usbtools.UsbTools">
 <em class="property">class </em><code class="sig-prename descclassname">pyftdi.usbtools.</code><code class="sig-name descname">UsbTools</code><a class="headerlink" href="#pyftdi.usbtools.UsbTools" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helpers to obtain information about connected USB devices.</p>
+<dl class="method">
+<dt id="pyftdi.usbtools.UsbTools.build_dev_strings">
+<em class="property">classmethod </em><code class="sig-name descname">build_dev_strings</code><span class="sig-paren">(</span><em class="sig-param">scheme</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">devdescs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.build_dev_strings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build URL and device descriptors from UsbDeviceDescriptors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scheme</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – protocol part of the URLs to generate</p></li>
+<li><p><strong>vdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – vendor name map of USB vendor ids</p></li>
+<li><p><strong>pdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – vendor id map of product name map of product ids</p></li>
+<li><p><strong>devdescs</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – USB devices and interfaces</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of (url, descriptors)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.usbtools.UsbTools.enumerate_candidates">
+<em class="property">classmethod </em><code class="sig-name descname">enumerate_candidates</code><span class="sig-paren">(</span><em class="sig-param">urlparts</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.enumerate_candidates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enumerate USB device URLs that match partial URL and VID/PID
+criteria.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>urlpart</strong> – splitted device specifier URL</p></li>
+<li><p><strong>vdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – vendor name map of USB vendor ids</p></li>
+<li><p><strong>pdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – vendor id map of product name map of product ids</p></li>
+<li><p><strong>default_vendor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – default vendor id</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]], <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>list of (usbdev, iface), parsed index if any</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.find_all">
 <em class="property">static </em><code class="sig-name descname">find_all</code><span class="sig-paren">(</span><em class="sig-param">vps</em>, <em class="sig-param">nocache=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Permalink to this definition">¶</a></dt>
@@ -250,13 +299,13 @@ constraints.</p>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.get_string">
-<em class="property">classmethod </em><code class="sig-name descname">get_string</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">strname</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">get_string</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">stridx</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve a string from the USB device, dealing with PyUSB API breaks</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>device</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>) – USB device instance</p></li>
-<li><p><strong>strname</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the string identifier</p></li>
+<li><p><strong>stridx</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the string identifier</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -264,6 +313,32 @@ constraints.</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>the string read from the USB device</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.usbtools.UsbTools.list_devices">
+<em class="property">classmethod </em><code class="sig-name descname">list_devices</code><span class="sig-paren">(</span><em class="sig-param">urlstr</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">default_vendor</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.list_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>List candidates that match the device URL pattern.</p>
+<dl class="field-list simple">
+<dt class="field-odd">See</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.usbtools.UsbTools.show_devices" title="pyftdi.usbtools.UsbTools.show_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">show_devices()</span></code></a> to generate the URLs from the
+candidates list</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>url</strong> – the URL to parse</p></li>
+<li><p><strong>vdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – vendor name map of USB vendor ids</p></li>
+<li><p><strong>pdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – vendor id map of product name map of product ids</p></li>
+<li><p><strong>default_vendor</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – default vendor id</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of (UsbDeviceDescriptor, interface)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -286,9 +361,16 @@ constraints.</p>
 <dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>UsbDeviceDescriptor, interface)</p>
+<dd class="field-odd"><p>UsbDeviceDescriptor, interface</p>
 </dd>
 </dl>
+<p>..note:</p>
+<blockquote>
+<div><p>URL syntax:</p>
+<blockquote>
+<div><p>protocol://vendor:product[:serial|:index|:bus:addr]/interface</p>
+</div></blockquote>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -304,7 +386,7 @@ constraints.</p>
 
 <dl class="method">
 <dt id="pyftdi.usbtools.UsbTools.show_devices">
-<em class="property">classmethod </em><code class="sig-name descname">show_devices</code><span class="sig-paren">(</span><em class="sig-param">scheme</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">candidates</em>, <em class="sig-param">out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">show_devices</code><span class="sig-paren">(</span><em class="sig-param">scheme</em>, <em class="sig-param">vdict</em>, <em class="sig-param">pdict</em>, <em class="sig-param">devdescs</em>, <em class="sig-param">out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show supported devices. When the joker url <code class="docutils literal notranslate"><span class="pre">scheme://*/?</span></code> is
 specified as an URL, it generates a list of connected USB devices
 that match the supported USB devices. It can be used to provide the
@@ -315,8 +397,8 @@ end-user with a list of valid URL schemes.</p>
 <li><p><strong>scheme</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – scheme to match in the URL string (scheme://…)</p></li>
 <li><p><strong>vdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – vendor name map of USB vendor ids</p></li>
 <li><p><strong>pdict</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – vendor id map of product name map of product ids</p></li>
-<li><p><strong>candidates</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – candidate devices</p></li>
-<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code>]) – output stream, none for stdout</p></li>
+<li><p><strong>devdescs</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]) – candidate devices</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TextIO</span></code>]) – output stream, none for stdout</p></li>
 </ul>
 </dd>
 </dl>
@@ -356,11 +438,14 @@ end-user with a list of valid URL schemes.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -371,7 +456,6 @@ end-user with a list of valid URL schemes.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

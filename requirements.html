@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyFtdi
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -96,6 +98,7 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -104,6 +107,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,7 +146,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Requirements</li>
     
@@ -165,7 +169,8 @@
             
   <div class="section" id="requirements">
 <h1>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference external" href="https://www.python.org/">Python</a> 3.5 or above is required. (see next section for Python 2.x support)</p>
+<p><a class="reference external" href="https://www.python.org/">Python</a> 3.5 or above is required; new tests require 3.6 or above, as they rely
+on <a class="reference external" href="https://www.python.org/dev/peps/pep-0498">fstring</a> syntax.</p>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> relies on <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a>, which itself depends on one of the following native
 libraries:</p>
 <ul class="simple">
@@ -173,25 +178,7 @@ libraries:</p>
 </ul>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not depend on any other native library, and only uses standard
 Python modules along with <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>.</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been tested with <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below is no longer supported.</p></li>
-</ul>
-</div></blockquote>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Note about previous releases</p>
-<p>If you have no choice but using previous releases of software, such as</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://www.python.org/">Python</a> (2.6+, 3.3 or 3.4),</p></li>
-<li><p>other <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> backends such as the deprecated libusb-0.1, or openusb,</p></li>
-<li><p><a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.0b1 or below,</p></li>
-<li><p><a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> 2.6+ (previous versions of <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> will NOT work)</p></li>
-</ul>
-<p>please checkout the latest <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> 0.1x series (0.13.3) which provides support
-for these deprecated environmement, but is no longer actively maintained.</p>
-</div>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is beeing tested with <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> 1.0.2.</p>
 <div class="section" id="development">
 <h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed on macOS platforms (64-bit kernel), and is validated on a
@@ -223,11 +210,14 @@ with Windows 7 for example. Your mileage may vary.</p>
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -238,7 +228,6 @@ with Windows 7 for example. Your mileage may vary.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

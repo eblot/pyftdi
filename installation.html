@@ -1,8 +1,7 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html lang="en" >
 <head>
   <meta charset="utf-8">
   
@@ -17,7 +16,9 @@
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> PyFtdi
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.44.2
+                0.46.0
               </div>
             
           
@@ -78,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -98,16 +100,17 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#post-installation-sanity-check">Post-installation sanity check</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-with-pip">Installing with PIP</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-from-source">Installing from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-installation-sanity-check">Post-installation sanity check</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
@@ -116,6 +119,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -154,7 +158,7 @@
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Installation</li>
     
@@ -264,12 +268,43 @@ device. Always select the former.</p></li>
 </div>
 </div>
 </div>
+<div class="section" id="python-dependencies">
+<h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Dependencies should be automatically installed with PIP.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>pyusb &gt;= 1.0.0</p></li>
+<li><p>pyserial &gt;= 3.0</p></li>
+</ul>
+</div></blockquote>
+<p>Do <em>not</em> install <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> from GitHub development branch (<code class="docutils literal notranslate"><span class="pre">master</span></code>, …).
+Always prefer a stable, tagged release.</p>
+</div>
+<div class="section" id="installing-with-pip">
+<h2>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this headline">¶</a></h2>
+<p>PIP should automatically install the missing dependencies.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyftdi
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-from-source">
+<h2>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
+<p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
+github repository.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyusb
+pip3 install pyserial
+git clone https://github.com/eblot/pyftdi.git
+<span class="nb">cd</span> pyftdi
+python3 setup.py ...
+</pre></div>
+</div>
+</div>
 <div class="section" id="post-installation-sanity-check">
 <h2>Post-installation sanity check<a class="headerlink" href="#post-installation-sanity-check" title="Permalink to this headline">¶</a></h2>
 <p>Open a <em>shell</em>, or a <em>CMD</em> on Windows</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3  <span class="c1"># or &#39;python&#39; on Windows</span>
 from pyftdi.ftdi import Ftdi
-Ftdi<span class="o">()</span>.open_from_url<span class="o">(</span><span class="s1">&#39;ftdi:///?&#39;</span><span class="o">)</span>
+Ftdi.show_devices<span class="o">()</span>
 </pre></div>
 </div>
 <p>should list all the FTDI devices available on your host.</p>
@@ -290,35 +325,6 @@ with no serial number, connected to the host:</p>
 command, please refer to the <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> API to add custom identifiers, <em>i.e.</em> see
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_vendor" title="pyftdi.ftdi.Ftdi.add_custom_vendor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_vendor()</span></code></a> and
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.add_custom_product" title="pyftdi.ftdi.Ftdi.add_custom_product"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.add_custom_product()</span></code></a> APIs.</p>
-</div>
-<div class="section" id="python-dependencies">
-<h2>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>Dependencies should be automatically installed with PIP.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>pyusb &gt;= 1.0.0</p></li>
-<li><p>pyserial &gt;= 3.0</p></li>
-</ul>
-</div></blockquote>
-</div>
-<div class="section" id="installing-with-pip">
-<h2>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this headline">¶</a></h2>
-<p>PIP should automatically install the missing dependencies.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyftdi
-</pre></div>
-</div>
-</div>
-<div class="section" id="installing-from-source">
-<h2>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
-<p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
-github repository.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyusb
-pip3 install pyserial
-git clone https://github.com/eblot/pyftdi.git
-<span class="nb">cd</span> pyftdi
-python3 setup.py ...
-</pre></div>
-</div>
 </div>
 </div>
 
@@ -342,11 +348,14 @@ python3 setup.py ...
 
   <div role="contentinfo">
     <p>
+        
         &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -357,7 +366,6 @@ python3 setup.py ...
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

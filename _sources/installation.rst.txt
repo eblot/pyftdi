@@ -102,37 +102,6 @@ The probably easiest way to deal with libusb on Windows is to use Zadig_
 
 See also `Libusb on Windows`_
 
-
-Post-installation sanity check
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Open a *shell*, or a *CMD* on Windows
-
-.. code-block:: shell
-
-    python3  # or 'python' on Windows
-    from pyftdi.ftdi import Ftdi
-    Ftdi().open_from_url('ftdi:///?')
-
-should list all the FTDI devices available on your host.
-
-  * Example with 1 FT232H device with a serial number and 1 FT2232 device
-    with no serial number, connected to the host:
-
-    .. code-block::
-
-        Available interfaces:
-          ftdi://ftdi:232h:FT1PWZ0Q/1   (C232HD-DDHSP-0)
-          ftdi://ftdi:2232/1            (Dual RS232-HS)
-          ftdi://ftdi:2232/2            (Dual RS232-HS)
-
-
-Note that FTDI devices with custom VID/PID are not listed with this simple
-command, please refer to the PyFtdi_ API to add custom identifiers, *i.e.* see
-:py:meth:`pyftdi.ftdi.Ftdi.add_custom_vendor` and
-:py:meth:`pyftdi.ftdi.Ftdi.add_custom_product` APIs.
-
-
 Python dependencies
 ~~~~~~~~~~~~~~~~~~~
 
@@ -141,6 +110,8 @@ Dependencies should be automatically installed with PIP.
   * pyusb >= 1.0.0
   * pyserial >= 3.0
 
+Do *not* install PyUSB_ from GitHub development branch (``master``, ...).
+Always prefer a stable, tagged release.
 
 Installing with PIP
 ~~~~~~~~~~~~~~~~~~~
@@ -165,3 +136,33 @@ github repository.
      git clone https://github.com/eblot/pyftdi.git
      cd pyftdi
      python3 setup.py ...
+
+Post-installation sanity check
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Open a *shell*, or a *CMD* on Windows
+
+.. code-block:: shell
+
+    python3  # or 'python' on Windows
+    from pyftdi.ftdi import Ftdi
+    Ftdi.show_devices()
+
+should list all the FTDI devices available on your host.
+
+  * Example with 1 FT232H device with a serial number and 1 FT2232 device
+    with no serial number, connected to the host:
+
+    .. code-block::
+
+        Available interfaces:
+          ftdi://ftdi:232h:FT1PWZ0Q/1   (C232HD-DDHSP-0)
+          ftdi://ftdi:2232/1            (Dual RS232-HS)
+          ftdi://ftdi:2232/2            (Dual RS232-HS)
+
+
+Note that FTDI devices with custom VID/PID are not listed with this simple
+command, please refer to the PyFtdi_ API to add custom identifiers, *i.e.* see
+:py:meth:`pyftdi.ftdi.Ftdi.add_custom_vendor` and
+:py:meth:`pyftdi.ftdi.Ftdi.add_custom_product` APIs.
+
