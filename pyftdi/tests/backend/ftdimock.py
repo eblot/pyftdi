@@ -180,13 +180,15 @@ class MockFtdi:
         size = 0
         data = b''
         if eeprom:
-            if version in cls.INT_EEPROMS:
-                raise ValueError('No external EEPROM supported on this device')
             model = eeprom.get('model', None)
-            try:
-                size = cls.EXT_EEPROMS[model.lower()]
-            except KeyError:
-                raise ValueError('Unsupported EEPROM model: {model}')
+            if model:
+                if version in cls.INT_EEPROMS:
+                    raise ValueError('No external EEPROM supported on this '
+                                     'device')
+                try:
+                    size = cls.EXT_EEPROMS[model.lower()]
+                except KeyError:
+                    raise ValueError('Unsupported EEPROM model: {model}')
             data = eeprom.get('data', b'')
         if version in cls.INT_EEPROMS:
             int_size = cls.INT_EEPROMS[version]
