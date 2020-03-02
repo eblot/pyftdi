@@ -16,7 +16,7 @@ from array import array
 from binascii import hexlify
 from collections import deque
 from logging import getLogger
-from struct import pack as spack
+from struct import pack as spack, unpack as sunpack
 from sys import version_info
 from typing import Mapping, Optional, Tuple
 from pyftdi.tracer import FtdiMpsseTracer
@@ -65,7 +65,10 @@ class MockFtdi:
         self._queues: Tuple[deque, deque] = (deque(), deque())
         self._status: int = 0
         self._version = version
-        self._eeprom: bytearray = self._build_eeprom(version, eeprom)
+        buf, load = self._build_eeprom(version, eeprom)
+        self._eeprom: bytearray = buf
+        if load:
+            self._load_eeprom()
 
     def control(self, dev_handle: 'MockDeviceHandle', bmRequestType: int,
                 bRequest: int, wValue: int, wIndex: int, data: array,
@@ -172,7 +175,8 @@ class MockFtdi:
         self._direction = direction & 0xFFFF
 
     @classmethod
-    def _build_eeprom(cls, version, eeprom: Optional[dict]):
+    def _build_eeprom(cls, version, eeprom: Optional[dict]) -> \
+            Tuple[bytearray, bool]:
         size = 0
         data = b''
         if eeprom:
@@ -199,7 +203,34 @@ class MockFtdi:
             raise ValueError('Data cannot fit into EEPROM')
         buf = bytearray(size)
         buf[:len(data)] = data
-        return buf
+        load = eeprom.get('load', False) if eeprom else False
+        return buf, load
+
+    def _checksum_eeprom(self, data: bytearray) -> int:
+        length = len(data)
+        if length & 0x1:
+            raise ValueError('Length not even')
+        # NOTE: checksum is computed using 16-bit values in little endian
+        # ordering
+        checksum = 0XAAAA
+        mtp = self._version == 0x1000  # FT230X
+        for idx in range(0, length, 2):
+            if mtp and 0x12 <= idx < 0x40:
+                # special MTP user section which is not considered for the CRC
+                continue
+            val = ((data[idx+1] << 8) + data[idx]) & 0xffff
+            checksum = val ^ checksum
+            checksum = ((checksum << 1) & 0xffff) | ((checksum >> 15) & 0xffff)
+        return checksum
+
+    def _load_eeprom(self) -> None:
+        whole = self._version != 0x1000  # FT230X
+        buf = self._eeprom[:-2] if whole else self._eeprom[:0x7e]
+        local_chksum = self._checksum_eeprom(buf)
+        stored_chksum = sunpack('<H', self._eeprom[-2:] if whole
+                                else self._eeprom[0x7e:0x80])
+        if local_chksum != stored_chksum:
+            self.log.warning('Invalid EEPROM checksum, ignoring content')
 
     def _control_reset(self, wValue: int, wIndex: int,
                        data: array) -> None:

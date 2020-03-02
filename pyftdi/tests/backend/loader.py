@@ -138,7 +138,16 @@ class MockLoader:
                     if pkey == 'model':
                         if not isinstance(pval, str):
                             raise ValueError(f'Invalid EEPROM model')
-                    elif pkey == 'data':
+                        continue
+                    if pkey == 'load':
+                        try:
+                            pval = to_bool(pval, permissive=False,
+                                           allow_int=True)
+                            yval[pkey] = pval
+                        except ValueError:
+                            raise ValueError(f'Invalid EEPROM load option')
+                        continue
+                    if pkey == 'data':
                         if isinstance(pval, str):
                             hexstr = pval.replace(' ', '').replace('\n', '')
                             try:
@@ -146,14 +155,12 @@ class MockLoader:
                                 yval[pkey] = pval
                             except ValueError:
                                 raise ValueError('Invalid EEPROM hex format')
-                        elif isinstance(pval, bytes):
-                            pass
-                        else:
+                        if not isinstance(pval, bytes):
                             raise ValueError(f'Invalid EEPROM data '
                                              f'{type(pval)}')
-                    else:
-                        raise ValueError(f'Unknown EEPROM option {pkey}')
-                    self._epprom_backup = pval
+                        self._epprom_backup = pval
+                        continue
+                    raise ValueError(f'Unknown EEPROM option {pkey}')
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')

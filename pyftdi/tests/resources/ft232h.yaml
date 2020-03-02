@@ -46,6 +46,7 @@ devices:
                       direction: out
                       type: bulk
     eeprom:
+      load: no
       model: 93c66
       # invalid EEPROM content to perform content access tests
       data: |  # hex byte encode format
