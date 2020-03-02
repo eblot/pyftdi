@@ -9,6 +9,7 @@
 #pylint: disable-msg=too-many-branches
 #pylint: disable-msg=no-self-use
 
+from binascii import unhexlify
 from logging import getLogger
 from sys import version_info
 from typing import BinaryIO
@@ -123,6 +124,28 @@ class MockLoader:
                     yval = USBCONST.speeds[yval]
                 except KeyError:
                     raise ValueError(f'Invalid device speed {yval}')
+            if ykey == 'eeprom':
+                if not isinstance(yval, dict):
+                    raise ValueError(f'Invalid EEPROM section')
+                for pkey, pval in yval.items():
+                    if pkey == 'model':
+                        if not isinstance(pval, str):
+                            raise ValueError(f'Invalid EEPROM model')
+                    elif pkey == 'data':
+                        if isinstance(pval, str):
+                            hexstr = pval.replace(' ', '').replace('\n', '')
+                            try:
+                                pval = unhexlify(hexstr)
+                                yval[pkey] = pval
+                            except ValueError:
+                                raise ValueError('Invalid EEPROM hex format')
+                        elif isinstance(pval, bytes):
+                            pass
+                        else:
+                            raise ValueError(f'Invalid EEPROM data '
+                                             f'{type(pval)}')
+                    else:
+                        raise ValueError(f'Unknown EEPROM option {pkey}')
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')

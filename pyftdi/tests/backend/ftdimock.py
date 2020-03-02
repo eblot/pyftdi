@@ -8,6 +8,7 @@
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
 
@@ -16,6 +17,7 @@ from binascii import hexlify
 from collections import deque
 from logging import getLogger
 from sys import version_info
+from typing import Mapping, Optional, Tuple, Union
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
 
@@ -35,16 +37,34 @@ class MockMpsseTracer(FtdiMpsseTracer):
 
 class MockFtdi:
     """Fake FTDI device.
+
+       :param version: FTDI version (device kind)
+       :param eeprom_size: size of external EEPROM size, if any
     """
 
-    def __init__(self):
+    EXT_EEPROMS: Mapping[str, int] = {
+        '93c46': 128,  # 1024 bits
+        '93c56': 256,  # 2048 bits
+        '93c66': 256,  # 2048 bits  (93C66 seen as 93C56)
+    }
+    """External EEPROMs."""
+
+    INT_EEPROMS: Mapping[int, int] = {
+        0x0600: 0x80,  # FT232R: 128 bytes, 1024 bits
+        0x1000: 0x400  # FT230*X: 1KiB
+    }
+    """Internal EEPROMs."""
+
+    def __init__(self, version: int, eeprom: Optional[dict] = None):
         self.log = getLogger('pyftdi.mock.ftdi')
         self._bitmode = FTDICONST.get_value('bitmode', 'reset')
-        self._mpsse = None
-        self._direction = 0
-        self._gpio = 0
-        self._queues = deque(), deque()
-        self._status = 0
+        self._mpsse: Optional[MockMpsseTracer] = None
+        self._direction: int = 0
+        self._gpio: int = 0
+        self._queues: Tuple[deque, deque] = (deque(), deque())
+        self._status: int = 0
+        self._version = version
+        self._eeprom: bytearray = self._build_eeprom(version, eeprom)
 
     def control(self, dev_handle: 'MockDeviceHandle', bmRequestType: int,
                 bRequest: int, wValue: int, wIndex: int, data: array,
@@ -140,6 +160,36 @@ class MockFtdi:
     def direction(self, direction: int) -> None:
         self._direction = direction & 0xFFFF
 
+    @classmethod
+    def _build_eeprom(cls, version, eeprom: Optional[dict]):
+        size = 0
+        data = b''
+        if eeprom:
+            if version in cls.INT_EEPROMS:
+                raise ValueError('No external EEPROM supported on this device')
+            model = eeprom.get('model', None)
+            try:
+                size = cls.EXT_EEPROMS[model.lower()]
+            except KeyError:
+                raise ValueError('Unsupported EEPROM model: {model}')
+            data = eeprom.get('data', b'')
+        if version in cls.INT_EEPROMS:
+            int_size = cls.INT_EEPROMS[version]
+            # FT230x, FT231x, FT234x
+            if size:
+                if size != int_size:
+                    raise ValueError('Internal EEPROM size cannot be changed')
+            else:
+                size = int_size
+        else:
+            if size and size not in cls.EXT_EEPROMS.values():
+                raise ValueError(f'Invalid EEPROM size: {size}')
+        if data and len(data) > size:
+            raise ValueError('Data cannot fit into EEPROM')
+        buf = bytearray(size)
+        buf[:len(data)] = data
+        return buf
+
     def _control_reset(self, wValue: int, wIndex: int,
                        data: array) -> None:
         reset = FTDICONST.get_name('sio_reset', wValue)
@@ -182,12 +232,29 @@ class MockFtdi:
 
     def _control_set_baudrate(self, wValue: int, wIndex: int,
                               data: array) -> None:
+        self.log.info('> ftdi set_baudrate')
         pass
 
     def _control_set_data(self, wValue: int, wIndex: int,
                           data: array) -> None:
+        self.log.info('> ftdi set_data')
         pass
 
     def _control_set_flow_ctrl(self, wValue: int, wIndex: int,
                                data: array) -> None:
+        self.log.info('> ftdi set_flow_ctrl')
         pass
+
+    def _control_read_eeprom(self, wValue: int, wIndex: int,
+                             data: array) -> Optional[bytes]:
+        self.log.debug('> ftdi read_eeprom')
+        if not self._eeprom:
+            self.log.warning('Missing EEPROM')
+            return None
+        address = abs(wIndex * 2)
+        if address + 1 > len(self._eeprom):
+            # out of bound
+            self.log.warning('Invalid EEPROM address: 0x%04x', wValue)
+            return None
+        word = bytes(self._eeprom[address: address+2])
+        return word

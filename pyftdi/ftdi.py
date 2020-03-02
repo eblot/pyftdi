@@ -289,7 +289,12 @@ class Ftdi:
     LATENCY_MAX = 255
 
     # EEPROM Properties
-    EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
+    EXT_EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
+
+    INT_EEPROMS = {
+        0x0600: 0x80,  # FT232R: 128 bytes, 1024 bits
+        0x1000: 0x400  # FT230*X: 1KiB
+    }
 
     def __init__(self):
         self.log = getLogger('pyftdi.ftdi')
@@ -1428,10 +1433,7 @@ class Ftdi:
            :param eeprom_size: total size in bytes of the eeprom or None
            :return: eeprom bytes, as an array of bytes
         """
-        if eeprom_size is None:
-            eeprom_size = self.EEPROM_SIZES[-1]
-        if eeprom_size not in self.EEPROM_SIZES:
-            raise ValueError('Invalid EEPROM size')
+        eeprom_size = self._check_eeprom_size(eeprom_size)
         if length is None:
             length = eeprom_size
         if addr < 0 or (addr+length) > eeprom_size:
@@ -1473,10 +1475,7 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        if eeprom_size is None:
-            eeprom_size = self.EEPROM_SIZES[-1]
-        if eeprom_size not in self.EEPROM_SIZES:
-            raise ValueError('Invalid EEPROM size')
+        eeprom_size = self._check_eeprom_size(eeprom_size)
         if not data:
             return
         length = len(data)
@@ -1527,7 +1526,11 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        if len(data) not in self.EEPROM_SIZES:
+        if self.device_version in self.INT_EEPROMS:
+            eeprom_size = self.INT_EEPROMS[self.device_version]
+            if len(data) != eeprom_size:
+                raise ValueError('Invalid EEPROM size')
+        elif len(data) not in self.EXT_EEPROM_SIZES:
             raise ValueError('Invalid EEPROM size')
         self._write_eeprom_raw(0, data, dry_run=dry_run)
 
@@ -1836,7 +1839,6 @@ class Ftdi:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def _write(self, data: bytes) -> int:
-        """Write to FTDI, using the API introduced with pyusb 1.0.0b2"""
         try:
             self.log.debug('> %s', hexlify(data).decode())
         except TypeError:
@@ -1846,7 +1848,6 @@ class Ftdi:
         return self.usb_dev.write(self.in_ep, data, self.usb_write_timeout)
 
     def _read(self) -> bytes:
-        """Read from FTDI, using the API introduced with pyusb 1.0.0b2"""
         data = self.usb_dev.read(self.out_ep, self.readbuffer_chunksize,
                                  self.usb_read_timeout)
         if data:
@@ -1854,6 +1855,19 @@ class Ftdi:
             if self._tracer and len(data) > 2:
                 self._tracer.receive(data[2:])
         return data
+
+    def _check_eeprom_size(self, eeprom_size: int) -> int:
+        if self.device_version in self.INT_EEPROMS:
+            if (eeprom_size and
+                    eeprom_size != self.INT_EEPROMS[self.device_version]):
+                raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
+            eeprom_size = self.INT_EEPROMS[self.device_version]
+        else:
+            if eeprom_size is None:
+                eeprom_size = self.EXT_EEPROM_SIZES[-1]
+            if eeprom_size not in self.EXT_EEPROM_SIZES:
+                raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
+        return eeprom_size
 
     def _write_eeprom_raw(self, addr: int, data: Union[bytes, bytearray],
                           dry_run: bool = True) -> None:

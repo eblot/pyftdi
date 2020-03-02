@@ -23,6 +23,7 @@ from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.misc import hexdump
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 
@@ -467,19 +468,101 @@ class MockSimpleUartTestCase(TestCase):
         port.close()
 
 
+class MockInternalEepromTestCase(TestCase):
+    """Test FTDI EEPROM APIs with internal EEPROM device
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test(self):
+        """Check  sequence."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        data = ftdi.read_eeprom()
+        self.assertEqual(len(data), 0x400)
+        ftdi.close()
+
+class MockExternalEepromTestCase(TestCase):
+    """Test FTDI EEPROM APIs with external EEPROM device
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_dump(self):
+        """Check EEPROM full content."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        ref_data = bytes(list(range(256)))
+        size = len(ref_data)
+        data = ftdi.read_eeprom()
+        self.assertEqual(len(data), size)
+        self.assertEqual(ref_data, data)
+        ftdi.close()
+
+    def test_random_access_read(self):
+        """Check EEPROM random read access."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        ref_data = bytes(list(range(256)))
+        size = len(ref_data)
+        # out of bound
+        self.assertRaises(ValueError, ftdi.read_eeprom, size, 2)
+        # last bytes
+        buf = ftdi.read_eeprom(size-2, 2)
+        self.assertEqual(buf[0:2], ref_data[-2:])
+        self.assertEqual(buf[0:2], b'\xfe\xff')
+        # out of bound
+        self.assertRaises(ValueError, ftdi.read_eeprom, size-2, 4)
+        # unaligned access
+        buf = ftdi.read_eeprom(1, 2)
+        self.assertEqual(buf[0:2], ref_data[1:3])
+        self.assertEqual(buf[0:2], b'\x01\x02')
+        # long read, unaligned access, unaligned size
+        buf = ftdi.read_eeprom(43, 43)
+        self.assertEqual(len(buf), 43)
+        self.assertEqual(buf, ref_data[43:86])
+        ftdi.close()
+
+    def test_randow_access_write(self):
+        """Check EEPROM random write access."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        ref_data = bytes(list(range(256)))
+        size = len(ref_data)
+
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    suite_.addTest(makeSuite(MockExternalEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockInternalEepromTestCase, 'test'))
     return suite_
 
 
