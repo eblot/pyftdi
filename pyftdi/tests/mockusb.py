@@ -7,6 +7,8 @@
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=no-self-use
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=global-statement
 
 import logging
 from collections import defaultdict
@@ -23,7 +25,10 @@ from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
-from backend.loader import MockLoader
+
+# MockLoader is assigned in ut_main
+MockLoader = None
+
 
 # need support for f-string syntax
 if version_info[:2] < (3, 6):
@@ -489,6 +494,14 @@ def main():
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('backend.usbmock', )
+    # Ensure the virtual backend can be found and is loaded
+    backend = UsbTools.find_backend()
+    try:
+        # obtain the loader class associated with the virtual backend
+        global MockLoader
+        MockLoader = backend.create_loader()
+    except AttributeError:
+        raise AssertionError('Cannot load virtual USB backend')
     ut_main(defaultTest='suite')
 
 

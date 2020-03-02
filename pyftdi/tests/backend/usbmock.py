@@ -309,6 +309,20 @@ class MockBackend(IBackend):
     def flush_devices(self):
         self._devices.clear()
 
+    def create_loader(self) -> 'MockLooader':
+        """Provide the loader class to configure this virtual backend instance.
+
+           Using this method to retrieve a loader ensure both the virtual
+           backend and the loader have been loaded from the same package.
+
+           :return: the MockLoader class
+        """
+        # this is a bit circumvoluted, but modules cannot cross-reference
+        loader_modname = '.'.join(__name__.split('.')[:-1] + ['loader'])
+        loader_mod = import_module(loader_modname)
+        MockLoader = getattr(loader_mod, 'MockLoader')
+        return MockLoader
+
     @property
     def devices(self) -> List[MockDevice]:
         return self._devices

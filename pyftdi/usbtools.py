@@ -33,6 +33,7 @@ from threading import RLock
 from typing import (List, Mapping, NamedTuple, Optional, Sequence, Set,
                     TextIO, Tuple)
 from urllib.parse import urlsplit, urlunsplit
+from usb.backend import IBackend
 from usb.core import Device as UsbDevice, USBError
 from usb.util import dispose_resources, get_string as usb_get_string
 from .misc import to_int
@@ -87,8 +88,8 @@ class UsbTools:
     UsbDevices = {}
     UsbApi = None
 
-    @staticmethod
-    def find_all(vps: Sequence[Tuple[int, int]], nocache: bool = False) -> \
+    @classmethod
+    def find_all(cls, vps: Sequence[Tuple[int, int]], nocache: bool = False) -> \
             List[Tuple[UsbDeviceDescriptor, int]]:
         """Find all devices that match the specified vendor/product pairs.
 
@@ -97,21 +98,25 @@ class UsbTools:
                                 the host
            :return: a list of 2-tuple (UsbDeviceDescriptor, interface count)
         """
-        devs = set()
-        for vid, pid in vps:
-            # TODO optimize useless loops
-            devs.update(UsbTools._find_devices(vid, pid, nocache))
-        devices = set()
-        for dev in devs:
-            ifcount = max([cfg.bNumInterfaces for cfg in dev])
-            # TODO: handle / is serial number strings
-            sernum = UsbTools.get_string(dev, dev.iSerialNumber)
-            description = UsbTools.get_string(dev, dev.iProduct)
-            descriptor = UsbDeviceDescriptor(dev.idVendor, dev.idProduct,
-                                             dev.bus, dev.address,
-                                             sernum, None, description)
-            devices.add((descriptor, ifcount))
-        return list(devices)
+        cls.Lock.acquire()
+        try:
+            devs = set()
+            for vid, pid in vps:
+                # TODO optimize useless loops
+                devs.update(UsbTools._find_devices(vid, pid, nocache))
+            devices = set()
+            for dev in devs:
+                ifcount = max([cfg.bNumInterfaces for cfg in dev])
+                # TODO: handle / is serial number strings
+                sernum = UsbTools.get_string(dev, dev.iSerialNumber)
+                description = UsbTools.get_string(dev, dev.iProduct)
+                descriptor = UsbDeviceDescriptor(dev.idVendor, dev.idProduct,
+                                                 dev.bus, dev.address,
+                                                 sernum, None, description)
+                devices.add((descriptor, ifcount))
+            return list(devices)
+        finally:
+            cls.Lock.release()
 
     @classmethod
     def flush_cache(cls):
@@ -231,81 +236,6 @@ class UsbTools:
                         dispose_resources(cls.Devices[devkey][0])
                         del cls.Devices[devkey]
                     break
-        finally:
-            cls.Lock.release()
-
-    @classmethod
-    def _find_devices(cls, vendor: int, product: int,
-                      nocache: bool = False) -> Set[UsbDevice]:
-        """Find a USB device and return it.
-
-           This code re-implements the usb.core.find() method using a local
-           cache to avoid calling several times the underlying LibUSB and the
-           system USB calls to enumerate the available USB devices. As these
-           calls are time-hungry (about 1 second/call), the enumerated devices
-           are cached. It consumes a bit more memory but dramatically improves
-           start-up time.
-           Hopefully, this kludge is temporary and replaced with a better
-           implementation from PyUSB at some point.
-
-           :param vendor: USB vendor id
-           :param product: USB product id
-           :param bool nocache: bypass cache to re-enumerate USB devices on
-                                the host
-           :return: a set of USB device matching the vendor/product identifier
-                    pair
-        """
-        cls.Lock.acquire()
-        try:
-            backend = None
-            for candidate in cls.BACKENDS:
-                mod = import_module(candidate)
-                backend = mod.get_backend()
-                if backend is not None:
-                    break
-            else:
-                raise ValueError('No backend available')
-            vidpid = (vendor, product)
-            if nocache or (vidpid not in cls.UsbDevices):
-                # not freed until Python runtime completion
-                # enumerate_devices returns a generator, so back up the
-                # generated device into a list. To save memory, we only
-                # back up the supported devices
-                devs = set()
-                vpdict = {}
-                vpdict.setdefault(vendor, [])
-                vpdict[vendor].append(product)
-                for dev in backend.enumerate_devices():
-                    device = UsbDevice(dev, backend)
-                    if device.idVendor in vpdict:
-                        products = vpdict[device.idVendor]
-                        if products and (device.idProduct not in products):
-                            continue
-                        devs.add(device)
-                if sys.platform == 'win32':
-                    # ugly kludge for a boring OS:
-                    # on Windows, the USB stack may enumerate the very same
-                    # devices several times: a real device with N interface
-                    # appears also as N device with as single interface.
-                    # We only keep the "device" that declares the most
-                    # interface count and discard the "virtual" ones.
-                    filtered_devs = dict()
-                    for dev in devs:
-                        vid = dev.idVendor
-                        pid = dev.idProduct
-                        ifc = max([cfg.bNumInterfaces for cfg in dev])
-                        sernum = UsbTools.get_string(dev, dev.iSerialNumber)
-                        k = (vid, pid, sernum)
-                        if k not in filtered_devs:
-                            filtered_devs[k] = dev
-                        else:
-                            fdev = filtered_devs[k]
-                            fifc = max([cfg.bNumInterfaces for cfg in fdev])
-                            if fifc < ifc:
-                                filtered_devs[k] = dev
-                    devs = set(filtered_devs.values())
-                cls.UsbDevices[vidpid] = devs
-            return cls.UsbDevices[vidpid]
         finally:
             cls.Lock.release()
 
@@ -609,3 +539,91 @@ class UsbTools:
         if cls.UsbApi == 2:
             return usb_get_string(device, stridx)
         return usb_get_string(device, 64, stridx)
+
+    @classmethod
+    def find_backend(cls) -> IBackend:
+        """Try to find and load an PyUSB backend.
+
+           ..note:: There is no need to call this method for regular usage.
+
+           :return: PyUSB backend
+        """
+        cls.Lock.acquire()
+        try:
+            return cls._load_backend()
+        finally:
+            cls.Lock.release()
+
+    @classmethod
+    def _find_devices(cls, vendor: int, product: int,
+                      nocache: bool = False) -> Set[UsbDevice]:
+        """Find a USB device and return it.
+
+           This code re-implements the usb.core.find() method using a local
+           cache to avoid calling several times the underlying LibUSB and the
+           system USB calls to enumerate the available USB devices. As these
+           calls are time-hungry (about 1 second/call), the enumerated devices
+           are cached. It consumes a bit more memory but dramatically improves
+           start-up time.
+           Hopefully, this kludge is temporary and replaced with a better
+           implementation from PyUSB at some point.
+
+           :param vendor: USB vendor id
+           :param product: USB product id
+           :param bool nocache: bypass cache to re-enumerate USB devices on
+                                the host
+           :return: a set of USB device matching the vendor/product identifier
+                    pair
+        """
+        backend = cls._load_backend()
+        vidpid = (vendor, product)
+        if nocache or (vidpid not in cls.UsbDevices):
+            # not freed until Python runtime completion
+            # enumerate_devices returns a generator, so back up the
+            # generated device into a list. To save memory, we only
+            # back up the supported devices
+            devs = set()
+            vpdict = {}
+            vpdict.setdefault(vendor, [])
+            vpdict[vendor].append(product)
+            for dev in backend.enumerate_devices():
+                device = UsbDevice(dev, backend)
+                if device.idVendor in vpdict:
+                    products = vpdict[device.idVendor]
+                    if products and (device.idProduct not in products):
+                        continue
+                    devs.add(device)
+            if sys.platform == 'win32':
+                # ugly kludge for a boring OS:
+                # on Windows, the USB stack may enumerate the very same
+                # devices several times: a real device with N interface
+                # appears also as N device with as single interface.
+                # We only keep the "device" that declares the most
+                # interface count and discard the "virtual" ones.
+                filtered_devs = dict()
+                for dev in devs:
+                    vid = dev.idVendor
+                    pid = dev.idProduct
+                    ifc = max([cfg.bNumInterfaces for cfg in dev])
+                    sernum = UsbTools.get_string(dev, dev.iSerialNumber)
+                    k = (vid, pid, sernum)
+                    if k not in filtered_devs:
+                        filtered_devs[k] = dev
+                    else:
+                        fdev = filtered_devs[k]
+                        fifc = max([cfg.bNumInterfaces for cfg in fdev])
+                        if fifc < ifc:
+                            filtered_devs[k] = dev
+                devs = set(filtered_devs.values())
+            cls.UsbDevices[vidpid] = devs
+        return cls.UsbDevices[vidpid]
+
+    @classmethod
+    def _load_backend(cls) -> IBackend:
+        backend = None
+        for candidate in cls.BACKENDS:
+            mod = import_module(candidate)
+            backend = mod.get_backend()
+            if backend is not None:
+                return backend
+        raise ValueError('No backend available')
