@@ -16,8 +16,9 @@ from array import array
 from binascii import hexlify
 from collections import deque
 from logging import getLogger
+from struct import pack as spack
 from sys import version_info
-from typing import Mapping, Optional, Tuple, Union
+from typing import Mapping, Optional, Tuple
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
 
@@ -132,10 +133,6 @@ class MockFtdi:
         self.log.debug('. (%d)', len(buff))
         return 0
 
-    @property
-    def gpio(self) -> int:
-        return self._gpio
-
     def uart_write(self, buffer: bytes) -> None:
         self._queues[1].extend(buffer)
 
@@ -148,9 +145,23 @@ class MockFtdi:
             count -= 1
         return bytes(buf)
 
+    @property
+    def gpio(self) -> int:
+        return self._gpio
+
     @gpio.setter
     def gpio(self, gpio: int) -> None:
         self._gpio |= gpio & ~self._direction & 0xFFFF
+
+    @property
+    def eeprom(self) -> bytes:
+        return bytes(self._eeprom)
+
+    @eeprom.setter
+    def eeprom(self, value: bytes):
+        if len(value) != len(self._eeprom):
+            raise ValueError('EEPROM size mismatch')
+        self._eeprom = bytearray(value)
 
     @property
     def direction(self) -> int:
@@ -247,10 +258,13 @@ class MockFtdi:
 
     def _control_read_eeprom(self, wValue: int, wIndex: int,
                              data: array) -> Optional[bytes]:
-        self.log.debug('> ftdi read_eeprom')
+        self.log.debug('> ftdi read_eeprom @ 0x%04x', wIndex*2)
         if not self._eeprom:
             self.log.warning('Missing EEPROM')
             return None
+        if len(data) != 2:
+            self.log.warning('Unexpected read size: %d', len(data))
+            # resume anyway
         address = abs(wIndex * 2)
         if address + 1 > len(self._eeprom):
             # out of bound
@@ -258,3 +272,21 @@ class MockFtdi:
             return None
         word = bytes(self._eeprom[address: address+2])
         return word
+
+    def _control_write_eeprom(self, wValue: int, wIndex: int,
+                              data: array) -> None:
+        self.log.info('> ftdi write_eeprom @ 0x%04x', wIndex*2)
+        if not self._eeprom:
+            self.log.warning('Missing EEPROM')
+            return
+        address = abs(wIndex * 2)
+        if address + 1 > len(self._eeprom):
+            # out of bound
+            self.log.warning('Invalid EEPROM address: 0x%04x', wValue)
+            return
+        if self._version == 0x1000:
+            if 0x40 <= address < 0x50:
+                # those address are R/O on FT230x
+                self.log.warning('Protected EEPROM address: 0x%04x', wValue)
+                return
+        self._eeprom[address: address+2] = spack('<H', wValue)

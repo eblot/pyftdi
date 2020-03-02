@@ -468,8 +468,8 @@ class MockSimpleUartTestCase(TestCase):
         port.close()
 
 
-class MockInternalEepromTestCase(TestCase):
-    """Test FTDI EEPROM APIs with internal EEPROM device
+class MockRawIntEepromTestCase(TestCase):
+    """Test FTDI EEPROM low-level APIs with internal EEPROM device
     """
 
     @classmethod
@@ -491,8 +491,8 @@ class MockInternalEepromTestCase(TestCase):
         self.assertEqual(len(data), 0x400)
         ftdi.close()
 
-class MockExternalEepromTestCase(TestCase):
-    """Test FTDI EEPROM APIs with external EEPROM device
+class MockRawExtEepromTestCase(TestCase):
+    """Test FTDI EEPROM low-level APIs with external EEPROM device
     """
 
     @classmethod
@@ -506,10 +506,20 @@ class MockExternalEepromTestCase(TestCase):
     def tearDownClass(cls):
         cls.loader.unload()
 
+    def _restore_eeprom(self, ftdi):
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        data = self.loader.eeprom_backup
+        size = len(vftdi.eeprom)
+        if len(data) < size:
+            data = bytearray(data) + bytes(size-len(data))
+        vftdi.eeprom = bytes(data)
+
     def test_dump(self):
         """Check EEPROM full content."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
+        self._restore_eeprom(ftdi)
         ref_data = bytes(list(range(256)))
         size = len(ref_data)
         data = ftdi.read_eeprom()
@@ -521,6 +531,7 @@ class MockExternalEepromTestCase(TestCase):
         """Check EEPROM random read access."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
+        self._restore_eeprom(ftdi)
         ref_data = bytes(list(range(256)))
         size = len(ref_data)
         # out of bound
@@ -545,24 +556,60 @@ class MockExternalEepromTestCase(TestCase):
         """Check EEPROM random write access."""
         ftdi = Ftdi()
         ftdi.open_from_url('ftdi:///1')
-        ref_data = bytes(list(range(256)))
-        size = len(ref_data)
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        self._restore_eeprom(ftdi)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:8]
+        ref_data = b'ABCD'
+        ftdi.write_eeprom(0, ref_data, dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the data have been written
+        self.assertEqual(vftdi.eeprom[:4], ref_data)
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[4:8], orig_data[4:])
+        # verify the checksum has been updated
+        # TODO compute the expected checksum
+        self.assertNotEqual(checksum1, checksum2)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:24]
+        ftdi.write_eeprom(9, ref_data, dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the unaligned data have been written
+        self.assertEqual(vftdi.eeprom[9:13], ref_data)
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[:9], orig_data[:9])
+        self.assertEqual(vftdi.eeprom[13:24], orig_data[13:])
+        # verify the checksum has been updated
+        self.assertNotEqual(checksum1, checksum2)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:48]
+        ftdi.write_eeprom(33, ref_data[:3], dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the unaligned data have been written
+        self.assertEqual(vftdi.eeprom[33:36], ref_data[:3])
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[:33], orig_data[:33])
+        self.assertEqual(vftdi.eeprom[36:48], orig_data[36:])
+        # verify the checksum has been updated
+        self.assertNotEqual(checksum1, checksum2)
+
 
 def suite():
     suite_ = TestSuite()
-    #suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
-    #suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
-    suite_.addTest(makeSuite(MockExternalEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockInternalEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
+    suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
+    suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
+    suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
+    suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
+    suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
+    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
     return suite_
 
 

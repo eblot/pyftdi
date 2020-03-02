@@ -32,6 +32,7 @@ class MockLoader:
     def __init__(self):
         self.log = getLogger('pyftdi.mock.backend')
         self._last_ep_idx = 0
+        self._epprom_backup = b''
 
     def load(self, yamlfp: BinaryIO) -> None:
         """Load a YaML configuration stream.
@@ -54,6 +55,12 @@ class MockLoader:
 
     def get_virtual_ftdi(self, bus, address):
         return get_backend().get_virtual_ftdi(bus, address)
+
+    @property
+    def eeprom_backup(self) -> bytes:
+        """Return the prefined content of the EEPROM, if any.
+        """
+        return self._epprom_backup
 
     def _validate(self):
         locations = set()
@@ -146,6 +153,7 @@ class MockLoader:
                                              f'{type(pval)}')
                     else:
                         raise ValueError(f'Unknown EEPROM option {pkey}')
+                    self._epprom_backup = pval
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')

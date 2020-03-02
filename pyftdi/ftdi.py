@@ -1413,7 +1413,7 @@ class Ftdi:
         checksum = 0XAAAA
         mtp = self.device_version == 0x1000  # FT230X
         for idx in range(0, length, 2):
-            if mtp and 12 <= idx < 40:
+            if mtp and 0x12 <= idx < 0x40:
                 # special MTP user section which is not considered for the CRC
                 continue
             val = ((data[idx+1] << 8) + data[idx]) & 0xffff
@@ -1491,8 +1491,13 @@ class Ftdi:
         chksum = self.calc_eeprom_checksum(eeprom[:-2])
         self.log.info('New EEPROM checksum: 0x%04x', chksum)
         # insert updated checksum - it is last 16-bits in EEPROM
-        eeprom[-2] = chksum & 0x0ff
-        eeprom[-1] = chksum >> 8
+        if self.device_version == 0x1000:
+            # FT230x EEPROM structure is different
+            eeprom[0x7e] = chksum & 0x0ff
+            eeprom[0x7f] = chksum >> 8
+        else:
+            eeprom[-2] = chksum & 0x0ff
+            eeprom[-1] = chksum >> 8
         # Write back the new data and checksum back to
         # EEPROM. Only write data that is changing instead of writing
         # everything in EEPROM, even if the data does not change.
