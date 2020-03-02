@@ -468,29 +468,6 @@ class MockSimpleUartTestCase(TestCase):
         port.close()
 
 
-class MockRawIntEepromTestCase(TestCase):
-    """Test FTDI EEPROM low-level APIs with internal EEPROM device
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
-
-    def test(self):
-        """Check  sequence."""
-        ftdi = Ftdi()
-        ftdi.open_from_url('ftdi:///1')
-        data = ftdi.read_eeprom()
-        self.assertEqual(len(data), 0x400)
-        ftdi.close()
-
 class MockRawExtEepromTestCase(TestCase):
     """Test FTDI EEPROM low-level APIs with external EEPROM device
     """
@@ -593,6 +570,41 @@ class MockRawExtEepromTestCase(TestCase):
         self.assertEqual(vftdi.eeprom[36:48], orig_data[36:])
         # verify the checksum has been updated
         self.assertNotEqual(checksum1, checksum2)
+
+
+class MockRawIntEepromTestCase(TestCase):
+    """Test FTDI EEPROM low-level APIs with internal EEPROM device
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_descriptor_update(self):
+        """Check EEPROM content overrides YaML configuration."""
+        # this test is more about testing the virtual FTDI infrastructure
+        # than a pure PyFtdi test
+        devs = Ftdi.list_devices('ftdi:///?')
+        self.assertEqual(len(devs), 1)
+        desc = devs[0][0]
+        # these values are not the ones defined in YaML, but stored in EEPROM
+        self.assertEqual(desc.sn, 'FT3KMGTL')
+        self.assertEqual(desc.description, 'LC231X')
+
+    def test_eeprom_read(self):
+        """Check full read sequence."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        data = ftdi.read_eeprom()
+        self.assertEqual(len(data), 0x400)
+        ftdi.close()
 
 
 def suite():

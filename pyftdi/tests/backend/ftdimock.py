@@ -16,9 +16,9 @@ from array import array
 from binascii import hexlify
 from collections import deque
 from logging import getLogger
-from struct import pack as spack, unpack as sunpack
+from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
-from typing import Mapping, Optional, Tuple
+from typing import Mapping, Optional, Sequence, Tuple
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
 
@@ -52,7 +52,7 @@ class MockFtdi:
 
     INT_EEPROMS: Mapping[int, int] = {
         0x0600: 0x80,  # FT232R: 128 bytes, 1024 bits
-        0x1000: 0x400  # FT230*X: 1KiB
+        0x1000: 0x400  # FT23*X: 1KiB
     }
     """Internal EEPROMs."""
 
@@ -65,10 +65,11 @@ class MockFtdi:
         self._queues: Tuple[deque, deque] = (deque(), deque())
         self._status: int = 0
         self._version = version
-        buf, load = self._build_eeprom(version, eeprom)
-        self._eeprom: bytearray = buf
-        if load:
-            self._load_eeprom()
+        self._eeprom: bytearray = self._build_eeprom(version, eeprom)
+
+    def apply_eeprom_config(self, devdesc: dict,
+                            cfgdescs: Sequence[dict]) -> None:
+        self._load_eeprom(devdesc,  cfgdescs)
 
     def control(self, dev_handle: 'MockDeviceHandle', bmRequestType: int,
                 bRequest: int, wValue: int, wIndex: int, data: array,
@@ -175,8 +176,7 @@ class MockFtdi:
         self._direction = direction & 0xFFFF
 
     @classmethod
-    def _build_eeprom(cls, version, eeprom: Optional[dict]) -> \
-            Tuple[bytearray, bool]:
+    def _build_eeprom(cls, version, eeprom: Optional[dict]) -> bytearray:
         size = 0
         data = b''
         if eeprom:
@@ -192,7 +192,7 @@ class MockFtdi:
             data = eeprom.get('data', b'')
         if version in cls.INT_EEPROMS:
             int_size = cls.INT_EEPROMS[version]
-            # FT230x, FT231x, FT234x
+            # FT232R, FT230x, FT231x, FT234x
             if size:
                 if size != int_size:
                     raise ValueError('Internal EEPROM size cannot be changed')
@@ -205,8 +205,7 @@ class MockFtdi:
             raise ValueError('Data cannot fit into EEPROM')
         buf = bytearray(size)
         buf[:len(data)] = data
-        load = eeprom.get('load', False) if eeprom else False
-        return buf, load
+        return buf
 
     def _checksum_eeprom(self, data: bytearray) -> int:
         length = len(data)
@@ -217,7 +216,7 @@ class MockFtdi:
         checksum = 0XAAAA
         mtp = self._version == 0x1000  # FT230X
         for idx in range(0, length, 2):
-            if mtp and 0x12 <= idx < 0x40:
+            if mtp and 0x24 <= idx < 0x80:
                 # special MTP user section which is not considered for the CRC
                 continue
             val = ((data[idx+1] << 8) + data[idx]) & 0xffff
@@ -225,14 +224,33 @@ class MockFtdi:
             checksum = ((checksum << 1) & 0xffff) | ((checksum >> 15) & 0xffff)
         return checksum
 
-    def _load_eeprom(self) -> None:
+    def _load_eeprom(self, devdesc: dict, cfgdescs: Sequence[dict]) -> None:
         whole = self._version != 0x1000  # FT230X
-        buf = self._eeprom[:-2] if whole else self._eeprom[:0x7e]
-        local_chksum = self._checksum_eeprom(buf)
-        stored_chksum = sunpack('<H', self._eeprom[-2:] if whole
-                                else self._eeprom[0x7e:0x80])
-        if local_chksum != stored_chksum:
+        buf = self._eeprom if whole else self._eeprom[:0x100]
+        chksum = self._checksum_eeprom(buf)
+        if chksum:
             self.log.warning('Invalid EEPROM checksum, ignoring content')
+            return
+        # only apply a subset of what the EEPROM can configure for now
+        devdesc['idVendor'] = sunpack('<H', self._eeprom[2:4])[0]
+        devdesc['idProduct'] = sunpack('<H', self._eeprom[4:6])[0]
+        devdesc['iManufacturer'] = self._decode_eeprom_string(0x0e)
+        devdesc['iProduct'] = self._decode_eeprom_string(0x10)
+        devdesc['iSerialNumber'] = self._decode_eeprom_string(0x12)
+        for desc in cfgdescs:
+            if desc.bConfigurationValue == 0:
+                # only update first configuration
+                desc['bMaxPower'] = self._eeprom[0x09]
+                desc['bmAttributes'] = 0x80 | (self._eeprom[0x08] & 0x0F)
+
+    def _decode_eeprom_string(self, offset):
+        str_offset, str_size = sunpack('<BB', self._eeprom[offset:offset+2])
+        if str_size:
+            str_size -= scalc('<H')
+            str_offset += scalc('<H')
+            manufacturer = self._eeprom[str_offset:str_offset+str_size]
+            return manufacturer.decode('utf16', errors='ignore')
+        return ''
 
     def _control_reset(self, wValue: int, wIndex: int,
                        data: array) -> None:
@@ -318,7 +336,7 @@ class MockFtdi:
             self.log.warning('Invalid EEPROM address: 0x%04x', wValue)
             return
         if self._version == 0x1000:
-            if 0x40 <= address < 0x50:
+            if 0x80 <= address < 0xA0:
                 # those address are R/O on FT230x
                 self.log.warning('Protected EEPROM address: 0x%04x', wValue)
                 return

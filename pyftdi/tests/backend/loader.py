@@ -113,6 +113,7 @@ class MockLoader:
         devdesc = None
         configs = []
         properties = {}
+        delayed_load = False
         for ykey, yval in container.items():
             if ykey == 'descriptor':
                 if not isinstance(yval, dict):
@@ -144,6 +145,7 @@ class MockLoader:
                             pval = to_bool(pval, permissive=False,
                                            allow_int=True)
                             yval[pkey] = pval
+                            delayed_load = pval
                         except ValueError:
                             raise ValueError(f'Invalid EEPROM load option')
                         continue
@@ -169,6 +171,9 @@ class MockLoader:
         device = MockDevice(devdesc, **properties)
         for config in configs:
             device.add_configuration(config)
+        if delayed_load:
+            device.ftdi.apply_eeprom_config(device.desc,
+                                            [cfg.desc for cfg in configs])
         return device
 
     def _build_device_descriptor(self, container) -> dict:
