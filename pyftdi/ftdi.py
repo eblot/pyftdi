@@ -1413,7 +1413,7 @@ class Ftdi:
         checksum = 0XAAAA
         mtp = self.device_version == 0x1000  # FT230X
         for idx in range(0, length, 2):
-            if mtp and 0x12 <= idx < 0x40:
+            if mtp and 0x24 <= idx < 0x80:
                 # special MTP user section which is not considered for the CRC
                 continue
             val = ((data[idx+1] << 8) + data[idx]) & 0xffff
