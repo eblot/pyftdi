@@ -114,6 +114,12 @@ Exceptions
 
 .. autoexception :: SpiIOError
 
+
+GPIOs
+~~~~~
+
+See :doc:`../gpio` for details
+
 Tests
 ~~~~~
 

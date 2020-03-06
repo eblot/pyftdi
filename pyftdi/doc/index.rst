@@ -105,6 +105,7 @@ PyFTDI in details
    urlscheme
    api/index
    pinout
+   gpio
    eeprom
    testing
    troubleshooting

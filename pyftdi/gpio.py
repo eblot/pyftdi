@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -37,6 +37,8 @@ class GpioException(IOError):
 
 class GpioController:
     """GPIO controller for an FTDI port, in bit-bang legacy mode.
+
+       GPIO bit-bang mode is limited to the 8 lower pins of each GPIO port.
     """
 
     MASK = 0xFF
@@ -103,7 +105,7 @@ class GpioController:
            A true bit represents a GPIO, a false bit a reserved or not
            configured pin.
 
-           :return: always 0xFF.
+           :return: always 0xFF for GpioController instance.
         """
         return self.MASK
 
@@ -114,7 +116,7 @@ class GpioController:
            A true bit represents a pin which may be used as a GPIO, a false bit
            a reserved pin
 
-           :return: always 0xFF.
+           :return: always 0xFF for GpioController instance.
         """
         return self.MASK
 
