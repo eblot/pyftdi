@@ -78,6 +78,11 @@ Exceptions
 .. autoexception:: I2cTimeoutError
 
 
+GPIOs
+~~~~~
+
+See :doc:`../gpio` for details
+
 Tests
 ~~~~~
 

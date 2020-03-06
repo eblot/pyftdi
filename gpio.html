@@ -1,0 +1,494 @@
+
+
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GPIOs &mdash; PyFtdi  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="EEPROM management" href="eeprom.html" />
+    <link rel="prev" title="FTDI device pinout" href="pinout.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.46.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">GPIOs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#definitions">Definitions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#ports">Ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpio-value">GPIO value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#direction">Direction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gpio-bitmap">GPIO bitmap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#direction-bitmap">Direction bitmap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#direction-example">Direction example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#using-gpio-apis">Using GPIO APIs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setting-gpio-pin-state">Setting GPIO pin state</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#retrieving-gpio-pin-state">Retrieving GPIO pin state</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modifying-gpio-pin-state">Modifying GPIO pin state</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#reserved-pins">Reserved pins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gpio-pins-vs-feature-pins">GPIO pins vs. feature pins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>GPIOs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/gpio.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="gpios">
+<h1>GPIOs<a class="headerlink" href="#gpios" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>GpioController</cite> (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) gives full access to the FTDI pins as raw I/O pins,</p></li>
+<li><p><cite>SpiGpioPort</cite> (see <a class="reference internal" href="api/spi.html"><span class="doc">spi - SPI API</span></a>) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the SPI feature,</p></li>
+<li><p><cite>I2cGpioPort</cite> (see <a class="reference internal" href="api/i2c.html"><span class="doc">i2c - I2C API</span></a>) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the I2C feature</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Gpio raw access is not yet supported with JTAG feature</p>
+</div>
+<p>This document presents the common definitions for these APIs and explain how to drive those pins.</p>
+</div>
+<div class="section" id="definitions">
+<h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ports">
+<h3>Ports<a class="headerlink" href="#ports" title="Permalink to this headline">¶</a></h3>
+<p>Each port can be accessed as raw input/output pins. At a given time, a pin is either configured as an input or an output function.</p>
+<p>The width of a port, that is the number of pins of the interface, depending on the actual hardware, <em>i.e.</em> the FTDI model:</p>
+<ul class="simple">
+<li><p>FT232R features a single port, which is 8-bit wide: <cite>DBUS</cite></p></li>
+<li><p>FT232H features a single port, which is 16-bit wide: <cite>ADBUS/ACBUS</cite></p></li>
+<li><p>FT2232D features two ports, which are 12-bit wide each: <cite>ADBUS/ACBUS</cite> and
+<cite>BDBUS/BCBUS</cite></p></li>
+<li><p>FT2232H features two ports, which are 16-bit wide each: <cite>ADBUS/ACBUS</cite> and
+<cite>BDBUS/BCBUS</cite></p></li>
+<li><p>FT4232H features four ports, which are 8-bit wide each: <cite>ADBUS</cite>, <cite>BDBUS</cite>,
+<cite>CDBUS</cite> and <cite>DDBUS</cite>.</p></li>
+<li><p>FT230X features a single port, which is 4-bit wide</p></li>
+<li><p>FT231X feature a single port, which is 8-bit wide</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>FT232R and FT230X/FT231X support an additional port denoted CBUS:</p>
+<ul class="simple">
+<li><p>FT232R provides an additional 5-bit wide port</p></li>
+<li><p>FT230X/FT231X provides an additional 4-bit wide port</p></li>
+</ul>
+<p>Accessing this extra port requires a specific EEPROM configuration, <em>i.e.</em>
+it cannot be able with a software request till a specific configuration is
+defined in the EEPROM map. This feature and access to this port is not yet
+supported by PyFTDI.</p>
+</div>
+<p>For historical reasons, 16-bit ports used to be named <em>wide</em> ports and 8-bit
+ports used to be called <em>narrow</em>. This terminology - and API - is no longer
+used, but preserved to prevent API break. Please only use port <code class="docutils literal notranslate"><span class="pre">width</span></code>
+rather than port types.</p>
+</div>
+<div class="section" id="gpio-value">
+<h3>GPIO value<a class="headerlink" href="#gpio-value" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>A logical <code class="docutils literal notranslate"><span class="pre">0</span></code> bit represents a low level value on a pin, that is <em>GND</em></p></li>
+<li><p>A logical <code class="docutils literal notranslate"><span class="pre">1</span></code> bit represents a high level value on a pin, that is <em>Vdd</em>
+which is typically 3.3 volts on most FTDIs</p></li>
+</ul>
+<p>Please refers to the FTDI datasheet of your device for the tolerance and
+supported analog levels for more details</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>FT232H supports a specific feature, which is dedicated to better supporting
+the I<sup>2</sup>C feature. This specific devices enables an open-collector mode:</p>
+<ul class="simple">
+<li><p>Setting a pin to a low level drains it to <em>GND</em></p></li>
+<li><p>Setting a pin to a high level sets the pin as High-Z</p></li>
+</ul>
+<p>This feature is automatically activated when I<sup>2</sup>C feature is enabled on a
+port, for the two first pins, i.e. <cite>SCL</cite> and <cite>SDA out</cite>.</p>
+<p>However., PyFTDI does not yet provide an API to enable this mode to the
+other pins of a port, <em>i.e.</em> for the pins used as GPIOs.</p>
+</div>
+</div>
+<div class="section" id="direction">
+<h3>Direction<a class="headerlink" href="#direction" title="Permalink to this headline">¶</a></h3>
+<p>An FTDI pin should either be configured as an input or an ouput. It is
+mandatory to (re)configure the direction of a pin before changing the way it is
+used.</p>
+<ul class="simple">
+<li><p>A logical <code class="docutils literal notranslate"><span class="pre">0</span></code> bit represents an input pin, <em>i.e.</em> a pin whose value can be
+sampled and read via the PyFTDI APIs</p></li>
+<li><p>A logical <code class="docutils literal notranslate"><span class="pre">1</span></code> bit represents an output pin, <em>i.e.</em> a pin whose value can be
+set/written with the PyFTDI APIs</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gpio-bitmap">
+<h3>GPIO bitmap<a class="headerlink" href="#gpio-bitmap" title="Permalink to this headline">¶</a></h3>
+<p>The GPIO pins of a port are always accessed as an integer, whose supported
+width depends on the width of the port. These integers should be considered as
+a bitmap of pins, and are always assigned the same mapping, whatever feature is
+enabled:</p>
+<ul class="simple">
+<li><p>b<sub>0</sub> (<code class="docutils literal notranslate"><span class="pre">0x01</span></code>) represents the first pin of a port, <em>i.e.</em> AD0/BD0</p></li>
+<li><p>b<sub>1</sub> (<code class="docutils literal notranslate"><span class="pre">0x02</span></code>) represents the second pin of a port, <em>i.e.</em> AD1/BD1</p></li>
+<li><p>…</p></li>
+<li><p>b<sub>7</sub> (<code class="docutils literal notranslate"><span class="pre">0x80</span></code>) represents the seventh pin of a port, <em>i.e.</em> AD7/BD7</p></li>
+<li><p>b<sub>N</sub> represents the highest pin of a port, <em>i.e.</em> AD7/BD7 for an
+8-bit port, AD15/BD15 for a 16-bit port, etc.</p></li>
+</ul>
+<p>Pins reserved for a specific feature (I<sup>2</sup>C, SPI, …) cannot be accessed as
+a regular GPIO. They cannot be arbitrarily written and should be masked out
+when the GPIO output value is set. See <a class="reference internal" href="#reserved-pins"><span class="std std-ref">Reserved pins</span></a> for details.</p>
+</div>
+<div class="section" id="direction-bitmap">
+<h3>Direction bitmap<a class="headerlink" href="#direction-bitmap" title="Permalink to this headline">¶</a></h3>
+<p>Before using a port as GPIO, the port must be configured as GPIO. This is
+achieved by either instanciating a <code class="docutils literal notranslate"><span class="pre">GpioController</span></code> or by requesting the
+GPIO port from a specific controller: <code class="docutils literal notranslate"><span class="pre">I2cController.get_gpio()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">SpiController.get_gpio()</span></code>. All instances provide a similar API (duck typing
+API) to configure, read and write to GPIO pins.</p>
+<p>Once a GPIO port is instanciated, the direction of each pin should be defined.
+The direction can be changed at any time. It is not possible to write to /
+read from a pin before the proper direction has been defined.</p>
+<p>To configure the direction, use the <cite>set_direction</cite> API with a bitmap integer
+value that defines the direction to use of each pin.</p>
+<div class="section" id="direction-example">
+<h4>Direction example<a class="headerlink" href="#direction-example" title="Permalink to this headline">¶</a></h4>
+<p>A 8-bit port, dedicated to GPIO, is configured as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>BD0, BD3, BD7: input, <cite>I</cite> for short</p></li>
+<li><p>BD1-BD2, BD4-BD6: output, <cite>O</cite> for short</p></li>
+</ul>
+</div></blockquote>
+<p>That is, MSB to LSB: <em>I O O O I O O I</em>.</p>
+<p>This translates to 0b <code class="docutils literal notranslate"><span class="pre">0111</span> <span class="pre">0110</span></code> as output is <code class="docutils literal notranslate"><span class="pre">1</span></code> and input is <code class="docutils literal notranslate"><span class="pre">0</span></code>,
+that is <code class="docutils literal notranslate"><span class="pre">0x76</span></code> as an hexa value. This is the direction value to use to
+<code class="docutils literal notranslate"><span class="pre">configure()</span></code> the port.</p>
+<p>See also the <code class="docutils literal notranslate"><span class="pre">set_direction()</span></code> API to reconfigure the direction of GPIO pins
+at any time. This method accepts two arguments. This first arguments,
+<code class="docutils literal notranslate"><span class="pre">pins</span></code>, defines which pins - the ones with the maching bit set - to consider in the second <code class="docutils literal notranslate"><span class="pre">direction</span></code> argument, so there is no need to preserve/read-modify-copy the configuration of other pins. Pins with their matching bit
+reset are not reconfigured, whatever their direction bit.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
+<span class="c1"># later, reconfigure BD2 as input and BD7 as output</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">set_direction</span><span class="p">(</span><span class="mh">0x84</span><span class="p">,</span> <span class="mh">0x80</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="using-gpio-apis">
+<h2>Using GPIO APIs<a class="headerlink" href="#using-gpio-apis" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>GpioController (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) relies on legacy bit-band mode of
+FTDI device. This mode only gives access to the lower 8 bit of each FTDI
+port. This means that this API cannot be used to access the upport 4- or
+8- bit of respectively 12- or 16- bit capable ports.</p>
+<p>To access those upper pins, please use the GPIO mode of either I<sup>2</sup>C or SPI
+APIs. Unfortenately these APIs do not give access to the LSB (3- or 4- bits)
+of the port, as they are dedicated to I<sup>2</sup>C and SPI signalling.</p>
+</div>
+<div class="section" id="setting-gpio-pin-state">
+<h3>Setting GPIO pin state<a class="headerlink" href="#setting-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
+<p>To write to a GPIO, use the <cite>write()</cite> method. The caller needs to mask out
+the bits configured as input, or an exception is triggered:</p>
+<ul class="simple">
+<li><p>writing <code class="docutils literal notranslate"><span class="pre">0</span></code> to an input pin is ignored</p></li>
+<li><p>writing <code class="docutils literal notranslate"><span class="pre">1</span></code> to an input pin raises an exception</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
+<span class="c1"># all output set low</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0x00</span><span class="p">)</span>
+<span class="c1"># all output set high</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0x76</span><span class="p">)</span>
+<span class="c1"># all output set high, apply direction mask</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0xFF</span> <span class="o">&amp;</span> <span class="n">gpio</span><span class="o">.</span><span class="n">direction</span><span class="p">)</span>
+<span class="c1"># all output forced to high, writing to input pins is illegal</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0xFF</span><span class="p">)</span>  <span class="c1"># raises an IOError</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="retrieving-gpio-pin-state">
+<h3>Retrieving GPIO pin state<a class="headerlink" href="#retrieving-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
+<p>To read a GPIO, use the <cite>read()</cite> method.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
+<span class="c1"># read whole port</span>
+<span class="n">pins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="c1"># ignore output values (optional)</span>
+<span class="n">pins</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">gpio</span><span class="o">.</span><span class="n">direction</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="modifying-gpio-pin-state">
+<h3>Modifying GPIO pin state<a class="headerlink" href="#modifying-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
+<p>A read-modify-write sequence is required.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
+<span class="c1"># read whole port</span>
+<span class="n">pins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="c1"># clearing out AD1 and AD2</span>
+<span class="n">pins</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># or 0x06</span>
+<span class="c1"># want AD2=0, AD1=1</span>
+<span class="n">pins</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+<span class="c1"># update GPIO output</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pins</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="reserved-pins">
+<span id="id1"></span><h2>Reserved pins<a class="headerlink" href="#reserved-pins" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gpio-pins-vs-feature-pins">
+<h3>GPIO pins vs. feature pins<a class="headerlink" href="#gpio-pins-vs-feature-pins" title="Permalink to this headline">¶</a></h3>
+<p>It is important to note that the reserved pins do not change the pin
+assignment, <em>i.e.</em> the lowest pins of a port may become unavailable as regular
+GPIO when the feature is enabled:</p>
+<div class="section" id="example">
+<h4>Example<a class="headerlink" href="#example" title="Permalink to this headline">¶</a></h4>
+<p>I<sup>2</sup>C feature reserves
+the three first pins, as <em>SCL</em>, <em>SDA output</em>, <em>SDA input</em> (w/o clock stretching
+feature which also reserves another pin). This means that AD0, AD1 and AD2,
+that is b<sub>0</sub>, b<sub>1</sub>, b<sub>2</sub> cannot be directly
+accessed.</p>
+<p>The first accessible GPIO pin in this case is no longer AD0 but AD3, which
+means that b<sub>3</sub>becomes the lowest bit which can be read/written.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># use I2C feature</span>
+<span class="n">i2c</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span>
+<span class="c1"># configure the I2C feature, and predefines the direction of the GPIO pins</span>
+<span class="n">i2c</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x78</span><span class="p">)</span>
+<span class="n">gpio</span> <span class="o">=</span> <span class="n">i2c</span><span class="o">.</span><span class="n">get_gpio</span><span class="p">()</span>
+<span class="c1"># read whole port</span>
+<span class="n">pins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="c1"># clearing out I2C bits (SCL, SDAo, SDAi)</span>
+<span class="n">pins</span> <span class="o">&amp;=</span> <span class="mh">0x07</span>
+<span class="c1"># set AD4</span>
+<span class="n">pins</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span>
+<span class="c1"># update GPIO output</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pins</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="eeprom.html" class="btn btn-neutral float-right" title="EEPROM management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pinout.html" class="btn btn-neutral float-left" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+
+    </p>
+  </div>
+    
+    
+      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

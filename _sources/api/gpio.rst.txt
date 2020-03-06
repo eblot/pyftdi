@@ -35,3 +35,9 @@ Exceptions
 ~~~~~~~~~~
 
 .. autoexception :: GpioException
+
+
+Info about GPIO API
+~~~~~~~~~~~~~~~~~~~
+
+See :doc:`../gpio` for details

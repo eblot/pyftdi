@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.0
+                0.46.1
               </div>
             
           
@@ -99,6 +99,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#classes">Classes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#exceptions">Exceptions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#info-about-gpio-api">Info about GPIO API</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
@@ -112,6 +113,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpio.html">GPIO usage and definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
@@ -205,6 +207,7 @@ the <a class="reference internal" href="spi.html"><span class="doc">SPI API</spa
 <dt id="pyftdi.gpio.GpioController">
 <em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioController</code><a class="headerlink" href="#pyftdi.gpio.GpioController" title="Permalink to this definition">¶</a></dt>
 <dd><p>GPIO controller for an FTDI port, in bit-bang legacy mode.</p>
+<p>GPIO bit-bang mode is limited to the 8 lower pins of each GPIO port.</p>
 <dl class="method">
 <dt id="pyftdi.gpio.GpioController.all_pins">
 <em class="property">property </em><code class="sig-name descname">all_pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.all_pins" title="Permalink to this definition">¶</a></dt>
@@ -216,7 +219,7 @@ a reserved pin</p>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>always 0xFF.</p>
+<dd class="field-even"><p>always 0xFF for GpioController instance.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -313,7 +316,7 @@ configured pin.</p>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>always 0xFF.</p>
+<dd class="field-even"><p>always 0xFF for GpioController instance.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -420,6 +423,10 @@ level sets the pin as input/high-Z.</p></li>
 <dd><p>Base class for GPIO errors.</p>
 </dd></dl>
 
+</div>
+<div class="section" id="info-about-gpio-api">
+<h2>Info about GPIO API<a class="headerlink" href="#info-about-gpio-api" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="../gpio.html"><span class="doc">GPIO usage and definitions</span></a> for details</p>
 </div>
 </div>
 
