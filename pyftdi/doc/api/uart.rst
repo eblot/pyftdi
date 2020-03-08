@@ -45,6 +45,64 @@ Quickstart
     # Receive bytes
     data = port.read(1024)
 
+.. _uart_gpio:
+
+GPIO access
+~~~~~~~~~~~
+
+UART mode, the primary function of FTDI \*232\* devices, is somewhat limited
+when it comes to GPIO management, as opposed to alternative mode such as |I2C|,
+SPI and JTAG. It is not possible to assign the unused pins of an UART mode to
+arbitrary GPIO functions.
+
+All the 8 lower pins of an UART port are dedicated to the UART function,
+although most of them are seldomely used, as dedicated to manage a modem or a
+legacy DCE_ device. Upper pins (b\ :sub:`7`\ ..b\ :sub:`15`\ ), on devices that
+have ones, cannot be driven while UART port is enabled.
+
+It is nevertheless possible to have limited access to the lower pins as GPIO,
+with many limitations:
+
+- the GPIO direction of each pin is hardcoded and cannot be changed
+- GPIO pins cannot be addressed atomically: it is possible to read the state
+  of an input GPIO, or to change the state of an output GPIO, one after
+  another. This means than obtaining the state of several input GPIOs or
+  changing the state of several output GPIO at once is not possible.
+- some pins cannot be used as GPIO is hardware flow control is enabled.
+  Keep in mind However that HW flow control with FTDI is not reliable, see the
+  :ref:`hardware_flow_control` section.
+
+Accessing those GPIO pins is done through the UART extended pins, using their
+UART assigned name, as PySerial port attributes. See the table below:
+
++---------------+------+-----------+-------------------------------+
+| Bit           | UART | Direction | API                           |
++===============+======+===========+===============================+
+| b\ :sub:`0`\  | TX   | Out       | ``port.write(buffer)``        |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`1`\  | RX   | In        | ``buffer = port.read(count)`` |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`2`\  | RTS  | Out       | ``port.rts = state``          |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`3`\  | CTS  | In        | ``state = port.cts``          |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`4`\  | DTR  | Out       | ``port.dtr = state``          |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`5`\  | DSR  | In        | ``state = port.dsr``          |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`6`\  | DCD  | In        | ``state = port.dcd``          |
++---------------+------+-----------+-------------------------------+
+| b\ :sub:`7`\  | RI   | In        | ``state = port.ri``           |
++---------------+------+-----------+-------------------------------+
+
+CBUS support
+````````````
+
+Some FTDI devices (FT232R, FT230X, FT231X) support additional CBUS pins, which
+can be used as regular GPIOs pins, but they cannot be accessed with the FTDI
+port is configured for the UART functions. See :ref:`CBUS GPIO<cbus_gpio>` for
+details.
+
 
 Mini serial terminal example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -137,6 +195,16 @@ See the following table for details.
  * Stability reports whether subsequent runs, with the very same HW settings,
    produce the same timings.
 
+Achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
+results into an actual baudrate of about 8 Mbps, and suffer from clock
+fluterring [7.95 .. 8.1Mbps].
+
+.. _hardware_flow_control:
+
+Hardware flow control
+`````````````````````
+
 Moreover, as the hardware flow control of the FTDI device is not a true HW
 flow control. Quoting FTDI application note:
 
@@ -148,7 +216,3 @@ flow control. Quoting FTDI application note:
    RS232 device as seen on a PC. As such the device operates on a packet
    basis as opposed to a byte basis.*
 
-Achieving a reliable connection over 6 Mbps has proven difficult, if not
-impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
-results into an actual baudrate of about 8 Mbps, and suffer from clock
-fluterring [7.95 .. 8.1Mbps].
