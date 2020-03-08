@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.1
+                0.46.2
               </div>
             
           
@@ -95,8 +95,12 @@
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">GPIOs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#other-modes">Other modes</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#definitions">Definitions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#interfaces">Interfaces</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ports">Ports</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#gpio-value">GPIO value</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#direction">Direction</a></li>
@@ -202,23 +206,60 @@
 <p>Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><cite>GpioController</cite> (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) gives full access to the FTDI pins as raw I/O pins,</p></li>
-<li><p><cite>SpiGpioPort</cite> (see <a class="reference internal" href="api/spi.html"><span class="doc">spi - SPI API</span></a>) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the SPI feature,</p></li>
-<li><p><cite>I2cGpioPort</cite> (see <a class="reference internal" href="api/i2c.html"><span class="doc">i2c - I2C API</span></a>) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the I2C feature</p></li>
+<li><p><cite>GpioController</cite> (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) gives full access to the FTDI pins
+as raw I/O pins,</p></li>
+<li><p><cite>SpiGpioPort</cite> (see <a class="reference internal" href="api/spi.html"><span class="doc">spi - SPI API</span></a>) gives access to all free pins of an FTDI
+interface, which are not reserved for the SPI feature,</p></li>
+<li><p><cite>I2cGpioPort</cite> (see <a class="reference internal" href="api/i2c.html"><span class="doc">i2c - I2C API</span></a>) gives access to all free pins of an FTDI
+interface, which are not reserved for the I2C feature</p></li>
 </ul>
 </div></blockquote>
-<div class="admonition hint">
-<p class="admonition-title">Hint</p>
-<p>Gpio raw access is not yet supported with JTAG feature</p>
+<div class="section" id="other-modes">
+<h3>Other modes<a class="headerlink" href="#other-modes" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><p>Gpio raw access is not yet supported with JTAG feature.</p></li>
+<li><p>It is not possible to use GPIO along with UART mode on the same interface.
+However, UART mode still provides (very) limited access to GPIO pins, see
+UART <a class="reference internal" href="api/uart.html#uart-gpio"><span class="std std-ref">GPIO access</span></a> for details.</p></li>
+</ul>
+</div></blockquote>
+<p>This document presents the common definitions for these APIs and explain how to
+drive those pins.</p>
 </div>
-<p>This document presents the common definitions for these APIs and explain how to drive those pins.</p>
 </div>
 <div class="section" id="definitions">
 <h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="interfaces">
+<h3>Interfaces<a class="headerlink" href="#interfaces" title="Permalink to this headline">¶</a></h3>
+<p>An FTDI <em>interface</em> follows the definition of a <em>USB interface</em>: it is an
+independent hardware communication port with an FTDI device. Each interface can
+be configured independently from the other interfaces on the same device, e.g.
+one interface may be configured as an UART, the other one as I<sup>2</sup>C + GPIO.</p>
+<p>It is possible to access two distinct interfaces of the same FTDI device
+from a multithreaded application, and even from different applications, or
+Python interpreters. However two applications cannot access the same interface
+at the same time.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Performing a USB device reset affects all the interfaces of an FTDI device,
+this is the rationale for not automatically performing a device reset when
+an interface is initialiazed and configured from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>.</p>
+</div>
+</div>
 <div class="section" id="ports">
-<h3>Ports<a class="headerlink" href="#ports" title="Permalink to this headline">¶</a></h3>
-<p>Each port can be accessed as raw input/output pins. At a given time, a pin is either configured as an input or an output function.</p>
-<p>The width of a port, that is the number of pins of the interface, depending on the actual hardware, <em>i.e.</em> the FTDI model:</p>
+<span id="ftdi-ports"></span><h3>Ports<a class="headerlink" href="#ports" title="Permalink to this headline">¶</a></h3>
+<p>An FTDI port is ofter used in PyFtdi as a synonym for an interface. This may
+differ from the FTDI datasheets that sometimes show an interface with several
+ports (A*BUS, B*BUS). From a software standpoint, ports and interfaces are
+equivalent: APIs access all the HW port from the same interface at once. From a
+pure hardware standpoint, a single interface may be depicted as one or two
+<em>ports</em>.</p>
+<p>With <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>, <em>ports</em> and <em>interfaces</em> should be considered as synomyms.</p>
+<p>Each port can be accessed as raw input/output pins. At a given time, a pin is
+either configured as an input or an output function.</p>
+<p>The width of a port, that is the number of pins of the interface, depending on
+the actual hardware, <em>i.e.</em> the FTDI model:</p>
 <ul class="simple">
 <li><p>FT232R features a single port, which is 8-bit wide: <cite>DBUS</cite></p></li>
 <li><p>FT232H features a single port, which is 16-bit wide: <cite>ADBUS/ACBUS</cite></p></li>
@@ -231,7 +272,7 @@
 <li><p>FT230X features a single port, which is 4-bit wide</p></li>
 <li><p>FT231X feature a single port, which is 8-bit wide</p></li>
 </ul>
-<div class="admonition note">
+<div class="admonition note" id="cbus-gpio">
 <p class="admonition-title">Note</p>
 <p>FT232R and FT230X/FT231X support an additional port denoted CBUS:</p>
 <ul class="simple">
@@ -240,8 +281,8 @@
 </ul>
 <p>Accessing this extra port requires a specific EEPROM configuration, <em>i.e.</em>
 it cannot be able with a software request till a specific configuration is
-defined in the EEPROM map. This feature and access to this port is not yet
-supported by PyFTDI.</p>
+defined in the EEPROM map.</p>
+<p>This feature and access to this port is not yet supported by PyFTDI.</p>
 </div>
 <p>For historical reasons, 16-bit ports used to be named <em>wide</em> ports and 8-bit
 ports used to be called <em>narrow</em>. This terminology - and API - is no longer
@@ -331,8 +372,10 @@ that is <code class="docutils literal notranslate"><span class="pre">0x76</span>
 <code class="docutils literal notranslate"><span class="pre">configure()</span></code> the port.</p>
 <p>See also the <code class="docutils literal notranslate"><span class="pre">set_direction()</span></code> API to reconfigure the direction of GPIO pins
 at any time. This method accepts two arguments. This first arguments,
-<code class="docutils literal notranslate"><span class="pre">pins</span></code>, defines which pins - the ones with the maching bit set - to consider in the second <code class="docutils literal notranslate"><span class="pre">direction</span></code> argument, so there is no need to preserve/read-modify-copy the configuration of other pins. Pins with their matching bit
-reset are not reconfigured, whatever their direction bit.</p>
+<code class="docutils literal notranslate"><span class="pre">pins</span></code>, defines which pins - the ones with the maching bit set - to consider
+in the second <code class="docutils literal notranslate"><span class="pre">direction</span></code> argument, so there is no need to
+preserve/read-modify-copy the configuration of other pins. Pins with their
+matching bit reset are not reconfigured, whatever their direction bit.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
 <span class="c1"># later, reconfigure BD2 as input and BD7 as output</span>

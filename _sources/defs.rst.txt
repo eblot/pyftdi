@@ -23,3 +23,4 @@
 .. _Libusb issue on macOs: https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152
 .. _FT_PROG: https://www.ftdichip.com/Support/Utilities.htm#FT_PROG
 .. _fstring: https://www.python.org/dev/peps/pep-0498
+.. _DCE: https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment

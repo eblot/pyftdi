@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.1
+                0.46.2
               </div>
             
           
@@ -101,6 +101,7 @@
 <li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gpio-access">GPIO access</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mini-serial-terminal-example">Mini serial terminal example</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
 </ul>
@@ -113,7 +114,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../gpio.html">GPIO usage and definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpio.html">GPIOs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
@@ -219,6 +220,95 @@ as the UART client should use the regular <a class="reference external" href="ht
 <span class="c1"># Receive bytes</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
 </pre></div>
+</div>
+</div>
+<div class="section" id="gpio-access">
+<span id="uart-gpio"></span><h2>GPIO access<a class="headerlink" href="#gpio-access" title="Permalink to this headline">¶</a></h2>
+<p>UART mode, the primary function of FTDI *232* devices, is somewhat limited
+when it comes to GPIO management, as opposed to alternative mode such as I<sup>2</sup>C,
+SPI and JTAG. It is not possible to assign the unused pins of an UART mode to
+arbitrary GPIO functions.</p>
+<p>All the 8 lower pins of an UART port are dedicated to the UART function,
+although most of them are seldomely used, as dedicated to manage a modem or a
+legacy <a class="reference external" href="https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment">DCE</a> device. Upper pins (b<sub>7</sub>..b<sub>15</sub>), on devices that
+have ones, cannot be driven while UART port is enabled.</p>
+<p>It is nevertheless possible to have limited access to the lower pins as GPIO,
+with many limitations:</p>
+<ul class="simple">
+<li><p>the GPIO direction of each pin is hardcoded and cannot be changed</p></li>
+<li><p>GPIO pins cannot be addressed atomically: it is possible to read the state
+of an input GPIO, or to change the state of an output GPIO, one after
+another. This means than obtaining the state of several input GPIOs or
+changing the state of several output GPIO at once is not possible.</p></li>
+<li><p>some pins cannot be used as GPIO is hardware flow control is enabled.
+Keep in mind However that HW flow control with FTDI is not reliable, see the
+<a class="reference internal" href="#hardware-flow-control"><span class="std std-ref">Hardware flow control</span></a> section.</p></li>
+</ul>
+<p>Accessing those GPIO pins is done through the UART extended pins, using their
+UART assigned name, as PySerial port attributes. See the table below:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 10%" />
+<col style="width: 17%" />
+<col style="width: 49%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Bit</p></th>
+<th class="head"><p>UART</p></th>
+<th class="head"><p>Direction</p></th>
+<th class="head"><p>API</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>b<sub>0</sub></p></td>
+<td><p>TX</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.write(buffer)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>1</sub></p></td>
+<td><p>RX</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">buffer</span> <span class="pre">=</span> <span class="pre">port.read(count)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>2</sub></p></td>
+<td><p>RTS</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.rts</span> <span class="pre">=</span> <span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>3</sub></p></td>
+<td><p>CTS</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.cts</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>4</sub></p></td>
+<td><p>DTR</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.dtr</span> <span class="pre">=</span> <span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>5</sub></p></td>
+<td><p>DSR</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.dsr</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>6</sub></p></td>
+<td><p>DCD</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.dcd</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>7</sub></p></td>
+<td><p>RI</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.ri</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="cbus-support">
+<h3>CBUS support<a class="headerlink" href="#cbus-support" title="Permalink to this headline">¶</a></h3>
+<p>Some FTDI devices (FT232R, FT230X, FT231X) support additional CBUS pins, which
+can be used as regular GPIOs pins, but they cannot be accessed with the FTDI
+port is configured for the UART functions. See <a class="reference internal" href="../gpio.html#cbus-gpio"><span class="std std-ref">CBUS GPIO</span></a> for
+details.</p>
 </div>
 </div>
 <div class="section" id="mini-serial-terminal-example">
@@ -383,6 +473,12 @@ a good UART should exhibit the same duration for low bits and high bits,
 produce the same timings.</p></li>
 </ul>
 </div></blockquote>
+<p>Achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
+results into an actual baudrate of about 8 Mbps, and suffer from clock
+fluterring [7.95 .. 8.1Mbps].</p>
+<div class="section" id="hardware-flow-control">
+<span id="id1"></span><h3>Hardware flow control<a class="headerlink" href="#hardware-flow-control" title="Permalink to this headline">¶</a></h3>
 <p>Moreover, as the hardware flow control of the FTDI device is not a true HW
 flow control. Quoting FTDI application note:</p>
 <blockquote>
@@ -394,10 +490,7 @@ what is in the buffer.</em>
 RS232 device as seen on a PC. As such the device operates on a packet
 basis as opposed to a byte basis.</em></p>
 </div></blockquote>
-<p>Achieving a reliable connection over 6 Mbps has proven difficult, if not
-impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
-results into an actual baudrate of about 8 Mbps, and suffer from clock
-fluterring [7.95 .. 8.1Mbps].</p>
+</div>
 </div>
 </div>
 

@@ -8,24 +8,66 @@ Overview
 
 Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:
 
-  * `GpioController` (see :doc:`api/gpio`) gives full access to the FTDI pins as raw I/O pins,
-  * `SpiGpioPort` (see :doc:`api/spi`) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the SPI feature,
-  * `I2cGpioPort` (see :doc:`api/i2c`) gives access to all free pins of an FTDI interface, a.k.a. port, which are not reserved for the I2C feature
+  * `GpioController` (see :doc:`api/gpio`) gives full access to the FTDI pins
+    as raw I/O pins,
+  * `SpiGpioPort` (see :doc:`api/spi`) gives access to all free pins of an FTDI
+    interface, which are not reserved for the SPI feature,
+  * `I2cGpioPort` (see :doc:`api/i2c`) gives access to all free pins of an FTDI
+    interface, which are not reserved for the I2C feature
 
-.. hint:: Gpio raw access is not yet supported with JTAG feature
+Other modes
+```````````
 
-This document presents the common definitions for these APIs and explain how to drive those pins.
+  * Gpio raw access is not yet supported with JTAG feature.
+  * It is not possible to use GPIO along with UART mode on the same interface.
+    However, UART mode still provides (very) limited access to GPIO pins, see
+    UART :ref:`uart_gpio` for details.
+
+This document presents the common definitions for these APIs and explain how to
+drive those pins.
 
 
 Definitions
 ~~~~~~~~~~~
 
+Interfaces
+``````````
+
+An FTDI *interface* follows the definition of a *USB interface*: it is an
+independent hardware communication port with an FTDI device. Each interface can
+be configured independently from the other interfaces on the same device, e.g.
+one interface may be configured as an UART, the other one as |I2C| + GPIO.
+
+It is possible to access two distinct interfaces of the same FTDI device
+from a multithreaded application, and even from different applications, or
+Python interpreters. However two applications cannot access the same interface
+at the same time.
+
+.. warning::
+
+   Performing a USB device reset affects all the interfaces of an FTDI device,
+   this is the rationale for not automatically performing a device reset when
+   an interface is initialiazed and configured from PyFtdi_.
+
+.. _ftdi_ports:
+
 Ports
 `````
 
-Each port can be accessed as raw input/output pins. At a given time, a pin is either configured as an input or an output function.
+An FTDI port is ofter used in PyFtdi as a synonym for an interface. This may
+differ from the FTDI datasheets that sometimes show an interface with several
+ports (A\*BUS, B\*BUS). From a software standpoint, ports and interfaces are
+equivalent: APIs access all the HW port from the same interface at once. From a
+pure hardware standpoint, a single interface may be depicted as one or two
+*ports*.
 
-The width of a port, that is the number of pins of the interface, depending on the actual hardware, *i.e.* the FTDI model:
+With PyFtdi_, *ports* and *interfaces* should be considered as synomyms.
+
+Each port can be accessed as raw input/output pins. At a given time, a pin is
+either configured as an input or an output function.
+
+The width of a port, that is the number of pins of the interface, depending on
+the actual hardware, *i.e.* the FTDI model:
 
 * FT232R features a single port, which is 8-bit wide: `DBUS`
 * FT232H features a single port, which is 16-bit wide: `ADBUS/ACBUS`
@@ -38,6 +80,8 @@ The width of a port, that is the number of pins of the interface, depending on t
 * FT230X features a single port, which is 4-bit wide
 * FT231X feature a single port, which is 8-bit wide
 
+.. _cbus_gpio:
+
 .. note::
 
    FT232R and FT230X/FT231X support an additional port denoted CBUS:
@@ -47,8 +91,9 @@ The width of a port, that is the number of pins of the interface, depending on t
 
    Accessing this extra port requires a specific EEPROM configuration, *i.e.*
    it cannot be able with a software request till a specific configuration is
-   defined in the EEPROM map. This feature and access to this port is not yet
-   supported by PyFTDI.
+   defined in the EEPROM map.
+
+   This feature and access to this port is not yet supported by PyFTDI.
 
 For historical reasons, 16-bit ports used to be named *wide* ports and 8-bit
 ports used to be called *narrow*. This terminology - and API - is no longer
@@ -148,8 +193,10 @@ that is ``0x76`` as an hexa value. This is the direction value to use to
 
 See also the ``set_direction()`` API to reconfigure the direction of GPIO pins
 at any time. This method accepts two arguments. This first arguments,
-``pins``, defines which pins - the ones with the maching bit set - to consider in the second ``direction`` argument, so there is no need to preserve/read-modify-copy the configuration of other pins. Pins with their matching bit
-reset are not reconfigured, whatever their direction bit.
+``pins``, defines which pins - the ones with the maching bit set - to consider
+in the second ``direction`` argument, so there is no need to
+preserve/read-modify-copy the configuration of other pins. Pins with their
+matching bit reset are not reconfigured, whatever their direction bit.
 
 .. code-block:: python
 
