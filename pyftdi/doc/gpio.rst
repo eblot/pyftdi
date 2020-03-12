@@ -69,15 +69,15 @@ either configured as an input or an output function.
 The width of a port, that is the number of pins of the interface, depending on
 the actual hardware, *i.e.* the FTDI model:
 
-* FT232R features a single port, which is 8-bit wide: `DBUS`
-* FT232H features a single port, which is 16-bit wide: `ADBUS/ACBUS`
+* FT232R features a single port, which is 8-bit wide: `DBUS`,
+* FT232H features a single port, which is 16-bit wide: `ADBUS/ACBUS`,
 * FT2232D features two ports, which are 12-bit wide each: `ADBUS/ACBUS` and
-  `BDBUS/BCBUS`
+  `BDBUS/BCBUS`,
 * FT2232H features two ports, which are 16-bit wide each: `ADBUS/ACBUS` and
-  `BDBUS/BCBUS`
+  `BDBUS/BCBUS`,
 * FT4232H features four ports, which are 8-bit wide each: `ADBUS`, `BDBUS`,
-  `CDBUS` and `DDBUS`.
-* FT230X features a single port, which is 4-bit wide
+  `CDBUS` and `DDBUS`,
+* FT230X features a single port, which is 4-bit wide,
 * FT231X feature a single port, which is 8-bit wide
 
 For historical reasons, 16-bit ports used to be named *wide* ports and 8-bit
@@ -91,12 +91,15 @@ no longer used, but are kept to prevent API break. Please only use the port
 
    FT232R and FT230X/FT231X support an additional port denoted CBUS:
 
-   * FT232R provides an additional 5-bit wide port
+   * FT232R provides an additional 5-bit wide port, where only 4 LSBs can be
+     used as programmable GPIOs,
    * FT230X/FT231X provides an additional 4-bit wide port
 
    Accessing this extra port requires a specific EEPROM configuration, *i.e.*
    it cannot be enabled with a software request, if a specific configuration
    has not first defined in the EEPROM map.
+
+   Note that CBUS access is much slower than regular asynchronous bitbang mode.
 
    PyFtdi_ does not yet support access to CBUS on FT232R/FT230X/FT231X.
 
