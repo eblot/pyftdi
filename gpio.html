@@ -272,6 +272,10 @@ the actual hardware, <em>i.e.</em> the FTDI model:</p>
 <li><p>FT230X features a single port, which is 4-bit wide</p></li>
 <li><p>FT231X feature a single port, which is 8-bit wide</p></li>
 </ul>
+<p>For historical reasons, 16-bit ports used to be named <em>wide</em> ports and 8-bit
+ports used to be called <em>narrow</em> with <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>. This terminology and APIs are
+no longer used, but are kept to prevent API break. Please only use the port
+<code class="docutils literal notranslate"><span class="pre">width</span></code> rather than these legacy port types.</p>
 <div class="admonition note" id="cbus-gpio">
 <p class="admonition-title">Note</p>
 <p>FT232R and FT230X/FT231X support an additional port denoted CBUS:</p>
@@ -280,14 +284,10 @@ the actual hardware, <em>i.e.</em> the FTDI model:</p>
 <li><p>FT230X/FT231X provides an additional 4-bit wide port</p></li>
 </ul>
 <p>Accessing this extra port requires a specific EEPROM configuration, <em>i.e.</em>
-it cannot be able with a software request till a specific configuration is
-defined in the EEPROM map.</p>
-<p>This feature and access to this port is not yet supported by PyFTDI.</p>
+it cannot be enabled with a software request, if a specific configuration
+has not first defined in the EEPROM map.</p>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not yet support access to CBUS on FT232R/FT230X/FT231X.</p>
 </div>
-<p>For historical reasons, 16-bit ports used to be named <em>wide</em> ports and 8-bit
-ports used to be called <em>narrow</em>. This terminology - and API - is no longer
-used, but preserved to prevent API break. Please only use port <code class="docutils literal notranslate"><span class="pre">width</span></code>
-rather than port types.</p>
 </div>
 <div class="section" id="gpio-value">
 <h3>GPIO value<a class="headerlink" href="#gpio-value" title="Permalink to this headline">¶</a></h3>
