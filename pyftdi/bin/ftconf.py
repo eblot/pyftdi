@@ -29,7 +29,6 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from argparse import ArgumentParser, FileType
-from binascii import hexlify
 from io import StringIO
 from logging import Formatter, StreamHandler, DEBUG, ERROR
 from sys import modules, stderr
@@ -38,6 +37,11 @@ from traceback import format_exc
 from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.misc import hexdump
+
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
+
 
 def main():
     """Main routine"""
@@ -108,6 +112,11 @@ def main():
         if args.product:
             eeprom.set_product_name(args.product)
         for conf in args.config or []:
+            if conf == '?':
+                helpstr = ', '.join(eeprom.properties)
+                print(fill(helpstr, initial_indent='  ',
+                           subsequent_indent='  '))
+                exit(1)
             for sep in ':=':
                 if sep in conf:
                     name, value = conf.split(sep, 1)
@@ -137,7 +146,7 @@ def main():
         if args.output:
             eeprom.save_config(args.output)
 
-    except (ImportError, IOError, ValueError) as exc:
+    except (ImportError, IOError, NotImplementedError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)

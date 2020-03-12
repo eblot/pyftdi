@@ -33,10 +33,10 @@ from enum import IntEnum, IntFlag
 from logging import getLogger
 from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from typing import BinaryIO, Optional, TextIO, Union
+from typing import BinaryIO, Optional, Set, TextIO, Union
 from usb.core import Device as UsbDevice
-
 from .ftdi import Ftdi, FtdiError
+
 
 class FtdiEepromError(FtdiError):
     """FTDI EEPROM error."""
@@ -182,6 +182,16 @@ class FtdiEeprom:
         return bytes(self._eeprom)
 
     @property
+    def properties(self) ->  Set[str]:
+        """Returns the supported properties for the current device.
+
+           :return: the supported properies.
+        """
+        props = set(self._config.keys())
+        props -= set(self.VAR_STRINGS)
+        return props
+
+    @property
     def is_empty(self) -> bool:
         """Reports whether the EEPROM has been erased, or no EEPROM is
            connected to the FTDI EEPROM port.
@@ -232,16 +242,21 @@ class FtdiEeprom:
                      out: Optional[TextIO] = None) -> None:
         """Change the value of a stored property.
 
+           :see: :py:meth:`properties` for a list of valid property names.
+                 Note that for now, only a small subset of properties can be
+                 changed.
            :param name: the property to change
            :param value: the new value (supported values depend on property)
            :param out: optional output stream to report hints
         """
-        name = name.lower()
         mobj = match(r'cbus_func_(\d)', name)
         if mobj:
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
             return
+        if name in self.properties:
+            raise NotImplementedError(f"Change to '{name}' is not yet "
+                                      f"supported")
         raise ValueError(f"Unknown property '{name}'")
 
     def erase(self) -> None:
