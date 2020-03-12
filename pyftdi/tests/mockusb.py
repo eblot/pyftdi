@@ -21,6 +21,7 @@ from sys import modules, stdout, version_info
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
+from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
 from pyftdi.misc import hexdump
@@ -607,6 +608,91 @@ class MockRawIntEepromTestCase(TestCase):
         ftdi.close()
 
 
+class MockCBusEepromTestCase(TestCase):
+    """Test FTDI EEPROM APIs that manage CBUS feature
+    """
+
+    def test_ft230x(self):
+        loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        UsbTools.flush_cache()
+        eeprom = FtdiEeprom()
+        eeprom.open('ftdi:///1')
+        # default EEPROM config does not have any CBUS configured as GPIO
+        self.assertEqual(eeprom.cbus_pins, [])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        # enable CBUS1 and CBUS3 as GPIO
+        eeprom.set_property('cbus_func_1', 'iomode')
+        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        # enable CBUS0 and CBUS2 as GPIO
+        eeprom.set_property('cbus_func_0', 'iomode')
+        eeprom.set_property('cbus_func_2', 'iomode')
+        # not yet committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        eeprom.sync()
+        # committed
+        self.assertEqual(eeprom.cbus_pins, [0, 1, 2, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xF)
+        # invalid CBUS pin
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_4', 'iomode')
+        # invalid pin function
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_0', 'iomode_')
+        # invalid pin
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func', 'iomode')
+        # valid alternative mode
+        eeprom.set_property('cbus_func_0', 'txled')
+        eeprom.set_property('cbus_func_1', 'rxled')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [2, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xC)
+        eeprom.close()
+        loader.unload()
+
+    def test_ft232h(self):
+        loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        UsbTools.flush_cache()
+        eeprom = FtdiEeprom()
+        eeprom.open('ftdi://::FT1ABC1/1', ignore=True)
+        eeprom.erase()
+        eeprom.initialize()
+        # default EEPROM config does not have any CBUS configured as GPIO
+        self.assertEqual(eeprom.cbus_pins, [])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.set_property('cbus_func_1', 'iomode')
+        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.sync()
+        # CBUS1 and CBUS3 are not addressable as GPIOs
+        # they should appear in cbus_pins, but not in cbus_mask
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.set_property('cbus_func_6', 'iomode')
+        eeprom.set_property('cbus_func_9', 'iomode')
+        # not yet committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.sync()
+        # committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3, 6, 9])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        eeprom.set_property('cbus_func_5', 'iomode')
+        eeprom.set_property('cbus_func_8', 'iomode')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [1, 3, 5, 6, 8, 9])
+        self.assertEqual(eeprom.cbus_mask, 0xF)
+        eeprom.close()
+        loader.unload()
+
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
@@ -622,6 +708,7 @@ def suite():
     suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
     suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
     suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
     return suite_
 
 

@@ -1116,7 +1116,7 @@ class Ftdi:
 
            Switch the FTDI interface to bitbang mode.
         """
-        value = (bitmask & 0xff) | ((mode & self._BITMODE_MASK) << 8)
+        value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self._bitmode = mode

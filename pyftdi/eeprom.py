@@ -31,11 +31,13 @@ from collections import OrderedDict, namedtuple
 from configparser import ConfigParser
 from enum import IntEnum, IntFlag
 from logging import getLogger
+from random import randint
 from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from typing import BinaryIO, Optional, Set, TextIO, Union
+from typing import BinaryIO, List, Optional, Set, TextIO, Union
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
+from .misc import to_bool, to_int
 
 
 class FtdiEepromError(FtdiError):
@@ -122,10 +124,12 @@ class FtdiEeprom:
             return self._config[name]
         raise AttributeError('No such attribute: %s' % name)
 
-    def open(self, device: Union[str, UsbDevice]) -> None:
+    def open(self, device: Union[str, UsbDevice],
+             ignore: bool = False) -> None:
         """Open a new connection to the FTDI USB device.
 
            :param device: the device URL or a USB device instance.
+           :param ignore: whether to ignore existing content
         """
         if self._ftdi.is_connected:
             raise FtdiError('Already open')
@@ -133,9 +137,10 @@ class FtdiEeprom:
             self._ftdi.open_from_url(device)
         else:
             self._ftdi.open_from_device(device)
-        self._read_eeprom()
-        if self._valid:
-            self._decode_eeprom()
+        if not ignore:
+            self._read_eeprom()
+            if self._valid:
+                self._decode_eeprom()
 
     def close(self) -> None:
         """Close the current connection to the FTDI USB device,
@@ -145,6 +150,23 @@ class FtdiEeprom:
             self._eeprom = bytearray()
             self._dev_ver = 0
             self._config.clear()
+
+    def connect(self, ftdi: Ftdi, ignore: bool = False) -> None:
+        """Connect a FTDI EEPROM to an existing Ftdi instance.
+
+           :param ftdi: the Ftdi instance to use
+           :param ignore: whether to ignore existing content
+        """
+        self._ftdi = ftdi
+        self._eeprom = bytearray()
+        self._dev_ver = 0
+        self._valid = False
+        self._config = OrderedDict()
+        self._dirty = set()
+        if not ignore:
+            self._read_eeprom()
+            if self._valid:
+                self._decode_eeprom()
 
     @property
     def device_version(self) -> int:
@@ -205,6 +227,34 @@ class FtdiEeprom:
                 return False
         return True
 
+    @property
+    def cbus_pins(self) -> List[int]:
+        """Return the list of CBUS pins configured as GPIO, if any
+
+           :return: list of CBUS pins
+        """
+        pins = [pin for pin in range(0, 10)
+                if self._config.get(f'cbus_func_{pin}', '') == 'IOMODE']
+        return pins
+
+    @property
+    def cbus_mask(self) -> int:
+        """Return the bitmask of CBUS pins configured as GPIO.
+
+           The bitmap contains four bits, ordered in natural order.
+
+           :return: CBUS mask
+        """
+        if self.device_version == 0x900:  # FT232H
+            cbus = [5, 6, 8, 9]
+        else:
+            cbus = list(range(4))
+        mask = 0
+        for bix, pin in enumerate(cbus):
+            if self._config.get(f'cbus_func_{pin}', '') == 'IOMODE':
+                mask |= 1 << bix
+        return mask
+
     def save_config(self, file: TextIO) -> None:
         """Save the EEPROM content as an INI stream.
 
@@ -227,6 +277,7 @@ class FtdiEeprom:
         """Define a new serial number."""
         self._validate_string(serial)
         self._update_var_string('serial', serial)
+        self.set_property('has_serial', True)
 
     def set_manufacturer_name(self, manufacturer: str) -> None:
         """Define a new manufacturer string."""
@@ -238,7 +289,7 @@ class FtdiEeprom:
         self._validate_string(product)
         self._update_var_string('product', product)
 
-    def set_property(self, name: str, value: str,
+    def set_property(self, name: str, value: Union[str, int, bool],
                      out: Optional[TextIO] = None) -> None:
         """Change the value of a stored property.
 
@@ -251,8 +302,45 @@ class FtdiEeprom:
         """
         mobj = match(r'cbus_func_(\d)', name)
         if mobj:
+            if not isinstance(value, str):
+                raise ValueError(f"'{name}' should be specified as a string")
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
+            return
+        hwords = {
+            'vendor_id': 0x02,
+            'product_id': 0x04,
+            'type': 0x06,
+            'usb_version': 0x0c
+        }
+        if name in hwords:
+            val = to_int(value)
+            if not 0<= val <= 0xFFFF:
+                raise ValueError(f'Invalid value for {name}')
+            offset = hwords[name]
+            self._eeprom[offset:offset+2] = spack('<H', val)
+            return
+        confs = {
+            'remote_wakeup': (0, 5),
+            'self_powered': (0, 6),
+            'in_isochronous': (2, 0),
+            'out_isochronous': (2, 1),
+            'suspend_pull_down': (2, 2),
+            'has_serial': (2, 3),
+            'has_usb_version': (2, 4),
+        }
+        if name in confs:
+            val = to_bool(value, permissive=False, allow_int=True)
+            offset, bit = confs[name]
+            mask = 1 << bit
+            if val:
+                self._eeprom[0x08+offset] |= mask
+            else:
+                self._eeprom[0x0a+offset] &= ~mask
+            return
+        if name == 'power_max':
+            val = to_int(value) >> 1
+            self._eeprom[0x09] = val
             return
         if name in self.properties:
             raise NotImplementedError(f"Change to '{name}' is not yet "
@@ -261,8 +349,34 @@ class FtdiEeprom:
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
-        self._eeprom = bytearray([0xFF] * self.size)
+        self._eeprom = bytearray([0x00] * self.size)
         self._config.clear()
+
+    def initialize(self) -> None:
+        """Initialize the EEPROM with some default sensible values.
+        """
+        dev_ver = self.device_version
+        dev_name = Ftdi.DEVICE_NAMES[dev_ver]
+        vid = Ftdi.FTDI_VENDOR
+        pid = Ftdi.PRODUCT_IDS[vid][dev_name]
+        self.set_manufacturer_name('FTDI')
+        self.set_product_name(dev_name.upper())
+        sernum = ''.join([chr(randint(ord('A'), ord('Z'))) for _ in range(5)])
+        self.set_serial_number(f'FT{randint(0, 9)}{sernum}')
+        self.set_property('vendor_id', vid)
+        self.set_property('product_id', pid)
+        self.set_property('type', dev_ver)
+        self.set_property('usb_version', 0x200)
+        self.set_property('power_max', 150)
+        self._sync_eeprom()
+
+    def sync(self) -> None:
+        """Force re-evaluation of configuration after some changes.
+
+           This API is not useful for regular usage, but might help for testing
+           when the EEPROM does not go through a full save/load cycle
+        """
+        self._sync_eeprom()
 
     def dump_config(self, file: Optional[BinaryIO] = None) -> None:
         """Dump the configuration to a file.
@@ -392,7 +506,6 @@ class FtdiEeprom:
         cfg['manufacturer'] = self._decode_string(0x0e)
         cfg['product'] = self._decode_string(0x10)
         cfg['serial'] = self._decode_string(0x12)
-
         try:
             name = Ftdi.DEVICE_NAMES[cfg['type']]
             func = getattr(self, '_decode_%s' % name[2:])
