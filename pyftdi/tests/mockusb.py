@@ -635,7 +635,7 @@ def main():
         raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
-    UsbTools.BACKENDS = ('backend.usbmock', )
+    UsbTools.BACKENDS = ('backend.usbvirt', )
     # Ensure the virtual backend can be found and is loaded
     backend = UsbTools.find_backend()
     try:
