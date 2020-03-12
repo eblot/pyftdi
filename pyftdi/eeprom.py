@@ -1,10 +1,38 @@
+# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the Neotion nor the names of its contributors may
+#       be used to endorse or promote products derived from this software
+#       without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL NEOTION BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""EEPROM management for PyFdti"""
+
+import sys
 from binascii import hexlify
 from collections import OrderedDict, namedtuple
 from configparser import ConfigParser
 from enum import IntEnum, IntFlag
 from logging import getLogger
+from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from sys import stdout
 from typing import BinaryIO, Optional, TextIO, Union
 from usb.core import Device as UsbDevice
 
@@ -34,14 +62,14 @@ class FtdiEeprom:
     """Properties for each FTDI device release."""
 
     _PROPERTIES = {
-        0x0200: _PROPS(0, None, 0x94),    # FT232AM
-        0x0400: _PROPS(256, 0x14, 0x94),  # FT232BM
-        0x0500: _PROPS(256, 0x16, 0x96),  # FT2232D
-        0x0600: _PROPS(128, None, 0x98),  # FT232R
-        0x0700: _PROPS(256, 0x1A, 0x9A),  # FT2232H
-        0x0800: _PROPS(256, 0x1A, 0x9A),  # FT4232H
-        0x0900: _PROPS(256, 0x1A, 0xA0),  # FT232H
-        0x1000: _PROPS(1024, 0x1A, 0xA0),  # FT230X
+        0x0200: _PROPS(0, None, 0x94),     # FT232AM
+        0x0400: _PROPS(256, 0x14, 0x94),   # FT232BM
+        0x0500: _PROPS(256, 0x16, 0x96),   # FT2232D
+        0x0600: _PROPS(128, None, 0x98),   # FT232R
+        0x0700: _PROPS(256, 0x1A, 0x9A),   # FT2232H
+        0x0800: _PROPS(256, 0x1A, 0x9A),   # FT4232H
+        0x0900: _PROPS(256, 0x1A, 0xA0),   # FT232H
+        0x1000: _PROPS(1024, 0x1A, 0xA0),  # FT230X/FT231X/FT234X
     }
     """EEPROM properties."""
 
@@ -150,6 +178,7 @@ class FtdiEeprom:
 
            :return: the content as bytes.
         """
+        self._sync_eeprom()
         return bytes(self._eeprom)
 
     @property
@@ -171,6 +200,7 @@ class FtdiEeprom:
 
            :param file: output stream
         """
+        self._sync_eeprom()
         cfg = ConfigParser()
         cfg.add_section('values')
         for name, value in self._config.items():
@@ -185,15 +215,34 @@ class FtdiEeprom:
 
     def set_serial_number(self, serial: str) -> None:
         """Define a new serial number."""
+        self._validate_string(serial)
         self._update_var_string('serial', serial)
 
     def set_manufacturer_name(self, manufacturer: str) -> None:
         """Define a new manufacturer string."""
+        self._validate_string(manufacturer)
         self._update_var_string('manufacturer', manufacturer)
 
     def set_product_name(self, product: str) -> None:
         """Define a new product name."""
+        self._validate_string(product)
         self._update_var_string('product', product)
+
+    def set_property(self, name: str, value: str,
+                     out: Optional[TextIO] = None) -> None:
+        """Change the value of a stored property.
+
+           :param name: the property to change
+           :param value: the new value (supported values depend on property)
+           :param out: optional output stream to report hints
+        """
+        name = name.lower()
+        mobj = match(r'cbus_func_(\d)', name)
+        if mobj:
+            self._set_cbus_func(int(mobj.group(1)), value, out)
+            self._dirty.add(name)
+            return
+        raise ValueError(f"Unknown property '{name}'")
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
@@ -205,8 +254,10 @@ class FtdiEeprom:
 
            :param file: the output file, default to stdout
         """
+        if self._dirty:
+            self._decode_eeprom()
         for name, value in self._config.items():
-            print('%s: %s' % (name, value), file=file or stdout)
+            print('%s: %s' % (name, value), file=file or sys.stdout)
 
     def commit(self, dry_run: bool = True) -> bool:
         """Commit any changes to the EEPROM.
@@ -220,16 +271,26 @@ class FtdiEeprom:
             self.log.info('No change to commit')
             return False
         self.log.info('Changes to commit: %s', ', '.join(sorted(self._dirty)))
-        if any([x in self._dirty for x in self.VAR_STRINGS]):
-            self._generate_var_strings()
+        self._sync_eeprom()
         self._ftdi.overwrite_eeprom(self._eeprom, dry_run=dry_run)
         return dry_run
+
+    @classmethod
+    def _validate_string(cls, string):
+        for invchr in ':/':
+            # do not accept characters which are interpreted as URL seperators
+            if invchr in string:
+                raise ValueError(f"Invalid character '{invchr}' in string")
 
     def _update_var_string(self, name: str, value: str) -> None:
         if name not in self.VAR_STRINGS:
             raise ValueError('%s is not a variable string' % name)
-        if value == self._config[name]:
-            return
+        try:
+            if value == self._config[name]:
+                return
+        except KeyError:
+            # not yet defined
+            pass
         self._config[name] = value
         self._dirty.add(name)
 
@@ -239,10 +300,13 @@ class FtdiEeprom:
         data_pos = dynpos
         tbl_pos = 0x0e
         for name in self.VAR_STRINGS:
-            ustr = self._config[name].encode('utf-16le')
+            try:
+                ustr = self._config[name].encode('utf-16le')
+            except KeyError:
+                ustr = ''
             length = len(ustr)+2
             stream.append(length)
-            stream.append(0x03)  # no idea what this constant means
+            stream.append(0x03)  # string descriptor
             stream.extend(ustr)
             self._eeprom[tbl_pos] = data_pos
             tbl_pos += 1
@@ -252,17 +316,41 @@ class FtdiEeprom:
         self._eeprom[dynpos:dynpos+len(stream)] = stream
         crc_size = scalc('<H')
         if fill:
+            mtp = self._ftdi.device_version == 0x1000
+            crc_pos = 0x100 if mtp else len(self._eeprom)
+            crc_pos -= crc_size
             rem = len(self._eeprom) - (dynpos + len(stream)) - crc_size
-            self._eeprom[dynpos+len(stream):-crc_size] = bytes(rem)
-        crc = self._ftdi.calc_eeprom_checksum(self._eeprom[:-crc_size])
-        self._eeprom[-crc_size:] = spack('<H', crc)
+            self._eeprom[dynpos+len(stream):crc_pos] = bytes(rem)
+
+    def _sync_eeprom(self):
+        if not self._dirty:
+            return
+        if any([x in self._dirty for x in self.VAR_STRINGS]):
+            self._generate_var_strings()
+            for varstr in self.VAR_STRINGS:
+                self._dirty.discard(varstr)
+        self._update_crc()
+        self._decode_eeprom()
+        self._dirty.clear()
+
+    def _compute_crc(self, check=False):
+        mtp = self._ftdi.device_version == 0x1000
+        crc_pos = 0x100 if mtp else len(self._eeprom)
+        crc_size = scalc('<H')
+        if not check:
+            # check mode: add CRC itself, so that result should be zero
+            crc_pos -= crc_size
+        crc = self._ftdi.calc_eeprom_checksum(self._eeprom[:crc_pos])
+        return crc, crc_pos, crc_size
+
+    def _update_crc(self):
+        crc, crc_pos, crc_size = self._compute_crc()
+        self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
 
     def _read_eeprom(self):
         buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
         self._eeprom = bytearray(buf)
-        if self._ftdi.device_version == 0x1000:  # FT230x
-            buf = buf[:0x100]
-        crc = self._ftdi.calc_eeprom_checksum(buf)  # SBZ
+        crc = self._compute_crc(True)[0]
         if crc:
             if self.is_empty:
                 self.log.info('No EEPROM or EEPROM erased')
@@ -308,9 +396,42 @@ class FtdiEeprom:
             return manufacturer.decode('utf16', errors='ignore')
         return ''
 
+    def _set_cbus_func(self, cpin: int, value: str,
+                       out: Optional[TextIO]) -> None:
+        cmap = {0x600: (self._CBUS, 5, 0x14, 4),    # FT232R
+                0x900: (self._CBUSH, 10, 0x18, 4),  # FT232H
+                0x1000: (self._CBUSX, 4, 0x1A, 8)}  # FT230X/FT231X/FT234X
+        try:
+            cbus, count, offset, width = cmap[self.device_version]
+        except KeyError:
+            raise ValueError('This property is not supported on this device')
+        if value == '?' and out:
+            print(', '.join(sorted([item.name for item in cbus])), file=out)
+            return
+        if not 0 <= cpin < count:
+            raise ValueError(f"Unsupported CBUS pin '{cpin}'")
+        try:
+            code = cbus[value.upper()]
+        except KeyError:
+            raise ValueError(f"CBUS pin {cpin} does not have function "
+                             f"'{value}'")
+        addr = offset + (cpin*width)//8
+        if width == 4:
+            bitoff = 4 if cpin & 0x1 else 0
+            mask = 0x0F << bitoff
+        else:
+            bitoff = 0
+            mask = 0xFF
+        old = self._eeprom[addr]
+        self._eeprom[addr] &= ~mask
+        self._eeprom[addr] |= code << bitoff
+        self.log.debug('Cpin %d, addr 0x%02x, value 0x%02x->0x%02x',
+                       cpin, addr, old, self._eeprom[addr])
+
     def _decode_230x(self):
         cfg = self._config
-        cfg['channel_a_driver'] = 'VCP'
+        misc, = sunpack('<H', self._eeprom[0x00:0x02])
+        cfg['channel_a_driver'] = 'VCP' if misc & (1 << 7) else 'D2XX'
         for bit in self._INVERT:
             value = self._eeprom[0x0B]
             cfg['invert_%s' % self._INVERT(bit).name] = bool(value & bit)
@@ -331,7 +452,7 @@ class FtdiEeprom:
         cfg = self._config
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_type'] = cfg0 & 0x0F
-        cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 4)) else ''
+        cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 4)) else 'D2XX'
         cfg['clock_polarity'] = 'high' if (cfg1 & self._CFG1.CLK_IDLE_STATE) \
                                 else 'low'
         cfg['lsb_data'] = bool(cfg1 & self._CFG1.DATA_LSB)
@@ -382,8 +503,8 @@ class FtdiEeprom:
         cfg = self._config
         self._decode_x232h(cfg)
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
-        cfg['channel_c_driver'] = 'VCP' if ((cfg0 >> 4) & (1 << 3)) else ''
-        cfg['channel_d_driver'] = 'VCP' if ((cfg1 >> 4) & (1 << 3)) else ''
+        cfg['channel_c_driver'] = 'VCP' if ((cfg0 >> 4) & (1 << 3)) else 'D2XX'
+        cfg['channel_d_driver'] = 'VCP' if ((cfg1 >> 4) & (1 << 3)) else 'D2XX'
         conf = self._eeprom[0x0B]
         rs485 = self._CHANNEL.RS485
         for chix in range(4):
@@ -392,8 +513,8 @@ class FtdiEeprom:
     def _decode_x232h(self, cfg):
         # common code for2232h and 4232h
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
-        cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else ''
-        cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else ''
+        cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else 'D2XX'
+        cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else 'D2XX'
         max_drive = self._DRIVE.LOW | self._DRIVE.HIGH
         for bix in range(4):
             if not bix & 1:

@@ -49,6 +49,7 @@ from .usbtools import UsbDeviceDescriptor, UsbTools
 # pylint: disable=too-many-nested-blocks
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-locals
+# pylint: disable=too-many-lines
 
 
 class FtdiError(IOError):

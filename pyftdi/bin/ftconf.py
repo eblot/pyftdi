@@ -29,8 +29,11 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from argparse import ArgumentParser, FileType
+from binascii import hexlify
+from io import StringIO
 from logging import Formatter, StreamHandler, DEBUG, ERROR
 from sys import modules, stderr
+from textwrap import fill
 from traceback import format_exc
 from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
@@ -45,6 +48,8 @@ def main():
                                help='serial port device name')
         argparser.add_argument('-x', '--hexdump', action='store_true',
                                help='dump EEPROM content as ASCII')
+        argparser.add_argument('-X', '--hexblock', type=int,
+                               help='dump EEPROM as indented hexa blocks')
         argparser.add_argument('-o', '--output', type=FileType('wt'),
                                help='output ini file to save EEPROM content')
         argparser.add_argument('-s', '--serial-number',
@@ -53,6 +58,9 @@ def main():
                                help='set manufacturer name')
         argparser.add_argument('-p', '--product',
                                help='set product name')
+        argparser.add_argument('-c', '--config', action='append',
+                               help='change/configure a property '
+                                    'as key=value pair')
         argparser.add_argument('-e', '--erase', action='store_true',
                                help='erase the whole EEPROM content')
         argparser.add_argument('-u', '--update', action='store_true',
@@ -99,8 +107,29 @@ def main():
             eeprom.set_manufacturer_name(args.manufacturer)
         if args.product:
             eeprom.set_product_name(args.product)
+        for conf in args.config or []:
+            for sep in ':=':
+                if sep in conf:
+                    name, value = conf.split(sep, 1)
+                    if not value:
+                        argparser.error(f'Configuration {conf} without value')
+                    helpio = StringIO()
+                    eeprom.set_property(name, value, helpio)
+                    helpstr = helpio.getvalue()
+                    if helpstr:
+                        print(fill(helpstr, initial_indent='  ',
+                                   subsequent_indent='  '))
+                        exit(1)
+                    break
+            else:
+                argparser.error(f'Missing name:value separator in {conf}')
         if args.hexdump:
             print(hexdump(eeprom.data))
+        if args.hexblock is not None:
+            indent = ' ' * args.hexblock
+            for pos in range(0, len(eeprom.data), 16):
+                hexa = ' '.join([f'{x:02x}' for x in eeprom.data[pos:pos+16]])
+                print(indent, hexa, sep='')
         if args.update:
             eeprom.commit(False)
         if args.verbose > 0:
