@@ -41,7 +41,7 @@ class FtdiEeprom:
         0x0700: _PROPS(256, 0x1A, 0x9A),  # FT2232H
         0x0800: _PROPS(256, 0x1A, 0x9A),  # FT4232H
         0x0900: _PROPS(256, 0x1A, 0xA0),  # FT232H
-        0x1000: _PROPS(256, 0x1A, 0xA0),  # FT230X
+        0x1000: _PROPS(1024, 0x1A, 0xA0),  # FT230X
     }
     """EEPROM properties."""
 
@@ -258,9 +258,11 @@ class FtdiEeprom:
         self._eeprom[-crc_size:] = spack('<H', crc)
 
     def _read_eeprom(self):
-        self._eeprom = bytearray(self._ftdi.read_eeprom(0,
-                                                        eeprom_size=self.size))
-        crc = self._ftdi.calc_eeprom_checksum(self._eeprom)
+        buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
+        self._eeprom = bytearray(buf)
+        if self._ftdi.device_version == 0x1000:  # FT230x
+            buf = buf[:0x100]
+        crc = self._ftdi.calc_eeprom_checksum(buf)  # SBZ
         if crc:
             if self.is_empty:
                 self.log.info('No EEPROM or EEPROM erased')
@@ -309,9 +311,9 @@ class FtdiEeprom:
     def _decode_230x(self):
         cfg = self._config
         cfg['channel_a_driver'] = 'VCP'
-        for bit in self.INVERT:
+        for bit in self._INVERT:
             value = self._eeprom[0x0B]
-            cfg['invert_%s' % self.INVERT(bit).name] = bool(value & bit)
+            cfg['invert_%s' % self._INVERT(bit).name] = bool(value & bit)
         max_drive = self._DRIVE.LOW | self._DRIVE.HIGH
         value = self._eeprom[0x0c]
         for grp in range(2):

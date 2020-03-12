@@ -9,14 +9,15 @@
 #pylint: disable-msg=too-many-branches
 #pylint: disable-msg=no-self-use
 
+from binascii import unhexlify
 from logging import getLogger
 from sys import version_info
 from typing import BinaryIO
 from ruamel.yaml import load_all as yaml_load
 from ruamel.yaml.loader import Loader
 from pyftdi.misc import to_bool
-from .usbmock import (MockConfiguration, MockDevice, MockInterface,
-                      MockEndpoint, get_backend)
+from .usbvirt import (VirtConfiguration, VirtDevice, VirtInterface,
+                      VirtEndpoint, get_backend)
 from .consts import USBCONST
 
 # need support for f-string syntax
@@ -24,13 +25,14 @@ if version_info[:2] < (3, 6):
     raise AssertionError('Python 3.6 is required for this module')
 
 
-class MockLoader:
+class VirtLoader:
     """Load a virtual USB bus environment from a YaML description stream.
     """
 
     def __init__(self):
-        self.log = getLogger('pyftdi.mock.backend')
+        self.log = getLogger('pyftdi.virt.backend')
         self._last_ep_idx = 0
+        self._epprom_backup = b''
 
     def load(self, yamlfp: BinaryIO) -> None:
         """Load a YaML configuration stream.
@@ -53,6 +55,12 @@ class MockLoader:
 
     def get_virtual_ftdi(self, bus, address):
         return get_backend().get_virtual_ftdi(bus, address)
+
+    @property
+    def eeprom_backup(self) -> bytes:
+        """Return the prefined content of the EEPROM, if any.
+        """
+        return self._epprom_backup
 
     def _validate(self):
         locations = set()
@@ -105,6 +113,7 @@ class MockLoader:
         devdesc = None
         configs = []
         properties = {}
+        delayed_load = False
         for ykey, yval in container.items():
             if ykey == 'descriptor':
                 if not isinstance(yval, dict):
@@ -123,14 +132,48 @@ class MockLoader:
                     yval = USBCONST.speeds[yval]
                 except KeyError:
                     raise ValueError(f'Invalid device speed {yval}')
+            if ykey == 'eeprom':
+                if not isinstance(yval, dict):
+                    raise ValueError(f'Invalid EEPROM section')
+                for pkey, pval in yval.items():
+                    if pkey == 'model':
+                        if not isinstance(pval, str):
+                            raise ValueError(f'Invalid EEPROM model')
+                        continue
+                    if pkey == 'load':
+                        try:
+                            pval = to_bool(pval, permissive=False,
+                                           allow_int=True)
+                            yval[pkey] = pval
+                            delayed_load = pval
+                        except ValueError:
+                            raise ValueError(f'Invalid EEPROM load option')
+                        continue
+                    if pkey == 'data':
+                        if isinstance(pval, str):
+                            hexstr = pval.replace(' ', '').replace('\n', '')
+                            try:
+                                pval = unhexlify(hexstr)
+                                yval[pkey] = pval
+                            except ValueError:
+                                raise ValueError('Invalid EEPROM hex format')
+                        if not isinstance(pval, bytes):
+                            raise ValueError(f'Invalid EEPROM data '
+                                             f'{type(pval)}')
+                        self._epprom_backup = pval
+                        continue
+                    raise ValueError(f'Unknown EEPROM option {pkey}')
             properties[ykey] = yval
         if not devdesc:
             raise ValueError('Missing device descriptor')
         if not configs:
             configs = [self._build_configuration({})]
-        device = MockDevice(devdesc, **properties)
+        device = VirtDevice(devdesc, **properties)
         for config in configs:
             device.add_configuration(config)
+        if delayed_load:
+            device.ftdi.apply_eeprom_config(device.desc,
+                                            [cfg.desc for cfg in configs])
         return device
 
     def _build_device_descriptor(self, container) -> dict:
@@ -176,7 +219,7 @@ class MockLoader:
             raise ValueError(f'Unknown config entry {ykey}')
         if not interfaces:
             interfaces.extend(self._build_interfaces({}))
-        config = MockConfiguration(cfgdesc)
+        config = VirtConfiguration(cfgdesc)
         for iface in interfaces:
             config.add_interface(iface)
         return config
@@ -237,7 +280,7 @@ class MockLoader:
             ifdesc, endpoints = self._build_alternative(altdef[0])
             self._last_ep_idx = max([ep.bEndpointAddress & 0x7F
                                      for ep in endpoints])
-            iface = MockInterface(ifdesc)
+            iface = VirtInterface(ifdesc)
             for endpoint in endpoints:
                 iface.add_endpoint(endpoint)
             ifaces.append(iface)
@@ -298,7 +341,7 @@ class MockLoader:
             raise ValueError(f'Unknown config entry {ikey}')
         if not epdesc:
             raise ValueError('Missing endpoint descriptor')
-        endpoint = MockEndpoint(epdesc)
+        endpoint = VirtEndpoint(epdesc)
         return endpoint
 
     def _build_endpoint_descriptor(self, container) -> dict:

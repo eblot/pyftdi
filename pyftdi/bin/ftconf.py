@@ -3,7 +3,7 @@
 """Simple FTDI EEPROM configurator.
 """
 
-# Copyright (c) 2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,8 @@ def main():
                                help='erase the whole EEPROM content')
         argparser.add_argument('-u', '--update', action='store_true',
                                help='perform actual update, use w/ care')
+        argparser.add_argument('-V', '--virtual', type=FileType('r'),
+                               help='use a virtual device, specified as YaML')
         argparser.add_argument('-v', '--verbose', action='count', default=0,
                                help='increase verbosity')
         argparser.add_argument('-d', '--debug', action='store_true',
@@ -78,6 +80,15 @@ def main():
         FtdiLogger.set_level(loglevel)
         FtdiLogger.log.addHandler(StreamHandler(stderr))
 
+        if args.virtual:
+            from pyftdi.usbtools import UsbTools
+            # Force PyUSB to use PyFtdi test framework for USB backends
+            UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )
+            # Ensure the virtual backend can be found and is loaded
+            backend = UsbTools.find_backend()
+            loader = backend.create_loader()()
+            loader.load(args.virtual)
+
         eeprom = FtdiEeprom()
         eeprom.open(args.device)
         if args.erase:
@@ -97,7 +108,7 @@ def main():
         if args.output:
             eeprom.save_config(args.output)
 
-    except (IOError, ValueError) as exc:
+    except (ImportError, IOError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)

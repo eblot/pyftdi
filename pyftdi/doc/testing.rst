@@ -42,13 +42,13 @@ This new module implements a virtual USB backend for PyUSB, which creates some
 kind of virtual, limited USB stack. The PyUSB can be told to substitute the
 native platform's libusb with this module.
 
-This module, ``usbmock`` can be dynamically confifured with the help of YaML
+This module, ``usbvirt`` can be dynamically confifured with the help of YaML
 definition files to create one or more virtual FTDI devices on a virtual USB
 bus topology. This enables to test ``usbtools`` module to enumerate, detect,
 report and access FTDI devices using the regular :doc:`urlscheme` syntax.
 
-``usbmock`` also routes all vendor-specific USB API calls to a secondary
-``ftdimock`` module, which is in charge of handling all FTDI USB requests.
+``usbvirt`` also routes all vendor-specific USB API calls to a secondary
+``ftdivirt`` module, which is in charge of handling all FTDI USB requests.
 
 This module enables testing PyFtdi_ APIs. It also re-uses the MPSSE tracker
 engine to decode and verify MPSSE requests used to support |I2C|, SPI and UART
@@ -106,5 +106,5 @@ Examples
 Availability
 ~~~~~~~~~~~~
 
-Note that unit tests and mock infrastructure are not included in the
+Note that unit tests and the virtual infrastructure are not included in the
 distributed Python packages, they are only availabke from the git repository.

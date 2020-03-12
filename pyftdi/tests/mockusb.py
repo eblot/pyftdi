@@ -7,6 +7,8 @@
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=no-self-use
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=global-statement
 
 import logging
 from collections import defaultdict
@@ -21,9 +23,13 @@ from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.misc import hexdump
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
-from backend.loader import MockLoader
+
+# MockLoader is assigned in ut_main
+MockLoader = None
+
 
 # need support for f-string syntax
 if version_info[:2] < (3, 6):
@@ -462,6 +468,145 @@ class MockSimpleUartTestCase(TestCase):
         port.close()
 
 
+class MockRawExtEepromTestCase(TestCase):
+    """Test FTDI EEPROM low-level APIs with external EEPROM device
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def _restore_eeprom(self, ftdi):
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        data = self.loader.eeprom_backup
+        size = len(vftdi.eeprom)
+        if len(data) < size:
+            data = bytearray(data) + bytes(size-len(data))
+        vftdi.eeprom = bytes(data)
+
+    def test_dump(self):
+        """Check EEPROM full content."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        self._restore_eeprom(ftdi)
+        ref_data = bytes(list(range(256)))
+        size = len(ref_data)
+        data = ftdi.read_eeprom()
+        self.assertEqual(len(data), size)
+        self.assertEqual(ref_data, data)
+        ftdi.close()
+
+    def test_random_access_read(self):
+        """Check EEPROM random read access."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        self._restore_eeprom(ftdi)
+        ref_data = bytes(list(range(256)))
+        size = len(ref_data)
+        # out of bound
+        self.assertRaises(ValueError, ftdi.read_eeprom, size, 2)
+        # last bytes
+        buf = ftdi.read_eeprom(size-2, 2)
+        self.assertEqual(buf[0:2], ref_data[-2:])
+        self.assertEqual(buf[0:2], b'\xfe\xff')
+        # out of bound
+        self.assertRaises(ValueError, ftdi.read_eeprom, size-2, 4)
+        # unaligned access
+        buf = ftdi.read_eeprom(1, 2)
+        self.assertEqual(buf[0:2], ref_data[1:3])
+        self.assertEqual(buf[0:2], b'\x01\x02')
+        # long read, unaligned access, unaligned size
+        buf = ftdi.read_eeprom(43, 43)
+        self.assertEqual(len(buf), 43)
+        self.assertEqual(buf, ref_data[43:86])
+        ftdi.close()
+
+    def test_randow_access_write(self):
+        """Check EEPROM random write access."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        self._restore_eeprom(ftdi)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:8]
+        ref_data = b'ABCD'
+        ftdi.write_eeprom(0, ref_data, dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the data have been written
+        self.assertEqual(vftdi.eeprom[:4], ref_data)
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[4:8], orig_data[4:])
+        # verify the checksum has been updated
+        # TODO compute the expected checksum
+        self.assertNotEqual(checksum1, checksum2)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:24]
+        ftdi.write_eeprom(9, ref_data, dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the unaligned data have been written
+        self.assertEqual(vftdi.eeprom[9:13], ref_data)
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[:9], orig_data[:9])
+        self.assertEqual(vftdi.eeprom[13:24], orig_data[13:])
+        # verify the checksum has been updated
+        self.assertNotEqual(checksum1, checksum2)
+        checksum1 = vftdi.eeprom[-2:]
+        orig_data = vftdi.eeprom[:48]
+        ftdi.write_eeprom(33, ref_data[:3], dry_run=False)
+        checksum2 = vftdi.eeprom[-2:]
+        # verify the unaligned data have been written
+        self.assertEqual(vftdi.eeprom[33:36], ref_data[:3])
+        # verify the data have not been overwritten
+        self.assertEqual(vftdi.eeprom[:33], orig_data[:33])
+        self.assertEqual(vftdi.eeprom[36:48], orig_data[36:])
+        # verify the checksum has been updated
+        self.assertNotEqual(checksum1, checksum2)
+
+
+class MockRawIntEepromTestCase(TestCase):
+    """Test FTDI EEPROM low-level APIs with internal EEPROM device
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_descriptor_update(self):
+        """Check EEPROM content overrides YaML configuration."""
+        # this test is more about testing the virtual FTDI infrastructure
+        # than a pure PyFtdi test
+        devs = Ftdi.list_devices('ftdi:///?')
+        self.assertEqual(len(devs), 1)
+        desc = devs[0][0]
+        # these values are not the ones defined in YaML, but stored in EEPROM
+        self.assertEqual(desc.sn, 'FT3KMGTL')
+        self.assertEqual(desc.description, 'LC231X')
+
+    def test_eeprom_read(self):
+        """Check full read sequence."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        data = ftdi.read_eeprom()
+        self.assertEqual(len(data), 0x400)
+        ftdi.close()
+
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
@@ -475,6 +620,8 @@ def suite():
     suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
     suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
     return suite_
 
 
@@ -488,7 +635,15 @@ def main():
         raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
     # Force PyUSB to use PyFtdi test framework for USB backends
-    UsbTools.BACKENDS = ('backend.usbmock', )
+    UsbTools.BACKENDS = ('backend.usbvirt', )
+    # Ensure the virtual backend can be found and is loaded
+    backend = UsbTools.find_backend()
+    try:
+        # obtain the loader class associated with the virtual backend
+        global MockLoader
+        MockLoader = backend.create_loader()
+    except AttributeError:
+        raise AssertionError('Cannot load virtual USB backend')
     ut_main(defaultTest='suite')
 
 
