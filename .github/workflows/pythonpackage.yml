@@ -25,7 +25,7 @@ jobs:
         pip install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg=sphinx_rtd_theme
     - name: Build package
       run: |
-        python setup.py sdist bdist_wheel
+        python setup.py sdist bdist bdist_wheel
     - name: Build documentation
       run: |
         mkdir doc
