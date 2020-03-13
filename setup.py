@@ -30,6 +30,7 @@
 #pylint: disable-msg=unused-variable
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=broad-except
+#pylint: disable-msg=no-self-use
 
 from codecs import open as codec_open
 from os import close, unlink
@@ -129,15 +130,22 @@ class BuildPy(build_py):
             msg = None
             try:
                 pycompile(file, pyc, doraise=True)
+                self._check_line_width(file)
                 continue
             except PyCompileError as exc:
                 # avoid chaining exceptions
-                msg = str(exc)
+                print(str(exc), file=stderr)
+                raise SyntaxError("Cannot byte-compile '%s'" % file)
             finally:
                 unlink(pyc)
-            print(msg, file=stderr)
-            raise SyntaxError("Cannot byte-compile '%s'" % file)
         super().byte_compile(files)
+
+    def _check_line_width(self, file):
+        with open(file, 'rt') as pfp:
+            for lpos, line in enumerate(pfp, start=1):
+                if len(line) > 80:
+                    print('\n  %d: %s' % (lpos, line.rstrip()))
+                    raise RuntimeError("Invalid line width '%s'" % file)
 
 
 def main():

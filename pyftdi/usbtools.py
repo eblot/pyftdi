@@ -89,7 +89,8 @@ class UsbTools:
     UsbApi = None
 
     @classmethod
-    def find_all(cls, vps: Sequence[Tuple[int, int]], nocache: bool = False) -> \
+    def find_all(cls, vps: Sequence[Tuple[int, int]],
+                 nocache: bool = False) -> \
             List[Tuple[UsbDeviceDescriptor, int]]:
         """Find all devices that match the specified vendor/product pairs.
 

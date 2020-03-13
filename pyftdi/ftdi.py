@@ -1284,8 +1284,8 @@ class Ftdi:
             raise ValueError('Unknown flow control: %s' % flowctrl)
         try:
             if self._usb_dev.ctrl_transfer(
-                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_FLOW_CTRL, 0, value, bytearray(),
-                    self._usb_write_timeout):
+                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_FLOW_CTRL, 0, value,
+                    bytearray(), self._usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except USBError as exc:
             raise FtdiError('UsbError: %s' % str(exc))
@@ -1737,7 +1737,8 @@ class Ftdi:
                         if self._latency_threshold:
                             self._latency_count += 1
                             if self._latency != self._latency_max:
-                                if self._latency_count > self._latency_threshold:
+                                if self._latency_count > \
+                                        self._latency_threshold:
                                     self._latency *= 2
                                     if self._latency > self._latency_max:
                                         self._latency = self._latency_max
@@ -1934,7 +1935,7 @@ class Ftdi:
 
     def _read(self) -> bytes:
         data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
-                                 self._usb_read_timeout)
+                                  self._usb_read_timeout)
         if data:
             self.log.debug('< %s', hexlify(data).decode())
             if self._tracer and len(data) > 2:
