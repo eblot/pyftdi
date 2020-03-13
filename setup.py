@@ -27,16 +27,19 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#pylint: disable-msg=unused-variable
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=broad-except
+
 from codecs import open as codec_open
 from os import close, unlink
 from os.path import abspath, dirname, join as joinpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
+from sys import stderr
 from tempfile import mkstemp
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
-
-#pylint: disable-msg=unused-variable
 
 
 NAME = 'pyftdi'
@@ -123,19 +126,21 @@ class BuildPy(build_py):
                 continue
             pfd, pyc = mkstemp('.pyc')
             close(pfd)
+            msg = None
             try:
                 pycompile(file, pyc, doraise=True)
                 continue
             except PyCompileError as exc:
                 # avoid chaining exceptions
-                pass
+                msg = str(exc)
             finally:
                 unlink(pyc)
+            print(msg, file=stderr)
             raise SyntaxError("Cannot byte-compile '%s'" % file)
         super().byte_compile(files)
 
 
-if __name__ == '__main__':
+def main():
     setup(
         cmdclass={'build_py': BuildPy},
         name=NAME,
@@ -162,3 +167,10 @@ if __name__ == '__main__':
         # tests requires >=3.6
         python_requires='>=3.5',
     )
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as exc:
+        print(exc, file=stderr)
