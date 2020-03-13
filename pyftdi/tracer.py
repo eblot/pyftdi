@@ -181,7 +181,7 @@ class FtdiMpsseTracer:
             return False
         value, = sunpack('H', self._trace_tx[1:3])
         self.log.info(' Open collector [15:0] %04x %s',
-                      value, f'{value:016b}')
+                      value, self.bitfmt(value, 16))
         self._trace_tx[:] = self._trace_tx[3:]
         return True
 
@@ -423,9 +423,13 @@ class FtdiMpsseTracer:
 
     @classmethod
     def bm2str(cls, value: int, mask: int, z: str = '_') -> str:
-        vstr = f'{value:08b}'
-        mstr = f'{mask:08b}'
+        vstr = cls.bitfmt(value, 8)
+        mstr = cls.bitfmt(mask, 8)
         return ''.join([m == '1' and v or z for v, m in zip(vstr, mstr)])
+
+    @classmethod
+    def bitfmt(cls, value, width):
+        return format(value, '#0%db' % width)[2:]
 
     # rw_bytes_pve_pve_lsb
     # rw_bytes_pve_nve_lsb
