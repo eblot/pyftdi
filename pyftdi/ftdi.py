@@ -1142,7 +1142,7 @@ class Ftdi:
             raise FtdiError('CBUS gpio not available from current mode')
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= inmask <= 0x0F:
-            raise ValueError(f'Invalid direction: {inmask:02x}')
+            raise ValueError('Invalid direction: 0x%02x' % inmask)
         outmask = 0x0F & ~inmask
         value = (outmask << 4) | self._cbus
         oldmode = self._bitmode
@@ -1164,9 +1164,9 @@ class Ftdi:
             raise FtdiError('CBUS gpio not available from current mode')
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= outmask <= 0x0F:
-            raise ValueError(f'Invalid direction: {outmask:02x}')
+            raise ValueError('Invalid direction: 0x%02x' % outmask)
         if not 0 <= pins <= 0x0F:
-            raise ValueError(f'Invalid pins: {pins:02x}')
+            raise ValueError('Invalid pins: 0x%02x' % pins)
         value = (outmask << 4) | (outmask & pins)
         oldmode = self._bitmode
         try:
