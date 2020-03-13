@@ -429,7 +429,7 @@ class FtdiMpsseTracer:
 
     @classmethod
     def bitfmt(cls, value, width):
-        return format(value, '#0%db' % width)[2:]
+        return format(value, '0%db' % width)
 
     # rw_bytes_pve_pve_lsb
     # rw_bytes_pve_nve_lsb

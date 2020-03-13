@@ -41,7 +41,6 @@ __copyright__ = 'Copyright (c) 2011-2020 Emmanuel Blot'
 from logging import WARNING, NullHandler, getLogger
 
 
-
 class FtdiLogger:
 
     log = getLogger('pyftdi')

@@ -693,6 +693,36 @@ class MockCBusEepromTestCase(TestCase):
         loader.unload()
 
 
+class MockCbusGpioTestCase(TestCase):
+    """Test FTDI CBUS GPIO APIs
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
+        UsbTools.flush_cache()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.loader.unload()
+
+    def test_simple(self):
+        """Check simple GPIO write and read sequence."""
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        self.assertEqual(ftdi.has_cbus, True)
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        ftdi.set_cbus_direction(0xf, 0xa)
+        ftdi.set_cbus_gpio(0x3)
+        self.assertEqual(vftdi.cbus, 0xa & 0x3)
+        vftdi.cbus = 0x5
+        cbus = ftdi.get_cbus_gpio()
+        self.assertEqual(cbus, 0x5)
+        ftdi.close()
+
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
@@ -709,6 +739,7 @@ def suite():
     suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
     suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
     suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockCbusGpioTestCase, 'test'))
     return suite_
 
 

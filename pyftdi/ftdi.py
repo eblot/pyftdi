@@ -319,7 +319,8 @@ class Ftdi:
         self._latency_max = self.LATENCY_MAX
         self._latency_threshold = None  # disable dynamic latency
         self._lineprop = 0
-        self._cbus = 0
+        self._cbus_pins = (0, 0)
+        self._cbus_out = 0
         self._tracer = None
 
     # --- Public API -------------------------------------------------------
@@ -1132,19 +1133,28 @@ class Ftdi:
             raise FtdiError('Unable to read pins')
         return pins[0]
 
-    def get_cbus_gpio(self, inmask: int) -> int:
+    def set_cbus_direction(self, mask: int, direction: int) -> None:
+        """Configure the CBUS pins used as GPIOs
+
+           :param mask: which pins to configure as GPIOs
+           :param direction: which pins are output (vs. input)
+        """
+        # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
+        if not 0 <= mask <= 0x0F:
+            raise ValueError('Invalid CBUS gpio mask: 0x%02x' % mask)
+        if not 0 <= direction <= 0x0F:
+            raise ValueError('Invalid CBUS gpio direction: 0x%02x' % direction)
+        self._cbus_pins = (mask, direction)
+
+    def get_cbus_gpio(self) -> int:
         """Get the CBUS pins configured as GPIO inputs
 
-           :param direction: which pins are input (vs. output)
            :return: bitfield of CBUS read pins
         """
         if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
-        if not 0 <= inmask <= 0x0F:
-            raise ValueError('Invalid direction: 0x%02x' % inmask)
-        outmask = 0x0F & ~inmask
-        value = (outmask << 4) | self._cbus
+        value = (self._cbus_pins[1] << 4) | self._cbus_out
         oldmode = self._bitmode
         try:
             self.set_bitmode(value, Ftdi.BITMODE_CBUS)
@@ -1152,26 +1162,23 @@ class Ftdi:
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
-        return value & inmask
+        return value & ~self._cbus_pins[1] & self._cbus_pins[0]
 
-    def set_cbus_gpio(self, outmask: int, pins: int) -> None:
+    def set_cbus_gpio(self, pins: int) -> None:
         """Set the CBUS pins configured as GPIO outputs
 
-           :param output: which pins are output (vs. input)
            :param pins: bitfield to apply to CBUS output pins
         """
         if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
-        # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
-        if not 0 <= outmask <= 0x0F:
-            raise ValueError('Invalid direction: 0x%02x' % outmask)
         if not 0 <= pins <= 0x0F:
-            raise ValueError('Invalid pins: 0x%02x' % pins)
-        value = (outmask << 4) | (outmask & pins)
+            raise ValueError('Invalid CBUS gpio pins: 0x%02x' % pins)
+        pins &= self._cbus_pins[0] & self._cbus_pins[1]
+        value = (self._cbus_pins[1] << 4) | pins
         oldmode = self._bitmode
         try:
             self.set_bitmode(value, Ftdi.BITMODE_CBUS)
-            self._cbus = pins
+            self._cbus_out = pins
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
@@ -1751,7 +1758,7 @@ class Ftdi:
                     # data still fits in buf?
                     if (len(data) + length) <= size:
                         data += self._readbuffer[self._readoffset:
-                                                self._readoffset+length]
+                                                 self._readoffset+length]
                         self._readoffset += length
                         # did we read exactly the right amount of bytes?
                         if len(data) == size:
@@ -1764,7 +1771,7 @@ class Ftdi:
                         if part_size < 0:
                             raise FtdiError("Internal Error")
                         data += self._readbuffer[self._readoffset:
-                                                self._readoffset+part_size]
+                                                 self._readoffset+part_size]
                         self._readoffset += part_size
                         return data
         except USBError as ex:

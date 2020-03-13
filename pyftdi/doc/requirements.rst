@@ -4,7 +4,7 @@ Requirements
 ------------
 
 Python_ 3.5 or above is required; new tests require 3.6 or above, as they rely
-on fstring_ syntax.
+on fstring_ syntax (PEP_498_) and variable annotation syntax (PEP_526_).
 
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native
 libraries:
