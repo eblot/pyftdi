@@ -174,3 +174,4 @@ if __name__ == '__main__':
         main()
     except Exception as exc:
         print(exc, file=stderr)
+        exit(1)
