@@ -514,7 +514,10 @@ class UsbTools:
                     url = fmt % (scheme, ':'.join([vendor, product, '???']),
                                  port)
                 try:
-                    description = f'({desc.description:s})' or ''
+                    if desc.description:
+                        description = '(%s)' % desc.description
+                    else:
+                        description = ''
                 except Exception:
                     description = ''
                 descs.append((url, description))
