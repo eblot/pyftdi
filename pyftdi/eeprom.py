@@ -234,7 +234,7 @@ class FtdiEeprom:
            :return: list of CBUS pins
         """
         pins = [pin for pin in range(0, 10)
-                if self._config.get(f'cbus_func_{pin}', '') == 'IOMODE']
+                if self._config.get('cbus_func_%d' % pin, '') == 'IOMODE']
         return pins
 
     @property
@@ -251,7 +251,7 @@ class FtdiEeprom:
             cbus = list(range(4))
         mask = 0
         for bix, pin in enumerate(cbus):
-            if self._config.get(f'cbus_func_{pin}', '') == 'IOMODE':
+            if self._config.get('cbus_func_%d' % pin, '') == 'IOMODE':
                 mask |= 1 << bix
         return mask
 
@@ -303,7 +303,7 @@ class FtdiEeprom:
         mobj = match(r'cbus_func_(\d)', name)
         if mobj:
             if not isinstance(value, str):
-                raise ValueError(f"'{name}' should be specified as a string")
+                raise ValueError("'%s' should be specified as a string" % name)
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
             return
@@ -315,8 +315,8 @@ class FtdiEeprom:
         }
         if name in hwords:
             val = to_int(value)
-            if not 0<= val <= 0xFFFF:
-                raise ValueError(f'Invalid value for {name}')
+            if not 0 <= val <= 0xFFFF:
+                raise ValueError('Invalid value for %s' % name)
             offset = hwords[name]
             self._eeprom[offset:offset+2] = spack('<H', val)
             return
@@ -343,9 +343,9 @@ class FtdiEeprom:
             self._eeprom[0x09] = val
             return
         if name in self.properties:
-            raise NotImplementedError(f"Change to '{name}' is not yet "
-                                      f"supported")
-        raise ValueError(f"Unknown property '{name}'")
+            raise NotImplementedError("Change to '%s' is not yet supported" %
+                                      name)
+        raise ValueError("Unknown property '%s'" % name)
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
@@ -362,7 +362,7 @@ class FtdiEeprom:
         self.set_manufacturer_name('FTDI')
         self.set_product_name(dev_name.upper())
         sernum = ''.join([chr(randint(ord('A'), ord('Z'))) for _ in range(5)])
-        self.set_serial_number(f'FT{randint(0, 9)}{sernum}')
+        self.set_serial_number('FT%d%s' % (randint(0, 9), sernum))
         self.set_property('vendor_id', vid)
         self.set_property('product_id', pid)
         self.set_property('type', dev_ver)
@@ -409,7 +409,7 @@ class FtdiEeprom:
         for invchr in ':/':
             # do not accept characters which are interpreted as URL seperators
             if invchr in string:
-                raise ValueError(f"Invalid character '{invchr}' in string")
+                raise ValueError("Invalid character '%s' in string" % invchr)
 
     def _update_var_string(self, name: str, value: str) -> None:
         if name not in self.VAR_STRINGS:
@@ -537,12 +537,12 @@ class FtdiEeprom:
             print(', '.join(sorted([item.name for item in cbus])), file=out)
             return
         if not 0 <= cpin < count:
-            raise ValueError(f"Unsupported CBUS pin '{cpin}'")
+            raise ValueError("Unsupported CBUS pin '%d'" % cpin)
         try:
             code = cbus[value.upper()]
         except KeyError:
-            raise ValueError(f"CBUS pin {cpin} does not have function "
-                             f"'{value}'")
+            raise ValueError("CBUS pin %d does not have function '%s'" %
+                             (cpin, value))
         addr = offset + (cpin*width)//8
         if width == 4:
             bitoff = 4 if cpin & 0x1 else 0
