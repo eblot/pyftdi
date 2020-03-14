@@ -19,6 +19,7 @@ from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
 from typing import Mapping, Optional, Sequence, Tuple
+from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
 
@@ -80,10 +81,13 @@ class VirtFtdi:
         self._status: int = 0
         self._version = version
         self._eeprom: bytearray = self._build_eeprom(version, eeprom)
+        self._cbus_gpio: int = 0
+        self._cbus_force: int = 0
+        self._cbus_map: Optional[dict] = None
 
     def apply_eeprom_config(self, devdesc: dict,
                             cfgdescs: Sequence[dict]) -> None:
-        self._load_eeprom(devdesc,  cfgdescs)
+        self._load_eeprom(devdesc, cfgdescs)
 
     def control(self, dev_handle: 'VirtDeviceHandle', bmRequestType: int,
                 bRequest: int, wValue: int, wIndex: int, data: array,
@@ -178,15 +182,12 @@ class VirtFtdi:
     @property
     def cbus(self) -> int:
         """Emulate CBUS output (from FTDI to peripheral)."""
-        # TODO: combine with EEPROM configuration for actual output
-        return self._cbus
+        return self._cbus_read()
 
     @cbus.setter
     def cbus(self, cbus: int) -> None:
         """Emulate CBUS input (from peripheral to FTDI)."""
-        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-        # TODO: combine with EEPROM configuration for filtering input
-        self._cbus |= cbus & ~self._cbus_dir & mask
+        self._cbus_write(cbus)
 
     @property
     def eeprom(self) -> bytes:
@@ -201,10 +202,6 @@ class VirtFtdi:
     @property
     def direction(self) -> int:
         return self._direction
-
-    @classmethod
-    def bitfmt(cls, value, width):
-        return format(value, '0%db' % width)
 
     @classmethod
     def _build_eeprom(cls, version, eeprom: Optional[dict]) -> bytearray:
@@ -273,6 +270,13 @@ class VirtFtdi:
                 # only update first configuration
                 desc['bMaxPower'] = self._eeprom[0x09]
                 desc['bmAttributes'] = 0x80 | (self._eeprom[0x08] & 0x0F)
+        cbus_dec = f'_decode_cbus_x{self._version:04x}'
+        try:
+            cbus_func = getattr(self, cbus_dec)
+        except AttributeError:
+            self.log.debug('No CBUS support: %s', cbus_dec)
+            return
+        cbus_func()
 
     def _decode_eeprom_string(self, offset):
         str_offset, str_size = sunpack('<BB', self._eeprom[offset:offset+2])
@@ -386,3 +390,79 @@ class VirtFtdi:
                 self.log.warning('Protected EEPROM address: 0x%04x', wValue)
                 return
         self._eeprom[address: address+2] = spack('<H', wValue)
+
+    def _decode_cbus_x1000(self) -> None:
+        cbus_gpio = 0
+        cbus_force = 0
+        for bix in range(4):
+            value = self._eeprom[0x1A + bix]
+            if FtdiEeprom.CBUSX(value).name == 'IOMODE':
+                cbus_gpio |= 1 << bix
+            if FtdiEeprom.CBUSX(value).name == 'DRIVE1':
+                cbus_force |= 1 << bix
+        self._cbus_gpio = cbus_gpio
+        self._cbus_force = cbus_force
+
+    def _decode_cbus_x0900(self) -> None:
+        cbus_gpio = 0
+        cbus_force = 0
+        for bix in range(5):
+            value = self._eeprom[0x18 + bix]
+            low, high = value & 0x0F, value >> 4
+            if FtdiEeprom.CBUSH(low).name == 'IOMODE':
+                cbus_gpio |= 1 << (2*bix)
+            if FtdiEeprom.CBUSH(high).name == 'IOMODE':
+                cbus_gpio |= 1 << ((2*bix) + 1)
+            if FtdiEeprom.CBUSH(low).name == 'DRIVE1':
+                cbus_force |= 1 << (2*bix)
+            if FtdiEeprom.CBUSH(high).name == 'DRIVE1':
+                cbus_force |= 1 << ((2*bix) + 1)
+        self._cbus_gpio = cbus_gpio
+        self._cbus_force = cbus_force
+        self._cbus_map = {0: 5, 1: 6, 2: 8, 3: 9}
+
+    def _decode_cbus_x0600(self) -> None:
+        cbus_gpio = 0
+        bix = 0
+        while True:
+            value = self._eeprom[0x14 + bix]
+            low, high = value & 0x0F, value >> 4
+            if FtdiEeprom.CBUS(low).name == 'IOMODE':
+                cbus_gpio |= 1 << (2*bix)
+            if bix == 2:
+                break
+            if FtdiEeprom.CBUS(high).name == 'IOMODE':
+                cbus_gpio |= 1 << ((2*bix) + 1)
+            bix += 1
+        self._cbus_gpio = cbus_gpio
+        self._cbus_force = 0
+
+    def _cbus_write(self, cbus: int) -> None:
+        gpio = cbus & ~self._cbus_dir
+        if self._cbus_map:
+            # convert logical gpio into physical gpio
+            pgpio = 0
+            for log, phy in self._cbus_map:
+                if gpio & (1 << log):
+                    pgpio |= 1 << phy
+            gpio = pgpio
+        # mask out CBUS pins which are not configured as GPIOs
+        gpio &= self._cbus_gpio
+        # apply DRIVE1 to gpio
+        # High-Z is not supported, so High-Z and zero are considered the same
+        gpio |= self._cbus_force
+        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
+        self._cbus = gpio & mask
+
+    def _cbus_read(self) -> int:
+        gpio = self._cbus
+        # mask out CBUS pins which are not configured as GPIOs
+        gpio &= self._cbus_gpio
+        if self._cbus_map:
+            # convert physical gpio into logical gpio
+            lgpio = 0
+            for log, phy in self._cbus_map:
+                if gpio & (1 << phy):
+                    lgpio |= 1 << log
+            gpio = lgpio
+        return gpio
