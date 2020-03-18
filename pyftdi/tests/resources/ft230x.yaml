@@ -6,11 +6,10 @@ devices:
       pid: 0x6015
       version: 0x1000
       manufacturer: FTDI
-      product: FT230Z
+      product: FT230X
       serialnumber: FT1XYZ
     eeprom:
       load: yes
-      # invalid EEPROM content to perform content access tests
       data: |  # hex byte encode format
         80 00 03 04 15 60 00 10 80 2d 08 00 00 00 a0 0a
         aa 0e b8 12 00 00 00 00 00 00 00 02 01 00 00 00

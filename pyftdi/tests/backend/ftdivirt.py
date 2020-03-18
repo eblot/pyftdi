@@ -313,8 +313,10 @@ class VirtFtdi:
             # update output pins
             output = direction & 0xF & self._cbus_dir
             self._cbus |= output
-            self.log.info('> ftdi cbus %s %s',
-                          f'{self._cbus_dir:04b}', f'{self._cbus:04b}')
+            self.log.info('> ftdi cbus dir %s, io %s, mask %s',
+                          f'{self._cbus_dir:04b}',
+                          f'{self._cbus:04b}',
+                          f'{mask:04b}')
         else:
             self._direction = direction
         self._mpsse = FtdiMpsseTracer() if mode == 'mpsse' else None
@@ -478,11 +480,11 @@ class VirtFtdi:
         # mask out CBUS pins which are not configured as GPIOs
         cbus &= self._cbusp_active
         cbus &= self._cbusp_gpio
-        self.log.info('cbus_write active: %s gpio: %s, force: %s, cbus: %s',
-                      f'{self._cbusp_active:04b}',
-                      f'{self._cbusp_gpio:04b}',
-                      f'{self._cbusp_force:04b}',
-                      f'{cbus:04b}')
+        self.log.debug('> cbus_write active: %s gpio: %s, force: %s, cbus: %s',
+                       f'{self._cbusp_active:04b}',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{cbus:04b}')
         if self._cbus_map:
             self.log.info('cbus_write map')
             # convert physical gpio into logical gpio
@@ -500,11 +502,11 @@ class VirtFtdi:
     def _cbus_read(self) -> Tuple[int, int]:
         # from FTDI to peripheral
         cbus = self._cbus
-        self.log.info('> cbus_read active: %s gpio: %s, force: %s, cbus: %s',
-                      f'{self._cbusp_active:04b}',
-                      f'{self._cbusp_gpio:04b}',
-                      f'{self._cbusp_force:04b}',
-                      f'{cbus:04b}')
+        self.log.debug('> cbus_read active %s, gpio %s, force %s, cbus %s',
+                       f'{self._cbusp_active:04b}',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{cbus:04b}')
         if self._cbus_map:
             self.log.info('cbus_read map')
             # convert logical gpio into physical gpio
@@ -517,6 +519,6 @@ class VirtFtdi:
         cbus &= self._cbusp_gpio
         # apply DRIVE1 to gpio
         cbus |= self._cbusp_force
-        self.log.info('< cbus_read cbus: %s active: %s',
+        self.log.info('< cbus_read cbus %s, active %s',
                       f'{cbus:04b}', f'{self._cbusp_active:04b}')
         return cbus, self._cbusp_active
