@@ -700,6 +700,11 @@ class MockCbusGpioTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.loader = MockLoader()
+        # load custom CBUS config, with:
+            # CBUS0: IOMODE (gpio)
+            # CBUS1: IOMODE (gpio)
+            # CBUS0: DRIVE1 (forced to high level)
+            # CBUS0: TXLED  (eq. to highz for tests)
         with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
         UsbTools.flush_cache()
@@ -714,31 +719,56 @@ class MockCbusGpioTestCase(TestCase):
         ftdi.open_from_url('ftdi:///1')
         self.assertEqual(ftdi.has_cbus, True)
         vftdi = self.loader.get_virtual_ftdi(1, 1)
-        ftdi.set_cbus_direction(0xf, 0xa)
-        ftdi.set_cbus_gpio(0x3)
-        self.assertEqual(vftdi.cbus, 0xa & 0x3)
-        vftdi.cbus = 0x5
+        # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
+        #   however, only CBUS0 and CBUS1 are mapped as GPIO,
+        #   CBUS2 forced to 1 and CBUS3 not usable as IO
+        #   even if use mask is 1111
+        eeprom_mask = 0b0011
+        eeprom_force = 0b0100
+        cbus_mask = 0b1111
+        cbus_dir = 0b1010
+        ftdi.set_cbus_direction(cbus_mask, cbus_dir)
+        cbus_out = 0b0011
+        # CBUS0: 1, CBUS1: 1
+        #   however, only CBUS1 is out, so CBUS0 output value should be ignored
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        exp_out |= eeprom_force
+        vcbus, vactive = vftdi.cbus
+        self.assertEqual(vcbus, exp_out)
+        self.assertEqual(vactive, eeprom_mask | eeprom_force)
+        cbus_out = 0b0000
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        exp_out |= eeprom_force
+        vcbus, vactive = vftdi.cbus
+        self.assertEqual(vcbus, exp_out)
+        cbus_in = 0b0101
+        vftdi.cbus = cbus_in
         cbus = ftdi.get_cbus_gpio()
-        self.assertEqual(cbus, 0x5)
+        exp_in = cbus_in & eeprom_mask
+        self.assertEqual(cbus, exp_in)
         ftdi.close()
 
 
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
-    suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
+    #suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
     suite_.addTest(makeSuite(MockCbusGpioTestCase, 'test'))
     return suite_
 

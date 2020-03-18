@@ -10,10 +10,9 @@ devices:
       serialnumber: FT1XYZ
     eeprom:
       load: yes
-      # invalid EEPROM content to perform content access tests
       data: |  # hex byte encode format
          80 00 03 04 15 60 00 10 80 2d 08 00 00 00 a0 0a
-         aa 0e b8 0c 00 00 00 00 00 00 08 08 08 08 00 00
+         aa 0e b8 0c 00 00 00 00 00 00 08 08 07 01 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -27,4 +26,8 @@ devices:
          44 00 45 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-         00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 f7
+         00 00 00 00 00 00 00 00 00 00 00 00 00 00 d8 bf
+        # CBUS0: IOMODE (gpio)
+        # CBUS1: IOMODE (gpio)
+        # CBUS0: DRIVE1 (forced to high level)
+        # CBUS0: TXLED  (eq. to highz for tests)

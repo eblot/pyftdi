@@ -75,15 +75,16 @@ class VirtFtdi:
         self._mpsse: Optional[VirtMpsseTracer] = None
         self._direction: int = 0
         self._gpio: int = 0
-        self._cbus_dir: int = 0
-        self._cbus: int = 0
         self._queues: Tuple[deque, deque] = (deque(), deque())
         self._status: int = 0
         self._version = version
         self._eeprom: bytearray = self._build_eeprom(version, eeprom)
-        self._cbus_gpio: int = 0
-        self._cbus_force: int = 0
-        self._cbus_map: Optional[dict] = None
+        self._cbus_dir: int = 0  # logical (commands)
+        self._cbus: int = 0  # logical (commands)
+        self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
+        self._cbusp_gpio: int = 0  # physical (pins)
+        self._cbusp_force: int = 0  # physical (pins)
+        self._cbusp_active: int = 0  # physical (pins)
 
     def apply_eeprom_config(self, devdesc: dict,
                             cfgdescs: Sequence[dict]) -> None:
@@ -180,8 +181,12 @@ class VirtFtdi:
         self._gpio |= gpio & ~self._direction & mask
 
     @property
-    def cbus(self) -> int:
-        """Emulate CBUS output (from FTDI to peripheral)."""
+    def cbus(self) -> Tuple[int, int]:
+        """Emulate CBUS output (from FTDI to peripheral).
+
+           :return: a tuple of logical value on pins, active pins.
+                    non-active pins should be considered as High-Z
+        """
         return self._cbus_read()
 
     @cbus.setter
@@ -394,75 +399,124 @@ class VirtFtdi:
     def _decode_cbus_x1000(self) -> None:
         cbus_gpio = 0
         cbus_force = 0
+        cbus_active = 0
         for bix in range(4):
             value = self._eeprom[0x1A + bix]
+            bit = 1 << bix
             if FtdiEeprom.CBUSX(value).name == 'IOMODE':
-                cbus_gpio |= 1 << bix
-            if FtdiEeprom.CBUSX(value).name == 'DRIVE1':
-                cbus_force |= 1 << bix
-        self._cbus_gpio = cbus_gpio
-        self._cbus_force = cbus_force
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSX(value).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSX(value).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = cbus_force & mask
+        self._cbusp_active = cbus_active & mask
 
     def _decode_cbus_x0900(self) -> None:
         cbus_gpio = 0
         cbus_force = 0
+        cbus_active = 0
         for bix in range(5):
             value = self._eeprom[0x18 + bix]
             low, high = value & 0x0F, value >> 4
+            bit = 1 << 2*bix
             if FtdiEeprom.CBUSH(low).name == 'IOMODE':
-                cbus_gpio |= 1 << (2*bix)
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(low).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(low).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+            bit <<= 1
             if FtdiEeprom.CBUSH(high).name == 'IOMODE':
-                cbus_gpio |= 1 << ((2*bix) + 1)
-            if FtdiEeprom.CBUSH(low).name == 'DRIVE1':
-                cbus_force |= 1 << (2*bix)
-            if FtdiEeprom.CBUSH(high).name == 'DRIVE1':
-                cbus_force |= 1 << ((2*bix) + 1)
-        self._cbus_gpio = cbus_gpio
-        self._cbus_force = cbus_force
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(high).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(high).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = cbus_force & mask
+        self._cbusp_active = cbus_active & mask
         self._cbus_map = {0: 5, 1: 6, 2: 8, 3: 9}
 
     def _decode_cbus_x0600(self) -> None:
         cbus_gpio = 0
+        cbus_active = 0
         bix = 0
         while True:
             value = self._eeprom[0x14 + bix]
             low, high = value & 0x0F, value >> 4
+            bit = 1 << (2*bix)
             if FtdiEeprom.CBUS(low).name == 'IOMODE':
-                cbus_gpio |= 1 << (2*bix)
+                cbus_gpio |= bit
+                cbus_active |= bit
             if bix == 2:
                 break
+            bit <<= 1
             if FtdiEeprom.CBUS(high).name == 'IOMODE':
-                cbus_gpio |= 1 << ((2*bix) + 1)
+                cbus_gpio |= bit
+                cbus_active |= bit
             bix += 1
-        self._cbus_gpio = cbus_gpio
-        self._cbus_force = 0
+        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = 0
+        self._cbusp_active = cbus_active & mask
 
     def _cbus_write(self, cbus: int) -> None:
-        gpio = cbus & ~self._cbus_dir
-        if self._cbus_map:
-            # convert logical gpio into physical gpio
-            pgpio = 0
-            for log, phy in self._cbus_map:
-                if gpio & (1 << log):
-                    pgpio |= 1 << phy
-            gpio = pgpio
+        # from peripheral to FTDI
         # mask out CBUS pins which are not configured as GPIOs
-        gpio &= self._cbus_gpio
-        # apply DRIVE1 to gpio
-        # High-Z is not supported, so High-Z and zero are considered the same
-        gpio |= self._cbus_force
-        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-        self._cbus = gpio & mask
-
-    def _cbus_read(self) -> int:
-        gpio = self._cbus
-        # mask out CBUS pins which are not configured as GPIOs
-        gpio &= self._cbus_gpio
+        cbus &= self._cbusp_active
+        cbus &= self._cbusp_gpio
+        self.log.info('cbus_write active: %s gpio: %s, force: %s, cbus: %s',
+                      f'{self._cbusp_active:04b}',
+                      f'{self._cbusp_gpio:04b}',
+                      f'{self._cbusp_force:04b}',
+                      f'{cbus:04b}')
         if self._cbus_map:
+            self.log.info('cbus_write map')
             # convert physical gpio into logical gpio
             lgpio = 0
             for log, phy in self._cbus_map:
-                if gpio & (1 << phy):
+                if cbus & (1 << phy):
                     lgpio |= 1 << log
-            gpio = lgpio
-        return gpio
+            cbus = lgpio
+        # only consider logical input
+        cbus &= ~self._cbus_dir
+        # combine existing output with new input
+        self._cbus &= ~self._cbus_dir
+        self._cbus |= cbus & ~self._cbus_dir
+
+    def _cbus_read(self) -> Tuple[int, int]:
+        # from FTDI to peripheral
+        cbus = self._cbus
+        self.log.info('> cbus_read active: %s gpio: %s, force: %s, cbus: %s',
+                      f'{self._cbusp_active:04b}',
+                      f'{self._cbusp_gpio:04b}',
+                      f'{self._cbusp_force:04b}',
+                      f'{cbus:04b}')
+        if self._cbus_map:
+            self.log.info('cbus_read map')
+            # convert logical gpio into physical gpio
+            pgpio = 0
+            for log, phy in self._cbus_map:
+                if cbus & (1 << log):
+                    pgpio |= 1 << phy
+            cbus = pgpio
+        # mask out CBUS pins which are not configured as GPIOs
+        cbus &= self._cbusp_gpio
+        # apply DRIVE1 to gpio
+        cbus |= self._cbusp_force
+        self.log.info('< cbus_read cbus: %s active: %s',
+                      f'{cbus:04b}', f'{self._cbusp_active:04b}')
+        return cbus, self._cbusp_active
