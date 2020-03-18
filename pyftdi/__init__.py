@@ -26,7 +26,7 @@
 
 #pylint: disable-msg=missing-docstring
 
-__version__ = '0.46.4'
+__version__ = '0.47.0'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'
@@ -39,7 +39,6 @@ __copyright__ = 'Copyright (c) 2011-2020 Emmanuel Blot'
 
 
 from logging import WARNING, NullHandler, getLogger
-
 
 
 class FtdiLogger:

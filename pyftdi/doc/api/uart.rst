@@ -98,10 +98,9 @@ UART assigned name, as PySerial port attributes. See the table below:
 CBUS support
 ````````````
 
-Some FTDI devices (FT232R, FT230X, FT231X) support additional CBUS pins, which
-can be used as regular GPIOs pins, but they cannot be accessed with the FTDI
-port is configured for the UART functions. See :ref:`CBUS GPIO<cbus_gpio>` for
-details.
+Some FTDI devices (FT232R, FT232H, FT230X, FT231X) support additional CBUS
+pins, which can be used as regular GPIOs pins. See :ref:`CBUS GPIO<cbus_gpio>`
+for details.
 
 
 Mini serial terminal example

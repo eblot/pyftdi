@@ -89,7 +89,8 @@ class UsbTools:
     UsbApi = None
 
     @classmethod
-    def find_all(cls, vps: Sequence[Tuple[int, int]], nocache: bool = False) -> \
+    def find_all(cls, vps: Sequence[Tuple[int, int]],
+                 nocache: bool = False) -> \
             List[Tuple[UsbDeviceDescriptor, int]]:
         """Find all devices that match the specified vendor/product pairs.
 
@@ -514,7 +515,10 @@ class UsbTools:
                     url = fmt % (scheme, ':'.join([vendor, product, '???']),
                                  port)
                 try:
-                    description = f'({desc.description:s})' or ''
+                    if desc.description:
+                        description = '(%s)' % desc.description
+                    else:
+                        description = ''
                 except Exception:
                     description = ''
                 descs.append((url, description))

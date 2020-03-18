@@ -24,3 +24,5 @@
 .. _FT_PROG: https://www.ftdichip.com/Support/Utilities.htm#FT_PROG
 .. _fstring: https://www.python.org/dev/peps/pep-0498
 .. _DCE: https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment
+.. _PEP_498: https://www.python.org/dev/peps/pep-0498
+.. _PEP_526: https://www.python.org/dev/peps/pep-0526

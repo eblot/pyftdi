@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2018, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2018-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,21 +26,27 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Tiny I2C bus scanner."""
+
+#pylint: disable-msg=broad-except
+#pylint: disable-msg=too-few-public-methods
+
 from logging import ERROR, getLogger
 from os import environ
-from sys import modules, stderr, stdout
+from sys import stderr
 from pyftdi.i2c import I2cController, I2cNackError
 
 
-class I2cBusScanner(object):
+class I2cBusScanner:
     """Scan I2C bus to find slave.
 
        Emit the I2C address message, but no data. Detect any ACK on each valid
        address.
     """
 
-    def scan(self):
-        """Open an I2c connection to a slave"""
+    @staticmethod
+    def scan():
+        """Open an I2c connection to a slave."""
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         i2c = I2cController()
         slaves = []
@@ -69,8 +75,8 @@ class I2cBusScanner(object):
 
 
 def main():
-    scanner = I2cBusScanner()
-    scanner.scan()
+    """Entry point"""
+    I2cBusScanner.scan()
 
 
 if __name__ == '__main__':

@@ -31,8 +31,10 @@ most are actually disabled by default.
 
 You need specific bus slaves to perform most of these tests.
 
-Mock tests
-~~~~~~~~~~
+.. _virtual_framework:
+
+Virtual test framework
+~~~~~~~~~~~~~~~~~~~~~~
 
 With PyFTDI v0.45, a new test module enables PyFTDI API partial testing using a
 pure software environment with no hardware. This also eases automatic testing
@@ -92,6 +94,12 @@ USB device topology of FTDI devices.
 
 This enables to create simple definition files without having to mess with low
 level USB definitions whenever possible.
+
+EEPROM content
+++++++++++++++
+
+The :ref:`ftconf` tool can be used to load, modify and generate the content of
+a virtual EEPROM, see :doc:`eeprom`.
 
 Examples
 ++++++++

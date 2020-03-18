@@ -49,7 +49,12 @@ class VirtLoader:
                 raise ValueError(f'Invalid configuration: {exc}')
         self._validate()
 
-    def unload(self):
+    def unload(self) -> None:
+        """Unload current USB topology.
+
+           Note that the application should also flush UsbTools cache,
+           or reference to 'disconnected' devices may persist.
+        """
         backend = get_backend()
         backend.flush_devices()
 

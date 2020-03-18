@@ -121,7 +121,8 @@ def main():
                 if sep in conf:
                     name, value = conf.split(sep, 1)
                     if not value:
-                        argparser.error(f'Configuration {conf} without value')
+                        argparser.error('Configuration %s without value' %
+                                        conf)
                     helpio = StringIO()
                     eeprom.set_property(name, value, helpio)
                     helpstr = helpio.getvalue()
@@ -131,13 +132,13 @@ def main():
                         exit(1)
                     break
             else:
-                argparser.error(f'Missing name:value separator in {conf}')
+                argparser.error('Missing name:value separator in %s' % conf)
         if args.hexdump:
             print(hexdump(eeprom.data))
         if args.hexblock is not None:
             indent = ' ' * args.hexblock
             for pos in range(0, len(eeprom.data), 16):
-                hexa = ' '.join([f'{x:02x}' for x in eeprom.data[pos:pos+16]])
+                hexa = ' '.join(['%02x' % x for x in eeprom.data[pos:pos+16]])
                 print(indent, hexa, sep='')
         if args.update:
             eeprom.commit(False)

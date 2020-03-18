@@ -21,6 +21,7 @@ from sys import modules, stdout, version_info
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
+from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
 from pyftdi.misc import hexdump
@@ -607,6 +608,196 @@ class MockRawIntEepromTestCase(TestCase):
         ftdi.close()
 
 
+class MockCBusEepromTestCase(TestCase):
+    """Test FTDI EEPROM APIs that manage CBUS feature
+    """
+
+    def test_ft230x(self):
+        loader = MockLoader()
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        UsbTools.flush_cache()
+        eeprom = FtdiEeprom()
+        eeprom.open('ftdi:///1')
+        # default EEPROM config does not have any CBUS configured as GPIO
+        self.assertEqual(eeprom.cbus_pins, [])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        # enable CBUS1 and CBUS3 as GPIO
+        eeprom.set_property('cbus_func_1', 'iomode')
+        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        # enable CBUS0 and CBUS2 as GPIO
+        eeprom.set_property('cbus_func_0', 'iomode')
+        eeprom.set_property('cbus_func_2', 'iomode')
+        # not yet committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        eeprom.sync()
+        # committed
+        self.assertEqual(eeprom.cbus_pins, [0, 1, 2, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xF)
+        # invalid CBUS pin
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_4', 'iomode')
+        # invalid pin function
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_0', 'iomode_')
+        # invalid pin
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func', 'iomode')
+        # valid alternative mode
+        eeprom.set_property('cbus_func_0', 'txled')
+        eeprom.set_property('cbus_func_1', 'rxled')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [2, 3])
+        self.assertEqual(eeprom.cbus_mask, 0xC)
+        eeprom.close()
+        loader.unload()
+
+    def test_ft232h(self):
+        loader = MockLoader()
+        with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        UsbTools.flush_cache()
+        eeprom = FtdiEeprom()
+        eeprom.open('ftdi://::FT1ABC1/1', ignore=True)
+        eeprom.erase()
+        eeprom.initialize()
+        # default EEPROM config does not have any CBUS configured as GPIO
+        self.assertEqual(eeprom.cbus_pins, [])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.set_property('cbus_func_1', 'iomode')
+        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.sync()
+        # CBUS1 and CBUS3 are not addressable as GPIOs
+        # they should appear in cbus_pins, but not in cbus_mask
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.set_property('cbus_func_6', 'iomode')
+        eeprom.set_property('cbus_func_9', 'iomode')
+        # not yet committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_mask, 0)
+        eeprom.sync()
+        # committed
+        self.assertEqual(eeprom.cbus_pins, [1, 3, 6, 9])
+        self.assertEqual(eeprom.cbus_mask, 0xA)
+        eeprom.set_property('cbus_func_5', 'iomode')
+        eeprom.set_property('cbus_func_8', 'iomode')
+        eeprom.sync()
+        self.assertEqual(eeprom.cbus_pins, [1, 3, 5, 6, 8, 9])
+        self.assertEqual(eeprom.cbus_mask, 0xF)
+        eeprom.close()
+        loader.unload()
+
+
+class MockCbusGpioTestCase(TestCase):
+    """Test FTDI CBUS GPIO APIs
+    """
+
+    def test_230x(self):
+        """Check simple GPIO write and read sequence."""
+        loader = MockLoader()
+        # load custom CBUS config, with:
+            # CBUS0: IOMODE (gpio)
+            # CBUS1: IOMODE (gpio)
+            # CBUS0: DRIVE1 (forced to high level)
+            # CBUS0: TXLED  (eq. to highz for tests)
+        with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        try:
+            UsbTools.flush_cache()
+            ftdi = Ftdi()
+            ftdi.open_from_url('ftdi:///1')
+            self.assertEqual(ftdi.has_cbus, True)
+            vftdi = loader.get_virtual_ftdi(1, 1)
+            # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
+            #   however, only CBUS0 and CBUS1 are mapped as GPIO,
+            #   CBUS2 forced to 1 and CBUS3 not usable as IO
+            #   even if use mask is 1111
+            eeprom_mask = 0b0011
+            eeprom_force = 0b0100
+            cbus_mask = 0b1111
+            cbus_dir = 0b1010
+            ftdi.set_cbus_direction(cbus_mask, cbus_dir)
+            cbus_out = 0b0011
+            # CBUS0: 1, CBUS1: 1
+            #   however, only CBUS1 is out, so CBUS0 output value should be ignored
+            ftdi.set_cbus_gpio(cbus_out)
+            exp_out = cbus_dir & cbus_out
+            exp_out &= eeprom_mask
+            exp_out |= eeprom_force
+            vcbus, vactive = vftdi.cbus
+            self.assertEqual(vcbus, exp_out)
+            self.assertEqual(vactive, eeprom_mask | eeprom_force)
+            cbus_out = 0b0000
+            ftdi.set_cbus_gpio(cbus_out)
+            exp_out = cbus_dir & cbus_out
+            exp_out &= eeprom_mask
+            exp_out |= eeprom_force
+            vcbus, vactive = vftdi.cbus
+            self.assertEqual(vcbus, exp_out)
+            cbus_in = 0b0101
+            vftdi.cbus = cbus_in
+            cbus = ftdi.get_cbus_gpio()
+            exp_in = cbus_in & eeprom_mask
+            self.assertEqual(cbus, exp_in)
+            ftdi.close()
+        finally:
+            loader.unload()
+
+    def test_lc231x(self):
+        """Check simple GPIO write and read sequence."""
+        loader = MockLoader()
+            # load custom CBUS config, with:
+            # CBUS0: IOMODE (gpio)
+            # CBUS1: TXLED
+            # CBUS2: DRIVE0 (to light up RX green led)
+            # CBUS3: IOMODE (gpio)
+            # only CBUS0 and CBUS3 are available on LC231X
+            # CBUS1 is connected to TX led, CBUS2 to RX led
+        with open('pyftdi/tests/resources/ft231x_cbus.yaml', 'rb') as yfp:
+            loader.load(yfp)
+        try:
+            UsbTools.flush_cache()
+            ftdi = Ftdi()
+            ftdi.open_from_url('ftdi:///1')
+            self.assertEqual(ftdi.has_cbus, True)
+            vftdi = loader.get_virtual_ftdi(1, 1)
+            # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
+            #   however, only CBUS0 and CBUS3 are mapped as GPIO,
+            #   CBUS1 not usable as IO, CBUS2 is fixed to low
+            #   even if use mask is 1111
+            eeprom_mask = 0b1001
+            eeprom_force_low = 0b0100
+            cbus_mask = 0b1111
+            cbus_dir = 0b1010
+            ftdi.set_cbus_direction(cbus_mask, cbus_dir)
+            cbus_out = 0b1111
+            # however, only CBUS0 & 3 are out, so CBUS1/CBUS2 should be ignored
+            ftdi.set_cbus_gpio(cbus_out)
+            exp_out = cbus_dir & cbus_out
+            exp_out &= eeprom_mask
+            vcbus, vactive = vftdi.cbus
+            self.assertEqual(vcbus, exp_out)
+            self.assertEqual(vactive, eeprom_mask | eeprom_force_low)
+            cbus_out = 0b0000
+            ftdi.set_cbus_gpio(cbus_out)
+            exp_out = cbus_dir & cbus_out
+            exp_out &= eeprom_mask
+            vcbus, vactive = vftdi.cbus
+            self.assertEqual(vcbus, exp_out)
+            cbus_in = 0b0101
+            vftdi.cbus = cbus_in
+            cbus = ftdi.get_cbus_gpio()
+            exp_in = cbus_in & eeprom_mask
+            self.assertEqual(cbus, exp_in)
+            ftdi.close()
+        finally:
+            loader.unload()
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
@@ -622,6 +813,8 @@ def suite():
     suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
     suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
     suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
+    suite_.addTest(makeSuite(MockCbusGpioTestCase, 'test'))
     return suite_
 
 

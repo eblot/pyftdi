@@ -18,6 +18,11 @@ Direct drive GPIO pins of FTDI device.
   to use the dedicated API. For now, this shared mode is only supported with
   the :doc:`SPI API <spi>`.
 
+.. warning::
+
+  This API does not provide access to the special CBUS port of FT232R, FT232H,
+  FT230X and FT231X devices. See :ref:`cbus_gpio` for details.
+
 Quickstart
 ~~~~~~~~~~
 
