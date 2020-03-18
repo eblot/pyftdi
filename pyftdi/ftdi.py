@@ -1153,16 +1153,18 @@ class Ftdi:
         """
         if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
-        # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
-        value = (self._cbus_pins[1] << 4) | self._cbus_out
+        if not self._cbus_pins[0] & ~self._cbus_pins[1]:
+            raise FtdiError('No CBUS IO configured as input')
+        outv = (self._cbus_pins[1] << 4) | self._cbus_out
         oldmode = self._bitmode
         try:
-            self.set_bitmode(value, Ftdi.BITMODE_CBUS)
-            value = self.read_pins()
+            self.set_bitmode(outv, Ftdi.BITMODE_CBUS)
+            inv = self.read_pins()
+            #print(f'BM {outv:04b} {inv:04b}')
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
-        return value & ~self._cbus_pins[1] & self._cbus_pins[0]
+        return inv & ~self._cbus_pins[1] & self._cbus_pins[0]
 
     def set_cbus_gpio(self, pins: int) -> None:
         """Set the CBUS pins configured as GPIO outputs
@@ -1171,8 +1173,11 @@ class Ftdi:
         """
         if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
+        # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= pins <= 0x0F:
             raise ValueError('Invalid CBUS gpio pins: 0x%02x' % pins)
+        if not self._cbus_pins[0] & self._cbus_pins[1]:
+            raise FtdiError('No CBUS IO configured as output')
         pins &= self._cbus_pins[0] & self._cbus_pins[1]
         value = (self._cbus_pins[1] << 4) | pins
         oldmode = self._bitmode
