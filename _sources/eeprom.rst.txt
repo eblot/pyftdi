@@ -36,6 +36,7 @@ number may be specified in the :doc:`URL <urlscheme>`.
 The :doc:`EEPROM API <api/eeprom>` implements the upper API to access the
 EEPROM content.
 
+.. _ftconf:
 
 ``ftconf.py``
 ~~~~~~~~~~~~~
@@ -43,11 +44,12 @@ EEPROM content.
 ``pyftdi/bin/ftconf.py`` is a companion script to help managing the content of
 the FTDI EEPROM from the command line.
 
-  $ pyftdi/bin/ftconf.py
+::
 
-  usage: ftconf.py [-h] [-x] [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER]
-                   [-p PRODUCT] [-e] [-u] [-v] [-d]
-                   [device]
+  ftconf.py [-h] [-x] [-X HEXBLOCK] [-o OUTPUT] [-s SERIAL_NUMBER]
+            [-m MANUFACTURER] [-p PRODUCT] [-c CONFIG] [-e] [-u]
+            [-V VIRTUAL] [-v] [-d]
+            [device]
 
   Simple FTDI EEPROM configurator.
 
@@ -57,6 +59,8 @@ the FTDI EEPROM from the command line.
   optional arguments:
     -h, --help            show this help message and exit
     -x, --hexdump         dump EEPROM content as ASCII
+    -X HEXBLOCK, --hexblock HEXBLOCK
+                          dump EEPROM as indented hexa blocks
     -o OUTPUT, --output OUTPUT
                           output ini file to save EEPROM content
     -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
@@ -65,10 +69,15 @@ the FTDI EEPROM from the command line.
                           set manufacturer name
     -p PRODUCT, --product PRODUCT
                           set product name
+    -c CONFIG, --config CONFIG
+                          change/configure a property as key=value pair
     -e, --erase           erase the whole EEPROM content
     -u, --update          perform actual update, use w/ care
+    -V VIRTUAL, --virtual VIRTUAL
+                          use a virtual device, specified as YaML
     -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
+
 
 **Again, please read the** :doc:`license` **terms before using the EEPROM API
 or this script. You may brick your device if something goes wrong, and there
@@ -91,3 +100,149 @@ Most FTDI device can run without an EEPROM. If something goes wrong, try to
 erase the EEPROM content, then restore the original content. For now,
 ``ftconf.py`` does not support EEPROM restoration, but a Windows-only
 application FT_PROG_ is available from FTDI web site.
+
+
+Option switches
+```````````````
+
+.. _option_d:
+
+``-d``
+  Enable debug mode, which emits Python traceback on exceptions
+
+.. _option_c:
+
+``-c name=value``
+  Change a configuration in the EEPROM. This flag can be repeated as many times
+  as required to change several configuration parameter at once. Note that
+  without option ``-u``, the EEPROM content is not actually modified, the
+  script runs in dry-run mode.
+
+  The name should be separated from the value with an equal ``=`` sign or
+  alternatively a full column ``:`` character.
+
+  * To obtain the list of supported name, use the `?` wildcard: ``-c ?``.
+  * To obtain the list of supported values for a namw, use the `?` wildcard:
+    ``-c name=?``, where *name* is a supported name.
+
+.. _option_e:
+
+``-e``
+  Erase the whole EEPROM. This may be useful to recover from a corrupted
+  EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
+  to a default configuration. Note that without option ``-u``, the EEPROM
+  content is not actually modified, the script runs in dry-run mode.
+
+.. _option_h:
+
+``-h``
+  Show quick help and exit
+
+.. _option_m:
+
+``-m <manufacturer>``
+  Assign a new manufacturer name to the device. Note that without option
+  ``-u``, the EEPROM content is not actually modified, the script runs in
+  dry-run mode. Manufacturer names with ``/`` or ``:`` characters are rejected,
+  to avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
+
+
+.. _option_o:
+
+``-o <output>``
+  Generate and write to the specified file the EEPROM content as decoded
+  values and a hexa dump. The special ``-`` file can be used as the output file
+  to print to the standard output. The output file contains two sections:
+
+  * ``[values]`` that contain the decoded EEPROM configuration as key, value
+    pair. Note that the keys and values can be used as configuration input, see
+    option ``-c``.
+  * ``[raw]`` that contains a compact representation of the EEPROM raw content,
+    encoded as hexadecimal strings.
+
+.. _option_p:
+
+``-p <product>``
+  Assign a new product name to the device. Note that without option ``-u``,
+  the EEPROM content is not actually modified, the script runs in dry-run mode.
+  Product names with ``/`` or ``:`` characters are rejected, to avoid parsing
+  issues with FTDI :ref:`URLs <url_scheme>`.
+
+.. _option_s:
+
+``-s <serial>``
+  Assign a new serial number to the device. Note that without option ``-u``,
+  the EEPROM content is not actually modified, the script runs in dry-run mode.
+  Serial number with ``/`` or ``:`` characters are rejected, to avoid parsing
+  issues with FTDI :ref:`URLs <url_scheme>`.
+
+.. _option_u:
+
+``-u``
+  Update the EEPROM with the new settings. Without this flag, the script runs
+  in dry-run mode, so no change is made to the EEPROM. Whenever this flag is
+  used, the EEPROM is actually updated and its checksum regenerated. If
+  something goes wrong at this point, you may brick you board, you've been
+  warned. PyFtdi_ offers neither guarantee whatsoever than altering the EEPROM
+  content is safe, nor that it is possible to recover from a bricked device.
+
+.. _option_v:
+
+``-v``
+  Increase verbosity, useful for debugging the tool. It can be repeated to
+  increase more the verbosity.
+
+.. _option_V_:
+
+``-V <virtual>``
+  Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
+  environment. This is useful for PyFtdi_ development, and to test EEPROM
+  configuration with a virtual setup. This option is not useful for regular
+  usage. See :ref:`virtual_framework`.
+
+.. _option_x:
+
+``-x``
+  Generate and print a hexadecimal raw dump of the EEPROM content, similar to
+  the output of the `hexdump -Cv` tool.
+
+
+Examples
+````````
+
+* Change product name and serial number
+
+  ::
+
+    pyftdi/bin/ftconf.py ftdi:///1 -p UartBridge -s abcd1234 -u
+
+* List supported configuration parameters
+
+  ::
+
+    pyftdi/bin/ftconf.py ftdi:///1 -c ?
+       cbus_func_0, group_0_drive, self_powered, type, group_0_slew,
+       group_1_schmitt, power_max, in_isochronous, invert_TXD, invert_DTR,
+       group_1_slew, invert_RI, product_id, remote_wakeup, invert_DCD,
+       invert_DSR, invert_CTS, has_serial, usb_version, suspend_pull_down,
+       invert_RXD, group_0_schmitt, has_usb_version, out_isochronous,
+       group_1_drive, vendor_id, cbus_func_2, cbus_func_3, cbus_func_1,
+       chip, channel_a_driver, invert_RTS
+
+* List supported configuration values for CBUS0
+
+  ::
+
+    pyftdi/bin/ftconf.py ftdi:///1 -c cbus_func_0:?
+       AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
+       DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
+       TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
+
+.. _eeprom_cbus:
+
+* Configure CBUS: 0 and 3 as GPIOs, then show the device configuration
+
+  ::
+
+   pyftdi/bin/ftconf.py ftdi:///1 -v
+      -c cbus_func_0:IOMODE -c cbus_func_3:IOMODE

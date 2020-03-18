@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.2
+                0.47.0
               </div>
             
           
@@ -97,7 +97,11 @@
 <li class="toctree-l1"><a class="reference internal" href="gpio.html">GPIOs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">EEPROM management</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#supported-features">Supported features</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#ftconf-py"><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ftconf-py"><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#option-switches">Option switches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
@@ -202,55 +206,42 @@ number may be specified in the <a class="reference internal" href="urlscheme.htm
 EEPROM content.</p>
 </div>
 <div class="section" id="ftconf-py">
-<h2><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code><a class="headerlink" href="#ftconf-py" title="Permalink to this headline">¶</a></h2>
+<span id="ftconf"></span><h2><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code><a class="headerlink" href="#ftconf-py" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pyftdi/bin/ftconf.py</span></code> is a companion script to help managing the content of
 the FTDI EEPROM from the command line.</p>
-<blockquote>
-<div><p>$ pyftdi/bin/ftconf.py</p>
-<dl class="simple">
-<dt>usage: ftconf.py [-h] [-x] [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER]</dt><dd><p>[-p PRODUCT] [-e] [-u] [-v] [-d]
-[device]</p>
-</dd>
-</dl>
-<p>Simple FTDI EEPROM configurator.</p>
-<dl>
-<dt>positional arguments:</dt><dd><p>device                serial port device name</p>
-</dd>
-<dt>optional arguments:</dt><dd><dl class="option-list">
-<dt><kbd><span class="option">-h</span>, <span class="option">--help</span></kbd></dt>
-<dd><p>show this help message and exit</p>
-</dd>
-<dt><kbd><span class="option">-x</span>, <span class="option">--hexdump</span></kbd></dt>
-<dd><p>dump EEPROM content as ASCII</p>
-</dd>
-<dt><kbd><span class="option">-o <var>OUTPUT</var></span>, <span class="option">--output <var>OUTPUT</var></span></kbd></dt>
-<dd><p>output ini file to save EEPROM content</p>
-</dd>
-<dt><kbd><span class="option">-s <var>SERIAL_NUMBER</var></span>, <span class="option">--serial-number <var>SERIAL_NUMBER</var></span></kbd></dt>
-<dd><p>set serial number</p>
-</dd>
-<dt><kbd><span class="option">-m <var>MANUFACTURER</var></span>, <span class="option">--manufacturer <var>MANUFACTURER</var></span></kbd></dt>
-<dd><p>set manufacturer name</p>
-</dd>
-<dt><kbd><span class="option">-p <var>PRODUCT</var></span>, <span class="option">--product <var>PRODUCT</var></span></kbd></dt>
-<dd><p>set product name</p>
-</dd>
-<dt><kbd><span class="option">-e</span>, <span class="option">--erase</span></kbd></dt>
-<dd><p>erase the whole EEPROM content</p>
-</dd>
-<dt><kbd><span class="option">-u</span>, <span class="option">--update</span></kbd></dt>
-<dd><p>perform actual update, use w/ care</p>
-</dd>
-<dt><kbd><span class="option">-v</span>, <span class="option">--verbose</span></kbd></dt>
-<dd><p>increase verbosity</p>
-</dd>
-<dt><kbd><span class="option">-d</span>, <span class="option">--debug</span></kbd></dt>
-<dd><p>enable debug mode</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">]</span>
+          <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span><span class="p">]</span>
+          <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+          <span class="p">[</span><span class="n">device</span><span class="p">]</span>
+
+<span class="n">Simple</span> <span class="n">FTDI</span> <span class="n">EEPROM</span> <span class="n">configurator</span><span class="o">.</span>
+
+<span class="n">positional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="n">device</span>                <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="o">--</span><span class="n">hexdump</span>         <span class="n">dump</span> <span class="n">EEPROM</span> <span class="n">content</span> <span class="k">as</span> <span class="n">ASCII</span>
+  <span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">,</span> <span class="o">--</span><span class="n">hexblock</span> <span class="n">HEXBLOCK</span>
+                        <span class="n">dump</span> <span class="n">EEPROM</span> <span class="k">as</span> <span class="n">indented</span> <span class="n">hexa</span> <span class="n">blocks</span>
+  <span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">,</span> <span class="o">--</span><span class="n">output</span> <span class="n">OUTPUT</span>
+                        <span class="n">output</span> <span class="n">ini</span> <span class="n">file</span> <span class="n">to</span> <span class="n">save</span> <span class="n">EEPROM</span> <span class="n">content</span>
+  <span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">,</span> <span class="o">--</span><span class="n">serial</span><span class="o">-</span><span class="n">number</span> <span class="n">SERIAL_NUMBER</span>
+                        <span class="nb">set</span> <span class="n">serial</span> <span class="n">number</span>
+  <span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">,</span> <span class="o">--</span><span class="n">manufacturer</span> <span class="n">MANUFACTURER</span>
+                        <span class="nb">set</span> <span class="n">manufacturer</span> <span class="n">name</span>
+  <span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">,</span> <span class="o">--</span><span class="n">product</span> <span class="n">PRODUCT</span>
+                        <span class="nb">set</span> <span class="n">product</span> <span class="n">name</span>
+  <span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">,</span> <span class="o">--</span><span class="n">config</span> <span class="n">CONFIG</span>
+                        <span class="n">change</span><span class="o">/</span><span class="n">configure</span> <span class="n">a</span> <span class="nb">property</span> <span class="k">as</span> <span class="n">key</span><span class="o">=</span><span class="n">value</span> <span class="n">pair</span>
+  <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">erase</span>           <span class="n">erase</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">EEPROM</span> <span class="n">content</span>
+  <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">--</span><span class="n">update</span>          <span class="n">perform</span> <span class="n">actual</span> <span class="n">update</span><span class="p">,</span> <span class="n">use</span> <span class="n">w</span><span class="o">/</span> <span class="n">care</span>
+  <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
+                        <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
+  <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
+  <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
+</pre></div>
+</div>
 <p><strong>Again, please read the</strong> <a class="reference internal" href="license.html"><span class="doc">License</span></a> <strong>terms before using the EEPROM API
 or this script. You may brick your device if something goes wrong, and there
 may be no way to recover your device.</strong></p>
@@ -268,6 +259,136 @@ subsequence update.</p>
 erase the EEPROM content, then restore the original content. For now,
 <code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> does not support EEPROM restoration, but a Windows-only
 application <a class="reference external" href="https://www.ftdichip.com/Support/Utilities.htm#FT_PROG">FT_PROG</a> is available from FTDI web site.</p>
+<div class="section" id="option-switches">
+<h3>Option switches<a class="headerlink" href="#option-switches" title="Permalink to this headline">¶</a></h3>
+<dl class="simple" id="option-d">
+<dt><code class="docutils literal notranslate"><span class="pre">-d</span></code></dt><dd><p>Enable debug mode, which emits Python traceback on exceptions</p>
+</dd>
+</dl>
+<dl id="option-c">
+<dt><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=value</span></code></dt><dd><p>Change a configuration in the EEPROM. This flag can be repeated as many times
+as required to change several configuration parameter at once. Note that
+without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM content is not actually modified, the
+script runs in dry-run mode.</p>
+<p>The name should be separated from the value with an equal <code class="docutils literal notranslate"><span class="pre">=</span></code> sign or
+alternatively a full column <code class="docutils literal notranslate"><span class="pre">:</span></code> character.</p>
+<ul class="simple">
+<li><p>To obtain the list of supported name, use the <cite>?</cite> wildcard: <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">?</span></code>.</p></li>
+<li><p>To obtain the list of supported values for a namw, use the <cite>?</cite> wildcard:
+<code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=?</span></code>, where <em>name</em> is a supported name.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple" id="option-e">
+<dt><code class="docutils literal notranslate"><span class="pre">-e</span></code></dt><dd><p>Erase the whole EEPROM. This may be useful to recover from a corrupted
+EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
+to a default configuration. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM
+content is not actually modified, the script runs in dry-run mode.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-h">
+<dt><code class="docutils literal notranslate"><span class="pre">-h</span></code></dt><dd><p>Show quick help and exit</p>
+</dd>
+</dl>
+<dl class="simple" id="option-m">
+<dt><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;manufacturer&gt;</span></code></dt><dd><p>Assign a new manufacturer name to the device. Note that without option
+<code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM content is not actually modified, the script runs in
+dry-run mode. Manufacturer names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected,
+to avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-o">
+<dt><code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">&lt;output&gt;</span></code></dt><dd><p>Generate and write to the specified file the EEPROM content as decoded
+values and a hexa dump. The special <code class="docutils literal notranslate"><span class="pre">-</span></code> file can be used as the output file
+to print to the standard output. The output file contains two sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[values]</span></code> that contain the decoded EEPROM configuration as key, value
+pair. Note that the keys and values can be used as configuration input, see
+option <code class="docutils literal notranslate"><span class="pre">-c</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[raw]</span></code> that contains a compact representation of the EEPROM raw content,
+encoded as hexadecimal strings.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="simple" id="option-p">
+<dt><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">&lt;product&gt;</span></code></dt><dd><p>Assign a new product name to the device. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>,
+the EEPROM content is not actually modified, the script runs in dry-run mode.
+Product names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to avoid parsing
+issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-s">
+<dt><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;serial&gt;</span></code></dt><dd><p>Assign a new serial number to the device. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>,
+the EEPROM content is not actually modified, the script runs in dry-run mode.
+Serial number with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to avoid parsing
+issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-u">
+<dt><code class="docutils literal notranslate"><span class="pre">-u</span></code></dt><dd><p>Update the EEPROM with the new settings. Without this flag, the script runs
+in dry-run mode, so no change is made to the EEPROM. Whenever this flag is
+used, the EEPROM is actually updated and its checksum regenerated. If
+something goes wrong at this point, you may brick you board, you’ve been
+warned. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> offers neither guarantee whatsoever than altering the EEPROM
+content is safe, nor that it is possible to recover from a bricked device.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-v">
+<dt><code class="docutils literal notranslate"><span class="pre">-v</span></code></dt><dd><p>Increase verbosity, useful for debugging the tool. It can be repeated to
+increase more the verbosity.</p>
+</dd>
+</dl>
+<dl class="simple" id="id1">
+<dt><code class="docutils literal notranslate"><span class="pre">-V</span> <span class="pre">&lt;virtual&gt;</span></code></dt><dd><p>Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
+environment. This is useful for <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> development, and to test EEPROM
+configuration with a virtual setup. This option is not useful for regular
+usage. See <a class="reference internal" href="testing.html#virtual-framework"><span class="std std-ref">Virtual test framework</span></a>.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-x">
+<dt><code class="docutils literal notranslate"><span class="pre">-x</span></code></dt><dd><p>Generate and print a hexadecimal raw dump of the EEPROM content, similar to
+the output of the <cite>hexdump -Cv</cite> tool.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p>Change product name and serial number</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span> <span class="o">-</span><span class="n">p</span> <span class="n">UartBridge</span> <span class="o">-</span><span class="n">s</span> <span class="n">abcd1234</span> <span class="o">-</span><span class="n">u</span>
+</pre></div>
+</div>
+</li>
+<li><p>List supported configuration parameters</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pyftdi/bin/ftconf.py ftdi:///1 -c ?
+   cbus_func_0, group_0_drive, self_powered, type, group_0_slew,
+   group_1_schmitt, power_max, in_isochronous, invert_TXD, invert_DTR,
+   group_1_slew, invert_RI, product_id, remote_wakeup, invert_DCD,
+   invert_DSR, invert_CTS, has_serial, usb_version, suspend_pull_down,
+   invert_RXD, group_0_schmitt, has_usb_version, out_isochronous,
+   group_1_drive, vendor_id, cbus_func_2, cbus_func_3, cbus_func_1,
+   chip, channel_a_driver, invert_RTS
+</pre></div>
+</div>
+</li>
+<li><p>List supported configuration values for CBUS0</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pyftdi/bin/ftconf.py ftdi:///1 -c cbus_func_0:?
+   AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
+   DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
+   TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
+</pre></div>
+</div>
+</li>
+</ul>
+<ul id="eeprom-cbus">
+<li><p>Configure CBUS: 0 and 3 as GPIOs, then show the device configuration</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span> <span class="o">-</span><span class="n">v</span>
+   <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_0</span><span class="p">:</span><span class="n">IOMODE</span> <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_3</span><span class="p">:</span><span class="n">IOMODE</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
 </div>
 </div>
 

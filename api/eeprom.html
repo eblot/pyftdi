@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.2
+                0.47.0
               </div>
             
           
@@ -227,10 +227,81 @@
 <dt id="pyftdi.eeprom.FtdiEeprom">
 <em class="property">class </em><code class="sig-prename descclassname">pyftdi.eeprom.</code><code class="sig-name descname">FtdiEeprom</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom" title="Permalink to this definition">¶</a></dt>
 <dd><p>FTDI EEPROM management</p>
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.CBUS">
+<em class="property">class </em><code class="sig-name descname">CBUS</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.CBUS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate features for legacy FT232R devices.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.CBUSH">
+<em class="property">class </em><code class="sig-name descname">CBUSH</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.CBUSH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate features for FT232H/FT2232H/FT4232H devices.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.CBUSX">
+<em class="property">class </em><code class="sig-name descname">CBUSX</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.CBUSX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate features for FT230X devices.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.CFG1">
+<em class="property">class </em><code class="sig-name descname">CFG1</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.CFG1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration bits stored &#64; 0x01.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.CHANNEL">
+<em class="property">class </em><code class="sig-name descname">CHANNEL</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.CHANNEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate port mode.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.DRIVE">
+<em class="property">class </em><code class="sig-name descname">DRIVE</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.DRIVE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Driver options for I/O pins.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.eeprom.FtdiEeprom.INVERT">
+<em class="property">class </em><code class="sig-name descname">INVERT</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.INVERT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Inversion flags for FT232R devices.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="pyftdi.eeprom.FtdiEeprom.VAR_STRINGS">
 <code class="sig-name descname">VAR_STRINGS</code><em class="property"> = ('manufacturer', 'product', 'serial')</em><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.VAR_STRINGS" title="Permalink to this definition">¶</a></dt>
 <dd><p>EEPROM strings with variable length.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.cbus_mask">
+<em class="property">property </em><code class="sig-name descname">cbus_mask</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.cbus_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the bitmask of CBUS pins configured as GPIO.</p>
+<p>The bitmap contains four bits, ordered in natural order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>CBUS mask</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.cbus_pins">
+<em class="property">property </em><code class="sig-name descname">cbus_pins</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.cbus_pins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of CBUS pins configured as GPIO, if any</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of CBUS pins</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -258,6 +329,23 @@ change the EEPROM content</p>
 </dd>
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>True if some changes have been committed to the EEPROM</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.connect">
+<code class="sig-name descname">connect</code><span class="sig-paren">(</span><em class="sig-param">ftdi</em>, <em class="sig-param">ignore=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect a FTDI EEPROM to an existing Ftdi instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ftdi</strong> (<a class="reference internal" href="ftdi.html#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ftdi</span></code></a>) – the Ftdi instance to use</p></li>
+<li><p><strong>ignore</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to ignore existing content</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -316,6 +404,17 @@ change the EEPROM content</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.initialize">
+<code class="sig-name descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the EEPROM with some default sensible values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.eeprom.FtdiEeprom.is_empty">
 <em class="property">property </em><code class="sig-name descname">is_empty</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.is_empty" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reports whether the EEPROM has been erased, or no EEPROM is
@@ -332,14 +431,31 @@ connected to the FTDI EEPROM port.</p>
 
 <dl class="method">
 <dt id="pyftdi.eeprom.FtdiEeprom.open">
-<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">device</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.open" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">ignore=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.open" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new connection to the FTDI USB device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>device</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>]) – the device URL or a USB device instance.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code>]) – the device URL or a USB device instance.</p></li>
+<li><p><strong>ignore</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to ignore existing content</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.properties">
+<em class="property">property </em><code class="sig-name descname">properties</code><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the supported properties for the current device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the supported properies.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -381,6 +497,29 @@ connected to the FTDI EEPROM port.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.set_property">
+<code class="sig-name descname">set_property</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">value</em>, <em class="sig-param">out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.set_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the value of a stored property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">See</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.eeprom.FtdiEeprom.properties" title="pyftdi.eeprom.FtdiEeprom.properties"><code class="xref py py-meth docutils literal notranslate"><span class="pre">properties()</span></code></a> for a list of valid property names.
+Note that for now, only a small subset of properties can be
+changed.</p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – the property to change</p></li>
+<li><p><strong>value</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]) – the new value (supported values depend on property)</p></li>
+<li><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TextIO</span></code>]) – optional output stream to report hints</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.eeprom.FtdiEeprom.set_serial_number">
 <code class="sig-name descname">set_serial_number</code><span class="sig-paren">(</span><em class="sig-param">serial</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.set_serial_number" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define a new serial number.</p>
@@ -402,6 +541,19 @@ connected to the FTDI EEPROM port.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the size in bytes</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.eeprom.FtdiEeprom.sync">
+<code class="sig-name descname">sync</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.eeprom.FtdiEeprom.sync" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force re-evaluation of configuration after some changes.</p>
+<p>This API is not useful for regular usage, but might help for testing
+when the EEPROM does not go through a full save/load cycle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>

@@ -94,9 +94,5 @@ companion EEPROM.
 Status
 ~~~~~~
 
-This project is still in beta development stage.
-
-However, PyFtdi_ is being forked from a closed-source software implementation
-that has been successfully used for over several years - including serial
-@ 3Mbps, spi and jtag protocols. PyFtdi_ is developed as an open-source
-solution.
+This project is still in beta development stage. PyFtdi_ is developed as an
+open-source solution.

@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.2
+                0.47.0
               </div>
             
           
@@ -235,6 +235,17 @@ USB identifiers.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.baudrate">
+<em class="property">property </em><code class="sig-name descname">baudrate</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.baudrate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return current baudrate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -464,6 +475,20 @@ device descriptors</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.get_cbus_gpio">
+<code class="sig-name descname">get_cbus_gpio</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cbus_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the CBUS pins configured as GPIO inputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bitfield of CBUS read pins</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.get_cd">
 <code class="sig-name descname">get_cd</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_cd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read terminal status line: Carrier Detect</p>
@@ -579,6 +604,28 @@ device descriptors</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.has_cbus">
+<em class="property">property </em><code class="sig-name descname">has_cbus</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_cbus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether the device supports CBUS bitbang.</p>
+<p>CBUS bitbanging feature requires a special configuration in EEPROM.
+This function only reports if the current device supports this mode,
+not if this mode has been enabled in EEPROM.</p>
+<p>EEPROM configuration must be queried to check which CBUS pins have
+been configured for GPIO/bitbang mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI device supports CBUS bitbang</p>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.has_drivezero">
 <em class="property">property </em><code class="sig-name descname">has_drivezero</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_drivezero" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tell whether the device supports drive-zero mode, i.e. if the
@@ -660,6 +707,21 @@ Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 </dd>
 <dt class="field-odd">Raises</dt>
 <dd class="field-odd"><p><a class="reference internal" href="#pyftdi.ftdi.FtdiError" title="pyftdi.ftdi.FtdiError"><strong>FtdiError</strong></a> – if no FTDI port is open</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.is_bitbang_enabled">
+<em class="property">property </em><code class="sig-name descname">is_bitbang_enabled</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_bitbang_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether some bitbang mode is activated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if the FTDI interface is configured to support
+bitbanging</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1253,7 +1315,7 @@ internal dividors are only able to achieve some baudrates.</p>
 <p>PyFtdi attemps to find the closest configurable baudrate and if
 the deviation from the requested baudrate is too high, it rejects
 the configuration.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">baudrate</span></code> attribute can be used to retrieve the exact
+<p><a class="reference internal" href="#pyftdi.ftdi.Ftdi.baudrate" title="pyftdi.ftdi.Ftdi.baudrate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">baudrate</span></code></a> attribute can be used to retrieve the exact
 selected baudrate.</p>
 <p><code class="xref py py-const docutils literal notranslate"><span class="pre">BAUDRATE_TOLERANCE</span></code> defines the maximum deviation between
 the requested baudrate and the closest FTDI achieveable baudrate,
@@ -1294,6 +1356,37 @@ baudrate is not within limits, baudrate setting is rejected.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>break</strong> – either start or stop break event</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_cbus_direction">
+<code class="sig-name descname">set_cbus_direction</code><span class="sig-paren">(</span><em class="sig-param">mask</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_cbus_direction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure the CBUS pins used as GPIOs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which pins to configure as GPIOs</p></li>
+<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which pins are output (vs. input)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.set_cbus_gpio">
+<code class="sig-name descname">set_cbus_gpio</code><span class="sig-paren">(</span><em class="sig-param">pins</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.set_cbus_gpio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the CBUS pins configured as GPIO outputs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>pins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – bitfield to apply to CBUS output pins</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -1549,6 +1642,17 @@ definitions.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.usb_dev">
+<em class="property">property </em><code class="sig-name descname">usb_dev</code><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_dev" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the underlying USB Device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Device</span></code></p>
 </dd>
 </dl>
 </dd></dl>

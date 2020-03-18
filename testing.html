@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.2
+                0.47.0
               </div>
             
           
@@ -99,10 +99,11 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Testing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hardware-tests">Hardware tests</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mock-tests">Mock tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#virtual-test-framework">Virtual test framework</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#beware-wip">Beware: WIP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#eeprom-content">EEPROM content</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
@@ -204,20 +205,20 @@ fit your actual test environment, and enable the proper unit test cases, as
 most are actually disabled by default.</p>
 <p>You need specific bus slaves to perform most of these tests.</p>
 </div>
-<div class="section" id="mock-tests">
-<h2>Mock tests<a class="headerlink" href="#mock-tests" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="virtual-test-framework">
+<span id="virtual-framework"></span><h2>Virtual test framework<a class="headerlink" href="#virtual-test-framework" title="Permalink to this headline">¶</a></h2>
 <p>With PyFTDI v0.45, a new test module enables PyFTDI API partial testing using a
 pure software environment with no hardware. This also eases automatic testing
 within a continuous integration environment.</p>
 <p>This new module implements a virtual USB backend for PyUSB, which creates some
 kind of virtual, limited USB stack. The PyUSB can be told to substitute the
 native platform’s libusb with this module.</p>
-<p>This module, <code class="docutils literal notranslate"><span class="pre">usbmock</span></code> can be dynamically confifured with the help of YaML
+<p>This module, <code class="docutils literal notranslate"><span class="pre">usbvirt</span></code> can be dynamically confifured with the help of YaML
 definition files to create one or more virtual FTDI devices on a virtual USB
 bus topology. This enables to test <code class="docutils literal notranslate"><span class="pre">usbtools</span></code> module to enumerate, detect,
 report and access FTDI devices using the regular <a class="reference internal" href="urlscheme.html"><span class="doc">URL Scheme</span></a> syntax.</p>
-<p><code class="docutils literal notranslate"><span class="pre">usbmock</span></code> also routes all vendor-specific USB API calls to a secondary
-<code class="docutils literal notranslate"><span class="pre">ftdimock</span></code> module, which is in charge of handling all FTDI USB requests.</p>
+<p><code class="docutils literal notranslate"><span class="pre">usbvirt</span></code> also routes all vendor-specific USB API calls to a secondary
+<code class="docutils literal notranslate"><span class="pre">ftdivirt</span></code> module, which is in charge of handling all FTDI USB requests.</p>
 <p>This module enables testing <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> APIs. It also re-uses the MPSSE tracker
 engine to decode and verify MPSSE requests used to support I<sup>2</sup>C, SPI and UART
 features.</p>
@@ -248,6 +249,11 @@ configuration loader tries to automatically define missing parts to match the
 USB device topology of FTDI devices.</p>
 <p>This enables to create simple definition files without having to mess with low
 level USB definitions whenever possible.</p>
+<div class="section" id="eeprom-content">
+<h4>EEPROM content<a class="headerlink" href="#eeprom-content" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference internal" href="eeprom.html#ftconf"><span class="std std-ref">ftconf.py</span></a> tool can be used to load, modify and generate the content of
+a virtual EEPROM, see <a class="reference internal" href="eeprom.html"><span class="doc">EEPROM management</span></a>.</p>
+</div>
 <div class="section" id="examples">
 <h4>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h4>
 <blockquote>
@@ -264,7 +270,7 @@ in <code class="docutils literal notranslate"><span class="pre">ft230x.yaml</spa
 </div>
 <div class="section" id="availability">
 <h2>Availability<a class="headerlink" href="#availability" title="Permalink to this headline">¶</a></h2>
-<p>Note that unit tests and mock infrastructure are not included in the
+<p>Note that unit tests and the virtual infrastructure are not included in the
 distributed Python packages, they are only availabke from the git repository.</p>
 </div>
 </div>

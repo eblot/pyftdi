@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.46.2
+                0.47.0
               </div>
             
           
@@ -106,8 +106,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#direction">Direction</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#cbus-gpios">CBUS GPIOs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cbus-eeprom-configuration">CBUS EEPROM configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cbus-gpio-api">CBUS GPIO API</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#gpio-bitmap">GPIO bitmap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpio-bitmap">GPIO bitmap</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ft232h-cbus-exception">FT232H CBUS exception</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#direction-bitmap">Direction bitmap</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#direction-example">Direction example</a></li>
 </ul>
@@ -118,6 +126,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#setting-gpio-pin-state">Setting GPIO pin state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#retrieving-gpio-pin-state">Retrieving GPIO pin state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#modifying-gpio-pin-state">Modifying GPIO pin state</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cbus-gpio-access">CBUS GPIO access</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#reserved-pins">Reserved pins</a><ul>
@@ -261,33 +270,21 @@ either configured as an input or an output function.</p>
 <p>The width of a port, that is the number of pins of the interface, depending on
 the actual hardware, <em>i.e.</em> the FTDI model:</p>
 <ul class="simple">
-<li><p>FT232R features a single port, which is 8-bit wide: <cite>DBUS</cite></p></li>
-<li><p>FT232H features a single port, which is 16-bit wide: <cite>ADBUS/ACBUS</cite></p></li>
+<li><p>FT232R features a single port, which is 8-bit wide: <cite>DBUS</cite>,</p></li>
+<li><p>FT232H features a single port, which is 16-bit wide: <cite>ADBUS/ACBUS</cite>,</p></li>
 <li><p>FT2232D features two ports, which are 12-bit wide each: <cite>ADBUS/ACBUS</cite> and
-<cite>BDBUS/BCBUS</cite></p></li>
+<cite>BDBUS/BCBUS</cite>,</p></li>
 <li><p>FT2232H features two ports, which are 16-bit wide each: <cite>ADBUS/ACBUS</cite> and
-<cite>BDBUS/BCBUS</cite></p></li>
+<cite>BDBUS/BCBUS</cite>,</p></li>
 <li><p>FT4232H features four ports, which are 8-bit wide each: <cite>ADBUS</cite>, <cite>BDBUS</cite>,
-<cite>CDBUS</cite> and <cite>DDBUS</cite>.</p></li>
-<li><p>FT230X features a single port, which is 4-bit wide</p></li>
+<cite>CDBUS</cite> and <cite>DDBUS</cite>,</p></li>
+<li><p>FT230X features a single port, which is 4-bit wide,</p></li>
 <li><p>FT231X feature a single port, which is 8-bit wide</p></li>
 </ul>
 <p>For historical reasons, 16-bit ports used to be named <em>wide</em> ports and 8-bit
 ports used to be called <em>narrow</em> with <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>. This terminology and APIs are
 no longer used, but are kept to prevent API break. Please only use the port
 <code class="docutils literal notranslate"><span class="pre">width</span></code> rather than these legacy port types.</p>
-<div class="admonition note" id="cbus-gpio">
-<p class="admonition-title">Note</p>
-<p>FT232R and FT230X/FT231X support an additional port denoted CBUS:</p>
-<ul class="simple">
-<li><p>FT232R provides an additional 5-bit wide port</p></li>
-<li><p>FT230X/FT231X provides an additional 4-bit wide port</p></li>
-</ul>
-<p>Accessing this extra port requires a specific EEPROM configuration, <em>i.e.</em>
-it cannot be enabled with a software request, if a specific configuration
-has not first defined in the EEPROM map.</p>
-<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> does not yet support access to CBUS on FT232R/FT230X/FT231X.</p>
-</div>
 </div>
 <div class="section" id="gpio-value">
 <h3>GPIO value<a class="headerlink" href="#gpio-value" title="Permalink to this headline">¶</a></h3>
@@ -308,7 +305,7 @@ the I<sup>2</sup>C feature. This specific devices enables an open-collector mode
 </ul>
 <p>This feature is automatically activated when I<sup>2</sup>C feature is enabled on a
 port, for the two first pins, i.e. <cite>SCL</cite> and <cite>SDA out</cite>.</p>
-<p>However., PyFTDI does not yet provide an API to enable this mode to the
+<p>However, PyFTDI does not yet provide an API to enable this mode to the
 other pins of a port, <em>i.e.</em> for the pins used as GPIOs.</p>
 </div>
 </div>
@@ -323,6 +320,58 @@ sampled and read via the PyFTDI APIs</p></li>
 <li><p>A logical <code class="docutils literal notranslate"><span class="pre">1</span></code> bit represents an output pin, <em>i.e.</em> a pin whose value can be
 set/written with the PyFTDI APIs</p></li>
 </ul>
+</div>
+</div>
+<div class="section" id="cbus-gpios">
+<span id="cbus-gpio"></span><h2>CBUS GPIOs<a class="headerlink" href="#cbus-gpios" title="Permalink to this headline">¶</a></h2>
+<p>FT232R, FT232H and FT230X/FT231X support an additional port denoted CBUS:</p>
+<ul class="simple">
+<li><p>FT232R provides an additional 5-bit wide port, where only 4 LSBs can be
+used as programmable GPIOs: <code class="docutils literal notranslate"><span class="pre">CBUS0</span></code> to <code class="docutils literal notranslate"><span class="pre">CBUS3</span></code>,</p></li>
+<li><p>FT232H provices an additional 10-bit wide port, where only 4 pins can be
+used as programmable GPIOs: <code class="docutils literal notranslate"><span class="pre">CBUS5</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS6</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS8</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS9</span></code></p></li>
+<li><p>FT230X/FT231X provides an additional 4-bit wide port: <code class="docutils literal notranslate"><span class="pre">CBUS0</span></code> to <code class="docutils literal notranslate"><span class="pre">CBUS3</span></code></p></li>
+</ul>
+<p>Note that CBUS access is slower than regular asynchronous bitbang mode.</p>
+<div class="section" id="cbus-eeprom-configuration">
+<h3>CBUS EEPROM configuration<a class="headerlink" href="#cbus-eeprom-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Accessing this extra port requires a specific EEPROM configuration.</p>
+<p>The EEPROM needs to be configured so that the CBUS pins that need to be used
+as GPIOs are defined as <code class="docutils literal notranslate"><span class="pre">IOMODE</span></code>. Without this special configuration, CBUS
+pins are used for other functions, such as driving leds when data is exchanged
+over the UART port. Remember to power-cycle the FTDI device after changing its
+EEPROM configuration to force load the new configuration.</p>
+<p>The <a class="reference internal" href="eeprom.html#ftconf"><span class="std std-ref">ftconf.py</span></a> tool can be used to query and change the EEPROM
+configuration. See the EEPROM configuration <a class="reference internal" href="eeprom.html#eeprom-cbus"><span class="std std-ref">example</span></a>.</p>
+</div>
+<div class="section" id="cbus-gpio-api">
+<h3>CBUS GPIO API<a class="headerlink" href="#cbus-gpio-api" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> starting from v0.47 supports CBUS pins as special GPIO port. This port
+is <em>not</em> mapped as regular GPIO, a dedicated API is reserved to drive those
+pins:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.has_cbus" title="pyftdi.ftdi.Ftdi.has_cbus"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.has_cbus()</span></code></a> to report whether the device supports
+CBUS gpios,</p></li>
+<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_cbus_direction" title="pyftdi.ftdi.Ftdi.set_cbus_direction"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_direction()</span></code></a> to configure the port,</p></li>
+<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_cbus_gpio" title="pyftdi.ftdi.Ftdi.get_cbus_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.get_cbus_gpio()</span></code></a> to get the logical values from the
+port,</p></li>
+<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_cbus_gpio" title="pyftdi.ftdi.Ftdi.set_cbus_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_gpio()</span></code></a> to set new logical values to the
+port</p></li>
+</ul>
+<p>Additionally, the EEPROM configuration can be queried to retrieve which CBUS
+pins have been assigned to GPIO functions:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.cbus_pins" title="pyftdi.eeprom.FtdiEeprom.cbus_pins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.eeprom.FtdiEeprom.cbus_pins()</span></code></a> to report CBUS GPIO pins</p></li>
+</ul>
+<p>The CBUS port is <strong>not</strong> available through the
+<a class="reference internal" href="api/gpio.html#pyftdi.gpio.GpioController" title="pyftdi.gpio.GpioController"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.gpio.GpioController</span></code></a> API, as it cannot be considered as a
+regular GPIO port.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>CBUS GPIO feature has only be tested with the virtual test framework and a
+real FT231X HW device. It should be considered as an experimental feature
+for now.</p>
+</div>
 </div>
 </div>
 <div class="section" id="configuration">
@@ -344,6 +393,18 @@ enabled:</p>
 <p>Pins reserved for a specific feature (I<sup>2</sup>C, SPI, …) cannot be accessed as
 a regular GPIO. They cannot be arbitrarily written and should be masked out
 when the GPIO output value is set. See <a class="reference internal" href="#reserved-pins"><span class="std std-ref">Reserved pins</span></a> for details.</p>
+<div class="section" id="ft232h-cbus-exception">
+<h4>FT232H CBUS exception<a class="headerlink" href="#ft232h-cbus-exception" title="Permalink to this headline">¶</a></h4>
+<p>Note that there is an exception to this rule for FT232H CBUS port: FTDI has
+decided to map non-contiguous CBUS pins as GPIO-capable CBUS pins, that is
+<code class="docutils literal notranslate"><span class="pre">CBUS5</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS6</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS8</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS9</span></code>, where other CBUS-enabled devices
+use <code class="docutils literal notranslate"><span class="pre">CBUS0</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS1</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS2</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS3</span></code>.</p>
+<p>If the CBUS GPIO feature is used with an FT232H device, the pin positions for
+the GPIO port are not b<sub>5</sub> .. b<sub>9</sub> but b<sub>0</sub> to
+b<sub>3</sub> . This may sounds weird, but CBUS feature is somewhat hack-ish
+even with FTDI commands, so it did not deserve a special treatment for the sake
+of handling the weird implementation of FT232H.</p>
+</div>
 </div>
 <div class="section" id="direction-bitmap">
 <h3>Direction bitmap<a class="headerlink" href="#direction-bitmap" title="Permalink to this headline">¶</a></h3>
@@ -443,6 +504,36 @@ the bits configured as input, or an exception is triggered:</p>
 <span class="n">pins</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
 <span class="c1"># update GPIO output</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pins</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cbus-gpio-access">
+<h3>CBUS GPIO access<a class="headerlink" href="#cbus-gpio-access" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ftdi</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="p">()</span>
+<span class="n">ftdi</span><span class="o">.</span><span class="n">open_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">)</span>
+<span class="c1"># validate CBUS feature with the current device</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">ftdi</span><span class="o">.</span><span class="n">has_cbus</span><span class="p">:</span>
+   <span class="k">return</span>
+<span class="c1"># validate CBUS EEPROM configuration with the current device</span>
+<span class="n">eeprom</span> <span class="o">=</span> <span class="n">FtdiEeprom</span><span class="p">()</span>
+<span class="n">eeprom</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ftdi</span><span class="p">)</span>
+<span class="c1"># here we use CBUS0 and CBUS3 (or CBUS5 and CBUS9 on FT232H)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">eeprom</span><span class="o">.</span><span class="n">cbus_mask</span> <span class="o">&amp;</span> <span class="mb">0b1001</span> <span class="o">==</span> <span class="mb">0b1001</span><span class="p">:</span>
+   <span class="k">return</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">eeprom</span><span class="o">.</span><span class="n">cbus_mask</span> <span class="o">&amp;</span> <span class="mb">0b1001</span><span class="p">,</span> <span class="mb">0b1001</span><span class="p">)</span>
+<span class="c1"># configure CBUS0 as output and CBUS3 as input</span>
+<span class="n">ftdi</span><span class="o">.</span><span class="n">set_cbus_direction</span><span class="p">(</span><span class="mb">0b1001</span><span class="p">,</span> <span class="mb">0b0001</span><span class="p">)</span>
+<span class="c1"># set CBUS0</span>
+<span class="n">ftdi</span><span class="o">.</span><span class="n">set_cbus_gpio</span><span class="p">(</span><span class="mh">0x1</span><span class="p">)</span>
+<span class="c1"># get CBUS3</span>
+<span class="n">cbus3</span> <span class="o">=</span> <span class="n">ftdi</span><span class="o">.</span><span class="n">get_cbus_gpio</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># it is possible to open the ftdi object from an existing serial connection:</span>
+<span class="n">port</span> <span class="o">=</span> <span class="n">serial_for_url</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">)</span>
+<span class="n">ftdi</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">ftdi</span>
+<span class="n">ftdi</span><span class="o">.</span><span class="n">has_cbus</span>
+<span class="c1"># etc...</span>
 </pre></div>
 </div>
 </div>

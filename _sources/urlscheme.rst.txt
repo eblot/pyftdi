@@ -1,5 +1,7 @@
 .. include:: defs.rst
 
+.. _url_scheme:
+
 URL Scheme
 ----------
 
