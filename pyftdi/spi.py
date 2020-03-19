@@ -185,6 +185,46 @@ class SpiPort:
         self._cs_prolog = bytes([cs_clock, cs_select])
         self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
 
+    def force_select(self, level: Optional[bool] = None,
+                     cs_hold: float = 0) -> None:
+        """Force /CS signal.
+
+           This API is not designed for a regular usage, but is reserved to
+           very specific slave devices that require non-standard SPI
+           signalling. There are very few use cases where
+           this API is required.
+
+           :param level: level to force on /CS output. This is a tri-state
+                         value.
+                         A boolean value forces the selected signal
+                         level; note that SpiPort no longer enforces that
+                         following API calls generates valid SPI signalling:
+                         use with extreme care.
+                         None triggers a pulse on /CS output,
+                         i.e. /CS is not asserted once the method returns,
+                         whatever the actual /CS level when this API is called.
+            :param cycle: /CS hold duration, as a unitless value. It is not
+                         possible to control the exact duration of the pulse,
+                         as it depends on the USB bus and the FTDI frequency.
+        """
+        clk, sel = self._cs_prolog
+        if cs_hold:
+            hold = max(1, cs_hold)
+            if hold > SpiController.PAYLOAD_MAX_LENGTH:
+                raise ValueError('cs_hold is too long')
+        else:
+            hold = self._cs_hold
+        if level is None:
+            seq = bytearray([clk])
+            seq.extend([sel]*(1+hold))
+            seq.extend([clk]*self._cs_hold)
+        elif level:
+            seq = bytearray([clk] * hold)
+        else:
+            seq = bytearray([clk] * hold)
+            seq.extend([sel]*(1+hold))
+        self._controller.force_control(self._frequency, bytes(seq))
+
     @property
     def frequency(self) -> float:
         """Return the current SPI bus block"""
@@ -319,7 +359,7 @@ class SpiController:
     DI_BIT = 0x04
     CS_BIT = 0x08
     SPI_BITS = DI_BIT | DO_BIT | SCK_BIT
-    PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
+    PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
 
     def __init__(self, cs_count: int = 1, turbo: bool = True):
         self.log = getLogger('pyftdi.spi.ctrl')
@@ -613,6 +653,16 @@ class SpiController:
                                               cs_prolog, cs_epilog,
                                               cpol, cpha, droptail)
 
+    def force_control(self, frequency: float, sequence: bytes) -> None:
+        """Execution an arbitrary SPI control bit sequence.
+           Use with extreme care, as it may lead to unexpected results. Regular
+           usage of SPI does not require to invoke this API.
+
+           :param sequence: the bit sequence to execute.
+        """
+        with self._lock:
+            self._force(frequency, sequence)
+
     def flush(self) -> None:
         """Flush the HW FIFOs.
         """
@@ -706,9 +756,27 @@ class SpiController:
             cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
+    def _force(self, frequency: float, sequence: bytes):
+        if not self._ftdi.is_connected:
+            raise SpiIOError("FTDI controller not initialized")
+        if len(sequence) > SpiController.PAYLOAD_MAX_LENGTH:
+            raise SpiIOError("Output payload is too large")
+        if self._frequency != frequency:
+            self._ftdi.set_frequency(frequency)
+            # store the requested value, not the actual one (best effort),
+            # to avoid setting unavailable values on each call.
+            self._frequency = frequency
+        cmd = bytearray()
+        direction = self.direction & 0xFF
+        for ctrl in sequence:
+            ctrl &= self._spi_mask
+            ctrl |= self._gpio_low
+            cmd.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
+        self._ftdi.write_data(cmd)
+
     def _exchange_half_duplex(self, frequency: float,
                               out: Union[bytes, bytearray, Iterable[int]],
-                              readlen: int, cs_prolog: bool, cs_epilog: bool,
+                              readlen: int, cs_prolog: bytes, cs_epilog: bytes,
                               cpol: bool, cpha: bool,
                               droptail: int) -> bytes:
         if not self._ftdi.is_connected:
@@ -817,7 +885,7 @@ class SpiController:
 
     def _exchange_full_duplex(self, frequency: float,
                               out: Union[bytes, bytearray, Iterable[int]],
-                              cs_prolog: bool, cs_epilog: bool,
+                              cs_prolog: bytes, cs_epilog: bytes,
                               cpol: bool, cpha: bool,
                               droptail: int) -> bytes:
         if not self._ftdi.is_connected:
