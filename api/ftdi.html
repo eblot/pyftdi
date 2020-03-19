@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.47.0
+                0.47.2
               </div>
             
           
@@ -1302,6 +1302,25 @@ Useful for bitbang mode.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>bitfield of FTDI interface input GPIO</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.ftdi.Ftdi.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">usb_reset=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset FTDI device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>usb_reset</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – wether to perform a full USB reset of the device.</p>
+</dd>
+</dl>
+<p>Beware that selecting usb_reset performs a full USB device reset,
+which means all other interfaces of the same device are also
+affected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
