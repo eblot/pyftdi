@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.47.2
+                0.48.0
               </div>
             
           
@@ -361,21 +361,22 @@ the output of the <cite>hexdump -Cv</cite> tool.</p>
 </li>
 <li><p>List supported configuration parameters</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pyftdi/bin/ftconf.py ftdi:///1 -c ?
-   cbus_func_0, group_0_drive, self_powered, type, group_0_slew,
-   group_1_schmitt, power_max, in_isochronous, invert_TXD, invert_DTR,
-   group_1_slew, invert_RI, product_id, remote_wakeup, invert_DCD,
-   invert_DSR, invert_CTS, has_serial, usb_version, suspend_pull_down,
-   invert_RXD, group_0_schmitt, has_usb_version, out_isochronous,
-   group_1_drive, vendor_id, cbus_func_2, cbus_func_3, cbus_func_1,
-   chip, channel_a_driver, invert_RTS
+  cbus_func_0, cbus_func_1, cbus_func_2, cbus_func_3, cbus_func_4,
+  cbus_func_5, cbus_func_6, cbus_func_7, cbus_func_8, cbus_func_9,
+  channel_a_driver, channel_a_type, chip, clock_polarity,
+  flow_control, group_0_drive, group_0_schmitt, group_0_slew,
+  group_1_drive, group_1_schmitt, group_1_slew, has_serial,
+  has_usb_version, in_isochronous, lsb_data, out_isochronous,
+  power_max, powersave, product_id, remote_wakeup, self_powered,
+  suspend_pull_down, type, usb_version, vendor_id
 </pre></div>
 </div>
 </li>
 <li><p>List supported configuration values for CBUS0</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pyftdi/bin/ftconf.py ftdi:///1 -c cbus_func_0:?
-   AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
-   DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
-   TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
+  AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
+  DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
+  TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
 </pre></div>
 </div>
 </li>

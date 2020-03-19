@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.47.2
+                0.48.0
               </div>
             
           
@@ -347,6 +347,35 @@ slave</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiPort.force_select">
+<code class="sig-name descname">force_select</code><span class="sig-paren">(</span><em class="sig-param">level=None</em>, <em class="sig-param">cs_hold=0</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiPort.force_select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force-drive /CS signal.</p>
+<p>This API is not designed for a regular usage, but is reserved to
+very specific slave devices that require non-standard SPI
+signalling. There are very few use cases where this API is required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>level</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]) – level to force on /CS output. This is a tri-state
+value. A boolean value forces the selected signal
+level; note that SpiPort no longer enforces that
+following API calls generates valid SPI signalling:
+use with extreme care. <cite>None</cite> triggers a pulse on /CS
+output, i.e. /CS is not asserted once the method
+returns, whatever the actual /CS level when this API
+is called.</p></li>
+<li><p><strong>cs_hold</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – /CS hold duration, as a unitless value. It is not
+possible to control the exact duration of the pulse,
+as it depends on the USB bus and the FTDI frequency.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -745,6 +774,22 @@ accesses)</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.spi.SpiController.force_control">
+<code class="sig-name descname">force_control</code><span class="sig-paren">(</span><em class="sig-param">frequency</em>, <em class="sig-param">sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.spi.SpiController.force_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execution an arbitrary SPI control bit sequence.
+Use with extreme care, as it may lead to unexpected results. Regular
+usage of SPI does not require to invoke this API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sequence</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>) – the bit sequence to execute.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
