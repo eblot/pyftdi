@@ -34,8 +34,8 @@ from sys import platform
 from typing import Optional, List, Sequence, TextIO, Tuple, Union
 from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
-from usb.util import (build_request_type, CTRL_IN, CTRL_OUT, CTRL_TYPE_VENDOR,
-                      CTRL_RECIPIENT_DEVICE)
+from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
+                      CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
@@ -523,32 +523,51 @@ class Ftdi:
             raise FtdiError('No such FTDI port: %d' % interface)
         self._set_interface(config, interface)
         self._max_packet_size = self._get_max_packet_size()
+        # Invalidate data in the readbuffer
+        self._readoffset = 0
+        self._readbuffer = bytearray()
         # Drain input buffer
         self.purge_buffers()
+        # Shallow reset
         self._reset_device()
+        # Reset feature mode
+        self.set_bitmode(0, Ftdi.BITMODE_RESET)
+        # Init latency
         self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self) -> None:
         """Close the FTDI interface/port."""
         if self._usb_dev:
             dev = self._usb_dev
-            # Unfortunately, we need to access pyusb ResourceManager
-            # and there is no public API for this.
-            ctx = dev._ctx
-            if ctx.handle:
+            if self._is_pyusb_handle_active():
                 # Do not attempt to execute the following calls if the
                 # device has been closed: the ResourceManager may attempt
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
                 self.set_bitmode(0, Ftdi.BITMODE_RESET)
                 self.set_latency_timer(self.LATENCY_MAX)
-                ctx.managed_release_interface(dev, self._index - 1)
+                release_interface(dev, self._index - 1)
                 try:
                     self._usb_dev.attach_kernel_driver(self._index - 1)
                 except (NotImplementedError, USBError):
                     pass
             self._usb_dev = None
             UsbTools.release_device(dev)
+
+    def reset(self, usb_reset: bool = False) -> None:
+        """Reset FTDI device.
+
+           :param usb_reset: wether to perform a full USB reset of the device.
+
+           Beware that selecting usb_reset performs a full USB device reset,
+           which means all other interfaces of the same device are also
+           affected.
+        """
+        if not self._usb_dev:
+            raise FtdiError('Not connected')
+        self._reset_device()
+        if usb_reset:
+            self._reset_usb_device()
 
     def open_mpsse_from_url(self, url: str, direction: int = 0x0,
                             initial: int = 0x0, frequency: float = 6.0E6,
@@ -1907,16 +1926,20 @@ class Ftdi:
         except (NotImplementedError, USBError):
             pass
 
+    def _reset_usb_device(self) -> None:
+        """Reset USB device (USB command, not FTDI specific)."""
+        self._usb_dev._ctx.backend.reset_device(self._usb_dev._ctx.handle)
+
     def _reset_device(self):
-        """Reset the ftdi device"""
+        """Reset the FTDI device (FTDI vendor command)"""
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
-        # Reset feature mode
-        self.set_bitmode(0, Ftdi.BITMODE_RESET)
-        # Invalidate data in the readbuffer
-        self._readoffset = 0
-        self._readbuffer = bytearray()
+
+    def _is_pyusb_handle_active(self) -> bool:
+        # Unfortunately, we need to access pyusb ResourceManager
+        # and there is no public API for this.
+        return bool(self._usb_dev._ctx.handle)
 
     def _ctrl_transfer_out(self, reqtype: int, value: int, data: bytes = b''):
         """Send a control message to the device"""

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -59,7 +59,7 @@ class HotplugTestCase(TestCase):
         """Demonstrate how to connect to an hotplugged FTDI device, i.e.
            an FTDI device that is connected after the initial attempt to
            enumerate it on the USB bus."""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         ftdi = Ftdi()
         timeout = now() + 5.0  # sanity check: bail out after 10 seconds
         while now() < timeout:
@@ -74,10 +74,58 @@ class HotplugTestCase(TestCase):
         print('Connected to FTDI', url)
 
 
+class ResetTestCase(TestCase):
+
+    def test_simple_reset(self):
+        """Demonstrate how to connect to an hotplugged FTDI device, i.e.
+           an FTDI device that is connected after the initial attempt to
+           enumerate it on the USB bus."""
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        ftdi = Ftdi()
+        ftdi.open_from_url(url)
+        self.assertTrue(ftdi.is_connected, 'Unable to connect to FTDI')
+        ftdi.close()
+        self.assertFalse(ftdi.is_connected, 'Unable to close connection')
+        ftdi.open_from_url(url)
+        self.assertTrue(ftdi.is_connected, 'Unable to connect to FTDI')
+        ftdi.reset(False)
+
+    def test_dual_if_reset(self):
+        """Demonstrate how to connect to an hotplugged FTDI device, i.e.
+           an FTDI device that is connected after the initial attempt to
+           enumerate it on the USB bus."""
+        url1 = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        url2 = environ.get('FTDI_DEVICE', 'ftdi:///2')
+        ftdi1 = Ftdi()
+        ftdi2 = Ftdi()
+        ftdi1.open_from_url(url1)
+        self.assertTrue(ftdi1.is_connected, 'Unable to connect to FTDI')
+        ftdi2.open_from_url(url2)
+        # use latenty setting to set/test configuration is preserved
+        ftdi2.set_latency_timer(128)
+        # should be the same value
+        self.assertEqual(ftdi2.get_latency_timer(), 128)
+        self.assertTrue(ftdi2.is_connected, 'Unable to connect to FTDI')
+        ftdi1.close()
+        self.assertFalse(ftdi1.is_connected, 'Unable to close connection')
+        # closing first connection should not alter second interface
+        self.assertEqual(ftdi2.get_latency_timer(), 128)
+        ftdi1.open_from_url(url1)
+        self.assertTrue(ftdi1.is_connected, 'Unable to connect to FTDI')
+        # a FTDI reset should not alter settings...
+        ftdi1.reset(False)
+        self.assertEqual(ftdi2.get_latency_timer(), 128)
+        # ... however performing a USB reset through any interface should alter
+        # any previous settings made to all interfaces
+        ftdi1.reset(True)
+        self.assertNotEqual(ftdi2.get_latency_timer(), 128)
+
+
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(FtdiTestCase, 'test'))
-    suite_.addTest(makeSuite(HotplugTestCase, 'test'))
+    #suite_.addTest(makeSuite(FtdiTestCase, 'test'))
+    #suite_.addTest(makeSuite(HotplugTestCase, 'test'))
+    suite_.addTest(makeSuite(ResetTestCase, 'test'))
     return suite_
 
 
