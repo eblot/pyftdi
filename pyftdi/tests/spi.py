@@ -139,7 +139,7 @@ class SpiTestCase(unittest.TestCase):
         spi = SpiDataFlashTest()
         spi.open()
         jedec_id = spi.read_jedec_id()
-        self.assertEqual(jedec_id, 'c22016')
+        self.assertIn(jedec_id, ('c22016', 'bf254a'))
         spi.close()
 
     def _test_spi2(self):
@@ -299,7 +299,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
         self._port.write([0x01])
         for loop in range(7):
             data = self._port.read(3, droptail=loop+1)
-            print(f'{data[-1]:08b}')
+            #print(f'{data[-1]:08b}')
             self.assertEqual(len(data), 3)
 
     def test_invalid_duplex(self):
@@ -387,7 +387,7 @@ def suite():
     suite_ = unittest.TestSuite()
     # suite_.addTest(unittest.makeSuite(SpiTestCase, 'test'))
     # suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
-    # suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
+    suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
     suite_.addTest(unittest.makeSuite(SpiCsForceTestCase, 'test'))
     return suite_
 
