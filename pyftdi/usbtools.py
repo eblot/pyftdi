@@ -610,7 +610,7 @@ class UsbTools:
                     pid = dev.idProduct
                     ifc = max([cfg.bNumInterfaces for cfg in dev])
                     sernum = UsbTools.get_string(dev, dev.iSerialNumber)
-                    k = (vid, pid, sernum)
+                    k = (vid, pid, dev.bus, dev.address)
                     if k not in filtered_devs:
                         filtered_devs[k] = dev
                     else:
