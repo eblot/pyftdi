@@ -113,7 +113,7 @@ def main():
             eeprom.set_product_name(args.product)
         for conf in args.config or []:
             if conf == '?':
-                helpstr = ', '.join(eeprom.properties)
+                helpstr = ', '.join(sorted(eeprom.properties))
                 print(fill(helpstr, initial_indent='  ',
                            subsequent_indent='  '))
                 exit(1)
