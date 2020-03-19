@@ -26,6 +26,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#pylint: disable-msg=empty-docstring
+#pylint: disable-msg=missing-docstring
+#pylint: disable-msg=no-self-use
+
 import logging
 import unittest
 from binascii import hexlify
@@ -36,9 +40,6 @@ from time import sleep
 from pyftdi import FtdiLogger
 from pyftdi.misc import to_bool
 from pyftdi.spi import SpiController, SpiIOError
-
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
 
 
 class SpiDataFlashTest:
@@ -51,7 +52,7 @@ class SpiDataFlashTest:
 
     def open(self):
         """Open an SPI connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
         self._spi.configure(url, debug=debug)
 
@@ -77,7 +78,7 @@ class SpiAccelTest:
 
     def open(self):
         """Open an SPI connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
         self._spi.configure(url, debug=debug)
 
@@ -101,16 +102,17 @@ class SpiRfda2125Test:
 
     def __init__(self):
         self._spi = SpiController(cs_count=3)
+        self._port = None
 
     def open(self):
         """Open an SPI connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
         self._spi.configure(url, debug=debug)
         self._port = self._spi.get_port(2, freq=1E6, mode=0)
 
     def change_attenuation(self, value):
-        if not (0.0 <= value <= 31.5):
+        if not 0.0 <= value <= 31.5:
             print('Out-of-bound attenuation', file=stderr)
         intval = 63-int(value*2)
         self._port.write(bytes([intval]), 1)
@@ -152,8 +154,8 @@ class SpiTestCase(unittest.TestCase):
         spi.open()
         slope = 1
         attenuation = 0.0
-        for cycle in range(10):
-            for step in range(63):
+        for _ in range(10):
+            for _ in range(63):
                 attenuation += float(slope)
                 print(attenuation/2.0)
                 spi.change_attenuation(attenuation/2.0)
@@ -180,7 +182,7 @@ class SpiGpioTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
 
     def setUp(self):
@@ -204,14 +206,14 @@ class SpiGpioTestCase(unittest.TestCase):
             return ac_output & ad_pins
 
         self._io.set_direction(io_pins, ac_pins)
-        for ac in range(1 << self.PIN_COUNT):
-            ac_out = ac << self.AC_OFFSET
+        for ac_pin in range(1 << self.PIN_COUNT):
+            ac_out = ac_pin << self.AC_OFFSET
             ad_in = ac_to_ad(ac_out)
             self._io.write(ac_out)
             # random SPI exchange to ensure SPI does not change GPIO
             self._port.exchange([0x00, 0xff], 2)
-            rd = self._io.read()
-            self.assertEqual(rd, ad_in)
+            buf = self._io.read()
+            self.assertEqual(buf, ad_in)
         self.assertRaises(SpiIOError, self._io.write, ad_pins)
 
     def test_ad_to_ac(self):
@@ -225,14 +227,14 @@ class SpiGpioTestCase(unittest.TestCase):
             return ad_output & ac_pins
 
         self._io.set_direction(io_pins, ad_pins)
-        for ad in range(1 << self.PIN_COUNT):
-            ad_out = ad << self.AD_OFFSET
+        for ad_pin in range(1 << self.PIN_COUNT):
+            ad_out = ad_pin << self.AD_OFFSET
             ac_in = ad_to_ac(ad_out)
             self._io.write(ad_out)
             # random SPI exchange to ensure SPI does not change GPIO
             self._port.exchange([0x00, 0xff], 2)
-            rd = self._io.read()
-            self.assertEqual(rd, ac_in)
+            buf = self._io.read()
+            self.assertEqual(buf, ac_in)
         self.assertRaises(SpiIOError, self._io.write, ac_pins)
 
 
@@ -246,7 +248,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
 
     def setUp(self):
@@ -340,7 +342,7 @@ class SpiCsForceTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
 
     def setUp(self):
@@ -374,6 +376,8 @@ class SpiCsForceTestCase(unittest.TestCase):
         self._port.write([0x00, 0x01, 0x02])
 
     def test_cs_default_pulse_rev_clock(self):
+        if not self._spi.is_inverted_cpha_supported:
+            self.skipTest('FTDI does not support mode 3')
         self._port.set_mode(3)
         for _ in range(5):
             self._port.force_select()
