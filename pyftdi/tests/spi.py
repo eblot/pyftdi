@@ -299,7 +299,6 @@ class SpiUnalignedTestCase(unittest.TestCase):
         self._port.write([0x01])
         for loop in range(7):
             data = self._port.read(3, droptail=loop+1)
-            #print(f'{data[-1]:08b}')
             self.assertEqual(len(data), 3)
 
     def test_invalid_duplex(self):

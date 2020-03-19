@@ -187,23 +187,21 @@ class SpiPort:
 
     def force_select(self, level: Optional[bool] = None,
                      cs_hold: float = 0) -> None:
-        """Force /CS signal.
+        """Force-drive /CS signal.
 
            This API is not designed for a regular usage, but is reserved to
            very specific slave devices that require non-standard SPI
-           signalling. There are very few use cases where
-           this API is required.
+           signalling. There are very few use cases where this API is required.
 
            :param level: level to force on /CS output. This is a tri-state
-                         value.
-                         A boolean value forces the selected signal
+                         value. A boolean value forces the selected signal
                          level; note that SpiPort no longer enforces that
                          following API calls generates valid SPI signalling:
-                         use with extreme care.
-                         None triggers a pulse on /CS output,
-                         i.e. /CS is not asserted once the method returns,
-                         whatever the actual /CS level when this API is called.
-            :param cycle: /CS hold duration, as a unitless value. It is not
+                         use with extreme care. `None` triggers a pulse on /CS
+                         output, i.e. /CS is not asserted once the method
+                         returns, whatever the actual /CS level when this API
+                         is called.
+           :param cs_hold: /CS hold duration, as a unitless value. It is not
                          possible to control the exact duration of the pulse,
                          as it depends on the USB bus and the FTDI frequency.
         """
