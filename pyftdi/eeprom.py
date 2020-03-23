@@ -104,7 +104,7 @@ class FtdiEeprom:
     """Driver options for I/O pins."""
 
     CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
-                            'HIGH_CURRENTDRIVE _20 _40 SUSPEND_DBUS7')
+                           'HIGH_CURRENTDRIVE _20 _40 SUSPEND_DBUS7')
     """Configuration bits stored @ 0x01."""
 
     VAR_STRINGS = ('manufacturer', 'product', 'serial')

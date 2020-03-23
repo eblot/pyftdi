@@ -25,12 +25,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""List valid FTDI device URLs and descriptors."""
 
 from pyftdi.ftdi import Ftdi
 
 
 def main():
-    """Simple way to list URLs and descriptors."""
+    """Entry point."""
     Ftdi.show_devices()
 
 
