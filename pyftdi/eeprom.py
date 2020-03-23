@@ -29,12 +29,16 @@ import sys
 from binascii import hexlify
 from collections import OrderedDict, namedtuple
 from configparser import ConfigParser
-from enum import IntEnum, IntFlag
+from enum import IntEnum
+if sys.version_info[:2] > (3, 5):
+    from enum import IntFlag
 from logging import getLogger
 from random import randint
 from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from typing import BinaryIO, List, Optional, Set, TextIO, Union
+if sys.version_info[:2] == (3, 5):
+    from aenum import IntFlag
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
 from .misc import to_bool, to_int
@@ -104,7 +108,7 @@ class FtdiEeprom:
     """Driver options for I/O pins."""
 
     CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
-                            'HIGH_CURRENTDRIVE _20 _40 SUSPEND_DBUS7')
+                           'HIGH_CURRENTDRIVE _20 _40 SUSPEND_DBUS7')
     """Configuration bits stored @ 0x01."""
 
     VAR_STRINGS = ('manufacturer', 'product', 'serial')

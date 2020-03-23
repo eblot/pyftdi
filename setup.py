@@ -67,6 +67,11 @@ INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
 ]
+INSTALL_REQUIRES_3_5 = [
+    # only for old Python 3.5 support
+    'aenum >= 2.1.0'
+]
+
 HERE = abspath(dirname(__file__))
 
 
@@ -165,13 +170,17 @@ def main():
         packages=PACKAGES,
         scripts=['pyftdi/bin/i2cscan.py',
                  'pyftdi/bin/ftdi_urls.py',
-                 'pyftdi/bin/ftconf.py'],
+                 'pyftdi/bin/ftconf.py',
+                 'pyftdi/bin/pyterm.py'],
         package_dir={'': '.'},
         package_data={'pyftdi': ['*.rst', 'doc/*.rst', 'doc/api/*.rst',
                                  'INSTALL'],
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
+        extras_require={
+            ':python_version == "3.5"': INSTALL_REQUIRES_3_5,
+        },
         # tests requires >=3.6
         python_requires='>=3.5',
     )
