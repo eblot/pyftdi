@@ -1,0 +1,19 @@
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x8a99
+      version: 0x700
+      manufacturer: FTDI
+      product: TUMPA
+      serialnumber: TIAO_USB_1
+  - bus: 1
+    address: 2
+    descriptor:
+      vid: 0xcafe
+      pid: 0xbeef
+      version: 0x1000
+      manufacturer: Acme
+      product: Whatever
+      serialnumber: SomeRandomNumber

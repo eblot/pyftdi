@@ -36,7 +36,8 @@ from textwrap import fill
 from traceback import format_exc
 from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
-from pyftdi.misc import hexdump
+from pyftdi.ftdi import Ftdi
+from pyftdi.misc import add_custom_devices, hexdump
 
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-many-branches
@@ -69,6 +70,9 @@ def main():
                                help='erase the whole EEPROM content')
         argparser.add_argument('-u', '--update', action='store_true',
                                help='perform actual update, use w/ care')
+        argparser.add_argument('-P', '--vidpid', action='append',
+                               help='specify a custom VID:PID device ID, '
+                                    'may be repeated')
         argparser.add_argument('-V', '--virtual', type=FileType('r'),
                                help='use a virtual device, specified as YaML')
         argparser.add_argument('-v', '--verbose', action='count', default=0,
@@ -100,6 +104,11 @@ def main():
             backend = UsbTools.find_backend()
             loader = backend.create_loader()()
             loader.load(args.virtual)
+
+        try:
+            add_custom_devices(Ftdi, args.vidpid)
+        except ValueError as exc:
+            argparser.error(str(exc))
 
         eeprom = FtdiEeprom()
         eeprom.open(args.device)

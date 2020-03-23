@@ -29,7 +29,7 @@
 from array import array
 from copy import deepcopy
 from re import match
-from typing import Any, Iterable, Union
+from typing import Any, Iterable, Optional, Sequence, Union
 
 #pylint: disable-msg=invalid-name
 
@@ -263,6 +263,54 @@ def pretty_size(size, sep: str = ' ',
         if floor or (ssize << 10) == size:
             return '%d%sKiB' % (ssize, sep)
     return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))
+
+
+def add_custom_devices(ftdicls: Optional['Ftdi'] = None,
+                       vpstr: Optional[Sequence[str]] = None) -> None:
+    """Helper function to add custom VID/PID to FTDI device identifer map.
+
+       The string to parse should match the following format:
+
+       [vendor_name=]<vendor_id>:[product_name=]<product_id>
+
+       * vendor_name and product_name are optional strings, they may be omitted
+         as they only serve as human-readable aliases for vendor and product
+         names.
+       * vendor_id and product_id are mandatory strings that should resolve
+         as 16-bit integer (USB VID and PID values). They may be expressed as
+         decimal or hexadecimal syntax.
+
+       ex:
+         * ``0x403:0x9999``, vid:pid short syntax, with no alias names
+         * ``mycompany=0x666:myproduct=0xcafe``, vid:pid complete syntax with
+            aliases
+
+       :param vpstr: typically, a option switch string describing the device
+                     to add
+       :param ftdicls: the Ftdi class that should support the new device.
+    """
+    from inspect import isclass
+    if not isclass(ftdicls):
+        raise ValueError('Expect Ftdi class, not instance')
+    for vidpid in vpstr or []:
+        vidpids = {vid: set() for vid in ftdicls.PRODUCT_IDS}
+        vname = ''
+        pname = ''
+        try:
+            vid, pid = vidpid.split(':')
+            if '=' in vid:
+                vname, vid = vid.split('=', 1)
+            if '=' in pid:
+                pname, pid = pid.split('=', 1)
+            vid, pid = [to_int(v) for v in (vid, pid)]
+        except ValueError:
+            raise ValueError('Invalid VID:PID value')
+        if vid not in vidpids:
+            ftdicls.add_custom_vendor(vid, vname)
+            vidpids[vid] = set()
+        if pid not in vidpids[vid]:
+            ftdicls.add_custom_product(vid, pid, pname)
+            vidpids[vid].add(pid)
 
 
 class EasyDict(dict):

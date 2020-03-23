@@ -29,7 +29,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from argparse import ArgumentParser
+#pylint: disable-msg=too-many-instance-attributes
+#pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=too-many-nested-blocks
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
+#pylint: disable-msg=too-few-public-methods
+#pylint: disable-msg=broad-except
+#pylint: disable-msg=wrong-import-position
+
+from argparse import ArgumentParser, FileType
 from atexit import register
 from collections import deque
 from logging import Formatter, StreamHandler, DEBUG, ERROR
@@ -43,13 +52,19 @@ MSWIN = platform == 'win32'
 if not MSWIN:
     from termios import TCSANOW, tcgetattr, tcsetattr
 from pyftdi import FtdiLogger
-from pyftdi.misc import to_bps
+from pyftdi.ftdi import Ftdi
+from pyftdi.misc import to_bps, add_custom_devices
+
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=import-error
 
 if os_name == 'nt':
     import msvcrt
 else:
     msvcrt = None
-global msvscrt
+
+#pylint: enable-msg=invalid-name
+#pylint: enable-msg=import-error
 
 
 class MiniTerm:
@@ -159,8 +174,8 @@ class MiniTerm:
                     self._port.write(data)
         except KeyboardInterrupt:
             return
-        except Exception as e:
-            print("Exception: %s" % e)
+        except Exception as exc:
+            print("Exception: %s" % exc)
             if self._debug:
                 print(format_exc(chain=False), file=stderr)
             interrupt_main()
@@ -169,32 +184,32 @@ class MiniTerm:
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
-                c = getkey()
+                char = getkey()
                 if MSWIN:
-                    if ord(c) == 0x3:
+                    if ord(char) == 0x3:
                         raise KeyboardInterrupt()
-                if fullmode and ord(c) == 0x2:  # Ctrl+B
+                if fullmode and ord(char) == 0x2:  # Ctrl+B
                     self._cleanup()
                     return
                 if silent:
-                    if ord(c) == 0x6:  # Ctrl+F
+                    if ord(char) == 0x6:  # Ctrl+F
                         self._silent = True
                         print('Silent\n')
                         continue
-                    if ord(c) == 0x7:  # Ctrl+G
+                    if ord(char) == 0x7:  # Ctrl+G
                         self._silent = False
                         print('Reg\n')
                         continue
                 else:
                     if localecho:
-                        stdout.write(c.decode('utf8', errors='replace'))
+                        stdout.write(char.decode('utf8', errors='replace'))
                         stdout.flush()
                     if crlf:
-                        if c == b'\n':
+                        if char == b'\n':
                             self._port.write(b'\r')
                             if crlf > 1:
                                 continue
-                    self._port.write(c)
+                    self._port.write(char)
             except KeyboardInterrupt:
                 if fullmode:
                     continue
@@ -220,8 +235,8 @@ class MiniTerm:
                 self._port.close()
                 self._port = None
                 print('Bye.')
-            for fd, att in self._termstates:
-                tcsetattr(fd, TCSANOW, att)
+            for tfd, att in self._termstates:
+                tcsetattr(tfd, TCSANOW, att)
         except Exception as ex:
             print(str(ex), file=stderr)
 
@@ -258,21 +273,22 @@ class MiniTerm:
             if not port.is_open:
                 raise IOError('Cannot open port "%s"' % device)
             if debug:
-                backend = hasattr(port, 'BACKEND') and port.BACKEND or '?'
+                backend = port.BACKEND if hasattr(port, 'BACKEND') else '?'
                 print("Using serial backend '%s'" % backend)
             return port
-        except SerialException as e:
-            raise IOError(str(e))
+        except SerialException as exc:
+            raise IOError(str(exc))
 
 
-def get_default_device():
+def get_default_device() -> str:
+    """Return the default comm device, depending on the host/OS."""
     envdev = environ.get('FTDI_DEVICE', '')
     if envdev:
         return envdev
     if platform == 'win32':
         device = 'COM1'
     elif platform == 'darwin':
-            device = '/dev/cu.usbserial'
+        device = '/dev/cu.usbserial'
     elif platform == 'linux':
         device = '/dev/ttyS0'
     else:
@@ -288,20 +304,20 @@ def init_term(fullterm: bool) -> None:
     """Internal terminal initialization function"""
     if os_name == 'nt':
         return True
-    elif os_name == 'posix':
+    if os_name == 'posix':
         import termios
-        fd = stdin.fileno()
-        old = termios.tcgetattr(fd)
-        new = termios.tcgetattr(fd)
+        tfd = stdin.fileno()
+        old = termios.tcgetattr(tfd)
+        new = termios.tcgetattr(tfd)
         new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
         new[6][termios.VMIN] = 1
         new[6][termios.VTIME] = 0
         if fullterm:
             new[6][termios.VINTR] = 0
             new[6][termios.VSUSP] = 0
-        termios.tcsetattr(fd, termios.TCSANOW, new)
+        termios.tcsetattr(tfd, termios.TCSANOW, new)
         def cleanup_console():
-            termios.tcsetattr(fd, termios.TCSAFLUSH, old)
+            termios.tcsetattr(tfd, termios.TCSAFLUSH, old)
             # terminal modes have to be restored on exit...
         register(cleanup_console)
         return True
@@ -317,18 +333,18 @@ def getkey() -> str:
         # w/ py2exe, it seems the importation fails to define the global
         # symbol 'msvcrt', to be fixed
         while 1:
-            z = msvcrt.getch()
-            if z == '\3':
+            char = msvcrt.getch()
+            if char == '\3':
                 raise KeyboardInterrupt('Ctrl-C break')
-            if z == '\0':
+            if char == '\0':
                 msvcrt.getch()
             else:
-                if z == '\r':
+                if char == '\r':
                     return '\n'
-                return z
+                return char
     elif os_name == 'posix':
-        c = os_read(stdin.fileno(), 1)
-        return c
+        char = os_read(stdin.fileno(), 1)
+        return char
     else:
         import time
         time.sleep(1)
@@ -359,7 +375,7 @@ def main():
                                    action='store_true',
                                    help='use full terminal mode, exit with '
                                         '[Ctrl]+B')
-        argparser.add_argument('-p', '--device', default=default_device,
+        argparser.add_argument('device', nargs='?', default=default_device,
                                help='serial port device name (default: %s)' %
                                default_device)
         argparser.add_argument('-b', '--baudrate',
@@ -382,6 +398,11 @@ def main():
                                     'chars)')
         argparser.add_argument('-s', '--silent', action='store_true',
                                help='silent mode')
+        argparser.add_argument('-P', '--vidpid', action='append',
+                               help='specify a custom VID:PID device ID, '
+                                    'may be repeated')
+        argparser.add_argument('-V', '--virtual', type=FileType('r'),
+                               help='use a virtual device, specified as YaML')
         argparser.add_argument('-v', '--verbose', action='count',
                                help='increase verbosity')
         argparser.add_argument('-d', '--debug', action='store_true',
@@ -402,6 +423,20 @@ def main():
         FtdiLogger.set_formatter(formatter)
         FtdiLogger.set_level(loglevel)
         FtdiLogger.log.addHandler(StreamHandler(stderr))
+
+        if args.virtual:
+            from pyftdi.usbtools import UsbTools
+            # Force PyUSB to use PyFtdi test framework for USB backends
+            UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )
+            # Ensure the virtual backend can be found and is loaded
+            backend = UsbTools.find_backend()
+            loader = backend.create_loader()()
+            loader.load(args.virtual)
+
+        try:
+            add_custom_devices(Ftdi, args.vidpid)
+        except ValueError as exc:
+            argparser.error(str(exc))
 
         init_term(args.fullmode)
         miniterm = MiniTerm(device=args.device,

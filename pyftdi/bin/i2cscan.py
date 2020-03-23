@@ -31,10 +31,15 @@
 #pylint: disable-msg=broad-except
 #pylint: disable-msg=too-few-public-methods
 
-from logging import ERROR, getLogger
+from argparse import ArgumentParser, FileType
+from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
 from os import environ
-from sys import stderr
+from sys import modules, stderr
+from traceback import format_exc
+from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi
 from pyftdi.i2c import I2cController, I2cNackError
+from pyftdi.misc import add_custom_devices
 
 
 class I2cBusScanner:
@@ -45,9 +50,8 @@ class I2cBusScanner:
     """
 
     @staticmethod
-    def scan():
+    def scan(url):
         """Open an I2c connection to a slave."""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         i2c = I2cController()
         slaves = []
         getLogger('pyftdi.i2c').setLevel(ERROR)
@@ -75,8 +79,61 @@ class I2cBusScanner:
 
 
 def main():
-    """Entry point"""
-    I2cBusScanner.scan()
+    """Entry point."""
+    debug = False
+    try:
+        argparser = ArgumentParser(description=modules[__name__].__doc__)
+        argparser.add_argument('device', nargs='?', default='ftdi:///?',
+                               help='serial port device name')
+        argparser.add_argument('-P', '--vidpid', action='append',
+                               help='specify a custom VID:PID device ID, '
+                                    'may be repeated')
+        argparser.add_argument('-V', '--virtual', type=FileType('r'),
+                               help='use a virtual device, specified as YaML')
+        argparser.add_argument('-v', '--verbose', action='count', default=0,
+                               help='increase verbosity')
+        argparser.add_argument('-d', '--debug', action='store_true',
+                               help='enable debug mode')
+        args = argparser.parse_args()
+        debug = args.debug
+
+        if not args.device:
+            argparser.error('Serial device not specified')
+
+        loglevel = max(DEBUG, ERROR - (10 * args.verbose))
+        loglevel = min(ERROR, loglevel)
+        if debug:
+            formatter = Formatter('%(asctime)s.%(msecs)03d %(name)-20s '
+                                  '%(message)s', '%H:%M:%S')
+        else:
+            formatter = Formatter('%(message)s')
+        FtdiLogger.set_formatter(formatter)
+        FtdiLogger.set_level(loglevel)
+        FtdiLogger.log.addHandler(StreamHandler(stderr))
+
+        if args.virtual:
+            from pyftdi.usbtools import UsbTools
+            # Force PyUSB to use PyFtdi test framework for USB backends
+            UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )
+            # Ensure the virtual backend can be found and is loaded
+            backend = UsbTools.find_backend()
+            loader = backend.create_loader()()
+            loader.load(args.virtual)
+
+        try:
+            add_custom_devices(Ftdi, args.vidpid)
+        except ValueError as exc:
+            argparser.error(str(exc))
+
+        I2cBusScanner.scan(args.device)
+
+    except (ImportError, IOError, NotImplementedError, ValueError) as exc:
+        print('\nError: %s' % exc, file=stderr)
+        if debug:
+            print(format_exc(chain=False), file=stderr)
+        exit(1)
+    except KeyboardInterrupt:
+        exit(2)
 
 
 if __name__ == '__main__':

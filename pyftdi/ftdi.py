@@ -393,7 +393,7 @@ class Ftdi:
            :param vidname: Vendor name (arbitrary string)
            :raise ValueError: if the vendor id is already referenced
         """
-        if vid in cls.VENDOR_IDS:
+        if vid in cls.VENDOR_IDS.values():
             raise ValueError('Vendor ID 0x%04x already registered' % vid)
         if not vidname:
             vidname = '0x%04x' % vid
@@ -413,8 +413,9 @@ class Ftdi:
         """
         if vid not in cls.PRODUCT_IDS:
             cls.PRODUCT_IDS[vid] = {}
-        elif pid in cls.PRODUCT_IDS[vid]:
-            raise ValueError('Product ID 0x%04x already registered' % vid)
+        elif pid in cls.PRODUCT_IDS[vid].values():
+            raise ValueError('Product ID 0x%04x:0x%04x already registered' %
+                             (vid, pid))
         if not pidname:
             pidname = '0x%04x' % pid
         cls.PRODUCT_IDS[vid][pidname] = pid
