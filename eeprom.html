@@ -237,6 +237,8 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
                         <span class="n">change</span><span class="o">/</span><span class="n">configure</span> <span class="n">a</span> <span class="nb">property</span> <span class="k">as</span> <span class="n">key</span><span class="o">=</span><span class="n">value</span> <span class="n">pair</span>
   <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">erase</span>           <span class="n">erase</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">EEPROM</span> <span class="n">content</span>
   <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">--</span><span class="n">update</span>          <span class="n">perform</span> <span class="n">actual</span> <span class="n">update</span><span class="p">,</span> <span class="n">use</span> <span class="n">w</span><span class="o">/</span> <span class="n">care</span>
+  <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
+                      <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
   <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
                         <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
   <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
@@ -262,10 +264,8 @@ erase the EEPROM content, then restore the original content. For now,
 application <a class="reference external" href="https://www.ftdichip.com/Support/Utilities.htm#FT_PROG">FT_PROG</a> is available from FTDI web site.</p>
 <div class="section" id="option-switches">
 <h3>Option switches<a class="headerlink" href="#option-switches" title="Permalink to this headline">¶</a></h3>
-<dl class="simple" id="option-d">
-<dt><code class="docutils literal notranslate"><span class="pre">-d</span></code></dt><dd><p>Enable debug mode, which emits Python traceback on exceptions</p>
-</dd>
-</dl>
+<p>In addition to the <a class="reference internal" href="tools.html#common-option-switches"><span class="std std-ref">Common options switches</span></a> for  <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools,
+<code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> support the following arguments:</p>
 <dl id="option-c">
 <dt><code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=value</span></code></dt><dd><p>Change a configuration in the EEPROM. This flag can be repeated as many times
 as required to change several configuration parameter at once. Note that
@@ -285,10 +285,6 @@ alternatively a full column <code class="docutils literal notranslate"><span cla
 EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
 to a default configuration. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM
 content is not actually modified, the script runs in dry-run mode.</p>
-</dd>
-</dl>
-<dl class="simple" id="option-h">
-<dt><code class="docutils literal notranslate"><span class="pre">-h</span></code></dt><dd><p>Show quick help and exit</p>
 </dd>
 </dl>
 <dl class="simple" id="option-m">
@@ -332,18 +328,6 @@ used, the EEPROM is actually updated and its checksum regenerated. If
 something goes wrong at this point, you may brick you board, you’ve been
 warned. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> offers neither guarantee whatsoever than altering the EEPROM
 content is safe, nor that it is possible to recover from a bricked device.</p>
-</dd>
-</dl>
-<dl class="simple" id="option-v">
-<dt><code class="docutils literal notranslate"><span class="pre">-v</span></code></dt><dd><p>Increase verbosity, useful for debugging the tool. It can be repeated to
-increase more the verbosity.</p>
-</dd>
-</dl>
-<dl class="simple" id="id1">
-<dt><code class="docutils literal notranslate"><span class="pre">-V</span> <span class="pre">&lt;virtual&gt;</span></code></dt><dd><p>Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
-environment. This is useful for <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> development, and to test EEPROM
-configuration with a virtual setup. This option is not useful for regular
-usage. See <a class="reference internal" href="testing.html#virtual-framework"><span class="std std-ref">Virtual test framework</span></a>.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-x">

@@ -315,16 +315,18 @@ for details.</p>
 <span id="pyterm"></span><h2>Mini serial terminal<a class="headerlink" href="#mini-serial-terminal" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is a simple serial terminal that can be used to test the serial
 port feature. See the <a class="reference internal" href="../tools.html#tools"><span class="std std-ref">Tools</span></a> chapter to locate this tool.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span>
-               <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">device</span><span class="p">]</span>
 
 <span class="n">Simple</span> <span class="n">Python</span> <span class="n">serial</span> <span class="n">terminal</span>
 
-<span class="n">Optional</span> <span class="n">arguments</span><span class="p">:</span>
+<span class="n">positional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="n">device</span>                <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
   <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
   <span class="o">-</span><span class="n">f</span><span class="p">,</span> <span class="o">--</span><span class="n">fullmode</span>        <span class="n">use</span> <span class="n">full</span> <span class="n">terminal</span> <span class="n">mode</span><span class="p">,</span> <span class="n">exit</span> <span class="k">with</span> <span class="p">[</span><span class="n">Ctrl</span><span class="p">]</span><span class="o">+</span><span class="n">B</span>
-  <span class="o">-</span><span class="n">p</span> <span class="n">DEVICE</span><span class="p">,</span> <span class="o">--</span><span class="n">device</span> <span class="n">DEVICE</span>
-                        <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span><span class="p">)</span>
   <span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">,</span> <span class="o">--</span><span class="n">baudrate</span> <span class="n">BAUDRATE</span>
                         <span class="n">serial</span> <span class="n">port</span> <span class="n">baudrate</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">115200</span><span class="p">)</span>
   <span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="o">--</span><span class="n">hwflow</span>          <span class="n">hardware</span> <span class="n">flow</span> <span class="n">control</span>
@@ -333,22 +335,26 @@ port feature. See the <a class="reference internal" href="../tools.html#tools"><
                         <span class="k">with</span> <span class="n">CR</span> <span class="n">chars</span>
   <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">loopback</span>        <span class="n">loopback</span> <span class="n">mode</span> <span class="p">(</span><span class="n">send</span> <span class="n">back</span> <span class="nb">all</span> <span class="n">received</span> <span class="n">chars</span><span class="p">)</span>
   <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="o">--</span><span class="n">silent</span>          <span class="n">silent</span> <span class="n">mode</span>
+  <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
+                        <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
+  <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
+                        <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
   <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
   <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
 </pre></div>
 </div>
 <p>If the PyFtdi module is not yet installed and <code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is run from the
 archive directory, <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> should be defined to the current directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PYTHONPATH=$PWD pyftdi/bin/pyterm.py -p ftdi:///?
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi:///?
 </pre></div>
 </div>
 <p>The above command lists all the available FTDI device ports.</p>
-<p>To start up a serial terminal session, use the <code class="docutils literal notranslate"><span class="pre">-p</span></code> option switch to select
-the proper port, for example:</p>
+<p>To start up a serial terminal session, specify the FTDI port to use, for
+example:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># detect all FTDI connected devices</span>
 <span class="nv">PYTHONPATH</span><span class="o">=</span>. python3 pyftdi/bin/ftdi_urls.py
 <span class="c1"># use the first interface of the first FT2232H as a serial port</span>
-<span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span> pyftdi/bin/pyterm.py -p ftdi://ftdi:2232/1
+<span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span> pyftdi/bin/pyterm.py ftdi://ftdi:2232/1
 </pre></div>
 </div>
 </div>

@@ -102,6 +102,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#where-to-find-these-tools">Where to find these tools?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-options-switches">Common options switches</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
@@ -221,6 +222,66 @@ directory where the Python interpreter is installed.</p></li>
 <li><p>on Windows, there are located in the <code class="docutils literal notranslate"><span class="pre">Scripts/</span></code> directory, which is a
 subdirectory of the directory where the Python interpreter is installed.</p></li>
 </ul>
+</div>
+<div class="section" id="common-options-switches">
+<span id="common-option-switches"></span><h2>Common options switches<a class="headerlink" href="#common-options-switches" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools share many common option switches:</p>
+<dl class="simple" id="option-d">
+<dt><code class="docutils literal notranslate"><span class="pre">-d</span></code></dt><dd><p>Enable debug mode, which emits Python traceback on exceptions</p>
+</dd>
+</dl>
+<dl class="simple" id="option-h">
+<dt><code class="docutils literal notranslate"><span class="pre">-h</span></code></dt><dd><p>Show quick help and exit</p>
+</dd>
+</dl>
+<dl id="option-p">
+<dt><code class="docutils literal notranslate"><span class="pre">-P</span> <span class="pre">&lt;vidpid&gt;</span></code></dt><dd><p>Add custom vendor and product identifiers.</p>
+<p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> only recognizes FTDI official USB vendor identifier (<em>0x403</em>) and
+the USB identifiers of their products.</p>
+<p>In order to use alternative VID/PID values, the <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools accept the
+<code class="docutils literal notranslate"><span class="pre">-P</span></code> option to describe those products</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">vidpid</span></code> argument should match the following format:</p>
+<p><code class="docutils literal notranslate"><span class="pre">[vendor_name=]&lt;vendor_id&gt;:[product_name=]&lt;product_id&gt;</span></code></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">vendor_name</span></code> and <code class="docutils literal notranslate"><span class="pre">product_name</span></code> are optional strings, they may be
+omitted as they only serve as human-readable aliases for the vendor and
+product names. See example below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">vendor_id</span></code> and <code class="docutils literal notranslate"><span class="pre">product_id</span></code> are mandatory strings that should resolve
+into 16-bit integers (USB VID and PID values). They may either be expressed
+as decimal or hexadecimal syntax.</p></li>
+</ul>
+<p>This option may be repeated as many times as required to add support for
+several custom devices.</p>
+<p>examples:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0x403:0x9999</span></code>, <em>vid:pid</em> short syntax, with no alias names;
+a matching FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URL</span></a> would be <code class="docutils literal notranslate"><span class="pre">ftdi://ftdi:0x9999/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mycompany=0x666:myproduct=0xcafe</span></code>, <em>vid:pid</em> complete syntax with
+aliases; matching FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a> could be:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://0x666:0x9999/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://mycompany:myproduct/1</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ftdi://mycompany:0x9999/1</span></code></p></li>
+<li><p>…</p></li>
+</ul>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="simple" id="option-v">
+<dt><code class="docutils literal notranslate"><span class="pre">-v</span></code></dt><dd><p>Increase verbosity, useful for debugging the tool. It can be repeated to
+increase more the verbosity.</p>
+</dd>
+</dl>
+<dl class="simple" id="id4">
+<dt><code class="docutils literal notranslate"><span class="pre">-V</span> <span class="pre">&lt;virtual&gt;</span></code></dt><dd><p>Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
+environment. This is useful for <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> development, and to test EEPROM
+configuration with a virtual setup. This option is not useful for regular
+usage. See <a class="reference internal" href="testing.html#virtual-framework"><span class="std std-ref">Virtual test framework</span></a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 
