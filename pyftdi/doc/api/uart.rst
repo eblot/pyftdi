@@ -113,16 +113,18 @@ port feature. See the :ref:`tools` chapter to locate this tool.
 
 ::
 
-  Usage: pyterm.py [-h] [-f] [-p DEVICE] [-b BAUDRATE] [-w] [-e] [-r] [-l] [-s]
-                 [-v] [-d]
+  Usage: pyterm.py [-h] [-f] [-b BAUDRATE] [-w] [-e] [-r] [-l] [-s] [-P VIDPID]
+                   [-V VIRTUAL] [-v] [-d]
+                   [device]
 
   Simple Python serial terminal
 
-  Optional arguments:
+  positional arguments:
+    device                serial port device name (default: ftdi:///1)
+
+  optional arguments:
     -h, --help            show this help message and exit
     -f, --fullmode        use full terminal mode, exit with [Ctrl]+B
-    -p DEVICE, --device DEVICE
-                          serial port device name (default: ftdi:///1)
     -b BAUDRATE, --baudrate BAUDRATE
                           serial port baudrate (default: 115200)
     -w, --hwflow          hardware flow control
@@ -131,25 +133,29 @@ port feature. See the :ref:`tools` chapter to locate this tool.
                           with CR chars
     -l, --loopback        loopback mode (send back all received chars)
     -s, --silent          silent mode
+    -P VIDPID, --vidpid VIDPID
+                          specify a custom VID:PID device ID, may be repeated
+    -V VIRTUAL, --virtual VIRTUAL
+                          use a virtual device, specified as YaML
     -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
 
 If the PyFtdi module is not yet installed and ``pyterm.py`` is run from the
 archive directory, ``PYTHONPATH`` should be defined to the current directory::
 
-    PYTHONPATH=$PWD pyftdi/bin/pyterm.py -p ftdi:///?
+    PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi:///?
 
 The above command lists all the available FTDI device ports.
 
-To start up a serial terminal session, use the ``-p`` option switch to select
-the proper port, for example:
+To start up a serial terminal session, specify the FTDI port to use, for
+example:
 
 .. code-block:: shell
 
     # detect all FTDI connected devices
     PYTHONPATH=. python3 pyftdi/bin/ftdi_urls.py
     # use the first interface of the first FT2232H as a serial port
-    PYTHONPATH=$PWD pyftdi/bin/pyterm.py -p ftdi://ftdi:2232/1
+    PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi://ftdi:2232/1
 
 
 .. _uart-limitations:
