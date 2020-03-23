@@ -37,7 +37,7 @@ from os import close, unlink
 from os.path import abspath, dirname, join as joinpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
-from sys import stderr
+from sys import stderr, version_info
 from tempfile import mkstemp
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
@@ -67,6 +67,9 @@ INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
 ]
+if sys.version_info[:2] == (3, 5):
+    INSTALL_REQUIRES.append('aenum >= 2.1.0')
+
 HERE = abspath(dirname(__file__))
 
 
