@@ -29,7 +29,7 @@ Modern FTDI devices include:
 * UART-only bridges
 
   * FT232R (single port, 3Mbps)
-  * FT230X/FT231X/FT234X/ (single port, 3Mbps)
+  * FT230X/FT231X/FT234X (single port, 3Mbps)
 
 * UART and multi-serial protocols (SPI, |I2C|, JTAG) bridges
 

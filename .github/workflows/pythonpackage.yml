@@ -31,4 +31,4 @@ jobs:
       run: |
         mkdir doc
         cd doc
-        sphinx-build -b html ../pyftdi/doc .
+        sphinx-build -W -b html ../pyftdi/doc .
