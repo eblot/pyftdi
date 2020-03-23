@@ -26,10 +26,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import sys
+import logging
 from os import environ
 from time import sleep
+from sys import modules, stdout
+from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from pyftdi import FtdiLogger
 from pyftdi.gpio import GpioController, GpioException
 
 #pylint: disable-msg=empty-docstring
@@ -48,20 +50,20 @@ class GpioTest:
         """Open a GPIO connection, defining which pins are configured as
            output and input"""
         out_pins &= 0xFF
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._gpio.configure(url, direction=out_pins)
 
     def close(self):
         """Close the GPIO connection"""
         self._gpio.close()
 
-    def set_gpio(self, line, on):
+    def set_gpio(self, line, high):
         """Set the level of a GPIO ouput pin.
 
            :param line: specify which GPIO to madify.
-           :param on: a boolean value, True for high-level, False for low-level
+           :param high: a boolean value, True for high-level, False for low-level
         """
-        if on:
+        if high:
             state = self._state | (1 << line)
         else:
             state = self._state & ~(1 << line)
@@ -84,7 +86,7 @@ class GpioTest:
         self._state = state
 
 
-class GpioTestCase(unittest.TestCase):
+class GpioTestCase(TestCase):
     """FTDI GPIO driver test case"""
 
     def test_gpio(self):
@@ -106,9 +108,11 @@ class GpioTestCase(unittest.TestCase):
             try:
                 gpio.set_gpio(pin, True)
             except GpioException:
-                self.assertFalse(bool((1 << pin) & mask))
+                self.assertFalse(bool((1 << pin) & mask),
+                                 f'exception: pin {pin} should be Low')
             else:
-                self.assertTrue(bool((1 << pin) & mask))
+                self.assertTrue(bool((1 << pin) & mask),
+                                f'exception: pin {pin} should be High')
             sleep(0.2)
         for pin in range(8):
             try:
@@ -122,12 +126,23 @@ class GpioTestCase(unittest.TestCase):
 
 
 def suite():
-    suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(GpioTestCase, 'test'))
+    suite_ = TestSuite()
+    suite_.addTest(makeSuite(GpioTestCase, 'test'))
     return suite_
 
 
-if __name__ == '__main__':
+def main():
     import doctest
-    doctest.testmod(sys.modules[__name__])
-    unittest.main(defaultTest='suite')
+    doctest.testmod(modules[__name__])
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.set_level(loglevel)
+    ut_main(defaultTest='suite')
+
+
+if __name__ == '__main__':
+    main()

@@ -27,7 +27,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-from unittest import TestCase, TestSuite, main as testmain
+from unittest import TestCase, TestSuite, main as ut_main
 from binascii import hexlify
 from doctest import testmod
 from os import environ
@@ -316,7 +316,7 @@ def main():
     except AttributeError:
         raise ValueError(f'Invalid log level: {level}')
     FtdiLogger.set_level(loglevel)
-    testmain(defaultTest='suite')
+    ut_main(defaultTest='suite')
 
 
 if __name__ == '__main__':

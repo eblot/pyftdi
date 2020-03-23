@@ -26,14 +26,15 @@
 
 """GPIO/BitBang support for PyFdti"""
 
-from enum import IntEnum
+#pylint: disable-msg=too-few-public-methods
+
 from struct import calcsize as scalc, unpack as sunpack
-from typing import Iterable, Optional, Tuple, Union
-from .ftdi import Ftdi, FtdiError, FtdiFeatureError
+from typing import Iterable, Tuple, Union
+from .ftdi import Ftdi, FtdiError
 from .misc import is_iterable
 
 
-class GpioException(IOError):
+class GpioException(FtdiError):
     """Base class for GPIO errors.
     """
 
@@ -43,22 +44,17 @@ class GpioPort:
     """
 
 
-class GpioController(GpioPort):
+class GpioBaseController(GpioPort):
     """GPIO controller for an FTDI port, in bit-bang legacy mode.
 
        GPIO bit-bang mode is limited to the 8 lower pins of each GPIO port.
     """
-
-    MODE = IntEnum('MODE', 'ASYNC SYNC MPSSE')
-
-    MPSSE_PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
 
     def __init__(self):
         self._ftdi = Ftdi()
         self._direction = 0
         self._width = 0
         self._mask = 0
-        self._mode = self.MODE.ASYNC
         self._frequency = 0.0
 
     @property
@@ -70,14 +66,6 @@ class GpioController(GpioPort):
         return self._ftdi
 
     @property
-    def mode(self) -> IntEnum['GpioController.MODE']:
-        """Return the current GPIO mode
-
-           :return: the mode
-        """
-        return self._mode
-
-    @property
     def is_connected(self) -> bool:
         """Reports whether a connection exists with the FTDI interface.
 
@@ -86,7 +74,6 @@ class GpioController(GpioPort):
         return self._ftdi.is_connected
 
     def configure(self, url: str, direction: int = 0,
-                  mode: Optional[IntEnum['GpioController.MODE']] = None,
                   **kwargs):
         """Open a new interface to the specified FTDI device in bitbang mode.
 
@@ -94,44 +81,15 @@ class GpioController(GpioPort):
            :param int direction: a bitfield specifying the FTDI GPIO direction,
                 where high level defines an output, and low level defines an
                 input
-           :param mode: optional GPIO mode to use, defaut to ASYNC
            :param initial: optional initial GPIO output value
            :param frequency: optional frequency in Hz
            :return: actual bitbang frequency in Hz
         """
         if self.is_connected:
             raise FtdiError('Already connected')
-        if mode not in self.MODE:
-            raise ValueError('Invalid mode: %s' % mode)
-        for k in ('direction',):
-            if k in kwargs:
-                del kwargs[k]
-        if mode == self.MODE.MPSSE:
-            frequency = self._ftdi.open_mpsse_from_url(url,
-                                                       direction=direction,
-                                                       **kwargs)
-            if not self._ftdi.has_mpsse:
-                self._ftdi.close()
-                raise FtdiFeatureError('MPSSE mode not supported')
-            self._width = self._ftdi.port_width
-        else:
-            if 'sync' in kwargs:
-                del kwargs['sync']
-            sync = mode == self.MODE.SYNC
-            frequency = self._ftdi.open_bitbang_from_url(url,
-                                                         direction=direction,
-                                                         sync=sync,
-                                                         **kwargs)
-            self._width = 8
-        self._frequency = frequency
+        self._frequency = self._configure(url, direction, **kwargs)
         self._mask = (1 << self._width) - 1
         self._direction = direction & self._mask
-        self._mode = mode
-        if 'initial' in kwargs:
-            if sync:
-                self.exchange(kwargs['initial'] & self._mask)
-            else:
-                self.write(kwargs['initial'] & self._mask)
 
     def close(self):
         """Close the FTDI interface.
@@ -202,36 +160,52 @@ class GpioController(GpioPort):
         self._direction |= (pins & direction)
         self._ftdi.set_bitmode(self._direction, Ftdi.BITMODE_BITBANG)
 
+    def _configure(self, url, direction, **kwargs):
+        raise NotImplementedError('GpioBaseController cannot be instanciated')
+
+
+class GpioAsyncController(GpioBaseController):
+    """GPIO controller for an FTDI port, in bit-bang asynchronous mode.
+
+       GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
+    """
+
+    def _configure(self, url, direction, **kwargs):
+        for k in ('direction', 'sync'):
+            if k in kwargs:
+                del kwargs[k]
+        frequency = self._ftdi.open_bitbang_from_url(url,
+                                                     direction=direction,
+                                                     sync=False,
+                                                     **kwargs)
+        if 'initial' in kwargs:
+            self.write(kwargs['initial'] & self._mask)
+        self._width = 8
+        return frequency
+
     def read(self, direct: bool = True, readlen: int = 1) -> \
-             Union[int, bytes, Tuple[int]]:
+             Union[int, bytes]:
         """Read the GPIO input pin electrical level.
 
            :param direct: whether to peak current value from port, or to use
                           the HW FIFO. When direct mode is selected, readlen
                           should be 1. This matches the behaviour of the legacy
-                          API. Direct mode is not compatible with MPSSE mode.
+                          API.
            :param readlen: how many GPIO samples to retrieve. Each sample if
-                           :py:meth:`width` bit wide.
-           :return: a :py:meth:`width` bit wide integer if direct mode is used,
-                    a :py:type:`bytes`` buffer if :py:meth:`width` is a byte,
-                    a list of integer otherwise (MPSSE mode only).
+                           8-bit wide.
+           :return: a 8-bit wide integer if direct mode is used, or
+                    a :py:type:`bytes`` buffer otherwise.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if self._mode == self.MODE.SYNC:
-            raise FtdiError('SYNC mode requires exchange')
         if direct:
             if readlen != 1:
                 raise ValueError('Invalid read length with direct mode')
-            if self._mode == self.MODE.MPSSE:
-                raise ValueError('Direct mode not available in MPSSE mode')
-        if self._mode == self.MODE.MPSSE:
-            return self._read_mpsse(readlen)
         if direct:
             return self._ftdi.read_pins()
         return self._ftdi.read_data(readlen)
 
-    def write(self, out: Union[bytes, bytearray, Iterable[int], int]) -> None:
+    def write(self, out: Union[bytes, bytearray, int]) -> None:
         """Set the GPIO output pin electrical level, or output a sequence of
            bytes @ constant frequency to GPIO output pins.
 
@@ -239,8 +213,6 @@ class GpioController(GpioPort):
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if self._mode == self.MODE.SYNC:
-            raise FtdiError('SYNC mode requires exchange')
         if isinstance(out, (bytes, bytearray)):
             pass
         else:
@@ -251,20 +223,31 @@ class GpioController(GpioPort):
             for val in out:
                 if val > self._mask:
                     raise GpioException("Invalid value")
-        if self._mode == self.MODE.MPSSE:
-            self._write_mpsse(out)
-        else:
-            self._ftdi.write_data(out)
+        self._ftdi.write_data(out)
 
-    def exchange(self, out: Union[bytes, bytearray, Iterable[int]]) -> bytes:
+    # old API names
+    open_from_url = GpioBaseController.configure
+    read_port = read
+    write_port = write
+
+
+# old API compatibility
+GpioController = GpioAsyncController
+
+
+class GpioSyncController(GpioBaseController):
+    """GPIO controller for an FTDI port, in bit-bang synchronous mode.
+
+       GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
+    """
+
+    def exchange(self, out: Union[bytes, bytearray]) -> bytes:
         """Set the GPIO output pin electrical level, or output a sequence of
            bytes @ constant frequency to GPIO output pins.
 
            :param out: the byte buffer to output as GPIO
            :return: a byte buffer of the same length as out buffer.
         """
-        if self._mode != self.MODE.SYNC:
-            raise FtdiError('Duplex exchange not available with current mode')
         if not self.is_connected:
             raise GpioException('Not connected')
         if isinstance(out, (bytes, bytearray)):
@@ -280,11 +263,78 @@ class GpioController(GpioPort):
         self._ftdi.write_data(out)
         return self._ftdi.read_data(len(out))
 
+    def _configure(self, url, direction, **kwargs):
+        for k in ('direction', 'sync'):
+            if k in kwargs:
+                del kwargs[k]
+        frequency = self._ftdi.open_bitbang_from_url(url,
+                                                     direction=direction,
+                                                     sync=True,
+                                                     **kwargs)
+        if 'initial' in kwargs:
+            self.exchange(kwargs['initial'] & self._mask)
+        self._width = 8
+        return frequency
 
-    # old API names
-    open_from_url = configure
-    read_port = read
-    write_port = write
+
+class GpioMpsseController(GpioBaseController):
+    """GPIO controller for an FTDI port, in MPSSE mode.
+
+       All GPIO pins are reachable, but MPSSE mode is slower than other modes.
+    """
+
+
+    MPSSE_PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
+
+    def read(self, direct: bool = True, readlen: int = 1) -> \
+             Union[int, bytes, Tuple[int]]:
+        """Read the GPIO input pin electrical level.
+
+           :param direct: whether to peak current value from port, or to use
+                          the HW FIFO. When direct mode is selected, readlen
+                          should be 1. This matches the behaviour of the legacy
+                          API.
+           :param readlen: how many GPIO samples to retrieve. Each sample if
+                           :py:meth:`width` bit wide.
+           :return: a :py:meth:`width` bit wide integer if direct mode is used,
+                    a :py:type:`bytes`` buffer if :py:meth:`width` is a byte,
+                    a list of integer otherwise (MPSSE mode only).
+        """
+        if not self.is_connected:
+            raise GpioException('Not connected')
+        if direct:
+            if readlen != 1:
+                raise ValueError('Invalid read length with direct mode')
+        if direct:
+            return self._ftdi.read_pins()
+        return self._read_mpsse(readlen)
+
+    def write(self, out: Union[bytes, bytearray, Iterable[int], int]) -> None:
+        """Set the GPIO output pin electrical level, or output a sequence of
+           bytes @ constant frequency to GPIO output pins.
+
+           :param out: a bitfield of GPIO pins, or a sequence of them
+        """
+        if not self.is_connected:
+            raise GpioException('Not connected')
+        if isinstance(out, (bytes, bytearray)):
+            pass
+        else:
+            if isinstance(out, int):
+                out = bytes([out])
+            elif not is_iterable(out):
+                raise TypeError('Invalid output value')
+            for val in out:
+                if val > self._mask:
+                    raise GpioException("Invalid value")
+        self._write_mpsse(out)
+
+    def _configure(self, url, direction, **kwargs):
+        frequency = self._ftdi.open_mpsse_from_url(url,
+                                                   direction=direction,
+                                                   **kwargs)
+        self._width = self._ftdi.port_width
+        return frequency
 
     def _read_mpsse(self, count: int) -> Tuple[int]:
         if self._width > 8:
