@@ -11,8 +11,10 @@ PyFTDI_ relies on PyUSB_, which requires a native dependency: libusb 1.x.
 The actual command to install depends on your OS and/or your distribution,
 see below
 
+.. _install_linux:
+
 Debian/Ubuntu Linux
-...................
+```````````````````
 
 .. code-block:: shell
 
@@ -25,11 +27,16 @@ configure `udev`, here is a typical setup:
 ::
 
     # /etc/udev/rules.d/11-ftdi.rules
-    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="plugdev", MODE="0666"
-    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6011", GROUP="plugdev", MODE="0666"
-    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", GROUP="plugdev", MODE="0666"
-    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", GROUP="plugdev", MODE="0666"
-    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0666"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", GROUP="plugdev", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6011", GROUP="plugdev", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6010", GROUP="plugdev", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", GROUP="plugdev", MODE="0664"
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0664"
+
+.. note:: **Accessing FTDI devices with custom VID/PID**
+
+   You need to add a line for each device with a custom VID / PID pair you
+   declare, see :ref:`custom_vid_pid` for details.
 
 You need to unplug / plug back the FTDI device once this file has been
 created so that `udev` loads the rules for the matching device, or
@@ -55,22 +62,27 @@ effective, or start a subshell to try testing PyFtdi_:
     newgrp plugdev
 
 
+.. _install_macos:
+
 Homebrew macOS
-..............
+``````````````
 
 .. code-block:: shell
 
     brew install libusb
 
+
+.. _install_windows:
+
 Windows
-.......
+```````
 
 Windows is not officially supported (*i.e.* not tested) but some users have
 reported successful installations. Windows requires a specific libusb backend
 installation.
 
 Zadig
-'''''
+.....
 
 The probably easiest way to deal with libusb on Windows is to use Zadig_
 
@@ -102,8 +114,14 @@ The probably easiest way to deal with libusb on Windows is to use Zadig_
 
 See also `Libusb on Windows`_
 
+
+.. _install_python:
+
+Python
+~~~~~~
+
 Python dependencies
-~~~~~~~~~~~~~~~~~~~
+```````````````````
 
 Dependencies should be automatically installed with PIP.
 
@@ -113,8 +131,9 @@ Dependencies should be automatically installed with PIP.
 Do *not* install PyUSB_ from GitHub development branch (``master``, ...).
 Always prefer a stable, tagged release.
 
+
 Installing with PIP
-~~~~~~~~~~~~~~~~~~~
+```````````````````
 
 PIP should automatically install the missing dependencies.
 
@@ -124,7 +143,7 @@ PIP should automatically install the missing dependencies.
 
 
 Installing from source
-~~~~~~~~~~~~~~~~~~~~~~
+``````````````````````
 
 If you prefer to install from source, check out a fresh copy from PyFtdi_
 github repository.
@@ -137,8 +156,9 @@ github repository.
      cd pyftdi
      python3 setup.py ...
 
+
 Post-installation sanity check
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``````````````````````````````
 
 Open a *shell*, or a *CMD* on Windows
 
@@ -149,6 +169,9 @@ Open a *shell*, or a *CMD* on Windows
     Ftdi.show_devices()
 
 should list all the FTDI devices available on your host.
+
+Alternatively, you can invoke ``ftdu_urls.py`` script that lists all detected
+FTDI devices. See the :doc:`tools` chapter for details.
 
   * Example with 1 FT232H device with a serial number and 1 FT2232 device
     with no serial number, connected to the host:
@@ -166,3 +189,57 @@ command, please refer to the PyFtdi_ API to add custom identifiers, *i.e.* see
 :py:meth:`pyftdi.ftdi.Ftdi.add_custom_vendor` and
 :py:meth:`pyftdi.ftdi.Ftdi.add_custom_product` APIs.
 
+
+.. _custom_vid_pid:
+
+Custom USB vendor and product IDs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyFtdi only recognizes FTDI official vendor and product IDs.
+
+If you have an FTDI device with an EEPROM with customized IDs, you need to tell
+PyFtdi to support those custom USB identifiers.
+
+Custom PID
+``````````
+
+To support a custom product ID (16-bit integer) with the official FTDI ID, add
+the following code **before** any call to an FTDI ``open()`` method.
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_product(Ftdi.DEFAULT_VENDOR, product_id)
+
+Custom VID
+``````````
+
+To support a custom vendor ID and product ID (16-bit integers), add the
+following code **before** any call to an FTDI ``open()`` method.
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_vendor(vendor_id)
+   Ftdi.add_custom_product(vendor_id, product_id)
+
+You may also specify an arbitrary string to each method if you want to specify
+a URL by custom vendor and product names instead of their numerical values:
+
+.. code-block:: python
+
+   from pyftdi.ftdi import Ftdi
+
+   Ftdi.add_custom_vendor(0x1234, 'myvendor')
+   Ftdi.add_custom_product(0x1234, 0x5678, 'myproduct')
+
+   f1 = Ftdi.create_from_url('ftdi://0x1234:0x5678/1')
+   f2 = Ftdi.create_from_url('ftdi://myvendor:myproduct/2')
+
+.. note::
+
+   Remember that on OSes that require per-device access permissions such as
+   Linux, you also need to add the custom VID/PID entry to the configuration
+   file, see :ref:`Linux installation <install_linux>` ``udev`` rule file.

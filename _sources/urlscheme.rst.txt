@@ -79,8 +79,11 @@ execution is not interrupted, two helper methods are available as
 :py:meth:`pyftdi.ftdi.Ftdi.list_devices` and
 :py:meth:`pyftdi.ftdi.Ftdi.show_devices` and accept the same URL syntax.
 
+Opening a connection
+~~~~~~~~~~~~~~~~~~~~
+
 URL-based methods to open a connection
-......................................
+``````````````````````````````````````
 
 .. code-block:: python
 
@@ -90,7 +93,7 @@ URL-based methods to open a connection
 
 
 Device-based methods to open a connection
-.........................................
+`````````````````````````````````````````
 
 You may also open an Ftdi device from an existing PyUSB_ device, with the help
 of the ``open_from_device()`` helper method.
@@ -103,7 +106,7 @@ of the ``open_from_device()`` helper method.
 
 
 Legacy methods to open a connection
-...................................
+```````````````````````````````````
 
 The old, deprecated method to open a connection is to use the ``open()``
 methods without the ``_from_url`` suffix, which accept VID, PID, and serial
@@ -115,57 +118,5 @@ parameters (among others).
    open_mpsse()
    open_bitbang()
 
-
-Tools
-~~~~~
-
-The ``bin/`` directory contains a tiny script ``ftdu_urls.py`` to list the
-available FTDIs connected to the host, and the URLs than can be used to open a
-``Fdti()`` instance with the ``Ftdi.open_from_url()`` method.
-
-
-Supporting custom USB vendor and product IDs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-PyFtdi only recognizes FTDI official vendor and product IDs.
-
-If you have an FTDI device with an EEPROM with customized IDs, you need to tell
-PyFtdi to support those custom USB identifiers.
-
-Custom PID
-..........
-
-To support a custom product ID (16-bit integer) with the official FTDI ID, add
-the following code **before** any call to an FTDI ``open()`` method.
-
-.. code-block:: python
-
-   from pyftdi.ftdi import Ftdi
-
-   Ftdi.add_custom_product(Ftdi.DEFAULT_VENDOR, product_id)
-
-Custom VID
-..........
-
-To support a custom vendor ID and product ID (16-bit integers), add the
-following code **before** any call to an FTDI ``open()`` method.
-
-.. code-block:: python
-
-   from pyftdi.ftdi import Ftdi
-
-   Ftdi.add_custom_vendor(vendor_id)
-   Ftdi.add_custom_product(vendor_id, product_id)
-
-You may also specify an arbitrary string to each method if you want to specify
-a URL by custom vendor and product names instead of their numerical values:
-
-.. code-block:: python
-
-   from pyftdi.ftdi import Ftdi
-
-   Ftdi.add_custom_vendor(0x1234, 'myvendor')
-   Ftdi.add_custom_product(0x1234, 0x5678, 'myproduct')
-
-   f1 = Ftdi.create_from_url('ftdi://0x1234:0x5678/1')
-   f2 = Ftdi.create_from_url('ftdi://myvendor:myproduct/2')
+See the :ref:`ftdi_urls` tool to obtain the URLs for the connected FTDI
+devices.

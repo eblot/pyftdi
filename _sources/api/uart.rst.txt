@@ -103,11 +103,15 @@ pins, which can be used as regular GPIOs pins. See :ref:`CBUS GPIO<cbus_gpio>`
 for details.
 
 
-Mini serial terminal example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _pyterm:
 
-``pyftdi/bin/pyterm.py`` is a simple serial terminal that can be used
-to test the serial port feature.::
+Mini serial terminal
+~~~~~~~~~~~~~~~~~~~~
+
+``pyterm.py`` is a simple serial terminal that can be used to test the serial
+port feature. See the :ref:`tools` chapter to locate this tool.
+
+::
 
   Usage: pyterm.py [-h] [-f] [-p DEVICE] [-b BAUDRATE] [-w] [-e] [-r] [-l] [-s]
                  [-v] [-d]

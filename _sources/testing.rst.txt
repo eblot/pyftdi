@@ -57,7 +57,7 @@ engine to decode and verify MPSSE requests used to support |I2C|, SPI and UART
 features.
 
 Beware: WIP
-...........
+```````````
 
 This is an experimental work in progress, which is its early inception stage.
 
@@ -72,7 +72,7 @@ simplify test setup and help avoiding regression issues.
 
 
 Usage
-.....
+`````
 
 No hardware is required to run these tests, to even a single FTDI device.
 
@@ -83,7 +83,7 @@ This new test framework require Python 3.6+, as it uses the fstring_ syntax.
     PYTHONPATH=. FTDI_LOGLEVEL=info pyftdi/tests/mockusb.py
 
 Configuration
-.............
+`````````````
 
 The ``pyftdi/tests/resources`` directory contains definition files which are
 loaded by the mock unit tests.
@@ -96,13 +96,13 @@ This enables to create simple definition files without having to mess with low
 level USB definitions whenever possible.
 
 EEPROM content
-++++++++++++++
+..............
 
 The :ref:`ftconf` tool can be used to load, modify and generate the content of
 a virtual EEPROM, see :doc:`eeprom`.
 
 Examples
-++++++++
+........
 
  * An example of a nearly comprehensive syntax can be found in ``ft232h.yaml``.
  * Another, much more simple example with only mandatory settings can be found

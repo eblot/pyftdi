@@ -110,7 +110,7 @@ Caveats
 ~~~~~~~
 
 Open-collector bus
-..................
+``````````````````
 
 |I2C| uses only two bidirectional open collector (or open drain) lines, pulled
 up with resistors. These resistors are also required on an |I2C| bus when an
@@ -136,7 +136,7 @@ Other FTDI devices such as FT2232H and FT4232H do not support open collector
 mode, and source current to SCL and SDA lines.
 
 Clock streching
-...............
+```````````````
 
 Clock stretching is supported through a hack that re-uses the JTAG adaptative
 clock mode designed for ARM devices. FTDI HW drives SCL on ``AD0`` (`BD0`), and
@@ -149,7 +149,7 @@ to add a low forward voltage drop diode to `AD0` to prevent AD0 to source
 current to the SCL bus. See the wiring section.
 
 Speed
-.....
+`````
 
 Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
 slow. As the I2C protocol enforces that each I2C exchanged byte needs to be

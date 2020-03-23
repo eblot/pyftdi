@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API documentation" href="api/index.html" />
+    <link rel="next" title="Tools" href="tools.html" />
     <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
@@ -92,17 +92,15 @@
 <li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">URL Scheme</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#url-based-methods-to-open-a-connection">URL-based methods to open a connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#device-based-methods-to-open-a-connection">Device-based methods to open a connection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#legacy-methods-to-open-a-connection">Legacy methods to open a connection</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#tools">Tools</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#supporting-custom-usb-vendor-and-product-ids">Supporting custom USB vendor and product IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#opening-a-connection">Opening a connection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#url-based-methods-to-open-a-connection">URL-based methods to open a connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-based-methods-to-open-a-connection">Device-based methods to open a connection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#legacy-methods-to-open-a-connection">Legacy methods to open a connection</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#custom-pid">Custom PID</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#custom-vid">Custom VID</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gpio.html">GPIOs</a></li>
@@ -254,8 +252,10 @@ the Python interpreter is forced to exit (<cite>SystemExit</cite> is raised).</p
 execution is not interrupted, two helper methods are available as
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.list_devices" title="pyftdi.ftdi.Ftdi.list_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.list_devices()</span></code></a> and
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.show_devices" title="pyftdi.ftdi.Ftdi.show_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.show_devices()</span></code></a> and accept the same URL syntax.</p>
+<div class="section" id="opening-a-connection">
+<h2>Opening a connection<a class="headerlink" href="#opening-a-connection" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="url-based-methods-to-open-a-connection">
-<h2>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
+<h3>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
 <span class="n">open_bitbang_from_url</span><span class="p">()</span>
@@ -263,7 +263,7 @@ execution is not interrupted, two helper methods are available as
 </div>
 </div>
 <div class="section" id="device-based-methods-to-open-a-connection">
-<h2>Device-based methods to open a connection<a class="headerlink" href="#device-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
+<h3>Device-based methods to open a connection<a class="headerlink" href="#device-based-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h3>
 <p>You may also open an Ftdi device from an existing <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> device, with the help
 of the <code class="docutils literal notranslate"><span class="pre">open_from_device()</span></code> helper method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_device</span><span class="p">()</span>
@@ -273,7 +273,7 @@ of the <code class="docutils literal notranslate"><span class="pre">open_from_de
 </div>
 </div>
 <div class="section" id="legacy-methods-to-open-a-connection">
-<h2>Legacy methods to open a connection<a class="headerlink" href="#legacy-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h2>
+<h3>Legacy methods to open a connection<a class="headerlink" href="#legacy-methods-to-open-a-connection" title="Permalink to this headline">¶</a></h3>
 <p>The old, deprecated method to open a connection is to use the <code class="docutils literal notranslate"><span class="pre">open()</span></code>
 methods without the <code class="docutils literal notranslate"><span class="pre">_from_url</span></code> suffix, which accept VID, PID, and serial
 parameters (among others).</p>
@@ -282,49 +282,8 @@ parameters (among others).</p>
 <span class="n">open_bitbang</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="section" id="tools">
-<h3>Tools<a class="headerlink" href="#tools" title="Permalink to this headline">¶</a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">bin/</span></code> directory contains a tiny script <code class="docutils literal notranslate"><span class="pre">ftdu_urls.py</span></code> to list the
-available FTDIs connected to the host, and the URLs than can be used to open a
-<code class="docutils literal notranslate"><span class="pre">Fdti()</span></code> instance with the <code class="docutils literal notranslate"><span class="pre">Ftdi.open_from_url()</span></code> method.</p>
-</div>
-<div class="section" id="supporting-custom-usb-vendor-and-product-ids">
-<h3>Supporting custom USB vendor and product IDs<a class="headerlink" href="#supporting-custom-usb-vendor-and-product-ids" title="Permalink to this headline">¶</a></h3>
-<p>PyFtdi only recognizes FTDI official vendor and product IDs.</p>
-<p>If you have an FTDI device with an EEPROM with customized IDs, you need to tell
-PyFtdi to support those custom USB identifiers.</p>
-</div>
-</div>
-<div class="section" id="custom-pid">
-<h2>Custom PID<a class="headerlink" href="#custom-pid" title="Permalink to this headline">¶</a></h2>
-<p>To support a custom product ID (16-bit integer) with the official FTDI ID, add
-the following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
-
-<span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">Ftdi</span><span class="o">.</span><span class="n">DEFAULT_VENDOR</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="custom-vid">
-<h2>Custom VID<a class="headerlink" href="#custom-vid" title="Permalink to this headline">¶</a></h2>
-<p>To support a custom vendor ID and product ID (16-bit integers), add the
-following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
-
-<span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">)</span>
-<span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>You may also specify an arbitrary string to each method if you want to specify
-a URL by custom vendor and product names instead of their numerical values:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
-
-<span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="s1">&#39;myvendor&#39;</span><span class="p">)</span>
-<span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="mh">0x5678</span><span class="p">,</span> <span class="s1">&#39;myproduct&#39;</span><span class="p">)</span>
-
-<span class="n">f1</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="o">.</span><span class="n">create_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi://0x1234:0x5678/1&#39;</span><span class="p">)</span>
-<span class="n">f2</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="o">.</span><span class="n">create_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi://myvendor:myproduct/2&#39;</span><span class="p">)</span>
-</pre></div>
+<p>See the <a class="reference internal" href="tools.html#ftdi-urls"><span class="std std-ref">ftdi_urls</span></a> tool to obtain the URLs for the connected FTDI
+devices.</p>
 </div>
 </div>
 </div>
@@ -337,7 +296,7 @@ a URL by custom vendor and product names instead of their numerical values:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="api/index.html" class="btn btn-neutral float-right" title="API documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="tools.html" class="btn btn-neutral float-right" title="Tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

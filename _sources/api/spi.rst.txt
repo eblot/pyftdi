@@ -147,7 +147,7 @@ Limitations
 ~~~~~~~~~~~
 
 SPI Modes 1 & 3
-................
+```````````````
 
 FTDI hardware does not support cpha=1 (mode 1 and mode 3). As stated in
 Application Node 114:
@@ -167,7 +167,7 @@ consequence of this workaround is that SCLK duty cycle is not longer 50% but
 considered as a kludge, you've been warned.
 
 Time-sensitive usage
-....................
+````````````````````
 
 Due to the MPSSE engine limitation, it is not possible to achieve
 time-controlled request sequence. In other words, if the SPI slave needs to

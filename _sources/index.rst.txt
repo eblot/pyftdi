@@ -1,7 +1,7 @@
 PyFtdi
 ======
 
-.. |I2C| replace:: I\ :sup:`2`\ C
+.. include:: defs.rst
 
 Documentation
 -------------
@@ -104,6 +104,7 @@ PyFTDI in details
    requirements
    installation
    urlscheme
+   tools
    api/index
    pinout
    gpio
