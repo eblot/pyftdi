@@ -73,6 +73,8 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                           change/configure a property as key=value pair
     -e, --erase           erase the whole EEPROM content
     -u, --update          perform actual update, use w/ care
+    -P VIDPID, --vidpid VIDPID
+                        specify a custom VID:PID device ID, may be repeated
     -V VIRTUAL, --virtual VIRTUAL
                           use a virtual device, specified as YaML
     -v, --verbose         increase verbosity
@@ -104,11 +106,8 @@ application FT_PROG_ is available from FTDI web site.
 
 Option switches
 ```````````````
-
-.. _option_d:
-
-``-d``
-  Enable debug mode, which emits Python traceback on exceptions
+In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
+``ftconf.py`` support the following arguments:
 
 .. _option_c:
 
@@ -132,11 +131,6 @@ Option switches
   EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
   to a default configuration. Note that without option ``-u``, the EEPROM
   content is not actually modified, the script runs in dry-run mode.
-
-.. _option_h:
-
-``-h``
-  Show quick help and exit
 
 .. _option_m:
 
@@ -185,20 +179,6 @@ Option switches
   something goes wrong at this point, you may brick you board, you've been
   warned. PyFtdi_ offers neither guarantee whatsoever than altering the EEPROM
   content is safe, nor that it is possible to recover from a bricked device.
-
-.. _option_v:
-
-``-v``
-  Increase verbosity, useful for debugging the tool. It can be repeated to
-  increase more the verbosity.
-
-.. _option_V_:
-
-``-V <virtual>``
-  Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
-  environment. This is useful for PyFtdi_ development, and to test EEPROM
-  configuration with a virtual setup. This option is not useful for regular
-  usage. See :ref:`virtual_framework`.
 
 .. _option_x:
 

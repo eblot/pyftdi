@@ -65,3 +65,72 @@ type of hosts:
 * on Windows, there are located in the ``Scripts/`` directory, which is a
   subdirectory of the directory where the Python interpreter is installed.
 
+
+.. _common_option_switches:
+
+Common options switches
+~~~~~~~~~~~~~~~~~~~~~~~
+
+PyFtdi_ tools share many common option switches:
+
+.. _option_d:
+
+``-d``
+  Enable debug mode, which emits Python traceback on exceptions
+
+.. _option_h:
+
+``-h``
+  Show quick help and exit
+
+.. _option_P_:
+
+``-P <vidpid>``
+  Add custom vendor and product identifiers.
+
+  PyFtdi_ only recognizes FTDI official USB vendor identifier (*0x403*) and
+  the USB identifiers of their products.
+
+  In order to use alternative VID/PID values, the PyFtdi_ tools accept the
+  ``-P`` option to describe those products
+
+  The ``vidpid`` argument should match the following format:
+
+  ``[vendor_name=]<vendor_id>:[product_name=]<product_id>``
+
+  * ``vendor_name`` and ``product_name`` are optional strings, they may be
+    omitted as they only serve as human-readable aliases for the vendor and
+    product names. See example below.
+  * ``vendor_id`` and ``product_id`` are mandatory strings that should resolve
+    into 16-bit integers (USB VID and PID values). They may either be expressed
+    as decimal or hexadecimal syntax.
+
+  This option may be repeated as many times as required to add support for
+  several custom devices.
+
+  examples:
+
+   * ``0x403:0x9999``, *vid:pid* short syntax, with no alias names;
+     a matching FTDI :ref:`URL <url_scheme>` would be ``ftdi://ftdi:0x9999/1``
+   * ``mycompany=0x666:myproduct=0xcafe``, *vid:pid* complete syntax with
+     aliases; matching FTDI :ref:`URLs <url_scheme>` could be:
+
+     * ``ftdi://0x666:0x9999/1``
+     * ``ftdi://mycompany:myproduct/1``
+     * ``ftdi://mycompany:0x9999/1``
+     * ...
+
+.. _option_v:
+
+``-v``
+  Increase verbosity, useful for debugging the tool. It can be repeated to
+  increase more the verbosity.
+
+.. _option_V_:
+
+``-V <virtual>``
+  Load a virtual USB device configuration, to use a virtualized FTDI/EEPROM
+  environment. This is useful for PyFtdi_ development, and to test EEPROM
+  configuration with a virtual setup. This option is not useful for regular
+  usage. See :ref:`virtual_framework`.
+
