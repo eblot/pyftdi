@@ -32,7 +32,7 @@ from re import match
 from typing import Any, Iterable, Optional, Sequence, Union
 
 #pylint: disable-msg=invalid-name
-
+#pylint: disable-msg=too-many-arguments
 
 # String values evaluated as true boolean values
 TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
@@ -265,7 +265,7 @@ def pretty_size(size, sep: str = ' ',
     return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))
 
 
-def add_custom_devices(ftdicls: Optional['Ftdi'] = None,
+def add_custom_devices(ftdicls=None,
                        vpstr: Optional[Sequence[str]] = None) -> None:
     """Helper function to add custom VID/PID to FTDI device identifer map.
 
