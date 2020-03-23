@@ -1,7 +1,8 @@
 PyFtdi
 ======
 
-.. include:: defs.rst
+.. cannot use defs.rst here, as PyPi wants a standalone file.
+.. |I2C| replace:: I\ :sup:`2`\ C
 
 Documentation
 -------------
