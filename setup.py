@@ -37,7 +37,7 @@ from os import close, unlink
 from os.path import abspath, dirname, join as joinpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
-from sys import stderr, version_info
+from sys import stderr
 from tempfile import mkstemp
 from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
@@ -67,8 +67,10 @@ INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
 ]
-if sys.version_info[:2] == (3, 5):
-    INSTALL_REQUIRES.append('aenum >= 2.1.0')
+INSTALL_REQUIRES_3_5 = [
+    # only for old Python 3.5 support
+    'aenum >= 2.1.0'
+]
 
 HERE = abspath(dirname(__file__))
 
@@ -176,6 +178,9 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
+        extras_require={
+            ':python_version == "3.5"': INSTALL_REQUIRES_3_5,
+        },
         # tests requires >=3.6
         python_requires='>=3.5',
     )
