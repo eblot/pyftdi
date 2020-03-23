@@ -731,7 +731,8 @@ class Ftdi:
         return frequency
 
     def open_bitbang_from_url(self, url: str, direction: int = 0x0,
-                              latency: int = 16) -> None:
+                              latency: int = 16, frequency: float = 6.0E6,
+                              sync: bool = False) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -743,17 +744,24 @@ class Ftdi:
            :param initial: ignored
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
+           :param frequency: pace to sequence GPIO exchanges
+           :param sync: whether to use synchronous or asynchronous bitbang
+           :return: actual bitbang frequency in Hz
         """
         devdesc, interface = self.get_identifiers(url)
         device = UsbTools.get_device(devdesc)
-        self.open_bitbang_from_device(device, interface, direction=direction,
-                                      latency=latency)
+        return self.open_bitbang_from_device(device, interface,
+                                             direction=direction,
+                                             latency=latency,
+                                             frequency=frequency,
+                                             sync=sync)
 
     def open_bitbang(self, vendor: int, product: int,
                      bus: Optional[int] = None, address: Optional[int] = None,
                      index: int = 0, serial: Optional[str] = None,
                      interface: int = 1, direction: int = 0x0,
-                     latency: int = 16) -> None:
+                     latency: int = 16, frequency: float = 6.0E6,
+                     sync: bool = False) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -770,16 +778,26 @@ class Ftdi:
                 input
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
+           :param frequency: pace to sequence GPIO exchanges
+           :param sync: whether to use synchronous or asynchronous bitbang
+           :return: actual bitbang frequency in Hz
         """
         devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
                                       index, None)
         device = UsbTools.get_device(devdesc)
-        self.open_bitbang_from_device(device, interface, direction=direction,
-                                      latency=latency)
+        return self.open_bitbang_from_device(device, interface,
+                                             direction=direction,
+                                             latency=latency,
+                                             frequency=frequency,
+                                             sync=sync)
+        # Configure clock
+        frequency = self._set_frequency(frequency)
+        return frequency
 
     def open_bitbang_from_device(self, device: UsbDevice,
                                  interface: int = 1, direction: int = 0x0,
-                                 latency: int = 16) -> None:
+                                 latency: int = 16, frequency: float = 6.0E6,
+                                 sync: bool = False) -> None:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -791,6 +809,9 @@ class Ftdi:
                 input
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
+           :param frequency: pace to sequence GPIO exchanges
+           :param sync: whether to use synchronous or asynchronous bitbang
+           :return: actual bitbang frequency in Hz
         """
         self.open_from_device(device, interface)
         # Set latency timer
@@ -799,9 +820,13 @@ class Ftdi:
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Enable BITBANG mode
-        self.set_bitmode(direction, Ftdi.BITMODE_BITBANG)
+        self.set_bitmode(direction, Ftdi.BITMODE_BITBANG if not sync else
+                         Ftdi.BITMODE_SYNCBB)
         # Drain input buffer
         self.purge_buffers()
+        # Configure clock
+        frequency = self._set_frequency(frequency)
+        return frequency
 
     @property
     def usb_path(self) -> Tuple[int, int, int]:
