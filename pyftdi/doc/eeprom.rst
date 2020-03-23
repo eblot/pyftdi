@@ -38,11 +38,11 @@ EEPROM content.
 
 .. _ftconf:
 
-``ftconf.py``
-~~~~~~~~~~~~~
+EEPROM configuration tool
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``pyftdi/bin/ftconf.py`` is a companion script to help managing the content of
-the FTDI EEPROM from the command line.
+``ftconf.py`` is a companion script to help managing the content of the FTDI
+EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
 
 ::
 

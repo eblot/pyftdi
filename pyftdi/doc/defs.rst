@@ -8,6 +8,7 @@
 .. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
 .. _FTDI_Recovery: http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
+.. _PyFtdiTools: https://github.com/eblot/pyftdi/tree/master/pyftdi/bin
 .. _FTDI: http://www.ftdichip.com/
 .. _PyUSB: http://pyusb.github.io/pyusb/
 .. _Python: https://www.python.org/
@@ -26,3 +27,21 @@
 .. _DCE: https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment
 .. _PEP_498: https://www.python.org/dev/peps/pep-0498
 .. _PEP_526: https://www.python.org/dev/peps/pep-0526
+
+
+.. Restructured Text levels
+
+..   Level 1
+..   -------
+
+..   Level 2
+..   ~~~~~~~
+
+..   Level 3
+..   ```````
+
+..   Level 4
+..   .......
+
+..   Level 5
+..   +++++++

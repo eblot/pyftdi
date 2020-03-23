@@ -18,7 +18,7 @@ Supported features
 ~~~~~~~~~~~~~~~~~~
 
 UART
-....
+````
 
 Serial port, up to 6 Mbps. PyFtdi_ includes a pyserial_ emulation layer that
 offers transparent access to the FTDI serial ports through a pyserial_-
@@ -30,7 +30,7 @@ name.
 See also :ref:`uart-limitations`.
 
 SPI master
-..........
+``````````
 
 Supported devices:
 
@@ -59,7 +59,7 @@ See :ref:`spi_wiring` and :ref:`spi_limitations`.
 Note: FTDI*232* devices cannot be used as an SPI slave.
 
 |I2C| master
-............
+````````````
 
 Supported devices: FT232H_, FT2232H_, FT4232H_
 
@@ -67,8 +67,8 @@ For now, only 7-bit addresses are supported.
 
 GPIOs can be used while |I2C| mode is enabled.
 
-The ``pyftdi/bin/i2cscan.py`` script helps to discover which I2C devices
-are connected to the FTDI I2C bus.
+The ``i2cscan.py`` script helps to discover which I2C devices are connected to
+the FTDI I2C bus. See the :ref:`tools` chapter to locate this tool.
 
 The pyi2cflash_ module demonstrates how to use the FTDI |I2C| master to access
 serial EEPROMS.
@@ -78,14 +78,14 @@ See :ref:`i2c_wiring` and :ref:`i2c_limitations`.
 Note: FTDI*232* devices cannot be used as an |I2C| slave.
 
 JTAG
-....
+````
 
 JTAG API is limited to low-level access. It is not intented to be used for
 any flashing or debugging purpose, but may be used as a base to perform SoC
 tests and boundary scans.
 
 EEPROM
-......
+``````
 
 The ``pyftdi/bin/ftconf.py`` script helps to manage the content of the FTDI
 companion EEPROM.

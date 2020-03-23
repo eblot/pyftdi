@@ -24,7 +24,7 @@ Common error messages
 ~~~~~~~~~~~~~~~~~~~~~
 
 "Error: No backend available"
-.............................
+`````````````````````````````
 
 libusb native library cannot be loaded. Try helping the dynamic loader:
 
@@ -40,7 +40,7 @@ libusb native library cannot be loaded. Try helping the dynamic loader:
 
 
 "Error: Access denied (insufficient permissions)"
-.................................................
+`````````````````````````````````````````````````
 
 The system may already be using the device.
 
@@ -75,7 +75,7 @@ The system may already be using the device.
 
 
 "Error: The device has no langid"
-.................................
+`````````````````````````````````
 
 * On Linux, it usually comes from the same installation issue as the
   ``Access denied`` error: the current user is not granted the permissions to
@@ -84,7 +84,7 @@ The system may already be using the device.
 
 
 "Bus error / Access violation"
-..............................
+``````````````````````````````
 
 PyFtdi does not use any native library, but relies on PyUSB_ and libusb_. The
 latter uses native code that may trigger OS error. Some early development
@@ -94,14 +94,14 @@ experience this kind of fatal error.
 
 
 "serial.serialutil.SerialException: Unable to open USB port"
-............................................................
+````````````````````````````````````````````````````````````
 
 May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
 uninstalling the driver. On macOS, refer to this `FTDI macOS guide`_.
 
 
 Slow initialisation on OS X El Capitan
-......................................
+``````````````````````````````````````
 
 It may take several seconds to open or enumerate FTDI devices.
 
