@@ -220,9 +220,9 @@ class Ftdi:
     SIO_REQ_ERASE_EEPROM = SIO_REQ_EEPROM + 2  # Erase EEPROM content
 
     # Reset commands
-    SIO_RESET_SIO = 0          # Reset device
-    SIO_RESET_PURGE_RX = 1     # Drain RX buffer
-    SIO_RESET_PURGE_TX = 2     # Drain TX buffer
+    SIO_RESET_SIO = 0        # Reset device
+    SIO_RESET_PURGE_RX = 1   # Drain USB RX buffer (host-to-ftdi)
+    SIO_RESET_PURGE_TX = 2   # Drain USB TX buffer (ftdi-to-host)
 
     # Flow control
     SIO_DISABLE_FLOW_CTRL = 0x0
@@ -269,7 +269,7 @@ class Ftdi:
     BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
     BAUDRATE_REF_HIGH = int(12.0E6)  # 12 MHz
     BAUDRATE_REF_SPECIAL = int(2.0E6)  # 3 MHz
-    BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift, in %
+    BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift for UART, in %
     BITBANG_CLOCK_MULTIPLIER = 4
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
@@ -731,7 +731,7 @@ class Ftdi:
         return frequency
 
     def open_bitbang_from_url(self, url: str, direction: int = 0x0,
-                              latency: int = 16, frequency: float = 6.0E6,
+                              latency: int = 16, baudrate: int = 1000000,
                               sync: bool = False) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
@@ -744,23 +744,23 @@ class Ftdi:
            :param initial: ignored
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
-           :param frequency: pace to sequence GPIO exchanges
+           :param baudrate: pace to sequence GPIO exchanges
            :param sync: whether to use synchronous or asynchronous bitbang
-           :return: actual bitbang frequency in Hz
+           :return: actual bitbang baudrate in bps
         """
         devdesc, interface = self.get_identifiers(url)
         device = UsbTools.get_device(devdesc)
         return self.open_bitbang_from_device(device, interface,
                                              direction=direction,
                                              latency=latency,
-                                             frequency=frequency,
+                                             baudrate=baudrate,
                                              sync=sync)
 
     def open_bitbang(self, vendor: int, product: int,
                      bus: Optional[int] = None, address: Optional[int] = None,
                      index: int = 0, serial: Optional[str] = None,
                      interface: int = 1, direction: int = 0x0,
-                     latency: int = 16, frequency: float = 6.0E6,
+                     latency: int = 16, baudrate: int = 1000000,
                      sync: bool = False) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
@@ -778,9 +778,9 @@ class Ftdi:
                 input
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
-           :param frequency: pace to sequence GPIO exchanges
+           :param baudrate: pace to sequence GPIO exchanges
            :param sync: whether to use synchronous or asynchronous bitbang
-           :return: actual bitbang frequency in Hz
+           :return: actual bitbang baudrate in bps
         """
         devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
                                       index, None)
@@ -788,15 +788,12 @@ class Ftdi:
         return self.open_bitbang_from_device(device, interface,
                                              direction=direction,
                                              latency=latency,
-                                             frequency=frequency,
+                                             baudrate=baudrate,
                                              sync=sync)
-        # Configure clock
-        frequency = self._set_frequency(frequency)
-        return frequency
 
     def open_bitbang_from_device(self, device: UsbDevice,
                                  interface: int = 1, direction: int = 0x0,
-                                 latency: int = 16, frequency: float = 6.0E6,
+                                 latency: int = 16, baudrate: int = 1000000,
                                  sync: bool = False) -> None:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
@@ -809,24 +806,28 @@ class Ftdi:
                 input
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
-           :param frequency: pace to sequence GPIO exchanges
+           :param baudrate: pace to sequence GPIO exchanges
            :param sync: whether to use synchronous or asynchronous bitbang
-           :return: actual bitbang frequency in Hz
+           :return: actual bitbang baudrate in bps
         """
         self.open_from_device(device, interface)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
+        # Beware that RX buffer, over 512 bytes, contains 2-byte modem marker
+        # on every 512 byte chunk, so data and out-of-band marker get
+        # interleaved. This is not yet supported with read_data_bytes for now
         self.write_data_set_chunksize(512)
         self.read_data_set_chunksize(512)
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG if not sync else
                          Ftdi.BITMODE_SYNCBB)
+        # Configure clock
+        if baudrate:
+            self._baudrate = self._set_baudrate(baudrate, False)
         # Drain input buffer
         self.purge_buffers()
-        # Configure clock
-        frequency = self._set_frequency(frequency)
-        return frequency
+        return self._baudrate
 
     @property
     def usb_path(self) -> Tuple[int, int, int]:
@@ -983,6 +984,7 @@ class Ftdi:
         """
         return self._bitmode not in (
             Ftdi.BITMODE_RESET,
+            Ftdi.BITMODE_MPSSE,
             Ftdi.BITMODE_CBUS  # CBUS mode does not change base frequency
         )
 
@@ -1008,12 +1010,12 @@ class Ftdi:
         # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
         # Values here are seen from the host perspective, whereas datasheet
         # values are defined from the device perspective
-        sizes = {0x0500: (384, 128),    # TX: 384, RX: 128
-                 0x0600: (128, 256),    # TX: 128, RX: 256
-                 0x0700: (4096, 4096),  # TX: 4KiB, RX: 4KiB
-                 0x0800: (2048, 2048),  # TX: 2KiB, RX: 2KiB
-                 0x0900: (1024, 1024),  # TX: 1KiB, RX: 1KiB
-                 0x1000: (512, 512)}    # TX: 512, RX: 512
+        sizes = {0x0500: (384, 128),    # FT232D:  TX: 384, RX: 128
+                 0x0600: (128, 256),    # FT232R:  TX: 128, RX: 256
+                 0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
+                 0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
+                 0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
+                 0x1000: (512, 512)}    # FT230X:  TX: 512, RX: 512
         return sizes.get(self.device_version, (128, 128))  # default sizes
 
     @property
@@ -1040,15 +1042,15 @@ class Ftdi:
         """
         return self._usb_dev
 
-    def set_baudrate(self, baudrate: int) -> None:
-        """Change the current UART baudrate.
+    def set_baudrate(self, baudrate: int, constrain: bool = True) -> int:
+        """Change the current UART or BitBang baudrate.
 
            The FTDI device is not able to use an arbitrary baudrate. Its
            internal dividors are only able to achieve some baudrates.
 
            PyFtdi attemps to find the closest configurable baudrate and if
            the deviation from the requested baudrate is too high, it rejects
-           the configuration.
+           the configuration if constrain is set.
 
            :py:attr:`baudrate` attribute can be used to retrieve the exact
            selected baudrate.
@@ -1059,27 +1061,14 @@ class Ftdi:
            baudrate is not within limits, baudrate setting is rejected.
 
            :param baudrate: the new baudrate for the UART.
+           :param constrain: whether to validate baudrate is in RS232 tolerance
+                             limits or allow larger drift
            :raise ValueError: if deviation from selected baudrate is too large
            :raise FtdiError: on IO Error
+           :return: the effective baudrate
         """
-        if self.bitbang_enabled:
-            baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
-        actual, value, index = self._convert_baudrate(baudrate)
-        delta = 100*abs(float(actual-baudrate))/baudrate
-        self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
-                       actual, delta, index, value)
-        if delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise ValueError('Baudrate tolerance exceeded: %.02f%% '
-                             '(wanted %d, achievable %d)' %
-                             (delta, baudrate, actual))
-        try:
-            if self._usb_dev.ctrl_transfer(
-                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_BAUDRATE, value, index,
-                    bytearray(), self._usb_write_timeout):
-                raise FtdiError('Unable to set baudrate')
-            self._baudrate = actual
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+        self._baudrate = self._set_baudrate(baudrate, constrain)
+        return self._baudrate
 
     def set_frequency(self, frequency: float) -> float:
         """Change the current MPSSE bus frequency
@@ -1097,19 +1086,22 @@ class Ftdi:
         return self._set_frequency(frequency)
 
     def purge_rx_buffer(self) -> None:
-        """Clear the read buffer on the chip and the internal read buffer."""
+        """Clear the USB receive buffer on the chip (host-to-ftdi) and the
+           internal read buffer."""
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_PURGE_RX):
             raise FtdiError('Unable to flush RX buffer')
         # Invalidate data in the readbuffer
         self._readoffset = 0
         self._readbuffer = bytearray()
+        self.log.debug('rx buf purged')
 
     def purge_tx_buffer(self) -> None:
-        """Clear the write buffer on the chip."""
+        """Clear the USB transmit buffer on the chip (ftdi-to-host)."""
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to flush TX buffer')
+        self.log.debug('tx buf purged')
 
     def purge_buffers(self) -> None:
         """Clear the buffers on the chip and the internal read buffer."""
@@ -1162,6 +1154,7 @@ class Ftdi:
 
            Switch the FTDI interface to bitbang mode.
         """
+        self.log.debug('bitmode: 0x%02x', mode)
         value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
@@ -1988,8 +1981,8 @@ class Ftdi:
     def _write(self, data: bytes) -> int:
         try:
             self.log.debug('> %s', hexlify(data).decode())
-        except TypeError:
-            self.log.error('> (invalid output byte sequence)')
+        except TypeError as exc:
+            self.log.error('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
             self._tracer.send(data)
         return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
@@ -2113,10 +2106,39 @@ class Ftdi:
         estimate = int(((8 * clock) + (div8//2))//div8)
         return estimate, value, index
 
+    def _set_baudrate(self, baudrate: int, constrain: bool) -> int:
+        if self.is_mpsse:
+            raise FtdiFeatureError('Cannot change frequency w/ current mode')
+        if self.is_bitbang_enabled:
+            baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
+            baudrate //= 10
+        actual, value, index = self._convert_baudrate(baudrate)
+        delta = 100*abs(float(actual-baudrate))/baudrate
+        if self.is_bitbang_enabled:
+            actual *= 10
+            actual //= Ftdi.BITBANG_CLOCK_MULTIPLIER
+        self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
+                       actual, delta, index, value)
+        # return actual
+        if constrain and delta > Ftdi.BAUDRATE_TOLERANCE:
+            raise ValueError('Baudrate tolerance exceeded: %.02f%% '
+                             '(wanted %d, achievable %d)' %
+                             (delta, baudrate, actual))
+        try:
+            if self._usb_dev.ctrl_transfer(
+                    Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_BAUDRATE, value, index,
+                    bytearray(), self._usb_write_timeout):
+                raise FtdiError('Unable to set baudrate')
+            return actual
+        except USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex))
+
     def _set_frequency(self, frequency: float) -> float:
         """Convert a frequency value into a TCK divisor setting"""
+        if not self.is_mpsse:
+            raise FtdiFeatureError('Cannot change frequency w/ current mode')
         if frequency > self.frequency_max:
-            raise FtdiFeatureError("Unsupported frequency: %f" % frequency)
+            raise FtdiFeatureError('Unsupported frequency: %f' % frequency)
         # Calculate base speed clock divider
         divcode = Ftdi.ENABLE_CLK_DIV5
         divisor = int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1

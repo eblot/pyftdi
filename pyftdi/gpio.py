@@ -29,7 +29,7 @@
 #pylint: disable-msg=too-few-public-methods
 
 from struct import calcsize as scalc, unpack as sunpack
-from typing import Iterable, Tuple, Union
+from typing import Iterable, Optional, Tuple, Union
 from .ftdi import Ftdi, FtdiError
 from .misc import is_iterable
 
@@ -55,7 +55,7 @@ class GpioBaseController(GpioPort):
         self._direction = 0
         self._width = 0
         self._mask = 0
-        self._frequency = 0.0
+        self._frequency = 0
 
     @property
     def ftdi(self) -> Ftdi:
@@ -74,7 +74,7 @@ class GpioBaseController(GpioPort):
         return self._ftdi.is_connected
 
     def configure(self, url: str, direction: int = 0,
-                  **kwargs):
+                  **kwargs) -> int:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            :param str url: a FTDI URL selector
@@ -82,12 +82,18 @@ class GpioBaseController(GpioPort):
                 where high level defines an output, and low level defines an
                 input
            :param initial: optional initial GPIO output value
-           :param frequency: optional frequency in Hz
-           :return: actual bitbang frequency in Hz
+           :param pace: optional pace in GPIO sample per second
+           :return: actual bitbang pace in sample per second
         """
         if self.is_connected:
             raise FtdiError('Already connected')
-        self._frequency = self._configure(url, direction, **kwargs)
+        frequency = kwargs.get('frequency', None)
+        if frequency is None:
+            frequency = kwargs.get('baudrate', None)
+        for k in ('direction', 'sync', 'frequency', 'baudrate'):
+            if k in kwargs:
+                del kwargs[k]
+        self._frequency = self._configure(url, direction, frequency, **kwargs)
         self._mask = (1 << self._width) - 1
         self._direction = direction & self._mask
 
@@ -146,6 +152,21 @@ class GpioBaseController(GpioPort):
         """
         return self._width
 
+    @property
+    def frequency(self) -> float:
+        """Return the pace at which sequence of GPIO samples are read
+           and written.
+        """
+        return self._frequency
+
+    def set_frequency(self, frequency: Union[int, float]) -> None:
+        """Set the frequency at which sequence of GPIO samples are read
+           and written.
+
+           :param frequency: the new frequency, in GPIO samples per second
+        """
+        raise NotImplementedError('GpioBaseController cannot be instanciated')
+
     def set_direction(self, pins: int, direction: int) -> None:
         """Update the GPIO pin direction.
 
@@ -160,7 +181,8 @@ class GpioBaseController(GpioPort):
         self._direction |= (pins & direction)
         self._ftdi.set_bitmode(self._direction, Ftdi.BITMODE_BITBANG)
 
-    def _configure(self, url, direction, **kwargs):
+    def _configure(self, url: str, direction: int,
+                   frequency: Union[int, float, None] = None, **kwargs) -> int:
         raise NotImplementedError('GpioBaseController cannot be instanciated')
 
 
@@ -170,39 +192,52 @@ class GpioAsyncController(GpioBaseController):
        GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
     """
 
-    def _configure(self, url, direction, **kwargs):
-        for k in ('direction', 'sync'):
-            if k in kwargs:
-                del kwargs[k]
-        frequency = self._ftdi.open_bitbang_from_url(url,
-                                                     direction=direction,
-                                                     sync=False,
-                                                     **kwargs)
-        if 'initial' in kwargs:
-            self.write(kwargs['initial'] & self._mask)
-        self._width = 8
-        return frequency
-
-    def read(self, direct: bool = True, readlen: int = 1) -> \
+    def read(self, readlen: int = 1, direct: Optional[bool] = None) -> \
              Union[int, bytes]:
         """Read the GPIO input pin electrical level.
 
+           :param readlen: how many GPIO samples to retrieve. Each sample is
+                           8-bit wide.
            :param direct: whether to peak current value from port, or to use
                           the HW FIFO. When direct mode is selected, readlen
                           should be 1. This matches the behaviour of the legacy
                           API.
-           :param readlen: how many GPIO samples to retrieve. Each sample if
-                           8-bit wide.
            :return: a 8-bit wide integer if direct mode is used, or
                     a :py:type:`bytes`` buffer otherwise.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
+        if direct is None and readlen == 1:
+            # compatibility with legacy API
+            direct = True
         if direct:
             if readlen != 1:
                 raise ValueError('Invalid read length with direct mode')
-        if direct:
             return self._ftdi.read_pins()
+        # weird errors occur if the FTDI-to-host buffer is not purged first
+        # for example, on FT232H, after 526 read bytes after a write, whatever
+        # the count of read() calls to reach 526 bytes, FTDI only reads zeroed
+        # values for about 510 bytes, before outputing proper values again.
+        # Meanwhile, direct mode always work, as it uses the control pipe, not
+        # the bulk pipe... Anyway, flushing the FTDI-to-host buffer seems to be
+        # a proper work around.
+        loop = 200
+        while loop:
+            loop -= 1
+            # do not attempt to do anything till the FTDI HW buffer has been
+            # emptied, i.e. previous write calls have been handled. Failing to
+            # do so lead to FTDI RX buffer corruption...
+            status = self._ftdi.poll_modem_status()
+            if status & Ftdi.MODEM_TEMT:
+                # TX buffer is now empty
+                break
+        else:
+            # sanity check to avoid endless loop on errors
+            raise FtdiError('FTDI TX buffer error')
+        # now flush the FTDI-to-host buffer as it may be filled with write
+        # data - no idea why in async bitbang mode...
+        self._ftdi.purge_tx_buffer()
+        # finally perform the actual read out
         return self._ftdi.read_data(readlen)
 
     def write(self, out: Union[bytes, bytearray, int]) -> None:
@@ -218,12 +253,52 @@ class GpioAsyncController(GpioBaseController):
         else:
             if isinstance(out, int):
                 out = bytes([out])
-            elif not is_iterable(out):
-                raise TypeError('Invalid output value')
+            else:
+                if not is_iterable(out):
+                    raise TypeError('Invalid output value')
             for val in out:
                 if val > self._mask:
-                    raise GpioException("Invalid value")
+                    raise ValueError('Invalid output value')
+            out = bytes(out)
         self._ftdi.write_data(out)
+
+    def set_frequency(self, frequency: Union[int, float]) -> None:
+        """Set the frequency at which sequence of GPIO samples are read
+           and written.
+
+           note: FTDI may update its clock register before it has emptied its
+           internal buffer. If the current frequency is "low", some
+           yet-to-output bytes may end up being clocked at the new frequency.
+
+           Unfortunately, it seems there is no way to wait for the internal
+           buffer to be emptied out. They can be flushed (i.e. discarded), but
+           not synchronized :-(
+
+           PyFtdi client should add "some" short delay to ensure a previous,
+           long write request has been fully output @ low freq before changing
+           the frequency.
+
+           Beware that only some exact frequencies can be generated. Contrary
+           to the UART mode, an approximate frequency is always accepted for
+           GPIO/bitbang mode. To get the actual frequency, and optionally abort
+           if it is out-of-spec, use :py:meth:`frequency` property.
+
+           :param frequency: the new frequency, in GPIO samples per second
+        """
+        self._frequency = float(self._ftdi.set_baudrate(int(frequency), False))
+
+    def _configure(self, url: str, direction: int,
+                   frequency: Union[int, float, None] = None, **kwargs) -> int:
+        baudrate = int(frequency) if frequency is not None else None
+        baudrate = self._ftdi.open_bitbang_from_url(url,
+                                                    direction=direction,
+                                                    sync=False,
+                                                    baudrate=baudrate,
+                                                    **kwargs)
+        if 'initial' in kwargs:
+            self.write(kwargs['initial'] & self._mask)
+        self._width = 8
+        return float(baudrate)
 
     # old API names
     open_from_url = GpioBaseController.configure
@@ -263,24 +338,36 @@ class GpioSyncController(GpioBaseController):
         self._ftdi.write_data(out)
         return self._ftdi.read_data(len(out))
 
-    def _configure(self, url, direction, **kwargs):
-        for k in ('direction', 'sync'):
-            if k in kwargs:
-                del kwargs[k]
+    def set_frequency(self, frequency: Union[int, float]) -> None:
+        """Set the frequency at which sequence of GPIO samples are read
+           and written.
+
+           :param frequency: the new frequency, in GPIO samples per second
+        """
+        self._frequency = float(self._ftdi.set_baudrate(int(frequency), False))
+
+    def _configure(self, url, direction, frequency, **kwargs):
         frequency = self._ftdi.open_bitbang_from_url(url,
                                                      direction=direction,
                                                      sync=True,
+                                                     baudrate=int(frequency),
                                                      **kwargs)
         if 'initial' in kwargs:
             self.exchange(kwargs['initial'] & self._mask)
         self._width = 8
-        return frequency
+        return float(frequency)
 
 
 class GpioMpsseController(GpioBaseController):
     """GPIO controller for an FTDI port, in MPSSE mode.
 
        All GPIO pins are reachable, but MPSSE mode is slower than other modes.
+
+       Beware that LSBs (b0..b7) and MSBs (b8..b15) are accessed with two
+       subsequence commands, so a slight delay may occur when sampling or
+       changing both groups at once. In other word, it is not possible to
+       atomically read to / write from LSBs and MSBs. This might be worth
+       checking the board design if atomic access to several lines is required.
     """
 
 
@@ -329,9 +416,10 @@ class GpioMpsseController(GpioBaseController):
                     raise GpioException("Invalid value")
         self._write_mpsse(out)
 
-    def _configure(self, url, direction, **kwargs):
+    def _configure(self, url, direction, frequency, **kwargs):
         frequency = self._ftdi.open_mpsse_from_url(url,
                                                    direction=direction,
+                                                   frequency=frequency,
                                                    **kwargs)
         self._width = self._ftdi.port_width
         return frequency

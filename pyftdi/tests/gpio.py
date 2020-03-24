@@ -38,91 +38,106 @@ from pyftdi.gpio import GpioController, GpioException
 #pylint: disable-msg=missing-docstring
 
 
-class GpioTest:
-    """
-    """
-
-    def __init__(self):
-        self._gpio = GpioController()
-        self._state = 0  # SW cache of the GPIO output lines
-
-    def open(self, out_pins):
-        """Open a GPIO connection, defining which pins are configured as
-           output and input"""
-        out_pins &= 0xFF
-        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
-        self._gpio.configure(url, direction=out_pins)
-
-    def close(self):
-        """Close the GPIO connection"""
-        self._gpio.close()
-
-    def set_gpio(self, line, high):
-        """Set the level of a GPIO ouput pin.
-
-           :param line: specify which GPIO to madify.
-           :param high: a boolean value, True for high-level, False for low-level
-        """
-        if high:
-            state = self._state | (1 << line)
-        else:
-            state = self._state & ~(1 << line)
-        self._commit_state(state)
-
-    def get_gpio(self, line):
-        """Retrieve the level of a GPIO input pin
-
-           :param line: specify which GPIO to read out.
-           :return: True for high-level, False for low-level
-        """
-        value = self._gpio.read_port()
-        return bool(value & (1 << line))
-
-    def _commit_state(self, state):
-        """Update GPIO outputs
-        """
-        self._gpio.write_port(state)
-        # do not update cache on error
-        self._state = state
-
-
 class GpioTestCase(TestCase):
-    """FTDI GPIO driver test case"""
+    """FTDI GPIO driver test case.
 
-    def test_gpio(self):
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. At least, b7..b5 can be driven high or
+       low, so check your HW setup before running this test as it might
+       damage your HW.
+
+       Low nibble is used as input, high nibble is used as output. They should
+       be interconnected as follow:
+
+       * b0 should be connected to b4
+       * b1 should be connected to b5
+       * b2 should be connected to b6
+       * b3 should be connected to b7
+
+       Do NOT run this test if you use FTDI port A as an UART or SPI
+       bridge -or any unsupported setup!! You've been warned.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+
+    def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
-
-           Please ensure that the HW you connect to the FTDI port A does match
-           the encoded configuration. At least, b7..b5 can be driven high or
-           low, so check your HW setup before running this test as it might
-           damage your HW.
-
-           Do NOT run this test if you use FTDI port A as an UART or SPI
-           bridge -or any unsupported setup!! You've been warned.
         """
-        gpio = GpioTest()
-        mask = 0xE0  # Out, Out, Out, In, In, In, In, In
-        gpio.open(mask)
-        for pin in range(8):
-            gpio.get_gpio(pin)
-            try:
-                gpio.set_gpio(pin, True)
-            except GpioException:
-                self.assertFalse(bool((1 << pin) & mask),
-                                 f'exception: pin {pin} should be Low')
-            else:
-                self.assertTrue(bool((1 << pin) & mask),
-                                f'exception: pin {pin} should be High')
-            sleep(0.2)
-        for pin in range(8):
-            try:
-                gpio.set_gpio(pin, False)
-            except GpioException:
-                self.assertFalse(bool((1 << pin) & mask))
-            sleep(0.2)
-        self.assertRaises(GpioException, gpio.set_gpio, pin+1, True)
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio = GpioController()
+        gpio.configure(self.url, direction=direction)
+        port = gpio.get_gpio()  # useless, for API duck typing
+        # legacy API: direct mode, 1 byte
+        ingress = port.read()
+        self.assertIsInstance(ingress, int)
+        # direct mode always gives a single byte output
+        ingress = port.read(direct=True)
+        self.assertIsInstance(ingress, int)
+        # regular mode always gives a bytes buffer
+        ingress = port.read(direct=False)
+        self.assertIsInstance(ingress, bytes)
+        self.assertEqual(len(ingress), 1)
+        # direct mode is not available with multi-byte mode
+        self.assertRaises(ValueError, port.read, 3, True)
+        ingress = port.read(3)
+        self.assertIsInstance(ingress, bytes)
+        self.assertEqual(len(ingress), 3)
+        port.write(0x00)
+        port.write(0xFF)
+        # only 8 bit values are accepted
+        self.assertRaises(ValueError, port.write, 0x100)
+        port.write([0x00, 0xFF, 0x00])
+        port.write(bytes([0x00, 0xFF, 0x00]))
+        # only 8 bit values are accepted
+        self.assertRaises(ValueError, port.write, [0x00, 0x100, 0x00])
         gpio.close()
-        self.assertRaises(GpioException, gpio.set_gpio, pin, True)
+
+    def test_gpio_loopback(self):
+        """Check I/O.
+        """
+        gpio = GpioController()
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio.configure(self.url, direction=direction, frequency=800000)
+        for out in range(16):
+            gpio.write(out << 4)
+            fback = gpio.read()
+            lsbs = fback & ~direction
+            msbs = fback >> 4
+            # check inputs match outputs
+            self.assertEqual(lsbs, out)
+            # check level of outputs match the ones written
+            self.assertEqual(msbs, out)
+        outs = list([(out & 0xf)<<4 for out in range(1000)])
+        gpio.write(outs)
+        gpio.ftdi.read_data(512)
+        for _ in range(len(outs)):
+            gpio.read(14)
+        last = outs[-1] >> 4
+        for _ in range(10):
+            fbacks = gpio.read(1000)
+            for fback in fbacks:
+                lsbs = fback & ~direction
+                msbs = fback >> 4
+                # check inputs match last output
+                self.assertEqual(lsbs, last)
+                # check level of output match the last written
+                self.assertEqual(msbs, last)
+        gpio.close()
+
+    def test_gpio_baudate(self):
+        gpio = GpioController()
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio.configure(self.url, direction=direction)
+        buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
+        gpio.set_frequency(10000) # 80 000
+        gpio.write(buf)
+        gpio.set_frequency(50000) # 400 000
+        gpio.write(buf)
+        gpio.set_frequency(200000)  # 1 700 000
+        gpio.write(buf)
+        gpio.close()
 
 
 def suite():

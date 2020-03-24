@@ -177,8 +177,7 @@ class FtdiSerial(SerialBase):
 
     def _reconfigure_port(self):
         try:
-            self.udev.set_baudrate(self._baudrate)
-            self._baudrate = self.udev.baudrate
+            self._baudrate = self.udev.set_baudrate(self._baudrate, True)
             self.udev.set_line_property(self._bytesize,
                                         self._stopbits,
                                         self._parity)
@@ -193,9 +192,9 @@ class FtdiSerial(SerialBase):
             except AttributeError:
                 # backend does not support this feature
                 pass
-        except IOError as e:
+        except IOError as exc:
             err = self.udev.get_error_string()
-            raise SerialException("%s (%s)" % (str(e), err))
+            raise SerialException("%s (%s)" % (str(exc), err))
 
     def _set_open_state(self, open_):
         self.is_open = bool(open_)
