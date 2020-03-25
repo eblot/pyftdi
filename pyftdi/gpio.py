@@ -190,52 +190,60 @@ class GpioAsyncController(GpioBaseController):
     """GPIO controller for an FTDI port, in bit-bang asynchronous mode.
 
        GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
+
+       GPIO asynchronous read access may be hard to use, except if peek mode
+       is selected, see :py:meth:`read` for details.
     """
 
-    def read(self, readlen: int = 1, direct: Optional[bool] = None) -> \
+    def read(self, readlen: int = 1, peek: Optional[bool] = None) -> \
              Union[int, bytes]:
         """Read the GPIO input pin electrical level.
 
            :param readlen: how many GPIO samples to retrieve. Each sample is
                            8-bit wide.
-           :param direct: whether to peak current value from port, or to use
-                          the HW FIFO. When direct mode is selected, readlen
-                          should be 1. This matches the behaviour of the legacy
-                          API.
-           :return: a 8-bit wide integer if direct mode is used, or
+           :param peek: whether to peek/sample the instantaneous GPIO pin
+                        values from port, or to use the HW FIFO. The HW FIFO is
+                        continously filled up with GPIO sample at the current
+                        frequency, until it is full - samples are no longer
+                        collected until the FIFO is read. This means than
+                        non-peek mode read "old" values, with no way to know at
+                        which time they have been sampled. PyFtdi ensures that
+                        old sampled values before the completion of a previous
+                        GPIO write are discarded. When peek mode is selected,
+                        readlen should be 1.
+           :return: a 8-bit wide integer if peek mode is used, or
                     a :py:type:`bytes`` buffer otherwise.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if direct is None and readlen == 1:
+        if peek is None and readlen == 1:
             # compatibility with legacy API
-            direct = True
-        if direct:
+            peek = True
+        if peek:
             if readlen != 1:
-                raise ValueError('Invalid read length with direct mode')
+                raise ValueError('Invalid read length with peek mode')
             return self._ftdi.read_pins()
-        # weird errors occur if the FTDI-to-host buffer is not purged first
-        # for example, on FT232H, after 526 read bytes after a write, whatever
-        # the count of read() calls to reach 526 bytes, FTDI only reads zeroed
-        # values for about 510 bytes, before outputing proper values again.
-        # Meanwhile, direct mode always work, as it uses the control pipe, not
-        # the bulk pipe... Anyway, flushing the FTDI-to-host buffer seems to be
-        # a proper work around.
+        # in asynchronous bitbang mode, the FTDI-to-host FIFO is filled in
+        # continuously once this mode is activated. This means there is no
+        # way to trigger the exact moment where the buffer is filled in, nor
+        # to define the write pointer in the buffer. Reading out this buffer
+        # at any time is likely to contain a mix of old and new values.
+        # Anyway, flushing the FTDI-to-host buffer seems to be a proper
+        # to get in sync with the buffer.
         loop = 200
         while loop:
             loop -= 1
             # do not attempt to do anything till the FTDI HW buffer has been
-            # emptied, i.e. previous write calls have been handled. Failing to
-            # do so lead to FTDI RX buffer corruption...
+            # emptied, i.e. previous write calls have been handled.
             status = self._ftdi.poll_modem_status()
             if status & Ftdi.MODEM_TEMT:
-                # TX buffer is now empty
+                # TX buffer is now empty, any "write" GPIO rquest has completed
+                # so start reading GPIO samples from this very moment.
                 break
         else:
             # sanity check to avoid endless loop on errors
             raise FtdiError('FTDI TX buffer error')
-        # now flush the FTDI-to-host buffer as it may be filled with write
-        # data - no idea why in async bitbang mode...
+        # now flush the FTDI-to-host buffer as it keeps being filled with data
         self._ftdi.purge_tx_buffer()
         # finally perform the actual read out
         return self._ftdi.read_data(readlen)

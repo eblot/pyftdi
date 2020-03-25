@@ -72,14 +72,23 @@ class Ftdi:
     """FTDI device driver"""
 
     SCHEME = 'ftdi'
+    """URL scheme for :py:class:`UsbTools`."""
+
     FTDI_VENDOR = 0x403
+    """USB VID for FTDI chips."""
+
     VENDOR_IDS = {'ftdi': FTDI_VENDOR}
+    """Supported vendors, only FTDI.
+       To add third parties vendors see :py:meth:`add_custom_vendor`.
+    """
+
     PRODUCT_IDS = {
         FTDI_VENDOR:
             {'232': 0x6001,
              '232r': 0x6001,
              '232h': 0x6014,
              '2232': 0x6010,
+             '2232c': 0x6010,
              '2232d': 0x6010,
              '2232h': 0x6010,
              '4232': 0x6011,
@@ -91,6 +100,7 @@ class Ftdi:
              'ft232r': 0x6001,
              'ft232h': 0x6014,
              'ft2232': 0x6010,
+             'ft2232c': 0x6010,
              'ft2232d': 0x6010,
              'ft2232h': 0x6010,
              'ft4232': 0x6011,
@@ -99,7 +109,43 @@ class Ftdi:
              'ft231x': 0x6015,
              'ft234x': 0x6015}
         }
+    """Supported products, only FTDI officials ones.
+       To add third parties and customized products, see
+       :py:meth:`add_custom_product`.
+    """
+
     DEFAULT_VENDOR = FTDI_VENDOR
+    """Default vendor: FTDI."""
+
+    DEVICE_NAMES = {
+        0x0200: 'ft232am',
+        0x0400: 'ft232bm',
+        0x0500: 'ft2232c',
+        0x0600: 'ft232r',
+        0x0700: 'ft2232h',
+        0x0800: 'ft4232h',
+        0x0900: 'ft232h',
+        0x1000: 'ft230x'}
+    """Common names of FTDI supported devices."""
+
+    # Note that the FTDI datasheets contradict themselves, so
+    # the following values may not be the right ones...
+    FIFO_SIZES = {
+        0x0200: (128, 128),    # FT232AM
+        0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
+        0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
+        0x0600: (128, 256),    # FT232R:  TX: 128, RX: 256
+        0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
+        0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
+        0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
+        0x1000: (512, 512),    # FT230X:  TX: 512, RX: 512
+    }
+    """FTDI chip internal FIFO sizes
+
+       Note that 'TX' and 'RX' are inverted with the datasheet terminology:
+       Values here are seen from the host perspective, whereas datasheet
+       values are defined from the device perspective
+    """
 
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
@@ -273,17 +319,6 @@ class Ftdi:
     BITBANG_CLOCK_MULTIPLIER = 4
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
-
-    DEVICE_NAMES = {
-        0x0200: 'ft232am',
-        0x0400: 'ft232bm',
-        0x0500: 'ft2232d',
-        0x0600: 'ft232r',
-        0x0700: 'ft2232h',
-        0x0800: 'ft4232h',
-        0x0900: 'ft232h',
-        0x1000: 'ft230x'}
-    # Supported FT*232* devices
 
     # Latency
     LATENCY_MIN = 12
@@ -700,8 +735,8 @@ class Ftdi:
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
-        self.write_data_set_chunksize(512)
-        self.read_data_set_chunksize(512)
+        self.write_data_set_chunksize()
+        self.read_data_set_chunksize()
         # Reset feature mode
         self.set_bitmode(0, Ftdi.BITMODE_RESET)
         # Enable MPSSE mode
@@ -817,8 +852,8 @@ class Ftdi:
         # Beware that RX buffer, over 512 bytes, contains 2-byte modem marker
         # on every 512 byte chunk, so data and out-of-band marker get
         # interleaved. This is not yet supported with read_data_bytes for now
-        self.write_data_set_chunksize(512)
-        self.read_data_set_chunksize(512)
+        self.write_data_set_chunksize()
+        self.read_data_set_chunksize()
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BITMODE_BITBANG if not sync else
                          Ftdi.BITMODE_SYNCBB)
@@ -1005,18 +1040,11 @@ class Ftdi:
 
            :return: 2-tuple of TX, RX FIFO size in bytes
         """
-        # Note that the FTDI datasheets contradict themselves, so
-        # the following values may not be the right ones...
-        # Note that 'TX' and 'RX' are inverted with the datasheet terminology:
-        # Values here are seen from the host perspective, whereas datasheet
-        # values are defined from the device perspective
-        sizes = {0x0500: (384, 128),    # FT232D:  TX: 384, RX: 128
-                 0x0600: (128, 256),    # FT232R:  TX: 128, RX: 256
-                 0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
-                 0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
-                 0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
-                 0x1000: (512, 512)}    # FT230X:  TX: 512, RX: 512
-        return sizes.get(self.device_version, (128, 128))  # default sizes
+        try:
+            return Ftdi.FIFO_SIZES[self.device_version]
+        except KeyError:
+            raise FtdiFeatureError('Unsupported device: 0x%04x' %
+                                   self.device_version)
 
     @property
     def mpsse_bit_delay(self) -> float:
@@ -1108,15 +1136,20 @@ class Ftdi:
         self.purge_rx_buffer()
         self.purge_tx_buffer()
 
-    def write_data_set_chunksize(self, chunksize: int) -> None:
+    def write_data_set_chunksize(self, chunksize: int = 0) -> None:
         """Configure write buffer chunk size.
 
            This is a low-level configuration option, which is not intended to
            be use for a regular usage.
 
-           :param chunksize: the size of the write buffer in bytes
+           :param chunksize: the optional size of the write buffer in bytes,
+                             it is recommended to use 0 to force automatic
+                             evaluation of the best value.
         """
+        if chunksize == 0:
+            chunksize = self.fifo_sizes[0]
         self._writebuffer_chunksize = chunksize
+        self.log.debug('TX chunksize: %d', self._writebuffer_chunksize)
 
     def write_data_get_chunksize(self) -> int:
         """Get write buffer chunk size.
@@ -1125,22 +1158,33 @@ class Ftdi:
         """
         return self._writebuffer_chunksize
 
-    def read_data_set_chunksize(self, chunksize: int) -> None:
+    def read_data_set_chunksize(self, chunksize: int = 0) -> None:
         """Configure read buffer chunk size.
 
            This is a low-level configuration option, which is not intended to
            be use for a regular usage.
 
-           :param chunksize: the size of the read buffer in bytes
+           :param chunksize: the optional size of the read buffer in bytes,
+                             it is recommended to use 0 to force automatic
+                             evaluation of the best value.
         """
         # Invalidate all remaining data
         self._readoffset = 0
         self._readbuffer = bytearray()
+        if chunksize == 0:
+            # status byte prolog is emitted every maxpacketsize, but for "some"
+            # reasons, FT232R emits it every RX FIFO size bytes... Other
+            # devices use a maxpacketsize which is smaller or equal to their
+            # FIFO size, so this weird behavior is for now only experienced
+            # with FT232R. Any, the following compution should address all
+            # devices.
+            chunksize = min(self.fifo_sizes[0], self.fifo_sizes[0],
+                            self._max_packet_size)
         if platform == 'linux':
             if chunksize > 16384:
                 chunksize = 16384
-        self._readbuffer = []
         self._readbuffer_chunksize = chunksize
+        self.log.debug('RX chunksize: %d', self._readbuffer_chunksize)
 
     def read_data_get_chunksize(self) -> int:
         """Get read buffer chunk size.
@@ -2042,10 +2086,6 @@ class Ftdi:
             raise IOError("Device is not yet known", ENODEV)
         if not self._interface:
             raise IOError("Interface is not yet known", ENODEV)
-        if self.is_H_series:
-            packet_size = 512
-        else:
-            packet_size = 64
         endpoint = self._interface[0]
         packet_size = endpoint.wMaxPacketSize
         return packet_size
