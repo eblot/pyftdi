@@ -621,7 +621,6 @@ class FtdiEeprom:
             conf |= value << 3
         else:
             raise RuntimeError('Internal error')
-        print(f'{conf:04b}')
         config |= conf << cshift
         self._eeprom[0x0c] = config
 
