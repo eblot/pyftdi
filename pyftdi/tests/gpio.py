@@ -69,14 +69,14 @@ class GpioTestCase(TestCase):
         gpio = GpioController()
         gpio.configure(self.url, direction=direction)
         port = gpio.get_gpio()  # useless, for API duck typing
-        # legacy API: direct mode, 1 byte
+        # legacy API: peek mode, 1 byte
         ingress = port.read()
         self.assertIsInstance(ingress, int)
-        # direct mode always gives a single byte output
-        ingress = port.read(direct=True)
+        # peek mode always gives a single byte output
+        ingress = port.read(peek=True)
         self.assertIsInstance(ingress, int)
-        # regular mode always gives a bytes buffer
-        ingress = port.read(direct=False)
+        # stream mode always gives a bytes buffer
+        ingress = port.read(peek=False)
         self.assertIsInstance(ingress, bytes)
         self.assertEqual(len(ingress), 1)
         # direct mode is not available with multi-byte mode
@@ -92,6 +92,8 @@ class GpioTestCase(TestCase):
         port.write(bytes([0x00, 0xFF, 0x00]))
         # only 8 bit values are accepted
         self.assertRaises(ValueError, port.write, [0x00, 0x100, 0x00])
+        # check direction API
+        port.set_direction(0xFF, 0xFF & ~direction)
         gpio.close()
 
     def test_gpio_loopback(self):

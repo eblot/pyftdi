@@ -179,7 +179,7 @@ class GpioBaseController(GpioPort):
             raise GpioException("Invalid direction mask")
         self._direction &= ~pins
         self._direction |= (pins & direction)
-        self._ftdi.set_bitmode(self._direction, Ftdi.BITMODE_BITBANG)
+        self._ftdi.set_bitmode(self._direction, Ftdi.BitMode.BITBANG)
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs) -> int:

@@ -27,6 +27,7 @@
 """FTDI core driver."""
 
 from binascii import hexlify
+from enum import IntEnum, unique
 from errno import ENODEV
 from logging import getLogger
 from struct import unpack as sunpack
@@ -147,6 +148,19 @@ class Ftdi:
        values are defined from the device perspective
     """
 
+    @unique
+    class BitMode(IntEnum):
+        """Function selection."""
+
+        RESET = 0x00    # switch off altnerative mode (default to UART)
+        BITBANG = 0x01  # classical asynchronous bitbang mode
+        MPSSE = 0x02    # MPSSE mode, available on 2232x chips
+        SYNCBB = 0x04   # synchronous bitbang mode
+        MCU = 0x08      # MCU Host Bus Emulation mode,
+        OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
+        CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
+        SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
+
     # Commands
     WRITE_BYTES_PVE_MSB = 0x10
     WRITE_BYTES_NVE_MSB = 0x11
@@ -228,16 +242,6 @@ class Ftdi:
     CLK_COUNT_WAIT_ON_LOW = 0x9d   # Clock byte cycles until GPIOL1 is low
     # FT232H only
     DRIVE_ZERO = 0x9e       # Drive-zero mode
-
-    BITMODE_RESET = 0x00    # switch off altnerative mode (default to UART)
-    BITMODE_BITBANG = 0x01  # classical asynchronous bitbang mode
-    BITMODE_MPSSE = 0x02    # MPSSE mode, available on 2232x chips
-    BITMODE_SYNCBB = 0x04   # synchronous bitbang mode
-    BITMODE_MCU = 0x08      # MCU Host Bus Emulation mode,
-    BITMODE_OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
-    BITMODE_CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
-    BITMODE_SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
-    BITMODE_MASK = 0x7F     # Mask for all bitmodes
 
     # USB control requests
     REQ_OUT = build_request_type(CTRL_OUT, CTRL_TYPE_VENDOR,
@@ -347,7 +351,7 @@ class Ftdi:
         self._index = None
         self._in_ep = None
         self._out_ep = None
-        self._bitmode = Ftdi.BITMODE_RESET
+        self._bitmode = Ftdi.BitMode.RESET
         self._latency = 0
         self._latency_count = 0
         self._latency_min = self.LATENCY_MIN
@@ -567,7 +571,7 @@ class Ftdi:
         # Shallow reset
         self._reset_device()
         # Reset feature mode
-        self.set_bitmode(0, Ftdi.BITMODE_RESET)
+        self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
         self.set_latency_timer(self.LATENCY_MIN)
 
@@ -580,7 +584,7 @@ class Ftdi:
                 # device has been closed: the ResourceManager may attempt
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
-                self.set_bitmode(0, Ftdi.BITMODE_RESET)
+                self.set_bitmode(0, Ftdi.BitMode.RESET)
                 self.set_latency_timer(self.LATENCY_MAX)
                 release_interface(dev, self._index - 1)
                 try:
@@ -738,18 +742,18 @@ class Ftdi:
         self.write_data_set_chunksize()
         self.read_data_set_chunksize()
         # Reset feature mode
-        self.set_bitmode(0, Ftdi.BITMODE_RESET)
+        self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Enable MPSSE mode
-        self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
+        self.set_bitmode(direction, Ftdi.BitMode.MPSSE)
         # Reset feature mode
-        self.set_bitmode(0, Ftdi.BITMODE_RESET)
+        self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Drain buffers
         self.purge_buffers()
         # Disable event and error characters
         self.set_event_char(0, False)
         self.set_error_char(0, False)
         # Enable MPSSE mode
-        self.set_bitmode(direction, Ftdi.BITMODE_MPSSE)
+        self.set_bitmode(direction, Ftdi.BitMode.MPSSE)
         # Configure clock
         frequency = self._set_frequency(frequency)
         # Configure I/O
@@ -855,8 +859,8 @@ class Ftdi:
         self.write_data_set_chunksize()
         self.read_data_set_chunksize()
         # Enable BITBANG mode
-        self.set_bitmode(direction, Ftdi.BITMODE_BITBANG if not sync else
-                         Ftdi.BITMODE_SYNCBB)
+        self.set_bitmode(direction, Ftdi.BitMode.BITBANG if not sync else
+                         Ftdi.BitMode.SYNCBB)
         # Configure clock
         if baudrate:
             self._baudrate = self._set_baudrate(baudrate, False)
@@ -996,7 +1000,7 @@ class Ftdi:
 
            :return: True if the FTDI interface is configured in MPSSE mode
         """
-        return self._bitmode == Ftdi.BITMODE_MPSSE
+        return self._bitmode == Ftdi.BitMode.MPSSE
 
     def is_mpsse_interface(self, interface: int) -> bool:
         """Tell whether the interface supports MPSSE (I2C, SPI, JTAG, ...)
@@ -1018,9 +1022,9 @@ class Ftdi:
                     bitbanging
         """
         return self._bitmode not in (
-            Ftdi.BITMODE_RESET,
-            Ftdi.BITMODE_MPSSE,
-            Ftdi.BITMODE_CBUS  # CBUS mode does not change base frequency
+            Ftdi.BitMode.RESET,
+            Ftdi.BitMode.MPSSE,
+            Ftdi.BitMode.CBUS  # CBUS mode does not change base frequency
         )
 
     # legacy API
@@ -1193,13 +1197,14 @@ class Ftdi:
         """
         return self._readbuffer_chunksize
 
-    def set_bitmode(self, bitmask: int, mode: int) -> None:
+    def set_bitmode(self, bitmask: int, mode: 'Ftdi.BitMode') -> None:
         """Enable/disable bitbang modes.
 
            Switch the FTDI interface to bitbang mode.
         """
-        self.log.debug('bitmode: 0x%02x', mode)
-        value = (bitmask & 0xff) | ((mode & self.BITMODE_MASK) << 8)
+        self.log.debug('bitmode: %s', mode.name)
+        mask = sum(Ftdi.BitMode)
+        value = (bitmask & 0xff) | ((mode.value & mask) << 8)
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_BITMODE, value):
             raise FtdiError('Unable to set bitmode')
         self._bitmode = mode
@@ -1233,14 +1238,14 @@ class Ftdi:
 
            :return: bitfield of CBUS read pins
         """
-        if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
+        if self._bitmode not in (Ftdi.BitMode.RESET, Ftdi.BitMode.CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
         if not self._cbus_pins[0] & ~self._cbus_pins[1]:
             raise FtdiError('No CBUS IO configured as input')
         outv = (self._cbus_pins[1] << 4) | self._cbus_out
         oldmode = self._bitmode
         try:
-            self.set_bitmode(outv, Ftdi.BITMODE_CBUS)
+            self.set_bitmode(outv, Ftdi.BitMode.CBUS)
             inv = self.read_pins()
             #print(f'BM {outv:04b} {inv:04b}')
         finally:
@@ -1253,7 +1258,7 @@ class Ftdi:
 
            :param pins: bitfield to apply to CBUS output pins
         """
-        if self._bitmode not in (Ftdi.BITMODE_RESET, Ftdi.BITMODE_CBUS):
+        if self._bitmode not in (Ftdi.BitMode.RESET, Ftdi.BitMode.CBUS):
             raise FtdiError('CBUS gpio not available from current mode')
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= pins <= 0x0F:
@@ -1264,7 +1269,7 @@ class Ftdi:
         value = (self._cbus_pins[1] << 4) | pins
         oldmode = self._bitmode
         try:
-            self.set_bitmode(value, Ftdi.BITMODE_CBUS)
+            self.set_bitmode(value, Ftdi.BitMode.CBUS)
             self._cbus_out = pins
         finally:
             if oldmode != self._bitmode:
