@@ -354,7 +354,8 @@ class GpioSyncController(GpioBaseController):
         """
         self._frequency = float(self._ftdi.set_baudrate(int(frequency), False))
 
-    def _configure(self, url, direction, frequency, **kwargs):
+    def _configure(self, url: str, direction: int,
+                   frequency: Union[int, float, None] = None, **kwargs):
         frequency = self._ftdi.open_bitbang_from_url(url,
                                                      direction=direction,
                                                      sync=True,
@@ -424,7 +425,8 @@ class GpioMpsseController(GpioBaseController):
                     raise GpioException("Invalid value")
         self._write_mpsse(out)
 
-    def _configure(self, url, direction, frequency, **kwargs):
+    def _configure(self, url: str, direction: int,
+                   frequency: Union[int, float, None] = None, **kwargs):
         frequency = self._ftdi.open_mpsse_from_url(url,
                                                    direction=direction,
                                                    frequency=frequency,
