@@ -412,26 +412,31 @@ class GpioMpsseController(GpioBaseController):
 
     MPSSE_PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
 
-    def read(self, direct: bool = True, readlen: int = 1) -> \
+    def read(self, readlen: int = 1, peek: Optional[bool] = None) -> \
              Union[int, bytes, Tuple[int]]:
         """Read the GPIO input pin electrical level.
 
-           :param direct: whether to peak current value from port, or to use
-                          the HW FIFO. When direct mode is selected, readlen
-                          should be 1. This matches the behaviour of the legacy
-                          API.
            :param readlen: how many GPIO samples to retrieve. Each sample if
                            :py:meth:`width` bit wide.
+           :param peek: whether to peak current value from port, or to use
+                        MPSSE stream and HW FIFO. When peek mode is selected,
+                        readlen should be 1. It is not available with wide
+                        ports if some of the MSB pins are configured as input
            :return: a :py:meth:`width` bit wide integer if direct mode is used,
                     a :py:type:`bytes`` buffer if :py:meth:`width` is a byte,
                     a list of integer otherwise (MPSSE mode only).
         """
         if not self.is_connected:
             raise GpioException('Not connected')
-        if direct:
+        if peek:
             if readlen != 1:
                 raise ValueError('Invalid read length with direct mode')
-        if direct:
+            if self._width > 8:
+                if (0xFFFF & ~self._direction) >> 8:
+                    print(f'{self._direction:016b} {0xFF & ~self._direction}')
+                    raise ValueError('Peek mode not available with selected '
+                                     'input config')
+        if peek:
             return self._ftdi.read_pins()
         return self._read_mpsse(readlen)
 
@@ -447,13 +452,18 @@ class GpioMpsseController(GpioBaseController):
             pass
         else:
             if isinstance(out, int):
-                out = bytes([out])
+                out = [out]
             elif not is_iterable(out):
                 raise TypeError('Invalid output value')
             for val in out:
                 if val > self._mask:
                     raise GpioException("Invalid value")
         self._write_mpsse(out)
+
+    def set_frequency(self, frequency: Union[int, float]) -> None:
+        if not self.is_connected:
+            raise GpioException('Not connected')
+        self._frequency = self._ftdi.set_frequency(float(frequency))
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs):

@@ -36,7 +36,10 @@ from sys import modules, stdout
 from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
-from pyftdi.gpio import GpioAsyncController, GpioSyncController
+from pyftdi.gpio import (GpioAsyncController,
+                         GpioSyncController,
+                         GpioMpsseController)
+from pyftdi.misc import to_bool
 
 
 class GpioAsyncTestCase(TestCase):
@@ -319,12 +322,70 @@ class GpioMpsseTestCase(TestCase):
        * AC3 should be connected to BC3
     """
 
+    @classmethod
+    def setUpClass(cls):
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        ftdi = Ftdi()
+        ftdi.open_from_url(url)
+        count = ftdi.device_port_count
+        width = ftdi.port_width
+        ftdi.close()
+        if count < 2:
+            raise SkipTest('FTDI device is not a multi-port device')
+        if width < 2:
+            raise SkipTest('FTDI device does not support wide ports')
+        url = url[:-1]
+        cls.urls = [f'{url}1', f'{url}2']
+        debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
+        cls.debug = debug
+
+    def _test_default_gpio(self):
+        """Check I/O.
+        """
+        gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
+        gpio_in.configure(self.urls[0], direction=0x0000, frequency=10e6,
+                          debug=self.debug)
+        gpio_out.configure(self.urls[1], direction=0xFFFF, frequency=10e6,
+                           debug=self.debug)
+        for out in range(0, 0x10000, 29):
+            gpio_out.write(out)
+            outv = gpio_out.read()[0]
+            inv = gpio_in.read()[0]
+            # check inputs match outputs
+            self.assertEqual(inv, out)
+            # check level of outputs match the ones written
+            self.assertEqual(outv, out)
+        gpio_in.close()
+        gpio_out.close()
+
+    def test_peek_gpio(self):
+        """Check I/O.
+        """
+        gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
+        gpio_in.configure(self.urls[0], direction=0xFF00, frequency=10e6,
+                          debug=self.debug)
+        gpio_out.configure(self.urls[1], direction=0x00FF, frequency=10e6,
+                           debug=self.debug)
+        for out in range(10, 256):
+            gpio_out.write(out)
+            outv = gpio_out.read()[0]
+            inv = gpio_in.read(peek=True)
+            # check inputs match outputs
+            self.assertEqual(inv, out)
+            print(f'{out} {inv}')
+            # check level of outputs match the ones written
+            self.assertEqual(outv, out)
+            break
+        gpio_in.close()
+        gpio_out.close()
+
 
 def suite():
     suite_ = TestSuite()
     # suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
     # suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    # suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
     return suite_
 
 
