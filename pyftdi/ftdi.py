@@ -2053,7 +2053,7 @@ class Ftdi:
         except TypeError as exc:
             self.log.error('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
-            self._tracer.send(data)
+            self._tracer.send(self._index, data)
         return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
 
     def _read(self) -> bytes:
@@ -2062,7 +2062,7 @@ class Ftdi:
         if data:
             self.log.debug('< %s', hexlify(data).decode())
             if self._tracer and len(data) > 2:
-                self._tracer.receive(data[2:])
+                self._tracer.receive(self._index, data[2:])
         return data
 
     def _check_eeprom_size(self, eeprom_size: int) -> int:

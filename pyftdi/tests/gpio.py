@@ -339,7 +339,7 @@ class GpioMpsseTestCase(TestCase):
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         cls.debug = debug
 
-    def _test_default_gpio(self):
+    def test_default_gpio(self):
         """Check I/O.
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
@@ -366,16 +366,15 @@ class GpioMpsseTestCase(TestCase):
                           debug=self.debug)
         gpio_out.configure(self.urls[1], direction=0x00FF, frequency=10e6,
                            debug=self.debug)
-        for out in range(10, 256):
+        for out in range(256):
             gpio_out.write(out)
             outv = gpio_out.read()[0]
             inv = gpio_in.read(peek=True)
             # check inputs match outputs
             self.assertEqual(inv, out)
-            print(f'{out} {inv}')
+            #print(f'{out} {inv}')
             # check level of outputs match the ones written
             self.assertEqual(outv, out)
-            break
         gpio_in.close()
         gpio_out.close()
 
