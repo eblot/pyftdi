@@ -209,7 +209,7 @@ class GpioAsyncController(GpioBaseController):
     """
 
     def read(self, readlen: int = 1, peek: Optional[bool] = None,
-             flush: bool = False) -> Union[int, bytes]:
+             noflush: bool = False) -> Union[int, bytes]:
         """Read the GPIO input pin electrical level.
 
            :param readlen: how many GPIO samples to retrieve. Each sample is
@@ -224,8 +224,8 @@ class GpioAsyncController(GpioBaseController):
                         old sampled values before the completion of a previous
                         GPIO write are discarded. When peek mode is selected,
                         readlen should be 1.
-           :param flush: whether to force a RX buffer flush before reading out
-                         data
+           :param noflush: whether to disable the RX buffer flush before
+                           reading out data
            :return: a 8-bit wide integer if peek mode is used, or
                     a :py:type:`bytes`` buffer otherwise.
         """
@@ -245,6 +245,8 @@ class GpioAsyncController(GpioBaseController):
         # at any time is likely to contain a mix of old and new values.
         # Anyway, flushing the FTDI-to-host buffer seems to be a proper
         # to get in sync with the buffer.
+        if noflush:
+            return self._ftdi.read_data(readlen)
         loop = 200
         while loop:
             loop -= 1

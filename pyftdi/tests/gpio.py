@@ -255,7 +255,6 @@ class GpioMultiportTestCase(TestCase):
             self.assertEqual(inv, out)
             # check level of outputs match the ones written
             self.assertEqual(outv, out)
-            print(f'{outv:08b} --> {inv:08b}')
         gpio_in.close()
         gpio_out.close()
 
@@ -269,7 +268,7 @@ class GpioMultiportTestCase(TestCase):
         gpio_out.write(outs)
         # read @ same speed (and same clock source, so no jitter), flushing
         # the byffer which has been filled since the port has been opened
-        ins = gpio_in.read(len(outs), flush=True)
+        ins = gpio_in.read(len(outs))
         qout = deque(outs)
         ifirst = ins[0]
         # the inout stream should be a copy of the output stream, minus a
@@ -282,7 +281,7 @@ class GpioMultiportTestCase(TestCase):
         # offset is the count of missed bytes
         offset = len(ins)-len(qout)
         self.assertLess(offset, 16) # seems to be in the 6..12 range
-        # print('OFFSET', offset)
+        # print('Offset', offset)
         # check that the remaining sequence match
         for sout, sin in zip(qout, ins):
             #print(f'{sout:08b} --> {sin:08b}')
