@@ -40,7 +40,7 @@ class GpioException(FtdiError):
 
 
 class GpioPort:
-    """Duck-type GPIO port for GPIO controller.
+    """Duck-type GPIO port for GPIO all controllers.
     """
 
 
@@ -227,7 +227,7 @@ class GpioAsyncController(GpioBaseController):
            :param noflush: whether to disable the RX buffer flush before
                            reading out data
            :return: a 8-bit wide integer if peek mode is used, or
-                    a :py:type:`bytes`` buffer otherwise.
+                    a bytes buffer otherwise.
         """
         if not self.is_connected:
             raise GpioException('Not connected')
@@ -423,7 +423,7 @@ class GpioMpsseController(GpioBaseController):
                         readlen should be 1. It is not available with wide
                         ports if some of the MSB pins are configured as input
            :return: a :py:meth:`width` bit wide integer if direct mode is used,
-                    a :py:type:`bytes`` buffer if :py:meth:`width` is a byte,
+                    a bytes buffer if :py:meth:`width` is a byte,
                     a list of integer otherwise (MPSSE mode only).
         """
         if not self.is_connected:
@@ -433,7 +433,6 @@ class GpioMpsseController(GpioBaseController):
                 raise ValueError('Invalid read length with direct mode')
             if self._width > 8:
                 if (0xFFFF & ~self._direction) >> 8:
-                    print(f'{self._direction:016b} {0xFF & ~self._direction}')
                     raise ValueError('Peek mode not available with selected '
                                      'input config')
         if peek:

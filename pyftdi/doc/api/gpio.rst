@@ -32,7 +32,15 @@ See ``tests/gpio.py`` example
 Classes
 ~~~~~~~
 
-.. autoclass :: GpioController
+.. autoclass :: GpioPort
+
+.. autoclass :: GpioAsyncController
+ :members:
+
+.. autoclass :: GpioSyncController
+ :members:
+
+.. autoclass :: GpioMpsseController
  :members:
 
 
