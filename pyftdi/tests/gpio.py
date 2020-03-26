@@ -26,20 +26,19 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
-from os import environ
-from time import sleep
-from sys import modules, stdout
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
-from pyftdi import FtdiLogger
-from pyftdi.gpio import GpioController, GpioException
-
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
 
+import logging
+from os import environ
+from sys import modules, stdout
+from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from pyftdi import FtdiLogger
+from pyftdi.gpio import GpioAsyncController, GpioSyncController
 
-class GpioTestCase(TestCase):
-    """FTDI GPIO driver test case.
+
+class GpioAsyncTestCase(TestCase):
+    """FTDI Asynchronous GPIO driver test case.
 
        Please ensure that the HW you connect to the FTDI port A does match
        the encoded configuration. At least, b7..b5 can be driven high or
@@ -54,6 +53,10 @@ class GpioTestCase(TestCase):
        * b2 should be connected to b6
        * b3 should be connected to b7
 
+       Note that this test cannot work with LC231X board, as FTDI is stupid
+       enough to add ubidirectionnal output buffer on DTR and RTS, so both
+       nibbles have at lest on output pin...
+
        Do NOT run this test if you use FTDI port A as an UART or SPI
        bridge -or any unsupported setup!! You've been warned.
     """
@@ -66,7 +69,7 @@ class GpioTestCase(TestCase):
         """Simple test to demonstrate bit-banging.
         """
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
-        gpio = GpioController()
+        gpio = GpioAsyncController()
         gpio.configure(self.url, direction=direction)
         port = gpio.get_gpio()  # useless, for API duck typing
         # legacy API: peek mode, 1 byte
@@ -99,7 +102,7 @@ class GpioTestCase(TestCase):
     def test_gpio_loopback(self):
         """Check I/O.
         """
-        gpio = GpioController()
+        gpio = GpioAsyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction, frequency=800000)
         for out in range(16):
@@ -129,7 +132,7 @@ class GpioTestCase(TestCase):
         gpio.close()
 
     def test_gpio_baudate(self):
-        gpio = GpioController()
+        gpio = GpioAsyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction)
         buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
@@ -142,9 +145,76 @@ class GpioTestCase(TestCase):
         gpio.close()
 
 
+class GpioSyncTestCase(TestCase):
+    """FTDI Synchrnous GPIO driver test case.
+
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. At least, b7..b5 can be driven high or
+       low, so check your HW setup before running this test as it might
+       damage your HW.
+
+       Low nibble is used as input, high nibble is used as output. They should
+       be interconnected as follow:
+
+       * b0 should be connected to b4
+       * b1 should be connected to b5
+       * b2 should be connected to b6
+       * b3 should be connected to b7
+
+       Note that this test cannot work with LC231X board, as FTDI is stupid
+       enough to add ubidirectionnal output buffer on DTR and RTS, so both
+       nibbles have at lest on output pin...
+
+       Do NOT run this test if you use FTDI port A as an UART or SPI
+       bridge -or any unsupported setup!! You've been warned.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+
+    def test_gpio_values(self):
+        """Simple test to demonstrate bit-banging.
+        """
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio = GpioSyncController()
+        gpio.configure(self.url, direction=direction, initial=0xee)
+        outs = bytes([(out & 0xf)<<4 for out in range(1000)])
+        ins = gpio.exchange(outs)
+        self.assertEqual(len(outs), len(ins))
+        last = None
+        for sout, sin in zip(outs, ins):
+            if last is not None:
+                # output nibble
+                sin_out = sin >> 4
+                # input nibble
+                sin_in = sin & 0xF
+                # check inputs match last output
+                self.assertEqual(sin_out, last)
+                # check level of output match the last written
+                self.assertEqual(sin_in, last)
+            # an IN sample if captured on the next clock of the OUT sample
+            # keep the MSB nibble, i.e. the nibble configured as output
+            last = sout >> 4
+        gpio.close()
+
+    def _test_gpio_baudate(self):
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio = GpioSyncController()
+        gpio.configure(self.url, direction=direction)
+        buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
+        gpio.set_frequency(10000) # 80 000
+        gpio.exchange(buf)
+        gpio.set_frequency(50000) # 400 000
+        gpio.exchange(buf)
+        gpio.set_frequency(200000)  # 1 700 000
+        gpio.exchange(buf)
+        gpio.close()
+
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(GpioTestCase, 'test'))
+    # suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
     return suite_
 
 
