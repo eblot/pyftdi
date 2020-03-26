@@ -208,8 +208,8 @@ class GpioAsyncController(GpioBaseController):
        check if it matches the board requirements.
     """
 
-    def read(self, readlen: int = 1, peek: Optional[bool] = None) -> \
-             Union[int, bytes]:
+    def read(self, readlen: int = 1, peek: Optional[bool] = None,
+             flush: bool = False) -> Union[int, bytes]:
         """Read the GPIO input pin electrical level.
 
            :param readlen: how many GPIO samples to retrieve. Each sample is
@@ -224,6 +224,8 @@ class GpioAsyncController(GpioBaseController):
                         old sampled values before the completion of a previous
                         GPIO write are discarded. When peek mode is selected,
                         readlen should be 1.
+           :param flush: whether to force a RX buffer flush before reading out
+                         data
            :return: a 8-bit wide integer if peek mode is used, or
                     a :py:type:`bytes`` buffer otherwise.
         """

@@ -30,10 +30,12 @@
 #pylint: disable-msg=missing-docstring
 
 import logging
+from collections import deque
 from os import environ
 from sys import modules, stdout
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi
 from pyftdi.gpio import GpioAsyncController, GpioSyncController
 
 
@@ -41,9 +43,8 @@ class GpioAsyncTestCase(TestCase):
     """FTDI Asynchronous GPIO driver test case.
 
        Please ensure that the HW you connect to the FTDI port A does match
-       the encoded configuration. At least, b7..b5 can be driven high or
-       low, so check your HW setup before running this test as it might
-       damage your HW.
+       the encoded configuration. Check your HW setup before running this test
+       as it might damage your HW. You've been warned.
 
        Low nibble is used as input, high nibble is used as output. They should
        be interconnected as follow:
@@ -56,9 +57,6 @@ class GpioAsyncTestCase(TestCase):
        Note that this test cannot work with LC231X board, as FTDI is stupid
        enough to add ubidirectionnal output buffer on DTR and RTS, so both
        nibbles have at lest on output pin...
-
-       Do NOT run this test if you use FTDI port A as an UART or SPI
-       bridge -or any unsupported setup!! You've been warned.
     """
 
     @classmethod
@@ -149,9 +147,8 @@ class GpioSyncTestCase(TestCase):
     """FTDI Synchrnous GPIO driver test case.
 
        Please ensure that the HW you connect to the FTDI port A does match
-       the encoded configuration. At least, b7..b5 can be driven high or
-       low, so check your HW setup before running this test as it might
-       damage your HW.
+       the encoded configuration. Check your HW setup before running this test
+       as it might damage your HW. You've been warned.
 
        Low nibble is used as input, high nibble is used as output. They should
        be interconnected as follow:
@@ -164,9 +161,6 @@ class GpioSyncTestCase(TestCase):
        Note that this test cannot work with LC231X board, as FTDI is stupid
        enough to add ubidirectionnal output buffer on DTR and RTS, so both
        nibbles have at lest on output pin...
-
-       Do NOT run this test if you use FTDI port A as an UART or SPI
-       bridge -or any unsupported setup!! You've been warned.
     """
 
     @classmethod
@@ -211,10 +205,127 @@ class GpioSyncTestCase(TestCase):
         gpio.exchange(buf)
         gpio.close()
 
+
+class GpioMultiportTestCase(TestCase):
+    """FTDI GPIO test for multi-port FTDI devices, i.e. FT2232H/FT4232H.
+
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. Check your HW setup before running this test
+       as it might damage your HW. You've been warned.
+
+       Low nibble is used as input, high nibble is used as output. They should
+       be interconnected as follow:
+
+       * AD0 should be connected to BD0
+       * AD1 should be connected to BD1
+       * AD2 should be connected to BD2
+       * AD3 should be connected to BD3
+       * AD0 should be connected to BD0
+       * AD1 should be connected to BD1
+       * AD2 should be connected to BD2
+       * AD3 should be connected to BD3
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        ftdi = Ftdi()
+        ftdi.open_from_url(url)
+        count = ftdi.device_port_count
+        pos = ftdi.port_index
+        ftdi.close()
+        if pos != 1:
+            raise ValueError("FTDI interface should be the device's first")
+        if count < 2:
+            raise SkipTest('FTDI device is not a multi-port device')
+        url = url[:-1]
+        cls.urls = [f'{url}1', f'{url}2']
+
+    def test_gpio_peek(self):
+        """Check I/O.
+        """
+        gpio_in, gpio_out = GpioAsyncController(), GpioAsyncController()
+        gpio_in.configure(self.urls[0], direction=0x00, frequency=1e6)
+        gpio_out.configure(self.urls[1], direction=0xFF, frequency=1e6)
+        for out in range(256):
+            gpio_out.write(out)
+            outv = gpio_out.read()
+            inv = gpio_in.read()
+            # check inputs match outputs
+            self.assertEqual(inv, out)
+            # check level of outputs match the ones written
+            self.assertEqual(outv, out)
+            print(f'{outv:08b} --> {inv:08b}')
+        gpio_in.close()
+        gpio_out.close()
+
+    def test_gpio_stream(self):
+        """Check I/O.
+        """
+        gpio_in, gpio_out = GpioAsyncController(), GpioAsyncController()
+        gpio_in.configure(self.urls[0], direction=0x00, frequency=1e4)
+        gpio_out.configure(self.urls[1], direction=0xFF, frequency=1e4)
+        outs = bytes(range(256))
+        gpio_out.write(outs)
+        # read @ same speed (and same clock source, so no jitter), flushing
+        # the byffer which has been filled since the port has been opened
+        ins = gpio_in.read(len(outs), flush=True)
+        qout = deque(outs)
+        ifirst = ins[0]
+        # the inout stream should be a copy of the output stream, minus a
+        # couple of missing samples that did not get captured while output
+        # was streaming but read command has not been yet received.
+        while qout:
+            if qout[0] == ifirst:
+                break
+            qout.popleft()
+        # offset is the count of missed bytes
+        offset = len(ins)-len(qout)
+        self.assertLess(offset, 16) # seems to be in the 6..12 range
+        # print('OFFSET', offset)
+        # check that the remaining sequence match
+        for sout, sin in zip(qout, ins):
+            #print(f'{sout:08b} --> {sin:08b}')
+            # check inputs match outputs
+            self.assertEqual(sout, sin)
+        gpio_in.close()
+        gpio_out.close()
+
+
+class GpioMpsseTestCase(TestCase):
+    """FTDI GPIO test for 16-bit port FTDI devices, i.e. FT2232H.
+
+       Please ensure that the HW you connect to the FTDI port A does match
+       the encoded configuration. Check your HW setup before running this test
+       as it might damage your HW. You've been warned.
+
+       Low nibble is used as input, high nibble is used as output. They should
+       be interconnected as follow:
+
+       * AD0 should be connected to BD0
+       * AD1 should be connected to BD1
+       * AD2 should be connected to BD2
+       * AD3 should be connected to BD3
+       * AD0 should be connected to BD0
+       * AD1 should be connected to BD1
+       * AD2 should be connected to BD2
+       * AD3 should be connected to BD3
+       * AC0 should be connected to BC0
+       * AC1 should be connected to BC1
+       * AC2 should be connected to BC2
+       * AC3 should be connected to BC3
+       * AC0 should be connected to BC0
+       * AC1 should be connected to BC1
+       * AC2 should be connected to BC2
+       * AC3 should be connected to BC3
+    """
+
+
 def suite():
     suite_ = TestSuite()
     # suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
+    # suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
     return suite_
 
 
