@@ -23,7 +23,8 @@ where:
 * product: the USB product ID of the device
 
   * ex: ``232h`` or ``0x6014``
-  * Supported product IDs: ``0x6001``, ``0x6010``, ``0x6011``, ``0x6014``, ``0x6015``
+  * Supported product IDs: ``0x6001``, ``0x6010``, ``0x6011``, ``0x6014``,
+    ``0x6015``
   * Supported product aliases:
 
     * ``232``, ``232r``, ``232h``, ``2232d``, ``2232h``, ``4232h``, ``230x``

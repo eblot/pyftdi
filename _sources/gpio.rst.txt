@@ -8,12 +8,13 @@ Overview
 
 Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:
 
-  * `GpioController` (see :doc:`api/gpio`) gives full access to the FTDI pins
-    as raw I/O pins,
-  * `SpiGpioPort` (see :doc:`api/spi`) gives access to all free pins of an FTDI
-    interface, which are not reserved for the SPI feature,
-  * `I2cGpioPort` (see :doc:`api/i2c`) gives access to all free pins of an FTDI
-    interface, which are not reserved for the I2C feature
+  * *GpioController*, implemented as ``GpioAsyncController``,
+    ``GpioSyncController`` and ``GpioMpsseController`` (see :doc:`api/gpio`)
+    gives full access to the FTDI pins as raw I/O pins,
+  * ``SpiGpioPort`` (see :doc:`api/spi`) gives access to all free pins of an
+    FTDI interface, which are not reserved for the SPI feature,
+  * ``I2cGpioPort`` (see :doc:`api/i2c`) gives access to all free pins of an
+    FTDI interface, which are not reserved for the I2C feature
 
 Other modes
 ```````````
@@ -223,10 +224,11 @@ Direction bitmap
 ````````````````
 
 Before using a port as GPIO, the port must be configured as GPIO. This is
-achieved by either instanciating a ``GpioController`` or by requesting the
-GPIO port from a specific controller: ``I2cController.get_gpio()`` and
-``SpiController.get_gpio()``. All instances provide a similar API (duck typing
-API) to configure, read and write to GPIO pins.
+achieved by either instanciating one of the *GpioController* or by requesting
+the GPIO port from a specific serial bus controller:
+``I2cController.get_gpio()`` and ``SpiController.get_gpio()``. All instances
+provide a similar API (duck typing API) to configure, read and write to GPIO
+pins.
 
 Once a GPIO port is instanciated, the direction of each pin should be defined.
 The direction can be changed at any time. It is not possible to write to /
@@ -258,7 +260,7 @@ matching bit reset are not reconfigured, whatever their direction bit.
 
 .. code-block:: python
 
-    gpio = GpioController()
+    gpio = GpioAsyncController()
     gpio.configure('ftdi:///1', direction=0x76)
     # later, reconfigure BD2 as input and BD7 as output
     gpio.set_direction(0x84, 0x80)
@@ -267,17 +269,43 @@ matching bit reset are not reconfigured, whatever their direction bit.
 Using GPIO APIs
 ~~~~~~~~~~~~~~~
 
-.. warning::
+There are 3 variant of *GpioController*, depending on which features are needed
+and how the GPIO port usage is intended. :doc:`api/gpio` gives in depth details
+about those controllers. Those controllers are mapped onto FTDI HW features.
 
-  GpioController (see :doc:`api/gpio`) relies on legacy bit-band mode of
-  FTDI device. This mode only gives access to the lower 8 bit of each FTDI
-  port. This means that this API cannot be used to access the upport 4- or
-  8- bit of respectively 12- or 16- bit capable ports.
+* ``GpioAsyncController`` is likely the most useful API to drive GPIOs.
 
-  To access those upper pins, please use the GPIO mode of either |I2C| or SPI
-  APIs. Unfortenately these APIs do not give access to the LSB (3- or 4- bits)
-  of the port, as they are dedicated to |I2C| and SPI signalling.
+  It enables reading current GPIO input pin levels and to change GPIO output
+  pin levels. When vector values (byte buffers) are used instead of scalar
+  value (single byte), GPIO pins are samples/updated at a regular pace, whose
+  frequency can be configured. It is however impossible to control the exact
+  time when input pins start to be sampled, which can be tricky to use with
+  most applications. See :doc:`api/gpio` for details.
 
+* ``GpioSyncController`` is a variant of the previous API.
+
+  It is aimed at precise time control of sampling/updating the GPIO: a new
+  GPIO input sample is captured once every time GPIO output pins are updated.
+  With byte buffers, GPIO pins are samples/updated at a regular pace, whose
+  frequency can be configured as well. The API of ``GpioSyncController``
+  slightly differ from the other GPIO APIs, as the usual ``read``/``write``
+  method are replaced with a single ``exchange`` method.
+
+Both ``GpioAsyncController`` and ``GpioSyncController`` are restricted to only
+access the 8 LSB pins of a port, which means that FTDI device with wider port
+(12- and 16- pins) cannot be fully addressed, as only b\ :sub:`0`\  to b\
+:sub:`7`\  can be addressed.
+
+* ``GpioMpsseController`` enables access to the MSB pins of wide ports.
+
+  However LSB and MSB pins cannot be addressed in a true atomic manner, which
+  means that there is a short delay between sampling/updating the LSB and MSB
+  part of the same wide port. Byte buffer can also be sampled/updated at a
+  regular pace, but the achievable frequency range may differ from the other
+  controllers.
+
+It is recommened to read the ``tests/gpio.py`` files - available from GitHub -
+to get some examples on how to use these API variants.
 
 Setting GPIO pin state
 ``````````````````````
@@ -290,7 +318,7 @@ the bits configured as input, or an exception is triggered:
 
 .. code-block:: python
 
-    gpio = GpioController()
+    gpio = GpioAsyncController()
     gpio.configure('ftdi:///1', direction=0x76)
     # all output set low
     gpio.write(0x00)
@@ -300,6 +328,7 @@ the bits configured as input, or an exception is triggered:
     gpio.write(0xFF & gpio.direction)
     # all output forced to high, writing to input pins is illegal
     gpio.write(0xFF)  # raises an IOError
+    gpio.close()
 
 
 Retrieving GPIO pin state
@@ -309,12 +338,13 @@ To read a GPIO, use the `read()` method.
 
 .. code-block:: python
 
-    gpio = GpioController()
+    gpio = GpioAsyncController()
     gpio.configure('ftdi:///1', direction=0x76)
     # read whole port
     pins = gpio.read()
     # ignore output values (optional)
     pins &= ~gpio.direction
+    gpio.close()
 
 
 Modifying GPIO pin state
@@ -324,7 +354,7 @@ A read-modify-write sequence is required.
 
 .. code-block:: python
 
-    gpio = GpioController()
+    gpio = GpioAsyncController()
     gpio.configure('ftdi:///1', direction=0x76)
     # read whole port
     pins = gpio.read()
@@ -334,6 +364,20 @@ A read-modify-write sequence is required.
     pins |= 1 << 1
     # update GPIO output
     gpio.write(pins)
+    gpio.close()
+
+
+Synchronous GPIO access
+```````````````````````
+
+.. code-block:: python
+
+    gpio = GpioSyncController()
+    gpio.configure('ftdi:///1, direction=0x0F, frequency=1e6)
+    outs = bytes(range(16})
+    ins = gpio.exchange(outs)
+    # ins contains as many bytes as outs
+    gpio.close()
 
 
 CBUS GPIO access

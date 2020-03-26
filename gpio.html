@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.48.2
+                0.49.0
               </div>
             
           
@@ -127,6 +127,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#setting-gpio-pin-state">Setting GPIO pin state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#retrieving-gpio-pin-state">Retrieving GPIO pin state</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#modifying-gpio-pin-state">Modifying GPIO pin state</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#synchronous-gpio-access">Synchronous GPIO access</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#cbus-gpio-access">CBUS GPIO access</a></li>
 </ul>
 </li>
@@ -216,12 +217,13 @@
 <p>Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><cite>GpioController</cite> (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) gives full access to the FTDI pins
-as raw I/O pins,</p></li>
-<li><p><cite>SpiGpioPort</cite> (see <a class="reference internal" href="api/spi.html"><span class="doc">spi - SPI API</span></a>) gives access to all free pins of an FTDI
-interface, which are not reserved for the SPI feature,</p></li>
-<li><p><cite>I2cGpioPort</cite> (see <a class="reference internal" href="api/i2c.html"><span class="doc">i2c - I2C API</span></a>) gives access to all free pins of an FTDI
-interface, which are not reserved for the I2C feature</p></li>
+<li><p><em>GpioController</em>, implemented as <code class="docutils literal notranslate"><span class="pre">GpioAsyncController</span></code>,
+<code class="docutils literal notranslate"><span class="pre">GpioSyncController</span></code> and <code class="docutils literal notranslate"><span class="pre">GpioMpsseController</span></code> (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>)
+gives full access to the FTDI pins as raw I/O pins,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SpiGpioPort</span></code> (see <a class="reference internal" href="api/spi.html"><span class="doc">spi - SPI API</span></a>) gives access to all free pins of an
+FTDI interface, which are not reserved for the SPI feature,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">I2cGpioPort</span></code> (see <a class="reference internal" href="api/i2c.html"><span class="doc">i2c - I2C API</span></a>) gives access to all free pins of an
+FTDI interface, which are not reserved for the I2C feature</p></li>
 </ul>
 </div></blockquote>
 <div class="section" id="other-modes">
@@ -365,7 +367,7 @@ pins have been assigned to GPIO functions:</p>
 <li><p><a class="reference internal" href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.cbus_pins" title="pyftdi.eeprom.FtdiEeprom.cbus_pins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.eeprom.FtdiEeprom.cbus_pins()</span></code></a> to report CBUS GPIO pins</p></li>
 </ul>
 <p>The CBUS port is <strong>not</strong> available through the
-<a class="reference internal" href="api/gpio.html#pyftdi.gpio.GpioController" title="pyftdi.gpio.GpioController"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.gpio.GpioController</span></code></a> API, as it cannot be considered as a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.gpio.GpioController</span></code> API, as it cannot be considered as a
 regular GPIO port.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -410,10 +412,11 @@ of handling the weird implementation of FT232H.</p>
 <div class="section" id="direction-bitmap">
 <h3>Direction bitmap<a class="headerlink" href="#direction-bitmap" title="Permalink to this headline">¶</a></h3>
 <p>Before using a port as GPIO, the port must be configured as GPIO. This is
-achieved by either instanciating a <code class="docutils literal notranslate"><span class="pre">GpioController</span></code> or by requesting the
-GPIO port from a specific controller: <code class="docutils literal notranslate"><span class="pre">I2cController.get_gpio()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">SpiController.get_gpio()</span></code>. All instances provide a similar API (duck typing
-API) to configure, read and write to GPIO pins.</p>
+achieved by either instanciating one of the <em>GpioController</em> or by requesting
+the GPIO port from a specific serial bus controller:
+<code class="docutils literal notranslate"><span class="pre">I2cController.get_gpio()</span></code> and <code class="docutils literal notranslate"><span class="pre">SpiController.get_gpio()</span></code>. All instances
+provide a similar API (duck typing API) to configure, read and write to GPIO
+pins.</p>
 <p>Once a GPIO port is instanciated, the direction of each pin should be defined.
 The direction can be changed at any time. It is not possible to write to /
 read from a pin before the proper direction has been defined.</p>
@@ -438,7 +441,7 @@ at any time. This method accepts two arguments. This first arguments,
 in the second <code class="docutils literal notranslate"><span class="pre">direction</span></code> argument, so there is no need to
 preserve/read-modify-copy the configuration of other pins. Pins with their
 matching bit reset are not reconfigured, whatever their direction bit.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
 <span class="c1"># later, reconfigure BD2 as input and BD7 as output</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">set_direction</span><span class="p">(</span><span class="mh">0x84</span><span class="p">,</span> <span class="mh">0x80</span><span class="p">)</span>
@@ -449,16 +452,41 @@ matching bit reset are not reconfigured, whatever their direction bit.</p>
 </div>
 <div class="section" id="using-gpio-apis">
 <h2>Using GPIO APIs<a class="headerlink" href="#using-gpio-apis" title="Permalink to this headline">¶</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>GpioController (see <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a>) relies on legacy bit-band mode of
-FTDI device. This mode only gives access to the lower 8 bit of each FTDI
-port. This means that this API cannot be used to access the upport 4- or
-8- bit of respectively 12- or 16- bit capable ports.</p>
-<p>To access those upper pins, please use the GPIO mode of either I<sup>2</sup>C or SPI
-APIs. Unfortenately these APIs do not give access to the LSB (3- or 4- bits)
-of the port, as they are dedicated to I<sup>2</sup>C and SPI signalling.</p>
-</div>
+<p>There are 3 variant of <em>GpioController</em>, depending on which features are needed
+and how the GPIO port usage is intended. <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a> gives in depth details
+about those controllers. Those controllers are mapped onto FTDI HW features.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">GpioAsyncController</span></code> is likely the most useful API to drive GPIOs.</p>
+<p>It enables reading current GPIO input pin levels and to change GPIO output
+pin levels. When vector values (byte buffers) are used instead of scalar
+value (single byte), GPIO pins are samples/updated at a regular pace, whose
+frequency can be configured. It is however impossible to control the exact
+time when input pins start to be sampled, which can be tricky to use with
+most applications. See <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a> for details.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GpioSyncController</span></code> is a variant of the previous API.</p>
+<p>It is aimed at precise time control of sampling/updating the GPIO: a new
+GPIO input sample is captured once every time GPIO output pins are updated.
+With byte buffers, GPIO pins are samples/updated at a regular pace, whose
+frequency can be configured as well. The API of <code class="docutils literal notranslate"><span class="pre">GpioSyncController</span></code>
+slightly differ from the other GPIO APIs, as the usual <code class="docutils literal notranslate"><span class="pre">read</span></code>/<code class="docutils literal notranslate"><span class="pre">write</span></code>
+method are replaced with a single <code class="docutils literal notranslate"><span class="pre">exchange</span></code> method.</p>
+</li>
+</ul>
+<p>Both <code class="docutils literal notranslate"><span class="pre">GpioAsyncController</span></code> and <code class="docutils literal notranslate"><span class="pre">GpioSyncController</span></code> are restricted to only
+access the 8 LSB pins of a port, which means that FTDI device with wider port
+(12- and 16- pins) cannot be fully addressed, as only b<sub>0</sub> to b<sub>7</sub> can be addressed.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">GpioMpsseController</span></code> enables access to the MSB pins of wide ports.</p>
+<p>However LSB and MSB pins cannot be addressed in a true atomic manner, which
+means that there is a short delay between sampling/updating the LSB and MSB
+part of the same wide port. Byte buffer can also be sampled/updated at a
+regular pace, but the achievable frequency range may differ from the other
+controllers.</p>
+</li>
+</ul>
+<p>It is recommened to read the <code class="docutils literal notranslate"><span class="pre">tests/gpio.py</span></code> files - available from GitHub -
+to get some examples on how to use these API variants.</p>
 <div class="section" id="setting-gpio-pin-state">
 <h3>Setting GPIO pin state<a class="headerlink" href="#setting-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
 <p>To write to a GPIO, use the <cite>write()</cite> method. The caller needs to mask out
@@ -467,7 +495,7 @@ the bits configured as input, or an exception is triggered:</p>
 <li><p>writing <code class="docutils literal notranslate"><span class="pre">0</span></code> to an input pin is ignored</p></li>
 <li><p>writing <code class="docutils literal notranslate"><span class="pre">1</span></code> to an input pin raises an exception</p></li>
 </ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
 <span class="c1"># all output set low</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0x00</span><span class="p">)</span>
@@ -477,25 +505,27 @@ the bits configured as input, or an exception is triggered:</p>
 <span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0xFF</span> <span class="o">&amp;</span> <span class="n">gpio</span><span class="o">.</span><span class="n">direction</span><span class="p">)</span>
 <span class="c1"># all output forced to high, writing to input pins is illegal</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mh">0xFF</span><span class="p">)</span>  <span class="c1"># raises an IOError</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="retrieving-gpio-pin-state">
 <h3>Retrieving GPIO pin state<a class="headerlink" href="#retrieving-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
 <p>To read a GPIO, use the <cite>read()</cite> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
 <span class="c1"># read whole port</span>
 <span class="n">pins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <span class="c1"># ignore output values (optional)</span>
 <span class="n">pins</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="n">gpio</span><span class="o">.</span><span class="n">direction</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="modifying-gpio-pin-state">
 <h3>Modifying GPIO pin state<a class="headerlink" href="#modifying-gpio-pin-state" title="Permalink to this headline">¶</a></h3>
 <p>A read-modify-write sequence is required.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioController</span><span class="p">()</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
 <span class="c1"># read whole port</span>
 <span class="n">pins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -505,6 +535,18 @@ the bits configured as input, or an exception is triggered:</p>
 <span class="n">pins</span> <span class="o">|=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
 <span class="c1"># update GPIO output</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">pins</span><span class="p">)</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="synchronous-gpio-access">
+<h3>Synchronous GPIO access<a class="headerlink" href="#synchronous-gpio-access" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioSyncController</span><span class="p">()</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1, direction=0x0F, frequency=1e6)</span>
+<span class="n">outs</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">})</span>
+<span class="n">ins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">outs</span><span class="p">)</span>
+<span class="c1"># ins contains as many bytes as outs</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>

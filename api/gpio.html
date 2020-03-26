@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.48.2
+                0.49.0
               </div>
             
           
@@ -195,8 +195,8 @@
 <p>This mode is mutually exclusive with advanced serial MPSSE features, such as
 I<sup>2</sup>C, SPI, JTAG, …</p>
 <p>If you need to use GPIO pins and MPSSE interface on the same port, you need
-to use the dedicated API. For now, this shared mode is only supported with
-the <a class="reference internal" href="spi.html"><span class="doc">SPI API</span></a>.</p>
+to use the dedicated API. This shared mode is supported with the
+<a class="reference internal" href="spi.html"><span class="doc">SPI API</span></a> and the <a class="reference internal" href="i2c.html"><span class="doc">I2C API</span></a>.</p>
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -210,35 +210,31 @@ FT230X and FT231X devices. See <a class="reference internal" href="../gpio.html#
 <div class="section" id="classes">
 <h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="pyftdi.gpio.GpioController">
-<em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioController</code><a class="headerlink" href="#pyftdi.gpio.GpioController" title="Permalink to this definition">¶</a></dt>
-<dd><p>GPIO controller for an FTDI port, in bit-bang legacy mode.</p>
-<p>GPIO bit-bang mode is limited to the 8 lower pins of each GPIO port.</p>
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.all_pins">
-<em class="property">property </em><code class="sig-name descname">all_pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.all_pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the addressable GPIOs as a bitfield.</p>
-<p>A true bit represents a pin which may be used as a GPIO, a false bit
-a reserved pin</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>always 0xFF for GpioController instance.</p>
-</dd>
-</dl>
+<dt id="pyftdi.gpio.GpioPort">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioPort</code><a class="headerlink" href="#pyftdi.gpio.GpioPort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Duck-type GPIO port for GPIO all controllers.</p>
 </dd></dl>
 
+<dl class="class">
+<dt id="pyftdi.gpio.GpioAsyncController">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioAsyncController</code><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO controller for an FTDI port, in bit-bang asynchronous mode.</p>
+<p>GPIO accessible pins are limited to the 8 lower pins of each GPIO port.</p>
+<p>Asynchronous bitbang output are updated on write request using the
+<a class="reference internal" href="#pyftdi.gpio.GpioAsyncController.write" title="pyftdi.gpio.GpioAsyncController.write"><code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code></a> method, clocked at the selected frequency.</p>
+<p>Asynchronous bitbang input are sampled at the same rate, as soon as the
+controller is initialized. The GPIO input samples fill in the FTDI HW
+buffer until it is filled up, in which case sampling stops until the
+GPIO samples are read out with the <a class="reference internal" href="#pyftdi.gpio.GpioAsyncController.read" title="pyftdi.gpio.GpioAsyncController.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code></a> method. It may be
+therefore hard to use, except if peek mode is selected,
+see <a class="reference internal" href="#pyftdi.gpio.GpioAsyncController.read" title="pyftdi.gpio.GpioAsyncController.read"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code></a> for details.</p>
+<p>Note that FTDI internal clock divider cannot generate any arbitrary
+frequency, so the closest frequency to the request one that can be
+generated is selected. The actual <code class="xref py py-attr docutils literal notranslate"><span class="pre">frequency</span></code> may be tested to
+check if it matches the board requirements.</p>
 <dl class="method">
-<dt id="pyftdi.gpio.GpioController.close">
-<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.close" title="Permalink to this definition">¶</a></dt>
-<dd><p>Close the FTDI interface.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.configure">
-<code class="sig-name descname">configure</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.configure" title="Permalink to this definition">¶</a></dt>
+<dt id="pyftdi.gpio.GpioAsyncController.open_from_url">
+<code class="sig-name descname">open_from_url</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.open_from_url" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -247,128 +243,106 @@ a reserved pin</p>
 <li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
+<li><p><strong>initial</strong> – optional initial GPIO output value</p></li>
+<li><p><strong>pace</strong> – optional pace in GPIO sample per second</p></li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.direction">
-<em class="property">property </em><code class="sig-name descname">direction</code><a class="headerlink" href="#pyftdi.gpio.GpioController.direction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reports the GPIO direction.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a bitfield specifying the FTDI GPIO direction, where high
-level reports an output pin, and low level reports an input pin</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.ftdi">
-<em class="property">property </em><code class="sig-name descname">ftdi</code><a class="headerlink" href="#pyftdi.gpio.GpioController.ftdi" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the Ftdi instance.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="ftdi.html#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ftdi</span></code></a></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the Ftdi instance</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.is_connected">
-<em class="property">property </em><code class="sig-name descname">is_connected</code><a class="headerlink" href="#pyftdi.gpio.GpioController.is_connected" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reports whether a connection exists with the FTDI interface.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the FTDI slave connection status</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.open_from_url">
-<code class="sig-name descname">open_from_url</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.open_from_url" title="Permalink to this definition">¶</a></dt>
-<dd><p>Open a new interface to the specified FTDI device in bitbang mode.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
-where high level defines an output, and low level defines an
-input</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.pins">
-<em class="property">property </em><code class="sig-name descname">pins</code><a class="headerlink" href="#pyftdi.gpio.GpioController.pins" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the configured GPIOs as a bitfield.</p>
-<p>A true bit represents a GPIO, a false bit a reserved or not
-configured pin.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>always 0xFF for GpioController instance.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.read">
-<code class="sig-name descname">read</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.read" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the GPIO input pin electrical level.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> – a bitfield of GPIO pins. Each bit represent a GPIO
-pin, matching the logical input level of the pin.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
 </dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>actual bitbang pace in sample per second</p>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyftdi.gpio.GpioController.read_port">
-<code class="sig-name descname">read_port</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.read_port" title="Permalink to this definition">¶</a></dt>
+<dt id="pyftdi.gpio.GpioAsyncController.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">readlen=1</em>, <em class="sig-param">peek=None</em>, <em class="sig-param">noflush=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the GPIO input pin electrical level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> – a bitfield of GPIO pins. Each bit represent a GPIO
-pin, matching the logical input level of the pin.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how many GPIO samples to retrieve. Each sample is
+8-bit wide.</p></li>
+<li><p><strong>peek</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]) – whether to peek/sample the instantaneous GPIO pin
+values from port, or to use the HW FIFO. The HW FIFO is
+continously filled up with GPIO sample at the current
+frequency, until it is full - samples are no longer
+collected until the FIFO is read. This means than
+non-peek mode read “old” values, with no way to know at
+which time they have been sampled. PyFtdi ensures that
+old sampled values before the completion of a previous
+GPIO write are discarded. When peek mode is selected,
+readlen should be 1.</p></li>
+<li><p><strong>noflush</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to disable the RX buffer flush before
+reading out data</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a 8-bit wide integer if peek mode is used, or
+a bytes buffer otherwise.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyftdi.gpio.GpioController.set_direction">
-<code class="sig-name descname">set_direction</code><span class="sig-paren">(</span><em class="sig-param">pins</em>, <em class="sig-param">direction</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.set_direction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the GPIO pin direction.</p>
+<dt id="pyftdi.gpio.GpioAsyncController.read_port">
+<code class="sig-name descname">read_port</code><span class="sig-paren">(</span><em class="sig-param">readlen=1</em>, <em class="sig-param">peek=None</em>, <em class="sig-param">noflush=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.read_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the GPIO input pin electrical level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pins</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – which GPIO pins should be reconfigured</p></li>
-<li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield of GPIO pins. Each bit represent a
-GPIO pin, where a high level sets the pin as output and a low
-level sets the pin as input/high-Z.</p></li>
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how many GPIO samples to retrieve. Each sample is
+8-bit wide.</p></li>
+<li><p><strong>peek</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]) – whether to peek/sample the instantaneous GPIO pin
+values from port, or to use the HW FIFO. The HW FIFO is
+continously filled up with GPIO sample at the current
+frequency, until it is full - samples are no longer
+collected until the FIFO is read. This means than
+non-peek mode read “old” values, with no way to know at
+which time they have been sampled. PyFtdi ensures that
+old sampled values before the completion of a previous
+GPIO write are discarded. When peek mode is selected,
+readlen should be 1.</p></li>
+<li><p><strong>noflush</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – whether to disable the RX buffer flush before
+reading out data</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a 8-bit wide integer if peek mode is used, or
+a bytes buffer otherwise.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioAsyncController.set_frequency">
+<code class="sig-name descname">set_frequency</code><span class="sig-paren">(</span><em class="sig-param">frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.set_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the frequency at which sequence of GPIO samples are read
+and written.</p>
+<p>note: FTDI may update its clock register before it has emptied its
+internal buffer. If the current frequency is “low”, some
+yet-to-output bytes may end up being clocked at the new frequency.</p>
+<p>Unfortunately, it seems there is no way to wait for the internal
+buffer to be emptied out. They can be flushed (i.e. discarded), but
+not synchronized :-(</p>
+<p>PyFtdi client should add “some” short delay to ensure a previous,
+long write request has been fully output &#64; low freq before changing
+the frequency.</p>
+<p>Beware that only some exact frequencies can be generated. Contrary
+to the UART mode, an approximate frequency is always accepted for
+GPIO/bitbang mode. To get the actual frequency, and optionally abort
+if it is out-of-spec, use <code class="xref py py-meth docutils literal notranslate"><span class="pre">frequency()</span></code> property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frequency</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – the new frequency, in GPIO samples per second</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -377,26 +351,13 @@ level sets the pin as input/high-Z.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyftdi.gpio.GpioController.width">
-<em class="property">property </em><code class="sig-name descname">width</code><a class="headerlink" href="#pyftdi.gpio.GpioController.width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Report the FTDI count of addressable pins.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>always 8.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="method">
-<dt id="pyftdi.gpio.GpioController.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.write" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the GPIO output pin electrical level.</p>
+<dt id="pyftdi.gpio.GpioAsyncController.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level, or output a sequence of
+bytes &#64; constant frequency to GPIO output pins.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</p>
+<dd class="field-odd"><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – a bitfield of GPIO pins, or a sequence of them</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
@@ -405,12 +366,131 @@ level sets the pin as input/high-Z.</p></li>
 </dd></dl>
 
 <dl class="method">
-<dt id="pyftdi.gpio.GpioController.write_port">
-<code class="sig-name descname">write_port</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioController.write_port" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the GPIO output pin electrical level.</p>
+<dt id="pyftdi.gpio.GpioAsyncController.write_port">
+<code class="sig-name descname">write_port</code><span class="sig-paren">(</span><em class="sig-param">out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController.write_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level, or output a sequence of
+bytes &#64; constant frequency to GPIO output pins.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>value</strong> (<em>int</em>) – a bitfield of GPIO pins.</p>
+<dd class="field-odd"><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – a bitfield of GPIO pins, or a sequence of them</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.gpio.GpioSyncController">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioSyncController</code><a class="headerlink" href="#pyftdi.gpio.GpioSyncController" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO controller for an FTDI port, in bit-bang synchronous mode.</p>
+<p>GPIO accessible pins are limited to the 8 lower pins of each GPIO port.</p>
+<p>Synchronous bitbang input and output are synchronized. Eveery time GPIO
+output is updated, the GPIO input is sampled and buffered.</p>
+<p>Update and sampling are clocked at the selected frequency. The GPIO
+samples are transfer in both direction with the <a class="reference internal" href="#pyftdi.gpio.GpioSyncController.exchange" title="pyftdi.gpio.GpioSyncController.exchange"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exchange()</span></code></a>
+method, which therefore always returns as many input samples as output
+bytes.</p>
+<p>Note that FTDI internal clock divider cannot generate any arbitrary
+frequency, so the closest frequency to the request one that can be
+generated is selected. The actual <code class="xref py py-attr docutils literal notranslate"><span class="pre">frequency</span></code> may be tested to
+check if it matches the board requirements.</p>
+<dl class="method">
+<dt id="pyftdi.gpio.GpioSyncController.exchange">
+<code class="sig-name descname">exchange</code><span class="sig-paren">(</span><em class="sig-param">out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioSyncController.exchange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level, or output a sequence of
+bytes &#64; constant frequency to GPIO output pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]) – the byte buffer to output as GPIO</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a byte buffer of the same length as out buffer.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioSyncController.set_frequency">
+<code class="sig-name descname">set_frequency</code><span class="sig-paren">(</span><em class="sig-param">frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioSyncController.set_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the frequency at which sequence of GPIO samples are read
+and written.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frequency</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – the new frequency, in GPIO samples per second</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyftdi.gpio.GpioMpsseController">
+<em class="property">class </em><code class="sig-prename descclassname">pyftdi.gpio.</code><code class="sig-name descname">GpioMpsseController</code><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController" title="Permalink to this definition">¶</a></dt>
+<dd><p>GPIO controller for an FTDI port, in MPSSE mode.</p>
+<p>All GPIO pins are reachable, but MPSSE mode is slower than other modes.</p>
+<p>Beware that LSBs (b0..b7) and MSBs (b8..b15) are accessed with two
+subsequence commands, so a slight delay may occur when sampling or
+changing both groups at once. In other word, it is not possible to
+atomically read to / write from LSBs and MSBs. This might be worth
+checking the board design if atomic access to several lines is required.</p>
+<dl class="method">
+<dt id="pyftdi.gpio.GpioMpsseController.read">
+<code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">readlen=1</em>, <em class="sig-param">peek=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the GPIO input pin electrical level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>readlen</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – how many GPIO samples to retrieve. Each sample if
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">width()</span></code> bit wide.</p></li>
+<li><p><strong>peek</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>]) – whether to peak current value from port, or to use
+MPSSE stream and HW FIFO. When peek mode is selected,
+readlen should be 1. It is not available with wide
+ports if some of the MSB pins are configured as input</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a <code class="xref py py-meth docutils literal notranslate"><span class="pre">width()</span></code> bit wide integer if direct mode is used,
+a bytes buffer if <code class="xref py py-meth docutils literal notranslate"><span class="pre">width()</span></code> is a byte,
+a list of integer otherwise (MPSSE mode only).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioMpsseController.set_frequency">
+<code class="sig-name descname">set_frequency</code><span class="sig-paren">(</span><em class="sig-param">frequency</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController.set_frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the frequency at which sequence of GPIO samples are read
+and written.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>frequency</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]) – the new frequency, in GPIO samples per second</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.gpio.GpioMpsseController.write">
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">out</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the GPIO output pin electrical level, or output a sequence of
+bytes &#64; constant frequency to GPIO output pins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>out</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – a bitfield of GPIO pins, or a sequence of them</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
