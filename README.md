@@ -9,17 +9,17 @@ PyFtdi documentation is available from https://eblot.github.io/pyftdi/
 
 ## Overview
 
-PyFtdi aims at providing a user-space driver for modern FTDI devices,
+PyFtdi aims at providing a user-space driver for popular FTDI devices,
 implemented in pure Python language.
 
-Modern FTDI devices include:
+Suported FTDI devices include:
 
-* UART-only bridges
+* UART and GPIO bridges
 
   * FT232R (single port, 3Mbps)
   * FT230X/FT231X/FT234X/ (single port, 3Mbps)
 
-* UART and multi-serial protocols (SPI, I2C, JTAG) bridges
+* UART, GPIO and multi-serial protocols (SPI, I2C, JTAG) bridges
 
   * FT2232C/D (dual port, clock up to 6 MHz)
   * FT232H (single port, clock up to 30 MHz)
@@ -32,12 +32,14 @@ PyFtdi currently supports the following features:
 
 * UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
   capability)
-* Bitbang/GPIO legacy support, 8 pins per port
+* GPIO/Bitbang support, with 8-bit asynchronous, 8-bit synchronous and
+  8-/16-bit MPSSE variants
 * SPI master, with simultanous GPIO support, up to 12 pins per port,
   with support for non-byte sized transfer
 * I2C master, with simultanous GPIO support, up to 14 pins per port
 * Basic JTAG master capabilities
-* Basic EEPROM support (R/O access + R/W for serial/product/manufacturer)
+* EEPROM support (some parameters are only available with R/O access)
+* Experimental CBUS support on selected devices, 4 pins per port
 
 
 ## Supported host OSes

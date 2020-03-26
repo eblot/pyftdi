@@ -25,6 +25,10 @@
 
 """EEPROM management for PyFdti"""
 
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=wrong-import-position
+#pylint: disable-msg=import-error
+
 import sys
 from binascii import hexlify
 from collections import OrderedDict, namedtuple
@@ -103,7 +107,7 @@ class FtdiEeprom:
     CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
     """Alternate port mode."""
 
-    DRIVE = IntEnum('DRIVE',
+    DRIVE = IntFlag('DRIVE',
                     'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 PWRSAVE_DIS')
     """Driver options for I/O pins."""
 
@@ -311,6 +315,11 @@ class FtdiEeprom:
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
             return
+        mobj = match(r'([abcd])bus_(drive|slow_slew|schmitt)', name)
+        if mobj:
+            self._set_bus_control(mobj.group(1), mobj.group(2), value, out)
+            self._dirty.add(name)
+            return
         hwords = {
             'vendor_id': 0x02,
             'product_id': 0x04,
@@ -331,7 +340,6 @@ class FtdiEeprom:
             'out_isochronous': (2, 1),
             'suspend_pull_down': (2, 2),
             'has_serial': (2, 3),
-            'has_usb_version': (2, 4),
         }
         if name in confs:
             val = to_bool(value, permissive=False, allow_int=True)
@@ -501,7 +509,6 @@ class FtdiEeprom:
         cfg['self_powered'] = bool(power_supply & (1 << 6))
         cfg['remote_wakeup'] = bool(power_supply & (1 << 5))
         cfg['power_max'] = power_max << 1
-        cfg['has_usb_version'] = bool(conf & (1 << 4))
         cfg['has_serial'] = bool(conf & (1 << 3))
         cfg['suspend_pull_down'] = bool(conf & (1 << 2))
         cfg['out_isochronous'] = bool(conf & (1 << 1))
@@ -560,6 +567,63 @@ class FtdiEeprom:
         self.log.debug('Cpin %d, addr 0x%02x, value 0x%02x->0x%02x',
                        cpin, addr, old, self._eeprom[addr])
 
+    def _set_bus_control(self, bus: str, control: str,
+                         value: Union[str, int, bool],
+                         out: Optional[TextIO]) -> None:
+        if self.device_version == 0x1000:
+            self._set_bus_control_230x(bus, control, value, out)
+            return
+        # for now, only support FT-X devices
+        raise ValueError('Bus control not implemented for this device')
+
+    def _set_bus_control_230x(self, bus: str, control: str,
+                              value: Union[str, int, bool],
+                              out: Optional[TextIO]) -> None:
+        if bus not in 'cd':
+            raise ValueError('Invalid bus: %s' % bus)
+        try:
+            if control == 'drive':
+                candidates = (4, 8, 12, 16)
+                if value == '?' and out:
+                    print(', '.join([str(v) for v in candidates]), file=out)
+                    return
+                value = int(value)
+                if value not in candidates:
+                    raise ValueError('Invalid drive current: %d mA' % value)
+                value //= 4
+                value -= 1
+            elif control in ('slow_slew', 'schmitt'):
+                if value == '?' and out:
+                    print('off, on', file=out)
+                    return
+                value = int(to_bool(value))
+            else:
+                raise ValueError('Unsupported control: %s' % control)
+        except (ValueError, TypeError):
+            raise ValueError('Invalid %s value: %s' % (control, value))
+        config = self._eeprom[0x0c]
+        if bus == 'd':
+            conf = config & 0x0F
+            config &= 0xF0
+            cshift = 0
+        else:
+            conf = config >> 4
+            config &= 0x0F
+            cshift = 4
+        if control == 'drive':
+            conf &= 0b1100
+            conf |= value
+        elif control == 'slow_slew':
+            conf &= 0b1011
+            conf |= value << 2
+        elif control == 'schmitt':
+            conf &= 0b0111
+            conf |= value << 3
+        else:
+            raise RuntimeError('Internal error')
+        config |= conf << cshift
+        self._eeprom[0x0c] = config
+
     def _decode_230x(self):
         cfg = self._config
         misc, = sunpack('<H', self._eeprom[0x00:0x02])
@@ -570,10 +634,11 @@ class FtdiEeprom:
         max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
         value = self._eeprom[0x0c]
         for grp in range(2):
-            conf = value &0xF
-            cfg['group_%d_drive' % grp] = bool((conf & max_drive) == max_drive)
-            cfg['group_%d_schmitt' % grp] = conf & self.DRIVE.SCHMITT
-            cfg['group_%d_slew' % grp] = conf & self.DRIVE.SLOW_SLEW
+            conf = value & 0xF
+            bus = 'c' if grp else 'd'
+            cfg['%sbus_drive' % bus] = 4 * (1+(conf & max_drive))
+            cfg['%sbus_schmitt' % bus] = bool(conf & self.DRIVE.SCHMITT)
+            cfg['%sbus_slow_slew' % bus] = bool(conf & self.DRIVE.SLOW_SLEW)
             value >>= 4
         for bix in range(4):
             value = self._eeprom[0x1A + bix]

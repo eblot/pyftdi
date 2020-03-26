@@ -32,8 +32,8 @@ class VirtMpsseTracer(FtdiMpsseTracer):
     """Reuse MPSSE tracer as a MPSSE command decoder engine.
     """
 
-    def __init__(self):
-        super().__init__(self)
+    def __init__(self, version: int):
+        super().__init__(version)
         self.log = getLogger('pyftdi.virt.mpsse')
 
 
@@ -119,7 +119,7 @@ class VirtFtdi:
     def write(self, dev_handle: 'VirtDeviceHandle', ep: int, intf: int,
               data: array, timeout: int) -> int:
         if self._bitmode == FTDICONST.get_value('bitmode', 'mpsse'):
-            self._mpsse.send(data)
+            self._mpsse.send(intf+1, data)
             return len(data)
         if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
             self._queues[0].extend(data)
@@ -319,7 +319,8 @@ class VirtFtdi:
                           f'{mask:04b}')
         else:
             self._direction = direction
-        self._mpsse = FtdiMpsseTracer() if mode == 'mpsse' else None
+        if mode == 'mpsse':
+            self._mpsse = VirtMpsseTracer(self._version)
 
     def _control_set_latency_timer(self, wValue: int, wIndex: int,
                                    data: array) -> None:

@@ -7,6 +7,8 @@
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
+#pylint: disable-msg=too-many-nested-blocks
 #pylint: disable-msg=no-self-use
 
 from binascii import unhexlify

@@ -7,6 +7,7 @@
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=too-many-instance-attributes
 
+from enum import Enum
 from importlib import import_module
 from sys import version_info
 from pyftdi.ftdi import Ftdi
@@ -71,6 +72,8 @@ class UsbConstants:
                 mapping[getattr(mod, entry)] = entry[plen:].lower()
             else:
                 mapping[entry[plen:].lower()] = getattr(mod, entry)
+        if not mapping:
+            raise ValueError(f"No USB constant found for {prefix.rstrip('_')}")
         return mapping
 
     @classmethod
@@ -120,13 +123,28 @@ class FtdiConstants:
             prefix = f'{prefix}_'
         mapping = EasyDict()
         plen = len(prefix)
-        for entry in dir(Ftdi):
-            if not entry.startswith(prefix):
+        for name in dir(Ftdi):
+            if not name.startswith(prefix):
                 continue
             if not reverse:
-                mapping[getattr(Ftdi, entry)] = entry[plen:].lower()
+                mapping[getattr(Ftdi, name)] = name[plen:].lower()
             else:
-                mapping[entry[plen:].lower()] = getattr(Ftdi, entry)
+                mapping[name[plen:].lower()] = getattr(Ftdi, name)
+        if not mapping:
+            # maybe an enum
+            prefix = prefix.rstrip('_').lower()
+            for name in dir(Ftdi):
+                if not name.lower().startswith(prefix):
+                    continue
+                item = getattr(Ftdi, name)
+                if issubclass(item, Enum):
+                    if not reverse:
+                        mapping = {en.value: en.name.lower() for en in item}
+                    else:
+                        mapping = {en.name.lower(): en.value for en in item}
+        if not mapping:
+            raise ValueError(f"No FTDI constant found for "
+                             f"{prefix.rstrip('_')}")
         return mapping
 
     def get_name(self, prefix: str, value: int) -> str:

@@ -25,6 +25,15 @@
 
 """I2C support for PyFdti"""
 
+#pylint: disable-msg=too-many-lines
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-instance-attributes
+#pylint: disable-msg=too-many-public-methods
+#pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
+
+
 from binascii import hexlify
 from collections import namedtuple
 from logging import getLogger
@@ -33,12 +42,6 @@ from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiFeatureError
-
-#pylint: disable-msg=too-many-lines
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=too-many-public-methods
-#pylint: disable-msg=too-many-arguments
 
 
 class I2cIOError(IOError):
@@ -373,7 +376,7 @@ class I2cController:
     SDA_O_BIT = 0x02  #AD1
     SDA_I_BIT = 0x04  #AD2
     SCL_FB_BIT = 0x80  #AD7
-    PAYLOAD_MAX_LENGTH = 0x10000  # 16 bits max
+    PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
     HIGHEST_I2C_ADDRESS = 0x78
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
