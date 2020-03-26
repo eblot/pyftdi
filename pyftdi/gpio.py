@@ -87,6 +87,7 @@ class GpioBaseController(GpioPort):
         """
         if self.is_connected:
             raise FtdiError('Already connected')
+        kwargs = dict(kwargs)
         frequency = kwargs.get('frequency', None)
         if frequency is None:
             frequency = kwargs.get('baudrate', None)
@@ -191,8 +192,20 @@ class GpioAsyncController(GpioBaseController):
 
        GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
 
-       GPIO asynchronous read access may be hard to use, except if peek mode
-       is selected, see :py:meth:`read` for details.
+       Asynchronous bitbang output are updated on write request using the
+       :py:meth:`write` method, clocked at the selected frequency.
+
+       Asynchronous bitbang input are sampled at the same rate, as soon as the
+       controller is initialized. The GPIO input samples fill in the FTDI HW
+       buffer until it is filled up, in which case sampling stops until the
+       GPIO samples are read out with the :py:meth:`read` method. It may be
+       therefore hard to use, except if peek mode is selected,
+       see :py:meth:`read` for details.
+
+       Note that FTDI internal clock divider cannot generate any arbitrary
+       frequency, so the closest frequency to the request one that can be
+       generated is selected. The actual :py:attr:`frequency` may be tested to
+       check if it matches the board requirements.
     """
 
     def read(self, readlen: int = 1, peek: Optional[bool] = None) -> \
@@ -322,6 +335,19 @@ class GpioSyncController(GpioBaseController):
     """GPIO controller for an FTDI port, in bit-bang synchronous mode.
 
        GPIO accessible pins are limited to the 8 lower pins of each GPIO port.
+
+       Synchronous bitbang input and output are synchronized. Eveery time GPIO
+       output is updated, the GPIO input is sampled and buffered.
+
+       Update and sampling are clocked at the selected frequency. The GPIO
+       samples are transfer in both direction with the :py:meth:`exchange`
+       method, which therefore always returns as many input samples as output
+       bytes.
+
+       Note that FTDI internal clock divider cannot generate any arbitrary
+       frequency, so the closest frequency to the request one that can be
+       generated is selected. The actual :py:attr:`frequency` may be tested to
+       check if it matches the board requirements.
     """
 
     def exchange(self, out: Union[bytes, bytearray]) -> bytes:
@@ -344,7 +370,7 @@ class GpioSyncController(GpioBaseController):
                 if val > self._mask:
                     raise GpioException("Invalid value")
         self._ftdi.write_data(out)
-        return self._ftdi.read_data(len(out))
+        return self._ftdi.read_data_bytes(len(out), 4)
 
     def set_frequency(self, frequency: Union[int, float]) -> None:
         """Set the frequency at which sequence of GPIO samples are read
@@ -356,10 +382,11 @@ class GpioSyncController(GpioBaseController):
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs):
+        baudrate = int(frequency) if frequency is not None else None
         frequency = self._ftdi.open_bitbang_from_url(url,
                                                      direction=direction,
                                                      sync=True,
-                                                     baudrate=int(frequency),
+                                                     baudrate=baudrate,
                                                      **kwargs)
         if 'initial' in kwargs:
             self.exchange(kwargs['initial'] & self._mask)
@@ -378,7 +405,6 @@ class GpioMpsseController(GpioBaseController):
        atomically read to / write from LSBs and MSBs. This might be worth
        checking the board design if atomic access to several lines is required.
     """
-
 
     MPSSE_PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
 
