@@ -25,6 +25,8 @@
 
 """MPSSE command debug tracer."""
 
+#pylint: disable-msg=missing-docstring
+
 from binascii import hexlify
 from collections import deque
 from inspect import stack
@@ -36,7 +38,42 @@ from .ftdi import Ftdi
 
 
 class FtdiMpsseTracer:
-    """FTDI MPSSE protocol decoder
+    """FTDI MPSSE protocol decoder."""
+
+    MPSSE_ENGINES = {
+        0x0200: 0,
+        0x0400: 0,
+        0x0500: 0,
+        0x0600: 0,
+        0x0700: 2,
+        0x0800: 2,
+        0x0900: 1,
+        0x1000: 0}
+    """Count of MPSSE engines."""
+
+    def __init__(self, version):
+        count = self.MPSSE_ENGINES[version]
+        self._engines = [None] * count
+
+    def send(self, iface: int, buf: Union[bytes, bytearray]) -> None:
+        self._get_engine(iface).send(buf)
+
+    def receive(self, iface: int, buf: Union[bytes, bytearray]) -> None:
+        self._get_engine(iface).receive(buf)
+
+    def _get_engine(self, iface: int):
+        iface -= 1
+        try:
+            self._engines[iface]
+        except IndexError:
+            raise ValueError(f'No MPSSE engine available on interface {iface}')
+        if not self._engines[iface]:
+            self._engines[iface] = FtdiMpsseEngine(iface)
+        return self._engines[iface]
+
+
+class FtdiMpsseEngine:
+    """FTDI MPSSE virtual engine
 
        Far from being complete for now
     """
@@ -62,8 +99,9 @@ class FtdiMpsseTracer:
 
     ST_IDLE = range(1)
 
-    def __init__(self):
+    def __init__(self, iface: int):
         self.log = getLogger('pyftdi.mpsse.tracer')
+        self._if = iface
         self._trace_tx = bytearray()
         self._trace_rx = bytearray()
         self._state = self.ST_IDLE
@@ -80,7 +118,8 @@ class FtdiMpsseTracer:
                 code = self._trace_tx[0]
                 cmd = self.COMMANDS[code]
                 if self._cmd_decoded:
-                    self.log.debug('[Command: %02X: %s]', code, cmd)
+                    self.log.debug('[%d]:[Command: %02X: %s]',
+                                   self._if, code, cmd)
                 cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
                 rdepth = len(self._expect_resp)
                 self._cmd_decoded = cmd_decoder()
@@ -91,12 +130,14 @@ class FtdiMpsseTracer:
                 # not enough data in buffer to decode a whole command
                 return
             except IndexError:
-                self.log.warning('Empty buffer on %02X: %s', code, cmd)
+                self.log.warning('[%d]:Empty buffer on %02X: %s',
+                                 self._if, code, cmd)
             except KeyError:
-                self.log.warning('Unknown command code: %02X', code)
+                self.log.warning('[%d]:Unknown command code: %02X',
+                                 self._if, code)
             except AttributeError:
-                self.log.warning('Decoder for command %s [%02X] is not '
-                                 'implemented', cmd, code)
+                self.log.warning('[%d]:Decoder for command %s [%02X] is not '
+                                 'implemented', self._if, cmd, code)
             # on error, flush all buffers
             self.log.warning('Flush TX/RX buffers')
             self._trace_tx = bytearray()
@@ -118,25 +159,26 @@ class FtdiMpsseTracer:
                 # not enough data in buffer to decode a whole response
                 return
             except IndexError:
-                self.log.warning('Empty buffer')
+                self.log.warning('[%d]:Empty buffer', self._if)
             except KeyError:
-                self.log.warning('Unknown command code: %02X', code)
+                self.log.warning('[%d]:Unknown command code: %02X',
+                                 self._if, code)
             except AttributeError:
-                self.log.warning('Decoder for response %s [%02X] is not '
-                                 'implemented', cmd, code)
+                self.log.warning('[%d]:Decoder for response %s [%02X] is not '
+                                 'implemented', self._if, cmd, code)
             # on error, flush RX buffer
-            self.log.warning('Flush RX buffer')
+            self.log.warning('[%d]:Flush RX buffer', self._if)
             self._trace_rx = bytearray()
             self._last_codes.clear()
 
     def _cmd_enable_clk_div5(self):
-        self.log.info(' Enable clock divisor /5')
+        self.log.info(' [%d]:Enable clock divisor /5', self._if)
         self._clkdiv5 = True
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_disable_clk_div5(self):
-        self.log.info(' Disable clock divisor /5')
+        self.log.info(' [%d]:Disable clock divisor /5', self._if)
         self._clkdiv5 = False
         self._trace_tx[:] = self._trace_tx[1:]
         return True
@@ -147,32 +189,32 @@ class FtdiMpsseTracer:
         value, = sunpack('<H', self._trace_tx[1:3])
         base = 12E6 if self._clkdiv5 else 60E6
         freq = base / ((1 + value) * 2)
-        self.log.info(' Set frequency %.3fMHZ', freq/1E6)
+        self.log.info(' [%d]:Set frequency %.3fMHZ', self._if, freq/1E6)
         self._trace_tx[:] = self._trace_tx[3:]
         return True
 
     def _cmd_loopback_end(self):
-        self.log.info(' Disable loopback')
+        self.log.info(' [%d]:Disable loopback', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_enable_clk_adaptive(self):
-        self.log.info(' Enable adaptive clock')
+        self.log.info(' [%d]:Enable adaptive clock', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_disable_clk_adaptive(self):
-        self.log.info(' Disable adaptive clock')
+        self.log.info(' [%d]:Disable adaptive clock', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_enable_clk_3phase(self):
-        self.log.info(' Enable 3-phase clock')
+        self.log.info(' [%d]:Enable 3-phase clock', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_disable_clk_3phase(self):
-        self.log.info(' Disable 3-phase clock')
+        self.log.info(' [%d]:Disable 3-phase clock', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
@@ -180,30 +222,32 @@ class FtdiMpsseTracer:
         if len(self._trace_tx) < 3:
             return False
         value, = sunpack('H', self._trace_tx[1:3])
-        self.log.info(' Open collector [15:0] %04x %s',
-                      value, self.bitfmt(value, 16))
+        self.log.info(' [%d]:Open collector [15:0] %04x %s',
+                      self._if, value, self.bitfmt(value, 16))
         self._trace_tx[:] = self._trace_tx[3:]
         return True
 
     def _cmd_send_immediate(self):
-        self.log.debug(' Send immediate')
+        self.log.debug(' [%d]:Send immediate', self._if)
         self._trace_tx[:] = self._trace_tx[1:]
         return True
 
     def _cmd_get_bits_low(self):
         self._trace_tx[:] = self._trace_tx[1:]
+        self._expect_resp.append(1)
         return True
 
     def _cmd_get_bits_high(self):
         self._trace_tx[:] = self._trace_tx[1:]
+        self._expect_resp.append(1)
         return True
 
     def _cmd_set_bits_low(self):
         if len(self._trace_tx) < 3:
             return False
         value, direction = sunpack('BB', self._trace_tx[1:3])
-        self.log.info(' Set gpio[7:0]  %02x %s',
-                      value, self.bm2str(value, direction))
+        self.log.info(' [%d]:Set gpio[7:0]  %02x %s',
+                      self._if, value, self.bm2str(value, direction))
         self._trace_tx[:] = self._trace_tx[3:]
         return True
 
@@ -211,8 +255,8 @@ class FtdiMpsseTracer:
         if len(self._trace_tx) < 3:
             return False
         value, direction = sunpack('BB', self._trace_tx[1:3])
-        self.log.info(' Set gpio[15:8] %02x %s',
-                      value, self.bm2str(value, direction))
+        self.log.info(' [%d]:Set gpio[15:8] %02x %s',
+                      self._if, value, self.bm2str(value, direction))
         self._trace_tx[:] = self._trace_tx[3:]
         return True
 
@@ -312,13 +356,12 @@ class FtdiMpsseTracer:
     def _resp_rw_bits_pve_nve_msb(self):
         return self._decode_input_mpsse_bits()
 
-
     def _resp_get_bits_low(self):
         if len(self._trace_rx) < 1:
             return False
         value = self._trace_rx[0]
-        self.log.info(' Get gpio[7:0]  %02x %s',
-                      value, self.bm2str(value, 0xFF))
+        self.log.info(' [%d]:Get gpio[7:0]  %02x %s',
+                      self._if, value, self.bm2str(value, 0xFF))
         self._trace_rx[:] = self._trace_rx[1:]
         return True
 
@@ -326,8 +369,8 @@ class FtdiMpsseTracer:
         if len(self._trace_rx) < 1:
             return False
         value = self._trace_rx[0]
-        self.log.info(' Get gpio[15:8] %02x %s',
-                      value, self.bm2str(value, 0xFF))
+        self.log.info(' [%d]:Get gpio[15:8] %02x %s',
+                      self._if, value, self.bm2str(value, 0xFF))
         self._trace_rx[:] = self._trace_rx[1:]
         return True
 
@@ -342,8 +385,9 @@ class FtdiMpsseTracer:
             self._expect_resp.append(length)
         payload = self._trace_tx[3:3+length]
         funcname = caller[5:].title().replace('_', '')
-        self.log.info(' %s> (%d) %s',
-                      funcname, length, hexlify(payload).decode('utf8'))
+        self.log.info(' [%d]:%s> (%d) %s',
+                      self._if, funcname, length,
+                      hexlify(payload).decode('utf8'))
         self._trace_tx[:] = self._trace_tx[3+length:]
         return True
 
@@ -380,10 +424,11 @@ class FtdiMpsseTracer:
 
     def _decode_input_mpsse_bytes(self):
         if not self._expect_resp:
-            self.log.warning('Response w/o request?')
+            self.log.warning('[%d]:Response w/o request?', self._if)
             return False
         if self._expect_resp[0] < 0:
-            self.log.warning('Handling byte request w/ bit length')
+            self.log.warning('[%d]:Handling byte request w/ bit length',
+                             self._if)
             return False
         if len(self._trace_rx) < self._expect_resp[0]:  # peek
             return False
@@ -398,12 +443,13 @@ class FtdiMpsseTracer:
 
     def _decode_input_mpsse_bits(self):
         if not self._expect_resp:
-            self.log.warning('Response w/o request?')
+            self.log.warning('[%d]:Response w/o request?', self._if)
             return False
         if len(self._trace_rx) < 1:  # peek
             return False
         if self._expect_resp[0] > 0:
-            self.log.warning('Handling bit request w/ byte length')
+            self.log.warning('[%d]:Handling bit request w/ byte length',
+                             self._if)
         caller = stack()[1].function
         bitlen = -self._expect_resp.popleft()
         payload = self._trace_rx[0]

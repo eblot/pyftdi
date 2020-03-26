@@ -734,7 +734,7 @@ class Ftdi:
             raise FtdiMpsseError('This interface does not support MPSSE')
         if to_bool(debug):
             from .tracer import FtdiMpsseTracer
-            self._tracer = FtdiMpsseTracer()
+            self._tracer = FtdiMpsseTracer(self.device_version)
             self.log.debug('Using MPSSE tracer')
         # Set latency timer
         self.set_latency_timer(latency)
