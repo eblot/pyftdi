@@ -15,8 +15,8 @@ Direct drive GPIO pins of FTDI device.
   |I2C|, SPI, JTAG, ...
 
   If you need to use GPIO pins and MPSSE interface on the same port, you need
-  to use the dedicated API. For now, this shared mode is only supported with
-  the :doc:`SPI API <spi>`.
+  to use the dedicated API. This shared mode is supported with the
+  :doc:`SPI API <spi>` and the :doc:`I2C API <i2c>`.
 
 .. warning::
 

@@ -66,7 +66,8 @@ class FtdiMpsseTracer:
         try:
             self._engines[iface]
         except IndexError:
-            raise ValueError(f'No MPSSE engine available on interface {iface}')
+            raise ValueError('No MPSSE engine available on interface %d' %
+                             iface)
         if not self._engines[iface]:
             self._engines[iface] = FtdiMpsseEngine(iface)
         return self._engines[iface]
