@@ -603,7 +603,7 @@ class Ftdi:
            which means all other interfaces of the same device are also
            affected.
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Not connected')
         self._reset_device()
         if usb_reset:
@@ -887,7 +887,7 @@ class Ftdi:
 
            :return: the device version (16-bit integer)
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self._usb_dev.bcdDevice
 
@@ -900,9 +900,29 @@ class Ftdi:
 
            :return: the identified FTDI device as a string
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             return 'unknown'
         return self.DEVICE_NAMES.get(self.device_version, 'undefined')
+
+    @property
+    def device_port_count(self) -> int:
+        """Report the count of port/interface of the Ftdi device.
+
+           :return: the count of ports
+        """
+        if not self.is_connected:
+            raise FtdiError('Device characteristics not yet known')
+        return self._usb_dev.get_active_configuration().bNumInterfaces
+
+    @property
+    def port_index(self) -> int:
+        """Report the port/interface index, starting from 1
+
+           :return: the port position/index
+        """
+        if not self.is_connected:
+            raise FtdiError('Device characteristics not yet known')
+        return self._index
 
     @property
     def port_width(self) -> int:
@@ -911,7 +931,7 @@ class Ftdi:
            :return: the width of the port, in bits
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         if self.device_version in (0x0500, 0x0700, 0x0900):
             return 16
@@ -926,7 +946,7 @@ class Ftdi:
            :return: True if the FTDI device supports MPSSE
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900)
 
@@ -953,7 +973,7 @@ class Ftdi:
            :return: True if the FTDI device supports CBUS bitbang
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0600, 0x0900, 0x1000)
 
@@ -966,7 +986,7 @@ class Ftdi:
            :return: True if the FTDI device features drive-zero mode
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0900, )
 
@@ -978,7 +998,7 @@ class Ftdi:
                     bridge
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version <= 0x0200
 
@@ -989,7 +1009,7 @@ class Ftdi:
            :return: True if the FTDI device is a high-end USB-UART bridge
            :raise FtdiError: if no FTDI port is open
         """
-        if not self._usb_dev:
+        if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0700, 0x0800, 0x0900)
 
@@ -2087,7 +2107,7 @@ class Ftdi:
 
     def _get_max_packet_size(self) -> int:
         """Retrieve the maximum length of a data packet"""
-        if not self._usb_dev:
+        if not self.is_connected:
             raise IOError("Device is not yet known", ENODEV)
         if not self._interface:
             raise IOError("Interface is not yet known", ENODEV)
