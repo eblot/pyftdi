@@ -339,7 +339,7 @@ class GpioMpsseTestCase(TestCase):
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         cls.debug = debug
 
-    def test_default_gpio(self):
+    def _test_default_gpio(self):
         """Check I/O.
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
@@ -358,7 +358,7 @@ class GpioMpsseTestCase(TestCase):
         gpio_in.close()
         gpio_out.close()
 
-    def test_peek_gpio(self):
+    def _test_peek_gpio(self):
         """Check I/O.
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
@@ -378,6 +378,21 @@ class GpioMpsseTestCase(TestCase):
         gpio_in.close()
         gpio_out.close()
 
+    def test_stream_gpio(self):
+        """Check I/O.
+        """
+        gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
+        gpio_in.configure(self.urls[0], direction=0x0000, frequency=10e6,
+                          debug=self.debug)
+        gpio_out.configure(self.urls[1], direction=0xFFFF, frequency=10e6,
+                           debug=self.debug)
+        outv = list(range(0, 0x10000, 29))
+        gpio_out.write(outv)
+        inv = gpio_in.read(len(outv))
+        # for now, it is hard to test value exactness
+        self.assertEqual(len(outv), len(inv))
+        gpio_in.close()
+        gpio_out.close()
 
 def suite():
     suite_ = TestSuite()
