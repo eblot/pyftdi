@@ -52,7 +52,7 @@ PyFtdi currently supports the following features:
   with support for non-byte sized transfer
 * |I2C| master, with simultanous GPIO support, up to 14 pins per port
 * Basic JTAG master capabilities
-* EEPROM support (some parameters are only available with R/O access)
+* EEPROM support (some parameters cannot yet be modified, only retrieved)
 * Experimental CBUS support on selected devices, 4 pins per port
 
 Supported host OSes

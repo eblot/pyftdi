@@ -18,7 +18,9 @@ from collections import deque
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
-from typing import Mapping, Optional, Sequence, Tuple
+from threading import Event, Lock, Thread
+from time import sleep
+from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
@@ -37,12 +39,450 @@ class VirtMpsseTracer(FtdiMpsseTracer):
         self.log = getLogger('pyftdi.virt.mpsse')
 
 
+class Fifo:
+    """Communication queues."""
+
+    def __init__(self):
+        self.q = deque()
+        self.lock = Lock()
+        self.event = Event()
+        self.stamp: int = 0
+
+
+class VirtFtdiPort:
+    """Virtual FTDI port/interface
+
+       :param iface: the interface number (start from 1)
+    """
+
+    POLL_DELAY = 1e-3
+
+    class Fifos(NamedTuple):
+        rx: Fifo  # Host-to-FTDI
+        tx: Fifo  # FTDI-to-host
+
+
+    def __init__(self, parent: 'VirtFtdi', iface: int):
+        self.log = getLogger('pyftdi.virt.ftdi[{iface}]')
+        self._parent = parent
+        self._iface: int = iface
+        self._bitmode = FTDICONST.get_value('bitmode', 'reset')
+        self._mpsse: Optional[VirtMpsseTracer] = None
+        self._direction: int = 0
+        self._gpio: int = 0
+        self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(Fifo(), Fifo())
+        # self._status: int = 0  # second byte of modem status
+        self._cbus_dir: int = 0  # logical (commands)
+        self._cbus: int = 0  # logical (commands)
+        self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
+        self._cbusp_gpio: int = 0  # physical (pins)
+        self._cbusp_force: int = 0  # physical (pins)
+        self._cbusp_active: int = 0  # physical (pins)
+        self._resume: bool = True
+        bus = parent.bus
+        address = parent.address
+        self._rx_thread = Thread(target=self._rx_worker,
+                                 name=f'Ftdi-{bus}:{address}/{iface}',
+                                 daemon=True)
+        self._rx_thread.start()
+        self._next_stamp = 0
+        self._stream_txd = deque()  # represent the TXD pin
+
+    def terminate(self):
+        self._resume = False
+        if self._rx_thread:
+            self._rx_thread.join()
+            self._rx_thread = None
+
+    @property
+    def direction(self) -> int:
+        return self._direction
+
+    @property
+    def gpio(self) -> int:
+        """Emulate GPIO output (from FTDI to peripheral)."""
+        self._wait_for_sync()
+        return self._gpio
+
+    @gpio.setter
+    def gpio(self, gpio: int) -> None:
+        """Emulate GPIO input (from peripheral to FTDI)."""
+        mask = (1 << self._parent.properties.ifwidth) - 1
+        self._gpio |= gpio & ~self._direction & mask
+
+    @property
+    def cbus(self) -> Tuple[int, int]:
+        """Emulate CBUS output (from FTDI to peripheral).
+
+           :return: a tuple of logical value on pins, active pins.
+                    non-active pins should be considered as High-Z
+        """
+        return self._cbus_read()
+
+    @cbus.setter
+    def cbus(self, cbus: int) -> None:
+        """Emulate CBUS input (from peripheral to FTDI)."""
+        self._cbus_write(cbus)
+
+    def write(self, data: array, timeout: int) -> int:
+        with self._fifos.rx.lock:
+            self._fifos.rx.q.extend(data)
+            print(f'> RX Q {hexlify(bytes(self._fifos.rx.q))}')
+            self._next_stamp = self._fifos.rx.stamp + 1
+            self._fifos.rx.event.set()
+        return len(data)
+
+    def read(self, buff: array, timeout: int) -> int:
+        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
+            count = len(buff)
+            if count < 2:
+                return 0
+            status = self.modem_status
+            buff[0], buff[1] = status[0], status[1]
+            pos = 2
+            with self._fifos.tx.lock:
+                while self._fifos.tx.q and pos < count:
+                    buff[pos] = self._fifos.tx.q.popleft()
+                    pos += 1
+            return pos
+        mode = FTDICONST.get_name('bitmode', self._bitmode)
+        self.log.debug('Read buffer discarded, mode %s', mode)
+        self.log.debug('. (%d)', len(buff))
+        return 0
+
+    def uart_write(self, buffer: bytes) -> None:
+        with self._fifos.tx.lock:
+            self._fifos.tx.q.extend(buffer)
+
+    def uart_read(self, count: int) -> bytes:
+        buf = bytearray()
+        self._wait_for_sync()
+        while self._stream_txd and count:
+            buf.append(self._stream_txd.popleft())
+            count -= 1
+        return bytes(buf)
+
+    @property
+    def modem_status(self) -> Tuple[int, int]:
+        # For some reason, B0 high nibble matches the LPC214x UART:UxMSR
+        # B0.0  ?
+        # B0.1  ?
+        # B0.2  ?
+        # B0.3  ?
+        # B0.4  Clear to send (CTS)
+        # B0.5  Data set ready (DTS)
+        # B0.6  Ring indicator (RI)
+        # B0.7  Receive line signal / Data carrier detect (RLSD/DCD)
+
+        # For some reason, B1 exactly matches the LPC214x UART:UxLSR
+        # B1.0  Data ready (DR)
+        # B1.1  Overrun error (OE)
+        # B1.2  Parity error (PE)
+        # B1.3  Framing error (FE)
+        # B1.4  Break interrupt (BI)
+        # B1.5  Transmitter holding register (THRE)
+        # B1.6  Transmitter empty (TEMT)
+        # B1.7  Error in RCVR FIFO
+        buf0 = 0x02  # magic constant, no idea for now
+        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
+            cts = 0x01 if self._gpio & 0x08 else 0
+            dsr = 0x02 if self._gpio & 0x20 else 0
+            ri = 0x04 if self._gpio & 0x80 else 0
+            dcd = 0x08 if self._gpio & 0x40 else 0
+            buf0 |= cts | dsr | ri | dcd
+        else:
+            buf0 |= 0x30  # another magic constant
+        buf1 = 0
+        with self._fifos.rx.lock:
+            if not self._fifos.rx.q:
+                # TX empty -> flag THRE & TEMT ("TX empty")
+                buf1 |= 0x40 | 0x20
+        return buf0, buf1
+
+    def control_reset(self, wValue: int, wIndex: int,
+                      data: array) -> None:
+        reset = FTDICONST.get_name('sio_reset', wValue)
+        self.log.info('> ftdi reset %s', reset)
+
+    def control_set_bitmode(self, wValue: int, wIndex: int,
+                            data: array) -> None:
+        direction = wValue & 0xff
+        bitmode = (wValue >> 8) & 0x7F
+        mode = FTDICONST.get_name('bitmode', bitmode)
+        self.log.info('> ftdi bitmode %s: %s', mode, f'{direction:08b}')
+        self._bitmode = bitmode
+        if mode == 'cbus':
+            self._cbus_dir = direction >> 4
+            mask = (1 << self._parent.properties.cbuswidth) - 1
+            self._cbus_dir &= mask
+            # clear output pins
+            self._cbus &= ~self._cbus_dir & 0xF
+            # update output pins
+            output = direction & 0xF & self._cbus_dir
+            self._cbus |= output
+            self.log.info('> ftdi cbus dir %s, io %s, mask %s',
+                          f'{self._cbus_dir:04b}',
+                          f'{self._cbus:04b}',
+                          f'{mask:04b}')
+        else:
+            self._direction = direction
+        if mode == 'mpsse':
+            if not self._mpsse:
+                self._mpsse = VirtMpsseTracer(self._parent.version)
+
+    def control_set_latency_timer(self, wValue: int, wIndex: int,
+                                  data: array) -> None:
+        self.log.info('> ftdi latency timer: %d', wValue)
+
+    def control_set_event_char(self, wValue: int, wIndex: int,
+                               data: array) -> None:
+        char = wValue & 0xFF
+        enable = bool(wValue >> 8)
+        self.log.info('> ftdi %sable event char: 0x%02x',
+                      'en' if enable else 'dis', char)
+
+    def control_set_error_char(self, wValue: int, wIndex: int,
+                               data: array) -> None:
+        char = wValue & 0xFF
+        enable = bool(wValue >> 8)
+        self.log.info('> ftdi %sable error char: 0x%02x',
+                      'en' if enable else 'dis', char)
+
+    def control_read_pins(self, wValue: int, wIndex: int,
+                          data: array) -> bytes:
+        mode = FTDICONST.get_name('bitmode', self._bitmode)
+        self.log.info('> ftdi read_pins %s', mode)
+        if mode == 'cbus':
+            cbus = self._cbus & ~self._cbus_dir & 0xF
+            self.log.info('< cbus 0x%01x: %s', cbus, f'{cbus:04b}')
+            return bytes([cbus])
+        low_gpio = self._gpio & 0xFF
+        self.log.info('< gpio 0x%02x: %s', low_gpio, f'{low_gpio:08b}')
+        return bytes([low_gpio])
+
+    def control_set_baudrate(self, wValue: int, wIndex: int,
+                             data: array) -> None:
+        self.log.info('> ftdi set_baudrate (NOT IMPLEMENTED)')
+
+    def control_set_data(self, wValue: int, wIndex: int,
+                         data: array) -> None:
+        self.log.info('> ftdi set_data (NOT IMPLEMENTED)')
+
+    def control_set_flow_ctrl(self, wValue: int, wIndex: int,
+                              data: array) -> None:
+        self.log.info('> ftdi set_flow_ctrl (NOT IMPLEMENTED)')
+
+    def control_poll_modem_status(self, wValue: int, wIndex: int,
+                                  data: array) -> None:
+        status = self.modem_status
+        self.log.info('> ftdi poll_modem_status %02x%02x',
+                      status[0], status[1])
+        return status
+
+    def _decode_cbus_x1000(self) -> None:
+        cbus_gpio = 0
+        cbus_force = 0
+        cbus_active = 0
+        for bix in range(4):
+            value = self._parent.eeprom[0x1A + bix]
+            bit = 1 << bix
+            if FtdiEeprom.CBUSX(value).name == 'IOMODE':
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSX(value).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSX(value).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+        mask = (1 << self._parent.properties.cbuswidth) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = cbus_force & mask
+        self._cbusp_active = cbus_active & mask
+        self.log.debug('x1000 config gpio %s, force %s, active %s',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{self._cbusp_active:04b}')
+
+    def _decode_cbus_x0900(self) -> None:
+        cbus_gpio = 0
+        cbus_force = 0
+        cbus_active = 0
+        for bix in range(5):
+            value = self._parent.eeprom[0x18 + bix]
+            low, high = value & 0x0F, value >> 4
+            bit = 1 << 2*bix
+            if FtdiEeprom.CBUSH(low).name == 'IOMODE':
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(low).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(low).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+            bit <<= 1
+            if FtdiEeprom.CBUSH(high).name == 'IOMODE':
+                cbus_gpio |= bit
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(high).name == 'DRIVE0':
+                cbus_force &= ~bit  # useless, for code symmetry
+                cbus_active |= bit
+            elif FtdiEeprom.CBUSH(high).name == 'DRIVE1':
+                cbus_force |= bit
+                cbus_active |= bit
+        mask = (1 << self._parent.properties.cbuswidth) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = cbus_force & mask
+        self._cbusp_active = cbus_active & mask
+        self._cbus_map = {0: 5, 1: 6, 2: 8, 3: 9}
+        self.log.debug('x0900 config gpio %s, force %s, active %s',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{self._cbusp_active:04b}')
+
+    def _decode_cbus_x0600(self) -> None:
+        cbus_gpio = 0
+        cbus_active = 0
+        bix = 0
+        while True:
+            value = self._parent.eeprom[0x14 + bix]
+            low, high = value & 0x0F, value >> 4
+            bit = 1 << (2*bix)
+            if FtdiEeprom.CBUS(low).name == 'IOMODE':
+                cbus_gpio |= bit
+                cbus_active |= bit
+            if bix == 2:
+                break
+            bit <<= 1
+            if FtdiEeprom.CBUS(high).name == 'IOMODE':
+                cbus_gpio |= bit
+                cbus_active |= bit
+            bix += 1
+        mask = (1 << self._parent.properties.cbuswidth) - 1
+        self._cbusp_gpio = cbus_gpio & mask
+        self._cbusp_force = 0
+        self._cbusp_active = cbus_active & mask
+        self.log.debug('x0600 config gpio %s, force %s, active %s',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{self._cbusp_active:04b}')
+
+    def _cbus_write(self, cbus: int) -> None:
+        # from peripheral to FTDI
+        # mask out CBUS pins which are not configured as GPIOs
+        cbus &= self._cbusp_active
+        cbus &= self._cbusp_gpio
+        self.log.debug('> cbus_write active: %s gpio: %s, force: %s, cbus: %s',
+                       f'{self._cbusp_active:04b}',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{cbus:04b}')
+        if self._cbus_map:
+            self.log.info('cbus_write map')
+            # convert physical gpio into logical gpio
+            lgpio = 0
+            for log, phy in self._cbus_map:
+                if cbus & (1 << phy):
+                    lgpio |= 1 << log
+            cbus = lgpio
+        # only consider logical input
+        cbus &= ~self._cbus_dir
+        # combine existing output with new input
+        self._cbus &= ~self._cbus_dir
+        self._cbus |= cbus & ~self._cbus_dir
+
+    def _cbus_read(self) -> Tuple[int, int]:
+        # from FTDI to peripheral
+        cbus = self._cbus
+        self.log.debug('> cbus_read active %s, gpio %s, force %s, cbus %s',
+                       f'{self._cbusp_active:04b}',
+                       f'{self._cbusp_gpio:04b}',
+                       f'{self._cbusp_force:04b}',
+                       f'{cbus:04b}')
+        if self._cbus_map:
+            self.log.info('cbus_read map')
+            # convert logical gpio into physical gpio
+            pgpio = 0
+            for log, phy in self._cbus_map:
+                if cbus & (1 << log):
+                    pgpio |= 1 << phy
+            cbus = pgpio
+        # mask out CBUS pins which are not configured as GPIOs
+        cbus &= self._cbusp_gpio
+        # apply DRIVE1 to gpio
+        cbus |= self._cbusp_force
+        self.log.info('< cbus_read cbus %s, active %s',
+                      f'{cbus:04b}', f'{self._cbusp_active:04b}')
+        return cbus, self._cbusp_active
+
+    def _rx_worker(self):
+        """Background handling of data received from host."""
+        while self._resume:
+            with self._fifos.rx.lock:
+                if not self._fifos.rx.event.wait(self.POLL_DELAY):
+                    continue
+                self._fifos.rx.event.clear()
+                if not self._fifos.rx.q:
+                    self.log.warning('wake up w/o RX data')
+                    continue
+                # TODO: for now, handle all in once, which does not match
+                # real HW
+                self._fifos.rx.stamp += 1
+                data = bytes(self._fifos.rx.q)
+                self._fifos.rx.q.clear()
+            if self._bitmode == FTDICONST.get_value('bitmode', 'mpsse'):
+                self._mpsse.send(self._iface, data)
+                return len(data)
+            if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
+                self._stream_txd.extend(data)
+            elif self._bitmode == FTDICONST.get_value('bitmode', 'bitbang'):
+                for byte in data:
+                    # only 8 LSBs are addressable through this command
+                    self._gpio &= ~0xFF
+                    self._gpio |= byte & self._direction
+                    self.log.info('. %02x: %s', self._gpio, f'{self._gpio:08b}')
+            else:
+                mode = FTDICONST.get_name('bitmode', self._bitmode)
+                self.log.warning('Write buffer discarded, mode %s', mode)
+                self.log.warning('. (%d) %s',
+                                 len(data), hexlify(data).decode())
+        self.log.debug('End of worker %s', self._rx_thread.name)
+
+    def _wait_for_sync(self) -> None:
+        """Introduce a small delay so that direct access to periphal side of
+           FTDI get a chance to be updated if the worked thread has not been
+           scheduled once since the last USB command received.
+
+           This is hackish, to be improved
+        """
+        loop = 10
+        while True:
+            self._fifos.rx.lock.acquire()
+            if self._fifos.rx.stamp < self._next_stamp:
+                self._fifos.rx.lock.release()
+                sleep(self.POLL_DELAY/2)
+                loop -= 1
+                if not loop:
+                    raise RuntimeError('Worker thread deadlock?')
+                continue
+            self._fifos.rx.lock.release()
+            break
+        print(f'SYNC {self._fifos.rx.stamp} < {self._next_stamp}')
+
+
 class VirtFtdi:
-    """Fake FTDI device.
+    """Virtual FTDI device.
 
        :param version: FTDI version (device kind)
        :param eeprom_size: size of external EEPROM size, if any
     """
+
+    class Properties(NamedTuple):
+        """Device properties."""
+        ifcount: int  # count of interface
+        ifwidth: int  # pin width of an interface
+        cbuswidth: int  # pin width of the control bus
 
     EXT_EEPROMS: Mapping[str, int] = {
         '93c46': 128,  # 1024 bits
@@ -57,34 +497,51 @@ class VirtFtdi:
     }
     """Internal EEPROMs."""
 
-    BUS_WIDTHS: Mapping[int, Tuple[int, int]] = {
-        0x0200: (8, 0),   # FT232AM
-        0x0400: (8, 0),   # FT232BM
-        0x0500: (8, 0),   # FT2232D
-        0x0600: (8, 5),   # FT232R
-        0x0700: (16, 0),  # FT2232H
-        0x0800: (8, 0),   # FT4232H
-        0x0900: (8, 10),  # FT232H
-        0x1000: (8, 4),   # FT231X
+    PROPERTIES: Mapping[int, Properties] = {
+        0x0200: Properties(1, 8, 0),   # FT232AM
+        0x0400: Properties(1, 8, 0),   # FT232BM
+        0x0500: Properties(1, 8, 0),   # FT2232D
+        0x0600: Properties(1, 8, 5),   # FT232R
+        0x0700: Properties(2, 16, 0),  # FT2232H
+        0x0800: Properties(4, 8, 0),   # FT4232H
+        0x0900: Properties(1, 8, 10),  # FT232H
+        0x1000: Properties(1, 8, 4),   # FT231X
     }
     """Width of port/bus (regular, cbus)."""
 
-    def __init__(self, version: int, eeprom: Optional[dict] = None):
+    EEPROM_REQ_BASE = FTDICONST.get_value('SIO_REQ', 'EEPROM')
+    """Base value for EEPROM request."""
+
+    def __init__(self, version: int, bus: int, address: int,
+                 eeprom: Optional[dict] = None):
         self.log = getLogger('pyftdi.virt.ftdi')
-        self._bitmode = FTDICONST.get_value('bitmode', 'reset')
-        self._mpsse: Optional[VirtMpsseTracer] = None
-        self._direction: int = 0
-        self._gpio: int = 0
-        self._queues: Tuple[deque, deque] = (deque(), deque())
-        self._status: int = 0
         self._version = version
+        self._bus: int = bus
+        self._address: int = address
         self._eeprom: bytearray = self._build_eeprom(version, eeprom)
-        self._cbus_dir: int = 0  # logical (commands)
-        self._cbus: int = 0  # logical (commands)
-        self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
-        self._cbusp_gpio: int = 0  # physical (pins)
-        self._cbusp_force: int = 0  # physical (pins)
-        self._cbusp_active: int = 0  # physical (pins)
+        self._ports: List[VirtFtdiPort] = []
+        for iface in range(self.PROPERTIES[self._version].ifcount):
+            self._ports.append(VirtFtdiPort(self, iface+1))
+
+    def terminate(self):
+        for port in self._ports:
+            port.terminate()
+
+    @property
+    def version(self) -> int:
+        return self._version
+
+    @property
+    def bus(self) -> int:
+        return self._bus
+
+    @property
+    def address(self) -> int:
+        return self._address
+
+    @property
+    def properties(self) -> 'VirtFtdi.Properties':
+        return self.PROPERTIES[self._version]
 
     def apply_eeprom_config(self, devdesc: dict,
                             cfgdescs: Sequence[dict]) -> None:
@@ -106,7 +563,16 @@ class VirtFtdi:
                        wValue, wIndex, dstr, timeout)
         size = 0
         try:
-            handler = getattr(self, f'_control_{req_name}')
+            if bRequest >= self.EEPROM_REQ_BASE:
+                obj = self
+            else:
+                obj = self._ports[0xFF & (wIndex-1)] if wIndex else self
+        except IndexError:
+            raise ValueError(f'Invalid iface: 0x{wIndex:04x} '
+                             f'for {req_name}') from None
+        try:
+            pre = '_' if obj == self else ''
+            handler = getattr(obj, f'{pre}control_{req_name}')
         except AttributeError:
             self.log.warning('Unknown request: %s', req_name)
             return size
@@ -118,81 +584,15 @@ class VirtFtdi:
 
     def write(self, dev_handle: 'VirtDeviceHandle', ep: int, intf: int,
               data: array, timeout: int) -> int:
-        if self._bitmode == FTDICONST.get_value('bitmode', 'mpsse'):
-            self._mpsse.send(intf+1, data)
-            return len(data)
-        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
-            self._queues[0].extend(data)
-            return len(data)
-        if self._bitmode == FTDICONST.get_value('bitmode', 'bitbang'):
-            # only 8 LSBs are addressable through this command
-            self._gpio &= ~0xFF
-            self._gpio |= data[0] & self._direction
-            self.log.info('. %02x: %s', self._gpio, f'{self._gpio:08b}')
-            return 1
-        mode = FTDICONST.get_name('bitmode', self._bitmode)
-        self.log.warning('Write buffer discarded, mode %s', mode)
-        self.log.warning('. (%d) %s', len(data), hexlify(data).decode())
-        return 0
+        return self._ports[intf].write(data, timeout)
 
     def read(self, dev_handle: 'VirtDeviceHandle', ep: int, intf: int,
              buff: array, timeout: int) -> int:
-        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
-            count = len(buff)
-            if count < 2:
-                return 0
-            cts = 0x08 if self._gpio & 0x08 else 0
-            dsr = 0x04 if self._gpio & 0x20 else 0
-            ri = 0x02 if self._gpio & 0x80 else 0
-            dcd = 0x01 if self._gpio & 0x40 else 0
-            buff[0] = cts | dsr | ri | dcd
-            buff[1] = self._status
-            pos = 2
-            while self._queues[1] and pos < count:
-                buff[pos] = self._queues[1].popleft()
-                pos += 1
-            return pos
-        mode = FTDICONST.get_name('bitmode', self._bitmode)
-        self.log.debug('Read buffer discarded, mode %s', mode)
-        self.log.debug('. (%d)', len(buff))
-        return 0
+        return self._ports[intf].read(buff, timeout)
 
-    def uart_write(self, buffer: bytes) -> None:
-        self._queues[1].extend(buffer)
-
-    def uart_read(self, count: int) -> bytes:
-        # it might be worth to use pipes here, but for now we do not care
-        # about the performance
-        buf = bytearray()
-        while self._queues[0] and count:
-            buf.append(self._queues[0].popleft())
-            count -= 1
-        return bytes(buf)
-
-    @property
-    def gpio(self) -> int:
-        """Emulate GPIO output (from FTDI to peripheral)."""
-        return self._gpio
-
-    @gpio.setter
-    def gpio(self, gpio: int) -> None:
-        """Emulate GPIO input (from peripheral to FTDI)."""
-        mask = (1 << self.BUS_WIDTHS[self._version][0]) - 1
-        self._gpio |= gpio & ~self._direction & mask
-
-    @property
-    def cbus(self) -> Tuple[int, int]:
-        """Emulate CBUS output (from FTDI to peripheral).
-
-           :return: a tuple of logical value on pins, active pins.
-                    non-active pins should be considered as High-Z
-        """
-        return self._cbus_read()
-
-    @cbus.setter
-    def cbus(self, cbus: int) -> None:
-        """Emulate CBUS input (from peripheral to FTDI)."""
-        self._cbus_write(cbus)
+    def get_port(self, iface: int):
+        # iface: 1..n
+        return self._ports[iface-1]
 
     @property
     def eeprom(self) -> bytes:
@@ -203,10 +603,6 @@ class VirtFtdi:
         if len(value) != len(self._eeprom):
             raise ValueError('EEPROM size mismatch')
         self._eeprom = bytearray(value)
-
-    @property
-    def direction(self) -> int:
-        return self._direction
 
     @classmethod
     def _build_eeprom(cls, version, eeprom: Optional[dict]) -> bytearray:
@@ -277,7 +673,7 @@ class VirtFtdi:
                 desc['bmAttributes'] = 0x80 | (self._eeprom[0x08] & 0x0F)
         cbus_dec = f'_decode_cbus_x{self._version:04x}'
         try:
-            cbus_func = getattr(self, cbus_dec)
+            cbus_func = getattr(self._ports[0], cbus_dec)
         except AttributeError:
             self.log.debug('No CBUS support: %s', cbus_dec)
             return
@@ -291,78 +687,6 @@ class VirtFtdi:
             manufacturer = self._eeprom[str_offset:str_offset+str_size]
             return manufacturer.decode('utf16', errors='ignore')
         return ''
-
-    def _control_reset(self, wValue: int, wIndex: int,
-                       data: array) -> None:
-        reset = FTDICONST.get_name('sio_reset', wValue)
-        self.log.info('> ftdi reset %s', reset)
-
-    def _control_set_bitmode(self, wValue: int, wIndex: int,
-                             data: array) -> None:
-        direction = wValue & 0xff
-        bitmode = (wValue >> 8) & 0x7F
-        mode = FTDICONST.get_name('bitmode', bitmode)
-        self.log.info('> ftdi bitmode %s: %s', mode, f'{direction:08b}')
-        self._bitmode = bitmode
-        if mode == 'cbus':
-            self._cbus_dir = direction >> 4
-            mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-            self._cbus_dir &= mask
-            # clear output pins
-            self._cbus &= ~self._cbus_dir & 0xF
-            # update output pins
-            output = direction & 0xF & self._cbus_dir
-            self._cbus |= output
-            self.log.info('> ftdi cbus dir %s, io %s, mask %s',
-                          f'{self._cbus_dir:04b}',
-                          f'{self._cbus:04b}',
-                          f'{mask:04b}')
-        else:
-            self._direction = direction
-        if mode == 'mpsse':
-            self._mpsse = VirtMpsseTracer(self._version)
-
-    def _control_set_latency_timer(self, wValue: int, wIndex: int,
-                                   data: array) -> None:
-        self.log.info('> ftdi latency timer: %d', wValue)
-
-    def _control_set_event_char(self, wValue: int, wIndex: int,
-                                data: array) -> None:
-        char = wValue & 0xFF
-        enable = bool(wValue >> 8)
-        self.log.info('> ftdi %sable event char: 0x%02x',
-                      'en' if enable else 'dis', char)
-
-    def _control_set_error_char(self, wValue: int, wIndex: int,
-                                data: array) -> None:
-        char = wValue & 0xFF
-        enable = bool(wValue >> 8)
-        self.log.info('> ftdi %sable error char: 0x%02x',
-                      'en' if enable else 'dis', char)
-
-    def _control_read_pins(self, wValue: int, wIndex: int,
-                           data: array) -> bytes:
-        mode = FTDICONST.get_name('bitmode', self._bitmode)
-        self.log.info('> ftdi read_pins %s', mode)
-        if mode == 'cbus':
-            cbus = self._cbus & ~self._cbus_dir & 0xF
-            self.log.info('< cbus 0x%01x: %s', cbus, f'{cbus:04b}')
-            return bytes([cbus])
-        low_gpio = self._gpio & 0xFF
-        self.log.info('< gpio 0x%02x: %s', low_gpio, f'{low_gpio:08b}')
-        return bytes([low_gpio])
-
-    def _control_set_baudrate(self, wValue: int, wIndex: int,
-                              data: array) -> None:
-        self.log.info('> ftdi set_baudrate')
-
-    def _control_set_data(self, wValue: int, wIndex: int,
-                          data: array) -> None:
-        self.log.info('> ftdi set_data')
-
-    def _control_set_flow_ctrl(self, wValue: int, wIndex: int,
-                               data: array) -> None:
-        self.log.info('> ftdi set_flow_ctrl')
 
     def _control_read_eeprom(self, wValue: int, wIndex: int,
                              data: array) -> Optional[bytes]:
@@ -398,128 +722,3 @@ class VirtFtdi:
                 self.log.warning('Protected EEPROM address: 0x%04x', wValue)
                 return
         self._eeprom[address: address+2] = spack('<H', wValue)
-
-    def _decode_cbus_x1000(self) -> None:
-        cbus_gpio = 0
-        cbus_force = 0
-        cbus_active = 0
-        for bix in range(4):
-            value = self._eeprom[0x1A + bix]
-            bit = 1 << bix
-            if FtdiEeprom.CBUSX(value).name == 'IOMODE':
-                cbus_gpio |= bit
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSX(value).name == 'DRIVE0':
-                cbus_force &= ~bit  # useless, for code symmetry
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSX(value).name == 'DRIVE1':
-                cbus_force |= bit
-                cbus_active |= bit
-        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-        self._cbusp_gpio = cbus_gpio & mask
-        self._cbusp_force = cbus_force & mask
-        self._cbusp_active = cbus_active & mask
-
-    def _decode_cbus_x0900(self) -> None:
-        cbus_gpio = 0
-        cbus_force = 0
-        cbus_active = 0
-        for bix in range(5):
-            value = self._eeprom[0x18 + bix]
-            low, high = value & 0x0F, value >> 4
-            bit = 1 << 2*bix
-            if FtdiEeprom.CBUSH(low).name == 'IOMODE':
-                cbus_gpio |= bit
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSH(low).name == 'DRIVE0':
-                cbus_force &= ~bit  # useless, for code symmetry
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSH(low).name == 'DRIVE1':
-                cbus_force |= bit
-                cbus_active |= bit
-            bit <<= 1
-            if FtdiEeprom.CBUSH(high).name == 'IOMODE':
-                cbus_gpio |= bit
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSH(high).name == 'DRIVE0':
-                cbus_force &= ~bit  # useless, for code symmetry
-                cbus_active |= bit
-            elif FtdiEeprom.CBUSH(high).name == 'DRIVE1':
-                cbus_force |= bit
-                cbus_active |= bit
-        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-        self._cbusp_gpio = cbus_gpio & mask
-        self._cbusp_force = cbus_force & mask
-        self._cbusp_active = cbus_active & mask
-        self._cbus_map = {0: 5, 1: 6, 2: 8, 3: 9}
-
-    def _decode_cbus_x0600(self) -> None:
-        cbus_gpio = 0
-        cbus_active = 0
-        bix = 0
-        while True:
-            value = self._eeprom[0x14 + bix]
-            low, high = value & 0x0F, value >> 4
-            bit = 1 << (2*bix)
-            if FtdiEeprom.CBUS(low).name == 'IOMODE':
-                cbus_gpio |= bit
-                cbus_active |= bit
-            if bix == 2:
-                break
-            bit <<= 1
-            if FtdiEeprom.CBUS(high).name == 'IOMODE':
-                cbus_gpio |= bit
-                cbus_active |= bit
-            bix += 1
-        mask = (1 << self.BUS_WIDTHS[self._version][1]) - 1
-        self._cbusp_gpio = cbus_gpio & mask
-        self._cbusp_force = 0
-        self._cbusp_active = cbus_active & mask
-
-    def _cbus_write(self, cbus: int) -> None:
-        # from peripheral to FTDI
-        # mask out CBUS pins which are not configured as GPIOs
-        cbus &= self._cbusp_active
-        cbus &= self._cbusp_gpio
-        self.log.debug('> cbus_write active: %s gpio: %s, force: %s, cbus: %s',
-                       f'{self._cbusp_active:04b}',
-                       f'{self._cbusp_gpio:04b}',
-                       f'{self._cbusp_force:04b}',
-                       f'{cbus:04b}')
-        if self._cbus_map:
-            self.log.info('cbus_write map')
-            # convert physical gpio into logical gpio
-            lgpio = 0
-            for log, phy in self._cbus_map:
-                if cbus & (1 << phy):
-                    lgpio |= 1 << log
-            cbus = lgpio
-        # only consider logical input
-        cbus &= ~self._cbus_dir
-        # combine existing output with new input
-        self._cbus &= ~self._cbus_dir
-        self._cbus |= cbus & ~self._cbus_dir
-
-    def _cbus_read(self) -> Tuple[int, int]:
-        # from FTDI to peripheral
-        cbus = self._cbus
-        self.log.debug('> cbus_read active %s, gpio %s, force %s, cbus %s',
-                       f'{self._cbusp_active:04b}',
-                       f'{self._cbusp_gpio:04b}',
-                       f'{self._cbusp_force:04b}',
-                       f'{cbus:04b}')
-        if self._cbus_map:
-            self.log.info('cbus_read map')
-            # convert logical gpio into physical gpio
-            pgpio = 0
-            for log, phy in self._cbus_map:
-                if cbus & (1 << log):
-                    pgpio |= 1 << phy
-            cbus = pgpio
-        # mask out CBUS pins which are not configured as GPIOs
-        cbus &= self._cbusp_gpio
-        # apply DRIVE1 to gpio
-        cbus |= self._cbusp_force
-        self.log.info('< cbus_read cbus %s, active %s',
-                      f'{cbus:04b}', f'{self._cbusp_active:04b}')
-        return cbus, self._cbusp_active

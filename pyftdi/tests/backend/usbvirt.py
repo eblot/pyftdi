@@ -235,7 +235,12 @@ class VirtDevice:
                 self._props.add(key)
         self.configurations = []
         self.strings = ['']  # slot 0 is reserved
-        self._ftdi = VirtFtdi(self.desc.bcdDevice, kwargs.get('eeprom', {}))
+        self._ftdi = VirtFtdi(self.desc.bcdDevice,
+                              self.desc.bus, self.desc.address,
+                              kwargs.get('eeprom', {}))
+
+    def terminate(self):
+        self._ftdi.terminate()
 
     def add_configuration(self, config: VirtConfiguration):
         config.update()
@@ -318,6 +323,8 @@ class VirtBackend(IBackend):
         self._devices.append(device)
 
     def flush_devices(self):
+        for dev in self._devices:
+            dev.terminate()
         self._devices.clear()
 
     @classmethod

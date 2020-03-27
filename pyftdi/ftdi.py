@@ -135,7 +135,7 @@ class Ftdi:
         0x0200: (128, 128),    # FT232AM
         0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
         0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
-        0x0600: (128, 256),    # FT232R:  TX: 128, RX: 256
+        0x0600: (256, 128),    # FT232R:  TX: 256, RX: 128
         0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
         0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
         0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
@@ -309,7 +309,7 @@ class Ftdi:
     # err:  Error in RCVR FIFO
     MODEM_STATUS = [('', '', '', '', 'cts', 'dsr', 'ri', 'dcd'),
                     ('dr', 'overrun', 'parity', 'framing',
-                     'break', 'thre', 'txe', 'rcvr')]
+                     'break', 'thre', 'txe', 'rcve')]
 
     ERROR_BITS = (0x00, 0x8E)
 
@@ -858,6 +858,8 @@ class Ftdi:
         # interleaved. This is not yet supported with read_data_bytes for now
         self.write_data_set_chunksize()
         self.read_data_set_chunksize()
+        # disable flow control
+        self.set_flowctrl('')
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BitMode.BITBANG if not sync else
                          Ftdi.BitMode.SYNCBB)
@@ -1202,7 +1204,7 @@ class Ftdi:
             # FIFO size, so this weird behavior is for now only experienced
             # with FT232R. Any, the following compution should address all
             # devices.
-            chunksize = min(self.fifo_sizes[0], self.fifo_sizes[0],
+            chunksize = min(self.fifo_sizes[0], self.fifo_sizes[1],
                             self._max_packet_size)
         if platform == 'linux':
             if chunksize > 16384:

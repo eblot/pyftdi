@@ -315,7 +315,7 @@ class UsbTools:
             vendor, product = desc[:2]
         except IndexError:
             raise UsbToolsError('No USB device matches URL %s' %
-                                urlstr)
+                                urlstr) from None
         if not vendor:
             cvendors = {candidate[0] for candidate in candidates}
             if len(cvendors) == 1:

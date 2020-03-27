@@ -247,7 +247,7 @@ class GpioAsyncController(GpioBaseController):
         # to get in sync with the buffer.
         if noflush:
             return self._ftdi.read_data(readlen)
-        loop = 200
+        loop = 10000
         while loop:
             loop -= 1
             # do not attempt to do anything till the FTDI HW buffer has been

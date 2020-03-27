@@ -9,6 +9,8 @@
 #pylint: disable-msg=no-self-use
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=global-statement
+#pylint: disable-msg=too-many-locals
+
 
 import logging
 from collections import defaultdict
@@ -24,7 +26,6 @@ from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
-from pyftdi.misc import hexdump
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 
@@ -430,9 +431,10 @@ class MockSimpleGpioTestCase(TestCase):
         bus, address, iface = gpio.ftdi.usb_path
         self.assertEqual((bus, address, iface), (4, 5, 0))
         vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
         gpio.write_port(0xF3)
-        self.assertEqual(vftdi.gpio, 0xAA & 0xF3)
-        vftdi.gpio = 0x0c
+        self.assertEqual(vport.gpio, 0xAA & 0xF3)
+        vport.gpio = 0x0c
         vio = gpio.read_port()
         self.assertEqual(vio, (0xAA & 0xF3) | (~0xAA & 0x0c))
         gpio.close()
@@ -458,12 +460,13 @@ class MockSimpleUartTestCase(TestCase):
         port = serial_for_url('ftdi:///1')
         bus, address, _ = port.usb_path
         vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
         msg = ascii_letters
         port.write(msg.encode())
-        buf = vftdi.uart_read(len(ascii_letters)+10).decode()
+        buf = vport.uart_read(len(ascii_letters)+10).decode()
         self.assertEqual(msg, buf)
         msg = ''.join(reversed(msg))
-        vftdi.uart_write(msg.encode())
+        vport.uart_write(msg.encode())
         buf = port.read(len(ascii_letters)).decode()
         self.assertEqual(msg, buf)
         port.close()
@@ -713,6 +716,7 @@ class MockCbusGpioTestCase(TestCase):
             ftdi.open_from_url('ftdi:///1')
             self.assertEqual(ftdi.has_cbus, True)
             vftdi = loader.get_virtual_ftdi(1, 1)
+            vport = vftdi.get_port(1)
             # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
             #   however, only CBUS0 and CBUS1 are mapped as GPIO,
             #   CBUS2 forced to 1 and CBUS3 not usable as IO
@@ -729,7 +733,7 @@ class MockCbusGpioTestCase(TestCase):
             exp_out = cbus_dir & cbus_out
             exp_out &= eeprom_mask
             exp_out |= eeprom_force
-            vcbus, vactive = vftdi.cbus
+            vcbus, vactive = vport.cbus
             self.assertEqual(vcbus, exp_out)
             self.assertEqual(vactive, eeprom_mask | eeprom_force)
             cbus_out = 0b0000
@@ -737,10 +741,10 @@ class MockCbusGpioTestCase(TestCase):
             exp_out = cbus_dir & cbus_out
             exp_out &= eeprom_mask
             exp_out |= eeprom_force
-            vcbus, vactive = vftdi.cbus
+            vcbus, vactive = vport.cbus
             self.assertEqual(vcbus, exp_out)
             cbus_in = 0b0101
-            vftdi.cbus = cbus_in
+            vport.cbus = cbus_in
             cbus = ftdi.get_cbus_gpio()
             exp_in = cbus_in & eeprom_mask
             self.assertEqual(cbus, exp_in)
@@ -766,6 +770,7 @@ class MockCbusGpioTestCase(TestCase):
             ftdi.open_from_url('ftdi:///1')
             self.assertEqual(ftdi.has_cbus, True)
             vftdi = loader.get_virtual_ftdi(1, 1)
+            vport = vftdi.get_port(1)
             # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
             #   however, only CBUS0 and CBUS3 are mapped as GPIO,
             #   CBUS1 not usable as IO, CBUS2 is fixed to low
@@ -780,17 +785,17 @@ class MockCbusGpioTestCase(TestCase):
             ftdi.set_cbus_gpio(cbus_out)
             exp_out = cbus_dir & cbus_out
             exp_out &= eeprom_mask
-            vcbus, vactive = vftdi.cbus
+            vcbus, vactive = vport.cbus
             self.assertEqual(vcbus, exp_out)
             self.assertEqual(vactive, eeprom_mask | eeprom_force_low)
             cbus_out = 0b0000
             ftdi.set_cbus_gpio(cbus_out)
             exp_out = cbus_dir & cbus_out
             exp_out &= eeprom_mask
-            vcbus, vactive = vftdi.cbus
+            vcbus, vactive = vport.cbus
             self.assertEqual(vcbus, exp_out)
             cbus_in = 0b0101
-            vftdi.cbus = cbus_in
+            vport.cbus = cbus_in
             cbus = ftdi.get_cbus_gpio()
             exp_in = cbus_in & eeprom_mask
             self.assertEqual(cbus, exp_in)
