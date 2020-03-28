@@ -86,17 +86,17 @@ class FtdiEeprom:
 
     CBUS = IntEnum('CBUS',
                    'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
-                   'CLK6 IOMODE BB_WR BB_R', start=0)
+                   'CLK6 GPIO BB_WR BB_R', start=0)
     """Alternate features for legacy FT232R devices."""
 
     CBUSH = IntEnum('CBUSH',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
-                    'IOMODE TXDEN CLK30 CLK15 CLK7_5', start=0)
+                    'GPIO TXDEN CLK30 CLK15 CLK7_5', start=0)
     """Alternate features for FT232H/FT2232H/FT4232H devices."""
 
     CBUSX = IntEnum('CBUSX',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
-                    'IOMODE TXDEN CLK24 CLK12 CLK6 BAT_DETECT BAT_DETECT_NEG '
+                    'GPIO TXDEN CLK24 CLK12 CLK6 BAT_DETECT BAT_NDETECT '
                     'I2C_TXE I2C_RXF VBUS_SENSE BB_WR BB_RD TIME_STAMP AWAKE',
                     start=0)
     """Alternate features for FT230X devices."""
@@ -242,7 +242,7 @@ class FtdiEeprom:
            :return: list of CBUS pins
         """
         pins = [pin for pin in range(0, 10)
-                if self._config.get('cbus_func_%d' % pin, '') == 'IOMODE']
+                if self._config.get('cbus_func_%d' % pin, '') == 'GPIO']
         return pins
 
     @property
@@ -259,7 +259,7 @@ class FtdiEeprom:
             cbus = list(range(4))
         mask = 0
         for bix, pin in enumerate(cbus):
-            if self._config.get('cbus_func_%d' % pin, '') == 'IOMODE':
+            if self._config.get('cbus_func_%d' % pin, '') == 'GPIO':
                 mask |= 1 << bix
         return mask
 

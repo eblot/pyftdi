@@ -286,7 +286,7 @@ class VirtFtdiPort:
         for bix in range(4):
             value = self._parent.eeprom[0x1A + bix]
             bit = 1 << bix
-            if FtdiEeprom.CBUSX(value).name == 'IOMODE':
+            if FtdiEeprom.CBUSX(value).name == 'GPIO':
                 cbus_gpio |= bit
                 cbus_active |= bit
             elif FtdiEeprom.CBUSX(value).name == 'DRIVE0':
@@ -312,7 +312,7 @@ class VirtFtdiPort:
             value = self._parent.eeprom[0x18 + bix]
             low, high = value & 0x0F, value >> 4
             bit = 1 << 2*bix
-            if FtdiEeprom.CBUSH(low).name == 'IOMODE':
+            if FtdiEeprom.CBUSH(low).name == 'GPIO':
                 cbus_gpio |= bit
                 cbus_active |= bit
             elif FtdiEeprom.CBUSH(low).name == 'DRIVE0':
@@ -322,7 +322,7 @@ class VirtFtdiPort:
                 cbus_force |= bit
                 cbus_active |= bit
             bit <<= 1
-            if FtdiEeprom.CBUSH(high).name == 'IOMODE':
+            if FtdiEeprom.CBUSH(high).name == 'GPIO':
                 cbus_gpio |= bit
                 cbus_active |= bit
             elif FtdiEeprom.CBUSH(high).name == 'DRIVE0':
@@ -349,13 +349,13 @@ class VirtFtdiPort:
             value = self._parent.eeprom[0x14 + bix]
             low, high = value & 0x0F, value >> 4
             bit = 1 << (2*bix)
-            if FtdiEeprom.CBUS(low).name == 'IOMODE':
+            if FtdiEeprom.CBUS(low).name == 'GPIO':
                 cbus_gpio |= bit
                 cbus_active |= bit
             if bix == 2:
                 break
             bit <<= 1
-            if FtdiEeprom.CBUS(high).name == 'IOMODE':
+            if FtdiEeprom.CBUS(high).name == 'GPIO':
                 cbus_gpio |= bit
                 cbus_active |= bit
             bix += 1

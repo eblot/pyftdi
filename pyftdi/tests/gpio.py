@@ -28,6 +28,7 @@
 
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
+#pylint: disable-msg=invalid-name
 
 import logging
 from collections import deque
@@ -96,7 +97,7 @@ class GpioAsyncTestCase(TestCase):
         # stream mode always gives a bytes buffer
         port.write([0xaa for _ in range(256)])
         ingress = port.read(100, peek=False, noflush=False)
-        print(len(ingress), ingress)
+        print('ingress', len(ingress), ingress)
     #    self.assertIsInstance(ingress, bytes)
     #    self.assertEqual(len(ingress), 1)
         # direct mode is not available with multi-byte mode

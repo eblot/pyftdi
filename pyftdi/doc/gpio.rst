@@ -146,7 +146,7 @@ CBUS EEPROM configuration
 Accessing this extra port requires a specific EEPROM configuration.
 
 The EEPROM needs to be configured so that the CBUS pins that need to be used
-as GPIOs are defined as ``IOMODE``. Without this special configuration, CBUS
+as GPIOs are defined as ``GPIO``. Without this special configuration, CBUS
 pins are used for other functions, such as driving leds when data is exchanged
 over the UART port. Remember to power-cycle the FTDI device after changing its
 EEPROM configuration to force load the new configuration.

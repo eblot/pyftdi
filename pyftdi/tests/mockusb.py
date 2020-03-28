@@ -704,8 +704,8 @@ class MockCbusGpioTestCase(TestCase):
         """Check simple GPIO write and read sequence."""
         loader = MockLoader()
         # load custom CBUS config, with:
-            # CBUS0: IOMODE (gpio)
-            # CBUS1: IOMODE (gpio)
+            # CBUS0: GPIO (gpio)
+            # CBUS1: GPIO (gpio)
             # CBUS0: DRIVE1 (forced to high level)
             # CBUS0: TXLED  (eq. to highz for tests)
         with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
@@ -756,10 +756,10 @@ class MockCbusGpioTestCase(TestCase):
         """Check simple GPIO write and read sequence."""
         loader = MockLoader()
             # load custom CBUS config, with:
-            # CBUS0: IOMODE (gpio)
+            # CBUS0: GPIO (gpio)
             # CBUS1: TXLED
             # CBUS2: DRIVE0 (to light up RX green led)
-            # CBUS3: IOMODE (gpio)
+            # CBUS3: GPIO (gpio)
             # only CBUS0 and CBUS3 are available on LC231X
             # CBUS1 is connected to TX led, CBUS2 to RX led
         with open('pyftdi/tests/resources/ft231x_cbus.yaml', 'rb') as yfp:

@@ -124,6 +124,9 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   * To obtain the list of supported values for a namw, use the `?` wildcard:
     ``-c name=?``, where *name* is a supported name.
 
+  See :ref:`cbus_func` table for the alternate function associated with each
+  name.
+
 .. _option_e:
 
 ``-e``
@@ -187,6 +190,63 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   the output of the `hexdump -Cv` tool.
 
 
+.. _cbus_func:
+
+CBUS function
+`````````````
+
+The following table describes the CBUS pin alternate functions. Note that
+depending on the actual device, some alternate function may not be available.
+
++-----------------+--------+--------------------------------------------------------------------------------+
+| Name            | Active | Description                                                                    |
++=================+========+================================================================================+
+| ``TRISTATE``    | Hi-Z   | IO Pad is tri-stated                                                           |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``TXLED``       | Low    | TX activity, can be used as status for LED                                     |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``RXLED``       | Low    | RX activity, can be used as status for LED                                     |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``TXRXLED``     | Low    | TX & RX activity, can be used as status for LED                                |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``PWREN``       | Low    | USB configured, USB suspend: high                                              |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``SLEEP``       | Low    | USB suspend, typically used to power down external devices.                    |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``DRIVE0``      | Low    | Drive a constant                                                               |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``DRIVE1``      | High   | Drive a constant                                                               |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``GPIO``        |        | IO port for CBUS bit bang mode                                                 |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``TXDEN``       | High   | Enable transmit for RS485 mode                                                 |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``CLK24``       |        | Output 24 MHz clock                                                            |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``CLK12``       |        | Output 12 MHz clock                                                            |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``CLK6``        |        | Output 6 MHz clock                                                             |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BAT_DETECT``  | High   | Battery Charger Detect, when the device is connected to a battery charger host |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BAT_NDETECT`` | Low    | Inverse signal of BAT_DETECT                                                   |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``I2C_TXE``     | Low    | Transmit buffer empty                                                          |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``I2C_RXF``     | Low    | Receive buffer full                                                            |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``VBUS_SENSE``  | High   | Detect when VBUS is present via the appropriate AC IO pad                      |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BB_WR``       | Low    | Synchronous Bit Bang Write strobe                                              |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BB_RD``       | Low    | Synchronous Bit Bang Read strobe                                               |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``TIME_STAMP``  |        | Toggle signal which changes state each time a USB SOF is received              |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``AWAKE``       | Low    | Do not suspend when unplugged/disconnect/suspsend                              |
++-----------------+--------+--------------------------------------------------------------------------------+
+
+
 Examples
 ````````
 
@@ -215,8 +275,8 @@ Examples
   ::
 
     pyftdi/bin/ftconf.py ftdi:///1 -c cbus_func_0:?
-      AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
-      DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
+      AWAKE, BAT_DETECT, BAT_NDETECT, BB_RD, BB_WR, CLK12, CLK24, CLK6,
+      DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, GPIO, PWREN, RXLED, SLEEP,
       TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
 
 .. _eeprom_cbus:
@@ -226,4 +286,4 @@ Examples
   ::
 
    pyftdi/bin/ftconf.py ftdi:///1 -v
-      -c cbus_func_0:IOMODE -c cbus_func_3:IOMODE
+      -c cbus_func_0:GPIO -c cbus_func_3:GPIO
