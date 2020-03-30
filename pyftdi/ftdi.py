@@ -41,17 +41,17 @@ from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
-# pylint: disable-msg=invalid-name
-# pylint: disable-msg=too-many-arguments
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
-# pylint: disable=too-many-nested-blocks
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-nested-blocks
-# pylint: disable=too-many-public-methods
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-lines
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=too-many-arguments
+#pylint: disable=too-many-arguments
+#pylint: disable=too-many-branches
+#pylint: disable=too-many-statements
+#pylint: disable=too-many-nested-blocks
+#pylint: disable=too-many-instance-attributes
+#pylint: disable=too-many-nested-blocks
+#pylint: disable=too-many-public-methods
+#pylint: disable=too-many-locals
+#pylint: disable=too-many-lines
 
 
 class FtdiError(IOError):
@@ -2019,20 +2019,26 @@ class Ftdi:
         except (NotImplementedError, USBError):
             pass
 
+#pylint: disable-msg=protected-access
+# need to access private member _ctx of PyUSB device (resource manager)
+# until PyUSB #302 is addressed
+
     def _reset_usb_device(self) -> None:
         """Reset USB device (USB command, not FTDI specific)."""
         self._usb_dev._ctx.backend.reset_device(self._usb_dev._ctx.handle)
+
+    def _is_pyusb_handle_active(self) -> bool:
+        # Unfortunately, we need to access pyusb ResourceManager
+        # and there is no public API for this.
+        return bool(self._usb_dev._ctx.handle)
+
+#pylint: enable-msg=protected-access
 
     def _reset_device(self):
         """Reset the FTDI device (FTDI vendor command)"""
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
-
-    def _is_pyusb_handle_active(self) -> bool:
-        # Unfortunately, we need to access pyusb ResourceManager
-        # and there is no public API for this.
-        return bool(self._usb_dev._ctx.handle)
 
     def _ctrl_transfer_out(self, reqtype: int, value: int, data: bytes = b''):
         """Send a control message to the device"""
@@ -2182,13 +2188,15 @@ class Ftdi:
         if self.is_mpsse:
             raise FtdiFeatureError('Cannot change frequency w/ current mode')
         if self.is_bitbang_enabled:
-            baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
-            baudrate //= 10
+            # not the slighest idea of where this value comes from, but
+            # this generates the expected bitrate...
+            baudrate = baudrate//5
+            # baudrate //= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
         if self.is_bitbang_enabled:
-            actual *= 10
-            actual //= Ftdi.BITBANG_CLOCK_MULTIPLIER
+            actual = actual*5
+            # actual *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
                        actual, delta, index, value)
         # return actual
