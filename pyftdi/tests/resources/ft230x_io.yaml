@@ -27,7 +27,7 @@ devices:
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 d8 bf
-        # CBUS0: IOMODE (gpio)
-        # CBUS1: IOMODE (gpio)
+        # CBUS0: GPIO (gpio)
+        # CBUS1: GPIO (gpio)
         # CBUS2: DRIVE1 (forced to high level)
         # CBUS3: TXLED  (eq. to highz for tests)
