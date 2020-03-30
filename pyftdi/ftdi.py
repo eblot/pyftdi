@@ -27,6 +27,7 @@
 """FTDI core driver."""
 
 from binascii import hexlify
+from collections import OrderedDict
 from enum import IntEnum, unique
 from errno import ENODEV
 from logging import getLogger
@@ -84,31 +85,34 @@ class Ftdi:
     """
 
     PRODUCT_IDS = {
-        FTDI_VENDOR:
-            {'232': 0x6001,
-             '232r': 0x6001,
-             '232h': 0x6014,
-             '2232': 0x6010,
-             '2232c': 0x6010,
-             '2232d': 0x6010,
-             '2232h': 0x6010,
-             '4232': 0x6011,
-             '4232h': 0x6011,
-             '230x': 0x6015,
-             '231x': 0x6015,
-             '234x': 0x6015,
-             'ft232': 0x6001,
-             'ft232r': 0x6001,
-             'ft232h': 0x6014,
-             'ft2232': 0x6010,
-             'ft2232c': 0x6010,
-             'ft2232d': 0x6010,
-             'ft2232h': 0x6010,
-             'ft4232': 0x6011,
-             'ft4232h': 0x6011,
-             'ft230x': 0x6015,
-             'ft231x': 0x6015,
-             'ft234x': 0x6015}
+        FTDI_VENDOR: OrderedDict((
+            # use an ordered dict so that the first occurence of a PID takes
+            # precedence when generating URLs - order does matter.
+            ('232', 0x6001),
+            ('232r', 0x6001),
+            ('232h', 0x6014),
+            ('2232', 0x6010),
+            ('2232c', 0x6010),
+            ('2232d', 0x6010),
+            ('2232h', 0x6010),
+            ('4232', 0x6011),
+            ('4232h', 0x6011),
+            ('ft-x', 0x6015),
+            ('230x', 0x6015),
+            ('231x', 0x6015),
+            ('234x', 0x6015),
+            ('ft232', 0x6001),
+            ('ft232r', 0x6001),
+            ('ft232h', 0x6014),
+            ('ft2232', 0x6010),
+            ('ft2232c', 0x6010),
+            ('ft2232d', 0x6010),
+            ('ft2232h', 0x6010),
+            ('ft4232', 0x6011),
+            ('ft4232h', 0x6011),
+            ('ft230x', 0x6015),
+            ('ft231x', 0x6015),
+            ('ft234x', 0x6015)))
         }
     """Supported products, only FTDI officials ones.
        To add third parties and customized products, see
@@ -126,7 +130,7 @@ class Ftdi:
         0x0700: 'ft2232h',
         0x0800: 'ft4232h',
         0x0900: 'ft232h',
-        0x1000: 'ft230x'}
+        0x1000: 'ft-x'}
     """Common names of FTDI supported devices."""
 
     # Note that the FTDI datasheets contradict themselves, so
@@ -139,7 +143,7 @@ class Ftdi:
         0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
         0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
         0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
-        0x1000: (512, 512),    # FT230X:  TX: 512, RX: 512
+        0x1000: (512, 512),    # FT-X:    TX: 512, RX: 512
     }
     """FTDI chip internal FIFO sizes
 
@@ -451,7 +455,7 @@ class Ftdi:
            :raise ValueError: if the product id is already referenced
         """
         if vid not in cls.PRODUCT_IDS:
-            cls.PRODUCT_IDS[vid] = {}
+            cls.PRODUCT_IDS[vid] = OrderedDict()
         elif pid in cls.PRODUCT_IDS[vid].values():
             raise ValueError('Product ID 0x%04x:0x%04x already registered' %
                              (vid, pid))

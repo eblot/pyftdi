@@ -488,7 +488,6 @@ class UsbTools:
                     if productids[prdc] == desc.pid:
                         products.append(prdc)
                 if products:
-                    products.sort(key=len)
                     product = products[0]
             except KeyError:
                 pass
