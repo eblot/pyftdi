@@ -153,7 +153,7 @@ class MockFtdiDiscoveryTestCase(TestCase):
             lines.pop()
         self.assertEqual(len(lines), 10)
         portmap = defaultdict(int)
-        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, '230x': 1}
+        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, 'ft-x': 1}
         for line in lines:
             url = line.split(' ')[0].strip()
             parts = urlsplit(url)
@@ -626,14 +626,14 @@ class MockCBusEepromTestCase(TestCase):
         self.assertEqual(eeprom.cbus_pins, [])
         self.assertEqual(eeprom.cbus_mask, 0)
         # enable CBUS1 and CBUS3 as GPIO
-        eeprom.set_property('cbus_func_1', 'iomode')
-        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.set_property('cbus_func_1', 'gpio')
+        eeprom.set_property('cbus_func_3', 'gpio')
         eeprom.sync()
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0xA)
         # enable CBUS0 and CBUS2 as GPIO
-        eeprom.set_property('cbus_func_0', 'iomode')
-        eeprom.set_property('cbus_func_2', 'iomode')
+        eeprom.set_property('cbus_func_0', 'gpio')
+        eeprom.set_property('cbus_func_2', 'gpio')
         # not yet committed
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0xA)
@@ -643,13 +643,13 @@ class MockCBusEepromTestCase(TestCase):
         self.assertEqual(eeprom.cbus_mask, 0xF)
         # invalid CBUS pin
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func_4', 'iomode')
+                          'cbus_func_4', 'gpio')
         # invalid pin function
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func_0', 'iomode_')
+                          'cbus_func_0', 'gpio_')
         # invalid pin
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func', 'iomode')
+                          'cbus_func', 'gpio')
         # valid alternative mode
         eeprom.set_property('cbus_func_0', 'txled')
         eeprom.set_property('cbus_func_1', 'rxled')
@@ -671,15 +671,15 @@ class MockCBusEepromTestCase(TestCase):
         # default EEPROM config does not have any CBUS configured as GPIO
         self.assertEqual(eeprom.cbus_pins, [])
         self.assertEqual(eeprom.cbus_mask, 0)
-        eeprom.set_property('cbus_func_1', 'iomode')
-        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.set_property('cbus_func_1', 'gpio')
+        eeprom.set_property('cbus_func_3', 'gpio')
         eeprom.sync()
         # CBUS1 and CBUS3 are not addressable as GPIOs
         # they should appear in cbus_pins, but not in cbus_mask
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0)
-        eeprom.set_property('cbus_func_6', 'iomode')
-        eeprom.set_property('cbus_func_9', 'iomode')
+        eeprom.set_property('cbus_func_6', 'gpio')
+        eeprom.set_property('cbus_func_9', 'gpio')
         # not yet committed
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0)
@@ -687,8 +687,8 @@ class MockCBusEepromTestCase(TestCase):
         # committed
         self.assertEqual(eeprom.cbus_pins, [1, 3, 6, 9])
         self.assertEqual(eeprom.cbus_mask, 0xA)
-        eeprom.set_property('cbus_func_5', 'iomode')
-        eeprom.set_property('cbus_func_8', 'iomode')
+        eeprom.set_property('cbus_func_5', 'gpio')
+        eeprom.set_property('cbus_func_8', 'gpio')
         eeprom.sync()
         self.assertEqual(eeprom.cbus_pins, [1, 3, 5, 6, 8, 9])
         self.assertEqual(eeprom.cbus_mask, 0xF)

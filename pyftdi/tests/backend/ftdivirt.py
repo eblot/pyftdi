@@ -468,7 +468,7 @@ class VirtFtdiPort:
                 continue
             self._fifos.rx.lock.release()
             break
-        print(f'SYNC {self._fifos.rx.stamp} < {self._next_stamp}')
+        self.log.debug(f'Sync {self._fifos.rx.stamp} < {self._next_stamp}')
 
 
 class VirtFtdi:

@@ -518,10 +518,12 @@ class FtdiEeprom:
         cfg['product'] = self._decode_string(0x10)
         cfg['serial'] = self._decode_string(0x12)
         try:
-            name = Ftdi.DEVICE_NAMES[cfg['type']]
-            func = getattr(self, '_decode_%s' % name[2:])
+            name = Ftdi.DEVICE_NAMES[cfg['type']].replace('-', '')
+            if name.startswith('ft'):
+                name = name[2:]
+            func = getattr(self, '_decode_%s' % name)
         except (KeyError, AttributeError):
-            pass
+            self.log.warning('No EEPROM decoder for device %s', name)
         else:
             func()
 
@@ -550,7 +552,7 @@ class FtdiEeprom:
         if not 0 <= cpin < count:
             raise ValueError("Unsupported CBUS pin '%d'" % cpin)
         try:
-            code = cbus[value.upper()]
+            code = cbus[value.upper()].value
         except KeyError:
             raise ValueError("CBUS pin %d does not have function '%s'" %
                              (cpin, value))
@@ -624,7 +626,8 @@ class FtdiEeprom:
         config |= conf << cshift
         self._eeprom[0x0c] = config
 
-    def _decode_230x(self):
+    def _decode_x(self):
+        # FT-X series
         cfg = self._config
         misc, = sunpack('<H', self._eeprom[0x00:0x02])
         cfg['channel_a_driver'] = 'VCP' if misc & (1 << 7) else 'D2XX'
