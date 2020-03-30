@@ -444,19 +444,17 @@ class MockSimpleUartTestCase(TestCase):
     """Test FTDI UART APIs
     """
 
-    @classmethod
-    def setUpClass(cls):
-        cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
+    def setUp(self):
+        self.loader = MockLoader()
         UsbTools.flush_cache()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
+    def tearDown(self):
+        self.loader.unload()
 
-    def test(self):
+    def test_uart(self):
         """Check simple TX/RX sequence."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
         port = serial_for_url('ftdi:///1')
         bus, address, _ = port.usb_path
         vftdi = self.loader.get_virtual_ftdi(bus, address)
@@ -469,6 +467,42 @@ class MockSimpleUartTestCase(TestCase):
         vport.uart_write(msg.encode())
         buf = port.read(len(ascii_letters)).decode()
         self.assertEqual(msg, buf)
+        port.close()
+
+    def test_baudrate_fs_dev(self):
+        """Check baudrate settings for full speed devices."""
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1', baudrate=1200)
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 100)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 3100000)
+        for baudrate in (200, 600, 1200, 2400, 4800, 9600, 115200, 230400,
+                         460800, 490000, 921600, 1000000, 1200000, 1500000,
+                         2000000, 3000000):
+            port.baudrate = baudrate
+            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
+            self.assertEqual(port.ftdi.baudrate, vport.baudrate)
+        port.close()
+
+    def test_baudrate_hs_dev(self):
+        """Check baudrate settings for high speed devices."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1', baudrate=1200)
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 100)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 12100000)
+        for baudrate in (200, 600, 1200, 2400, 4800, 9600, 115200, 230400,
+                         460800, 490000, 921600, 1000000, 1200000, 1500000,
+                         2000000, 3000000, 4000000, 6000000):
+            port.baudrate = baudrate
+            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
+            self.assertEqual(port.ftdi.baudrate, vport.baudrate)
         port.close()
 
 

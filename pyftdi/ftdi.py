@@ -322,7 +322,6 @@ class Ftdi:
     BUS_CLOCK_HIGH = 30.0E6  # 30 MHz
     BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
     BAUDRATE_REF_HIGH = int(12.0E6)  # 12 MHz
-    BAUDRATE_REF_SPECIAL = int(2.0E6)  # 3 MHz
     BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift for UART, in %
     BITBANG_CLOCK_MULTIPLIER = 4
 
@@ -2160,6 +2159,8 @@ class Ftdi:
             clock = self.BAUDRATE_REF_BASE
         if baudrate > clock:
             raise ValueError('Invalid baudrate (too high)')
+        if baudrate < ((clock >> 14) + 1):
+            raise ValueError('Invalid baudrate (too low)')
         div8 = int(round((8 * clock) / baudrate))
         div = div8 >> 3
         div |= self.FRAC_DIV_CODE[div8 & 0x7] << 14

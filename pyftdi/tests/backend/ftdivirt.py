@@ -67,11 +67,11 @@ class VirtFtdiPort:
         self._parent = parent
         self._iface: int = iface
         self._bitmode = FTDICONST.get_value('bitmode', 'reset')
+        self._baudrate: int = 0
         self._mpsse: Optional[VirtMpsseTracer] = None
         self._direction: int = 0
         self._gpio: int = 0
         self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(Fifo(), Fifo())
-        # self._status: int = 0  # second byte of modem status
         self._cbus_dir: int = 0  # logical (commands)
         self._cbus: int = 0  # logical (commands)
         self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
@@ -93,6 +93,10 @@ class VirtFtdiPort:
         if self._rx_thread:
             self._rx_thread.join()
             self._rx_thread = None
+
+    @property
+    def baudrate(self) -> int:
+        return self._baudrate
 
     @property
     def direction(self) -> int:
@@ -127,7 +131,7 @@ class VirtFtdiPort:
     def write(self, data: array, timeout: int) -> int:
         with self._fifos.rx.lock:
             self._fifos.rx.q.extend(data)
-            print(f'> RX Q {hexlify(bytes(self._fifos.rx.q))}')
+            # print(f'> RX Q {hexlify(bytes(self._fifos.rx.q))}')
             self._next_stamp = self._fifos.rx.stamp + 1
             self._fifos.rx.event.set()
         return len(data)
@@ -262,15 +266,37 @@ class VirtFtdiPort:
 
     def control_set_baudrate(self, wValue: int, wIndex: int,
                              data: array) -> None:
-        self.log.info('> ftdi set_baudrate (NOT IMPLEMENTED)')
+        FRAC_INV_DIV = (0, 4, 2, 1, 3, 5, 6, 7)
+        BAUDRATE_REF_BASE = 3.0E6  # 3 MHz
+        BAUDRATE_REF_HIGH = 12.0E6  # 12 MHz
+        if self._parent.is_hispeed_device:
+            wIndex >>= 8
+        divisor = wValue | (wIndex << 16)
+        div = divisor & 0x3FFF
+        hispeed = bool(divisor & 0x20000)
+        if not self._parent.is_hispeed_device and hispeed:
+                raise ValueError('Invalid hispeed mode with non-H series')
+        subdiv_code = (divisor >> 14) & 0x7
+        refclock = BAUDRATE_REF_HIGH if hispeed else BAUDRATE_REF_BASE
+        if div < 2 and subdiv_code:
+            raise ValueError('Invalid sub-divisor with special div')
+        if div == 0:
+            baudrate = 3.0e6
+        elif div == 1:
+            baudrate = 2.0e6
+        else:
+            subdiv = FRAC_INV_DIV[subdiv_code]
+            baudrate = round((refclock * 8) / (div * 8 + subdiv))
+        self.log.info('> ftdi set_baudrate %d bps', baudrate)
+        self._baudrate = int(baudrate)
 
     def control_set_data(self, wValue: int, wIndex: int,
                          data: array) -> None:
-        self.log.info('> ftdi set_data (NOT IMPLEMENTED)')
+        self.log.debug('> ftdi set_data (NOT IMPLEMENTED)')
 
     def control_set_flow_ctrl(self, wValue: int, wIndex: int,
                               data: array) -> None:
-        self.log.info('> ftdi set_flow_ctrl (NOT IMPLEMENTED)')
+        self.log.debug('> ftdi set_flow_ctrl (NOT IMPLEMENTED)')
 
     def control_poll_modem_status(self, wValue: int, wIndex: int,
                                   data: array) -> None:
@@ -543,6 +569,22 @@ class VirtFtdi:
     def properties(self) -> 'VirtFtdi.Properties':
         return self.PROPERTIES[self._version]
 
+    @property
+    def is_mpsse_device(self) -> bool:
+        """Tell whether the device has an MPSSE engine
+
+           :return: True if the FTDI device supports MPSSE
+        """
+        return self._version in (0x0500, 0x0700, 0x0800, 0x0900)
+
+    @property
+    def is_hispeed_device(self) -> bool:
+        """Tell whether the device is a high speed device
+
+           :return: True if the FTDI device is HS
+        """
+        return self._version in (0x0700, 0x0800, 0x0900)
+
     def apply_eeprom_config(self, devdesc: dict,
                             cfgdescs: Sequence[dict]) -> None:
         self._load_eeprom(devdesc, cfgdescs)
@@ -574,7 +616,9 @@ class VirtFtdi:
             pre = '_' if obj == self else ''
             handler = getattr(obj, f'{pre}control_{req_name}')
         except AttributeError:
-            self.log.warning('Unknown request: %s', req_name)
+            self.log.warning('Unknown request %02x:%04x: %s for %s)',
+                             bRequest, wIndex, req_name,
+                             obj.__class__.__name__)
             return size
         buf = handler(wValue, wIndex, data) or b''
         size = len(buf)
@@ -722,3 +766,17 @@ class VirtFtdi:
                 self.log.warning('Protected EEPROM address: 0x%04x', wValue)
                 return
         self._eeprom[address: address+2] = spack('<H', wValue)
+
+    def _control_set_baudrate(self, wValue: int, wIndex: int,
+                              data: array) -> None:
+        # set_baudrate is very specific and hack-ish, as the HW is.
+        # the way the interface is encoded is simply ugly (likely a legacy
+        # from single-port device, then FTDI needed to support multi-port
+        # ones and found a hack-ish way to implement it w/o breaking the
+        # existing implementation)
+        if self.is_mpsse_device:
+            iface = wIndex & 0xFF
+            wIndex >>= 16
+        else:
+            iface = 1
+        return self._ports[iface-1].control_set_baudrate(wValue, wIndex, data)
