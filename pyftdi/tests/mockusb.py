@@ -411,19 +411,17 @@ class MockSimpleGpioTestCase(TestCase):
     """Test FTDI GPIO APIs
     """
 
-    @classmethod
-    def setUpClass(cls):
-        cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
+    def setUp(self):
+        self.loader = MockLoader()
         UsbTools.flush_cache()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
+    def tearDown(self):
+        self.loader.unload()
 
-    def test(self):
+    def _test_gpio(self):
         """Check simple GPIO write and read sequence."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
         gpio = GpioController()
         # access to the virtual GPIO port
         out_pins = 0xAA
@@ -439,6 +437,25 @@ class MockSimpleGpioTestCase(TestCase):
         self.assertEqual(vio, (0xAA & 0xF3) | (~0xAA & 0x0c))
         gpio.close()
 
+    def test_baudrate(self):
+        """Check simple GPIO write and read sequence."""
+        # load custom CBUS config, with:
+            # CBUS0: GPIO (gpio)
+            # CBUS1: GPIO (gpio)
+            # CBUS0: DRIVE1 (forced to high level)
+            # CBUS0: TXLED  (eq. to highz for tests)
+        with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        gpio = GpioController()
+        # access to the virtual GPIO port
+        out_pins = 0xAA
+        gpio.configure('ftdi://:230x/1', direction=out_pins)
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        vport = vftdi.get_port(1)
+        baudrate = 1000000
+        gpio.set_frequency(1000000)
+        print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
+        gpio.close()
 
 class MockSimpleUartTestCase(TestCase):
     """Test FTDI UART APIs

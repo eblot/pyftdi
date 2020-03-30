@@ -236,7 +236,7 @@ class VirtFtdiPort:
 
     def control_set_latency_timer(self, wValue: int, wIndex: int,
                                   data: array) -> None:
-        self.log.info('> ftdi latency timer: %d', wValue)
+        self.log.debug('> ftdi latency timer: %d', wValue)
 
     def control_set_event_char(self, wValue: int, wIndex: int,
                                data: array) -> None:
@@ -275,7 +275,7 @@ class VirtFtdiPort:
         div = divisor & 0x3FFF
         hispeed = bool(divisor & 0x20000)
         if not self._parent.is_hispeed_device and hispeed:
-                raise ValueError('Invalid hispeed mode with non-H series')
+            raise ValueError('Invalid hispeed mode with non-H series')
         subdiv_code = (divisor >> 14) & 0x7
         refclock = BAUDRATE_REF_HIGH if hispeed else BAUDRATE_REF_BASE
         if div < 2 and subdiv_code:
