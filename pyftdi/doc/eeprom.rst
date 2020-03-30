@@ -213,37 +213,45 @@ depending on the actual device, some alternate function may not be available.
 +-----------------+--------+--------------------------------------------------------------------------------+
 | ``SLEEP``       | Low    | USB suspend, typically used to power down external devices.                    |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``DRIVE0``      | Low    | Drive a constant                                                               |
+| ``DRIVE0``      | Low    | Drive a constant (FT232H and FT-X only)                                        |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``DRIVE1``      | High   | Drive a constant                                                               |
+| ``DRIVE1``      | High   | Drive a constant (FT232H and FT-X only)                                        |
 +-----------------+--------+--------------------------------------------------------------------------------+
 | ``GPIO``        |        | IO port for CBUS bit bang mode                                                 |
 +-----------------+--------+--------------------------------------------------------------------------------+
 | ``TXDEN``       | High   | Enable transmit for RS485 mode                                                 |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``CLK24``       |        | Output 24 MHz clock                                                            |
+| ``CLK48``       |        | Output 48 MHz clock (FT232R only)                                              |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``CLK12``       |        | Output 12 MHz clock                                                            |
+| ``CLK30``       |        | Output 30 MHz clock (FT232H only)                                              |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``CLK6``        |        | Output 6 MHz clock                                                             |
+| ``CLK24``       |        | Output 24 MHz clock (FT232R and FT-X only)                                     |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``BAT_DETECT``  | High   | Battery Charger Detect, when the device is connected to a battery charger host |
+| ``CLK15``       |        | Output 12 MHz clock (FT232H only)                                              |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``BAT_NDETECT`` | Low    | Inverse signal of BAT_DETECT                                                   |
+| ``CLK12``       |        | Output 12 MHz clock (FT232R and FT-X only)                                     |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``I2C_TXE``     | Low    | Transmit buffer empty                                                          |
+| ``CLK7_5``      |        | Output 7.5 MHz clock (FT232H only)                                             |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``I2C_RXF``     | Low    | Receive buffer full                                                            |
+| ``CLK6``        |        | Output 6 MHz clock (FT232R and FT-X only)                                      |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``VBUS_SENSE``  | High   | Detect when VBUS is present via the appropriate AC IO pad                      |
+| ``BAT_DETECT``  | High   | Battery Charger Detect (FT-X only)                                             |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``BB_WR``       | Low    | Synchronous Bit Bang Write strobe                                              |
+| ``BAT_NDETECT`` | Low    | Inverse signal of BAT_DETECT (FT-X only)                                       |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``BB_RD``       | Low    | Synchronous Bit Bang Read strobe                                               |
+| ``I2C_TXE``     | Low    | Transmit buffer empty (FT-X only)                                              |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``TIME_STAMP``  |        | Toggle signal which changes state each time a USB SOF is received              |
+| ``I2C_RXF``     | Low    | Receive buffer full  (FT-X only)                                               |
 +-----------------+--------+--------------------------------------------------------------------------------+
-| ``AWAKE``       | Low    | Do not suspend when unplugged/disconnect/suspsend                              |
+| ``VBUS_SENSE``  | High   | Detect when VBUS is present via the appropriate AC IO pad (FT-X only)          |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BB_WR``       | Low    | Synchronous Bit Bang Write strobe (FT232R and FT-X only)                       |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``BB_RD``       | Low    | Synchronous Bit Bang Read strobe (FT232R and FT-X only)                        |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``TIMESTAMP``   |        | Toggle signal each time a USB SOF is received (FT-X only)                      |
++-----------------+--------+--------------------------------------------------------------------------------+
+| ``AWAKE``       | Low    | Do not suspend when unplugged/disconnect/suspsend (FT-X only)                  |
 +-----------------+--------+--------------------------------------------------------------------------------+
 
 

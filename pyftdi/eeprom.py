@@ -26,6 +26,7 @@
 """EEPROM management for PyFdti"""
 
 #pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-locals
 #pylint: disable-msg=wrong-import-position
 #pylint: disable-msg=import-error
 
@@ -85,8 +86,8 @@ class FtdiEeprom:
 
 
     CBUS = IntEnum('CBUS',
-                   'TXDEN PWREN RXLED TXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
-                   'CLK6 GPIO BB_WR BB_R', start=0)
+                   'TXDEN PWREN TXLED RXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
+                   'CLK6 GPIO BB_WR BB_RD', start=0)
     """Alternate features for legacy FT232R devices."""
 
     CBUSH = IntEnum('CBUSH',
@@ -97,7 +98,7 @@ class FtdiEeprom:
     CBUSX = IntEnum('CBUSX',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
                     'GPIO TXDEN CLK24 CLK12 CLK6 BAT_DETECT BAT_NDETECT '
-                    'I2C_TXE I2C_RXF VBUS_SENSE BB_WR BB_RD TIME_STAMP AWAKE',
+                    'I2C_TXE I2C_RXF VBUS_SENSE BB_WR BB_RD TIMESTAMP AWAKE',
                     start=0)
     """Alternate features for FT230X devices."""
 
@@ -546,8 +547,14 @@ class FtdiEeprom:
             cbus, count, offset, width = cmap[self.device_version]
         except KeyError:
             raise ValueError('This property is not supported on this device')
+        pin_filter = getattr(self,
+                             '_filter_cbus_func_x%x' % self.device_version,
+                             None)
         if value == '?' and out:
-            print(', '.join(sorted([item.name for item in cbus])), file=out)
+            items = {item.name for item in cbus}
+            if pin_filter:
+                items = {val for val in items if pin_filter(cpin, val)}
+            print(', '.join(sorted(items)) if items else '(none)', file=out)
             return
         if not 0 <= cpin < count:
             raise ValueError("Unsupported CBUS pin '%d'" % cpin)
@@ -556,6 +563,9 @@ class FtdiEeprom:
         except KeyError:
             raise ValueError("CBUS pin %d does not have function '%s'" %
                              (cpin, value))
+        if pin_filter and not pin_filter(cpin, value.upper()):
+            raise ValueError("Unsupported CBUS function '%s' for pin '%d'" %
+                             (value, cpin))
         addr = offset + (cpin*width)//8
         if width == 4:
             bitoff = 4 if cpin & 0x1 else 0
@@ -568,6 +578,28 @@ class FtdiEeprom:
         self._eeprom[addr] |= code << bitoff
         self.log.debug('Cpin %d, addr 0x%02x, value 0x%02x->0x%02x',
                        cpin, addr, old, self._eeprom[addr])
+
+    @classmethod
+    def _filter_cbus_func_x900(cls, cpin: int, value: str):
+        if cpin == 7:
+            # nothing can be assigned to ACBUS7
+            return False
+        if value in 'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0'.split():
+            # any pin can be assigned these functions
+            return True
+        if cpin in (5, 6, 8, 9):
+            # any function can be assigned to ACBUS5, ACBUS6, ACBUS8, ACBUS9
+            return True
+        if cpin == 0:
+            return value != 'GPIO'
+        return False
+
+    @classmethod
+    def _filter_cbus_func_x600(cls, cpin: int, value: str):
+        if value == 'BB_WR':
+            # this signal is only available on CBUS0, CBUS1
+            return cpin < 2
+        return True
 
     def _set_bus_control(self, bus: str, control: str,
                          value: Union[str, int, bool],
