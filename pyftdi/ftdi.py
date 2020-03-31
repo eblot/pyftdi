@@ -165,7 +165,7 @@ class Ftdi:
         CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
         SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
 
-    # Commands
+    # MPSSE Commands
     WRITE_BYTES_PVE_MSB = 0x10
     WRITE_BYTES_NVE_MSB = 0x11
     WRITE_BITS_PVE_MSB = 0x12
@@ -254,18 +254,18 @@ class Ftdi:
                                 CTRL_RECIPIENT_DEVICE)
 
     # Requests
-    SIO_REQ_RESET = 0               # Reset the port
-    SIO_REQ_SET_MODEM_CTRL = 1      # Set the modem control register
-    SIO_REQ_SET_FLOW_CTRL = 2       # Set flow control register
-    SIO_REQ_SET_BAUDRATE = 3        # Set baud rate
-    SIO_REQ_SET_DATA = 4            # Set the data characteristics of the port
-    SIO_REQ_POLL_MODEM_STATUS = 5   # Get line status
-    SIO_REQ_SET_EVENT_CHAR = 6      # Change event character
-    SIO_REQ_SET_ERROR_CHAR = 7      # Change error character
-    SIO_REQ_SET_LATENCY_TIMER = 9   # Change latency timer
-    SIO_REQ_GET_LATENCY_TIMER = 10  # Get latency timer
-    SIO_REQ_SET_BITMODE = 11        # Change bit mode
-    SIO_REQ_READ_PINS = 12          # Read GPIO pin value
+    SIO_REQ_RESET = 0x0               # Reset the port
+    SIO_REQ_SET_MODEM_CTRL = 0x1      # Set the modem control register
+    SIO_REQ_SET_FLOW_CTRL = 0x2       # Set flow control register
+    SIO_REQ_SET_BAUDRATE = 0x3        # Set baud rate
+    SIO_REQ_SET_DATA = 0x4            # Set the data characteristics of the port
+    SIO_REQ_POLL_MODEM_STATUS = 0x5   # Get line status
+    SIO_REQ_SET_EVENT_CHAR = 0x6      # Change event character
+    SIO_REQ_SET_ERROR_CHAR = 0x7      # Change error character
+    SIO_REQ_SET_LATENCY_TIMER = 0x9   # Change latency timer
+    SIO_REQ_GET_LATENCY_TIMER = 0xa   # Get latency timer
+    SIO_REQ_SET_BITMODE = 0xb         # Change bit mode
+    SIO_REQ_READ_PINS = 0xc           # Read GPIO pin value (or "get bitmode")
 
     # Eeprom requests
     SIO_REQ_EEPROM = 0x90
@@ -273,12 +273,12 @@ class Ftdi:
     SIO_REQ_WRITE_EEPROM = SIO_REQ_EEPROM + 1  # Write EEPROM content
     SIO_REQ_ERASE_EEPROM = SIO_REQ_EEPROM + 2  # Erase EEPROM content
 
-    # Reset commands
+    # Reset arguments
     SIO_RESET_SIO = 0        # Reset device
     SIO_RESET_PURGE_RX = 1   # Drain USB RX buffer (host-to-ftdi)
     SIO_RESET_PURGE_TX = 2   # Drain USB TX buffer (ftdi-to-host)
 
-    # Flow control
+    # Flow control arguments
     SIO_DISABLE_FLOW_CTRL = 0x0
     SIO_RTS_CTS_HS = (0x1 << 8)
     SIO_DTR_DSR_HS = (0x2 << 8)

@@ -195,7 +195,8 @@ class VirtFtdiPort:
             dcd = 0x08 if self._gpio & 0x40 else 0
             buf0 |= cts | dsr | ri | dcd
         else:
-            buf0 |= 0x30  # another magic constant
+            # another magic constant
+            buf0 |= 0x30
         buf1 = 0
         with self._fifos.rx.lock:
             if not self._fifos.rx.q:

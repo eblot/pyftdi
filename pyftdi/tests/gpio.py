@@ -34,6 +34,7 @@ import logging
 from collections import deque
 from os import environ
 from sys import modules, stdout
+from time import sleep
 from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
@@ -149,17 +150,27 @@ class GpioAsyncTestCase(TestCase):
                 self.assertEqual(msbs, last)
         gpio.close()
 
-    def _test_gpio_baudate(self):
+    def test_gpio_baudate(self):
         gpio = GpioAsyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction)
         buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
-        gpio.set_frequency(10000) # 80 000
+        gpio.set_frequency(50e3)
+        sleep(0.01)
         gpio.write(buf)
-        gpio.set_frequency(50000) # 400 000
+        gpio.read(1024)
+        gpio.set_frequency(200e3)
+        sleep(0.01)
         gpio.write(buf)
-        gpio.set_frequency(200000)  # 1 700 000
+        gpio.read(1024)
+        gpio.set_frequency(1e6)
+        sleep(0.01)
         gpio.write(buf)
+        gpio.read(1024)
+        gpio.set_frequency(5e6)
+        sleep(0.01)
+        gpio.write(buf)
+        gpio.read(1024)
         gpio.close()
 
 
@@ -212,16 +223,22 @@ class GpioSyncTestCase(TestCase):
             last = sout >> 4
         gpio.close()
 
-    def _test_gpio_baudate(self):
-        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+    def test_gpio_baudate(self):
         gpio = GpioSyncController()
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction)
         buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
-        gpio.set_frequency(10000) # 80 000
+        gpio.set_frequency(50e3)
+        sleep(0.01)
         gpio.exchange(buf)
-        gpio.set_frequency(50000) # 400 000
+        gpio.set_frequency(200e3)
+        sleep(0.01)
         gpio.exchange(buf)
-        gpio.set_frequency(200000)  # 1 700 000
+        gpio.set_frequency(1e6)
+        sleep(0.01)
+        gpio.exchange(buf)
+        gpio.set_frequency(5e6)
+        sleep(0.01)
         gpio.exchange(buf)
         gpio.close()
 
