@@ -330,6 +330,7 @@ class Ftdi:
     # Latency
     LATENCY_MIN = 12
     LATENCY_MAX = 255
+    LATENCY_EEPROM_FT232R = 77
 
     # EEPROM Properties
     EXT_EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
@@ -2101,20 +2102,33 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        length = len(data)
-        if addr & 0x1 or length & 0x1:
-            raise ValueError('Address/length not even')
-        for word in sunpack('<%dH' % (length//2), data):
-            if not dry_run:
-                out = self._usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
-                                                  Ftdi.SIO_REQ_WRITE_EEPROM,
-                                                  word, addr >> 1, b'',
-                                                  self._usb_write_timeout)
-                if out:
-                    raise FtdiEepromError('EEPROM Write Error @ %d' % addr)
-            else:
-                self.log.info('Write EEPROM [0x%02x]: 0x%04x', addr, word)
-            addr += 2
+        if self.device_version == 0x0600:
+            # FT232R internal EEPROM is unstable and latency timer seems
+            # to have a direct impact on EEPROM programming...
+            latency = self.get_latency_timer()
+        else:
+            latency = None
+        try:
+            if latency:
+                self.set_latency_timer(self.LATENCY_EEPROM_FT232R)
+            length = len(data)
+            if addr & 0x1 or length & 0x1:
+                raise ValueError('Address/length not even')
+            for word in sunpack('<%dH' % (length//2), data):
+                if not dry_run:
+                    out = self._usb_dev.ctrl_transfer(
+                        Ftdi.REQ_OUT, Ftdi.SIO_REQ_WRITE_EEPROM,
+                        word, addr >> 1, b'', self._usb_write_timeout)
+                    if out:
+                        raise FtdiEepromError('EEPROM Write Error @ %d' % addr)
+                    self.log.debug('Write EEPROM [0x%02x]: 0x%04x', addr, word)
+                else:
+                    self.log.info('Fake write EEPROM [0x%02x]: 0x%04x',
+                                  addr, word)
+                addr += 2
+        finally:
+            if latency:
+                self.set_latency_timer(latency)
 
     def _get_max_packet_size(self) -> int:
         """Retrieve the maximum length of a data packet"""
