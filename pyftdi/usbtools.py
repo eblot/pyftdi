@@ -539,9 +539,13 @@ class UsbTools:
                 cls.UsbApi = 1
             else:
                 cls.UsbApi = 2
-        if cls.UsbApi == 2:
-            return usb_get_string(device, stridx)
-        return usb_get_string(device, 64, stridx)
+        try:
+            if cls.UsbApi == 2:
+                return usb_get_string(device, stridx)
+            return usb_get_string(device, 64, stridx)
+        except UnicodeDecodeError:
+            # do not abort if EEPROM data is somewhat incoherent
+            return ''
 
     @classmethod
     def find_backend(cls) -> IBackend:
