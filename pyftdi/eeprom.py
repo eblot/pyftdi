@@ -31,7 +31,7 @@
 #pylint: disable-msg=import-error
 
 import sys
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 from collections import OrderedDict, namedtuple
 from configparser import ConfigParser
 from enum import IntEnum
@@ -70,13 +70,18 @@ class FtdiEeprom:
     """
 
     _PROPS = namedtuple('PROPS', 'size user dynoff')
-    """Properties for each FTDI device release."""
+    """Properties for each FTDI device release.
+
+       * size is the size in bytes of the EEPROM storage area
+       * user is the size in bytes of the user storage area, if any/supported
+       * dynoff is the offset in EEPROM of the first bytes to store strings
+    """
 
     _PROPERTIES = {
-        0x0200: _PROPS(0, None, 0x94),     # FT232AM
+        0x0200: _PROPS(0, None, 0),        # FT232AM
         0x0400: _PROPS(256, 0x14, 0x94),   # FT232BM
         0x0500: _PROPS(256, 0x16, 0x96),   # FT2232D
-        0x0600: _PROPS(128, None, 0x98),   # FT232R
+        0x0600: _PROPS(128, None, 0x18),   # FT232R
         0x0700: _PROPS(256, 0x1A, 0x9A),   # FT2232H
         0x0800: _PROPS(256, 0x1A, 0x9A),   # FT4232H
         0x0900: _PROPS(256, 0x1A, 0xA0),   # FT232H
@@ -103,7 +108,7 @@ class FtdiEeprom:
     """Alternate features for FT230X devices."""
 
     INVERT = IntFlag('INVERT', 'TXD RXD RTS CTS DTR DSR DCD RI')
-    """Inversion flags for FT232R devices."""
+    """Inversion flags for FT232R and FT-X devices."""
 
     CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
     """Alternate port mode."""
@@ -127,6 +132,7 @@ class FtdiEeprom:
         self._valid = False
         self._config = OrderedDict()
         self._dirty = set()
+        self._modified = False
 
     def __getattr__(self, name):
         if name in self._config:
@@ -147,9 +153,8 @@ class FtdiEeprom:
         else:
             self._ftdi.open_from_device(device)
         if not ignore:
-            self._read_eeprom()
-            if self._valid:
-                self._decode_eeprom()
+            self._eeprom = self._read_eeprom()
+            self._decode_eeprom()
 
     def close(self) -> None:
         """Close the current connection to the FTDI USB device,
@@ -173,9 +178,8 @@ class FtdiEeprom:
         self._config = OrderedDict()
         self._dirty = set()
         if not ignore:
-            self._read_eeprom()
-            if self._valid:
-                self._decode_eeprom()
+            self._eeprom = self._read_eeprom()
+            self._decode_eeprom()
 
     @property
     def device_version(self) -> int:
@@ -282,6 +286,74 @@ class FtdiEeprom:
             cfg.set('raw', '@%02x' % i, hexa)
         cfg.write(file)
 
+    def load_config(self, file: TextIO, section: Optional[str] = None) -> None:
+        """Load the EEPROM content from an INI stream.
+
+           The ``section`` argument selects which section(s) to load:
+
+           * ``raw`` only loads the raw data (hexabytes) from a previous dump
+           * ``values`` only loads the values section, that is the human
+             readable configuration.
+           * ``all``, which is the default section selection, load the raw
+             section, then overwrite part of it with any configuration value
+             from the ``values`` section. This provides a handy way to use an
+             existing dump from a valid EEPROM content, while customizing some
+             parameters, such as the serial number.
+
+           :param file: input stream
+           :paran section: which section to load from the ini file
+        """
+        self._sync_eeprom()
+        cfg = ConfigParser()
+        cfg.read_file(file)
+        loaded = False
+        sect = 'raw'
+        if section in (None, 'all', sect, ''):
+            if not cfg.has_section(sect):
+                raise FtdiEepromError("No '%s' section in INI file" % sect)
+            options = cfg.options(sect)
+            try:
+                for opt in options:
+                    if not opt.startswith('@'):
+                        raise ValueError()
+                    address = int(opt[1:], 16)
+                    hexval = cfg.get(sect, opt).strip()
+                    buf = unhexlify(hexval)
+                    self._eeprom[address:address+len(buf)] = buf
+            except IndexError:
+                raise ValueError("Invalid address in '%s'' section" % sect)
+            except ValueError:
+                raise ValueError("Invalid line in '%s'' section" % sect)
+            self._compute_crc(True)
+            if not self._valid:
+                raise ValueError('Loaded RAW section is invalid (CRC mismatch')
+            loaded = True
+        sect = 'values'
+        vmap = {
+            'manufacturer': 'manufacturer_name',
+            'product': 'product_name',
+            'serial': 'serial_number'
+        }
+        if section in (None, 'all', sect, ''):
+            if not cfg.has_section(sect):
+                raise FtdiEepromError("No '%s' section in INI file" % sect)
+            options = cfg.options(sect)
+            for opt in options:
+                value = cfg.get(sect, opt).strip()
+                if opt in vmap:
+                    func = getattr(self, 'set_%s' % vmap[opt])
+                    func(value)
+                else:
+                    try:
+                        self.set_property(opt, value)
+                    except ValueError:
+                        self.log.warning("Ignoring setting '%s': "
+                                         "not implemented", opt)
+            loaded = True
+        if not loaded:
+            raise ValueError('Invalid section: %s' % section)
+        self._sync_eeprom()
+
     def set_serial_number(self, serial: str) -> None:
         """Define a new serial number."""
         self._validate_string(serial)
@@ -355,6 +427,13 @@ class FtdiEeprom:
             val = to_int(value) >> 1
             self._eeprom[0x09] = val
             return
+        if name.startswith('invert_'):
+            if not self.device_version in (0x600, 0x1000):
+                raise ValueError('UART control line inversion not available '
+                                 'with this device')
+            self._set_invert(name[len('invert_'):], value, out)
+            self._dirty.add(name)
+            return
         if name in self.properties:
             raise NotImplementedError("Change to '%s' is not yet supported" %
                                       name)
@@ -362,8 +441,9 @@ class FtdiEeprom:
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
-        self._eeprom = bytearray([0x00] * self.size)
+        self._eeprom = bytearray([0xFF] * self.size)
         self._config.clear()
+        self._dirty.add('eeprom')
 
     def initialize(self) -> None:
         """Initialize the EEPROM with some default sensible values.
@@ -409,13 +489,25 @@ class FtdiEeprom:
 
            :return: True if some changes have been committed to the EEPROM
         """
-        if not self._dirty:
+        if not self._modified:
             self.log.info('No change to commit')
             return False
-        self.log.info('Changes to commit: %s', ', '.join(sorted(self._dirty)))
         self._sync_eeprom()
         self._ftdi.overwrite_eeprom(self._eeprom, dry_run=dry_run)
+        if not dry_run:
+            eeprom = self._read_eeprom()
+            if eeprom != self._eeprom:
+                for pos, (old, new) in enumerate(zip(self._eeprom, eeprom)):
+                    if old != new:
+                        break
+                pos &= ~0x1
+                raise FtdiEepromError('Write to EEPROM failed @ 0x%02x' % pos)
+            self._modified = False
         return dry_run
+
+    def reset_device(self):
+        """Execute a USB device reset."""
+        self._ftdi.reset(usb_reset=True)
 
     @classmethod
     def _validate_string(cls, string):
@@ -474,6 +566,7 @@ class FtdiEeprom:
         self._update_crc()
         self._decode_eeprom()
         self._dirty.clear()
+        self._modified = True
 
     def _compute_crc(self, check=False):
         mtp = self._ftdi.device_version == 0x1000
@@ -483,24 +576,33 @@ class FtdiEeprom:
             # check mode: add CRC itself, so that result should be zero
             crc_pos -= crc_size
         crc = self._ftdi.calc_eeprom_checksum(self._eeprom[:crc_pos])
+        if check:
+            self._valid = not bool(crc)
+            if not self._valid:
+                self.log.debug('CRC is now 0x%04x', crc)
+            else:
+                self.log.debug('CRC OK')
         return crc, crc_pos, crc_size
 
     def _update_crc(self):
         crc, crc_pos, crc_size = self._compute_crc()
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
 
-    def _read_eeprom(self):
+    def _read_eeprom(self) -> bytes:
         buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
-        self._eeprom = bytearray(buf)
+        eeprom = bytearray(buf)
         crc = self._compute_crc(True)[0]
         if crc:
             if self.is_empty:
                 self.log.info('No EEPROM or EEPROM erased')
             else:
                 self.log.error('Invalid CRC or EEPROM content')
-        self._valid = not bool(crc)
+        return eeprom
 
     def _decode_eeprom(self):
+        if not self._valid:
+            self.log.debug('Skipping EEPROM decoding, invalid content')
+            return
         cfg = self._config
         cfg.clear()
         cfg['vendor_id'] = Hex4Int(sunpack('<H', self._eeprom[0x02:0x04])[0])
@@ -518,13 +620,14 @@ class FtdiEeprom:
         cfg['manufacturer'] = self._decode_string(0x0e)
         cfg['product'] = self._decode_string(0x10)
         cfg['serial'] = self._decode_string(0x12)
+        name = None
         try:
             name = Ftdi.DEVICE_NAMES[cfg['type']].replace('-', '')
             if name.startswith('ft'):
                 name = name[2:]
             func = getattr(self, '_decode_%s' % name)
         except (KeyError, AttributeError):
-            self.log.warning('No EEPROM decoder for device %s', name)
+            self.log.warning('No EEPROM decoder for device %s', name or '?')
         else:
             func()
 
@@ -657,6 +760,21 @@ class FtdiEeprom:
             raise RuntimeError('Internal error')
         config |= conf << cshift
         self._eeprom[0x0c] = config
+
+    def _set_invert(self, name, value, out):
+        if value == '?' and out:
+            print('off, on', file=out)
+            return
+        if name.upper() not in self.INVERT.__members__:
+            raise ValueError('Unknown property: %s' % name)
+        value = to_bool(value, permissive=False)
+        code = getattr(self.INVERT, name.upper())
+        invert = self._eeprom[0x0B]
+        if value:
+            invert |= code
+        else:
+            invert &= ~code
+        self._eeprom[0x0B] = invert
 
     def _decode_x(self):
         # FT-X series
