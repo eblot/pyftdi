@@ -254,18 +254,18 @@ class Ftdi:
                                 CTRL_RECIPIENT_DEVICE)
 
     # Requests
-    SIO_REQ_RESET = 0x0               # Reset the port
-    SIO_REQ_SET_MODEM_CTRL = 0x1      # Set the modem control register
-    SIO_REQ_SET_FLOW_CTRL = 0x2       # Set flow control register
-    SIO_REQ_SET_BAUDRATE = 0x3        # Set baud rate
-    SIO_REQ_SET_DATA = 0x4            # Set the data characteristics of the port
-    SIO_REQ_POLL_MODEM_STATUS = 0x5   # Get line status
-    SIO_REQ_SET_EVENT_CHAR = 0x6      # Change event character
-    SIO_REQ_SET_ERROR_CHAR = 0x7      # Change error character
-    SIO_REQ_SET_LATENCY_TIMER = 0x9   # Change latency timer
-    SIO_REQ_GET_LATENCY_TIMER = 0xa   # Get latency timer
-    SIO_REQ_SET_BITMODE = 0xb         # Change bit mode
-    SIO_REQ_READ_PINS = 0xc           # Read GPIO pin value (or "get bitmode")
+    SIO_REQ_RESET = 0x0              # Reset the port
+    SIO_REQ_SET_MODEM_CTRL = 0x1     # Set the modem control register
+    SIO_REQ_SET_FLOW_CTRL = 0x2      # Set flow control register
+    SIO_REQ_SET_BAUDRATE = 0x3       # Set baud rate
+    SIO_REQ_SET_DATA = 0x4           # Set the data characteristics of the port
+    SIO_REQ_POLL_MODEM_STATUS = 0x5  # Get line status
+    SIO_REQ_SET_EVENT_CHAR = 0x6     # Change event character
+    SIO_REQ_SET_ERROR_CHAR = 0x7     # Change error character
+    SIO_REQ_SET_LATENCY_TIMER = 0x9  # Change latency timer
+    SIO_REQ_GET_LATENCY_TIMER = 0xa  # Get latency timer
+    SIO_REQ_SET_BITMODE = 0xb        # Change bit mode
+    SIO_REQ_READ_PINS = 0xc          # Read GPIO pin value (or "get bitmode")
 
     # Eeprom requests
     SIO_REQ_EEPROM = 0x90
