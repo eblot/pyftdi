@@ -8,6 +8,12 @@ EEPROM management
    value is written in the wrong place. You can even essentially **brick** your
    FTDI device. Use this function only with **extreme** caution.
 
+   It is not recommended to use this application with devices that use an
+   internal EEPROM such as FT232R or FT-X series, as if something goes wrong,
+   recovery options are indeed limited. FT232R internal EEPROM seems to be
+   unstable, even the official FT_PROG_ tool from FTDI may fail to fix it on
+   some conditions.
+
    If using a Hi-Speed Mini Module and you brick for FTDI device, see
    FTDI_Recovery_
 
@@ -15,23 +21,10 @@ EEPROM management
 Supported features
 ~~~~~~~~~~~~~~~~~~
 
-EEPROM support is experimental. For now, PyFtdi_ mostly supports read-only
-feature to report EEPROM configuration.
+EEPROM support is under active development.
 
 Some features may be wrongly decoded, as each FTDI model implements a different
-feature map, and more test/validation is required.
-
-Write access is limited to modifying the variable length strings of the EEPROM,
-that is:
-
- * manufacturer name, *e.g.* `FTDI`
- * product description string, *e.g.* ``FT2232H MiniModule``
- * serial number, *e.g.* ``FT123ABC``
-
-Changing the product description may help to distinguish a specific FTDI device
-when several of them are connected to a host, while changing the serial number
-may help selecting a specific FTDI device from the command line, as the serial
-number may be specified in the :doc:`URL <urlscheme>`.
+feature map, and more test/validation are required.
 
 The :doc:`EEPROM API <api/eeprom>` implements the upper API to access the
 EEPROM content.
@@ -46,10 +39,10 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
 
 ::
 
-  ftconf.py [-h] [-x] [-X HEXBLOCK] [-o OUTPUT] [-s SERIAL_NUMBER]
-            [-m MANUFACTURER] [-p PRODUCT] [-c CONFIG] [-e] [-u]
-            [-V VIRTUAL] [-v] [-d]
-            [device]
+  ftconf.py [-h] [-x] [-X HEXBLOCK] [-i INPUT] [-l {all,raw,values}]
+                   [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER] [-p PRODUCT]
+                   [-c CONFIG] [-e] [-u] [-P VIDPID] [-V VIRTUAL] [-v] [-d]
+                   [device]
 
   Simple FTDI EEPROM configurator.
 
@@ -61,6 +54,10 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
     -x, --hexdump         dump EEPROM content as ASCII
     -X HEXBLOCK, --hexblock HEXBLOCK
                           dump EEPROM as indented hexa blocks
+    -i INPUT, --input INPUT
+                          input ini file to load EEPROM content
+    -l {all,raw,values}, --load {all,raw,values}
+                          section(s) to load from input file
     -o OUTPUT, --output OUTPUT
                           output ini file to save EEPROM content
     -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
@@ -74,7 +71,7 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
     -e, --erase           erase the whole EEPROM content
     -u, --update          perform actual update, use w/ care
     -P VIDPID, --vidpid VIDPID
-                        specify a custom VID:PID device ID, may be repeated
+                          specify a custom VID:PID device ID, may be repeated
     -V VIRTUAL, --virtual VIRTUAL
                           use a virtual device, specified as YaML
     -v, --verbose         increase verbosity
@@ -86,22 +83,21 @@ or this script. You may brick your device if something goes wrong, and there
 may be no way to recover your device.**
 
 Note that to protect the EEPROM content of unexpected modification, it is
-mandatory to specify the ``-u`` flag along any alteration/change of the EEPROM
-content. Without this flag, the script performs a dry-run execution of the
-changes, *i.e.* all actions but the write request to the EEPROM are executed.
+mandatory to specify the :ref:`-u <option_u>` flag along any alteration/change
+of the EEPROM content. Without this flag, the script performs a dry-run
+execution of the changes, *i.e.* all actions but the write request to the
+EEPROM are executed.
 
 Once updated, you need to unplug/plug back the device to use the new EEPROM
 configuration.
 
 It is recommended to first save the current content of the EEPROM, using the
-``-o`` flag, to have a working copy of the EEPROM data before any attempt to
-modify it. It can help restoring the EEPROM if something gets wrong during a
-subsequence update.
+:ref:`-o <option_o>` flag, to have a working copy of the EEPROM data before any
+attempt to modify it. It can help restoring the EEPROM if something gets wrong
+during a subsequence update, thanks to the :ref:`-i <option_i>` option switch.
 
 Most FTDI device can run without an EEPROM. If something goes wrong, try to
-erase the EEPROM content, then restore the original content. For now,
-``ftconf.py`` does not support EEPROM restoration, but a Windows-only
-application FT_PROG_ is available from FTDI web site.
+erase the EEPROM content, then restore the original content.
 
 
 Option switches
@@ -132,16 +128,36 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
 ``-e``
   Erase the whole EEPROM. This may be useful to recover from a corrupted
   EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
-  to a default configuration. Note that without option ``-u``, the EEPROM
-  content is not actually modified, the script runs in dry-run mode.
+  to a default configuration. Note that without option :ref:`-u <option_u>`,
+  the EEPROM content is not actually modified, the script runs in dry-run mode.
+
+.. _option_i:
+
+``-i``
+  Load a INI file (as generated with the :ref:`-o <option_o>` option switch. It
+  is possible to select which section(s) from the INI file are loaded, using
+  :ref:`-l <option_l>` option switch. The ``values`` section may be modified,
+  as it takes precedence over the ``raw`` section. Note that without option
+  :ref:`-u <option_u>`, the EEPROM content is not actually modified, the script
+  runs in dry-run mode.
+
+.. _option_l:
+
+``-l <all|raw|values>``
+  Define which section(s) of the INI file are used to update the EEPROM content
+  along with the :ref:`-i <option_i>` option switch. Defaults to ``all``.
+
+  The supported feature set of the ``values`` is the same as the one exposed
+  through the :ref:`-c <option_c>` option switch. Unsupported feature are
+  ignored, and a warning is emitted for each unsupported feature.
 
 .. _option_m:
 
 ``-m <manufacturer>``
   Assign a new manufacturer name to the device. Note that without option
-  ``-u``, the EEPROM content is not actually modified, the script runs in
-  dry-run mode. Manufacturer names with ``/`` or ``:`` characters are rejected,
-  to avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
+  :ref:`-u <option_u>`, the EEPROM content is not actually modified, the script
+  runs in dry-run mode. Manufacturer names with ``/`` or ``:`` characters are
+  rejected, to avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
 
 
 .. _option_o:
@@ -153,25 +169,25 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
 
   * ``[values]`` that contain the decoded EEPROM configuration as key, value
     pair. Note that the keys and values can be used as configuration input, see
-    option ``-c``.
+    option :ref:`-c <option_c>`.
   * ``[raw]`` that contains a compact representation of the EEPROM raw content,
     encoded as hexadecimal strings.
 
 .. _option_p:
 
 ``-p <product>``
-  Assign a new product name to the device. Note that without option ``-u``,
-  the EEPROM content is not actually modified, the script runs in dry-run mode.
-  Product names with ``/`` or ``:`` characters are rejected, to avoid parsing
-  issues with FTDI :ref:`URLs <url_scheme>`.
+  Assign a new product name to the device. Note that without option :ref:`-u
+  <option_u>`, the EEPROM content is not actually modified, the script runs in
+  dry-run mode. Product names with ``/`` or ``:`` characters are rejected, to
+  avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
 
 .. _option_s:
 
 ``-s <serial>``
-  Assign a new serial number to the device. Note that without option ``-u``,
-  the EEPROM content is not actually modified, the script runs in dry-run mode.
-  Serial number with ``/`` or ``:`` characters are rejected, to avoid parsing
-  issues with FTDI :ref:`URLs <url_scheme>`.
+  Assign a new serial number to the device. Note that without option :ref:`-u
+  <option_u>`, the EEPROM content is not actually modified, the script runs in
+  dry-run mode. Serial number with ``/`` or ``:`` characters are rejected, to
+  avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
 
 .. _option_u:
 
