@@ -158,9 +158,10 @@ github repository.
 
 .. code-block:: shell
 
-     pip install -r requirements.txt
      git clone https://github.com/eblot/pyftdi.git
      cd pyftdi
+     # note: 'pip3' may simply be 'pip' on some hosts
+     pip3 install -r requirements.txt
      python3 setup.py install
 
 
@@ -173,10 +174,10 @@ Follow :ref:`install_from_source` then:
 
 .. code-block:: shell
 
-     pip install setuptools wheel sphinx sphinx_autodoc_typehints
+     pip3 install setuptools wheel sphinx sphinx_autodoc_typehints
      # Shpinx Read the Doc theme seems to never get a release w/ fixed issues
-     pip install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg=sphinx_rtd_theme
-     sphinx-build -b html ../pyftdi/pyftdi/doc .
+     pip3 install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg=sphinx_rtd_theme
+     sphinx-build -b html pyftdi/doc .
 
 The documentation may be accessed from the generated ``index.html`` entry file.
 

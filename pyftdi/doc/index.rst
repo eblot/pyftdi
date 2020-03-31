@@ -8,11 +8,13 @@ Documentation
 -------------
 
 The latest PyFtdi online documentation is always available from
-`here <https://eblot.github.io/pyftdi>`_, but beware this version may be more
-recent than the PyPI hosted version, as intermediate development versions are
-not published to `PyPi <https://pypi.org/project/pyftdi>`_.
+`here <https://eblot.github.io/pyftdi>`_.
 
-PyFtdi documentation can be build with Sphinx, see the installation
+Feware the online version may be more recent than the PyPI hosted version, as
+intermediate development versions are not published to
+`PyPi <https://pypi.org/project/pyftdi>`_.
+
+PyFtdi documentation can be locally build with Sphinx, see the installation
 instructions.
 
 Source code
