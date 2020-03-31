@@ -154,7 +154,8 @@ class FtdiEeprom:
             self._ftdi.open_from_device(device)
         if not ignore:
             self._eeprom = self._read_eeprom()
-            self._decode_eeprom()
+            if self._valid:
+                self._decode_eeprom()
 
     def close(self) -> None:
         """Close the current connection to the FTDI USB device,
@@ -179,6 +180,8 @@ class FtdiEeprom:
         self._dirty = set()
         if not ignore:
             self._eeprom = self._read_eeprom()
+            if self._valid:
+                self._decode_eeprom()
             self._decode_eeprom()
 
     @property
@@ -497,6 +500,7 @@ class FtdiEeprom:
         if not dry_run:
             eeprom = self._read_eeprom()
             if eeprom != self._eeprom:
+                pos = 0
                 for pos, (old, new) in enumerate(zip(self._eeprom, eeprom)):
                     if old != new:
                         break
@@ -600,9 +604,6 @@ class FtdiEeprom:
         return eeprom
 
     def _decode_eeprom(self):
-        if not self._valid:
-            self.log.debug('Skipping EEPROM decoding, invalid content')
-            return
         cfg = self._config
         cfg.clear()
         cfg['vendor_id'] = Hex4Int(sunpack('<H', self._eeprom[0x02:0x04])[0])
@@ -795,7 +796,10 @@ class FtdiEeprom:
             value >>= 4
         for bix in range(4):
             value = self._eeprom[0x1A + bix]
-            cfg['cbus_func_%d' % bix] = self.CBUSX(value).name
+            try:
+                cfg['cbus_func_%d' % bix] = self.CBUSX(value).name
+            except ValueError:
+                pass
         cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232h(self):
@@ -818,8 +822,14 @@ class FtdiEeprom:
         for bix in range(5):
             value = self._eeprom[0x18 + bix]
             low, high = value & 0x0F, value >> 4
-            cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUSH(low).name
-            cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUSH(high).name
+            try:
+                cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUSH(low).name
+            except ValueError:
+                pass
+            try:
+                cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUSH(high).name
+            except ValueError:
+                pass
         cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232r(self):
@@ -835,10 +845,16 @@ class FtdiEeprom:
         while True:
             value = self._eeprom[0x14 + bix]
             low, high = value & 0x0F, value >> 4
-            cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUS(low).name
+            try:
+                cfg['cbus_func_%d' % ((2*bix)+0)] = self.CBUS(low).name
+            except ValueError:
+                pass
             if bix == 2:
                 break
-            cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUS(high).name
+            try:
+                cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUS(high).name
+            except ValueError:
+                pass
             bix += 1
 
     def _decode_2232h(self):
