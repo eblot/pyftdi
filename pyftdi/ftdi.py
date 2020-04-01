@@ -1611,6 +1611,8 @@ class Ftdi:
            :return: checksum
         """
         length = len(data)
+        if not length:
+            raise ValueError('No data to checksum')
         if length & 0x1:
             raise ValueError('Length not even')
         # NOTE: checksum is computed using 16-bit values in little endian

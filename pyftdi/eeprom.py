@@ -327,7 +327,7 @@ class FtdiEeprom:
                 raise ValueError("Invalid address in '%s'' section" % sect)
             except ValueError:
                 raise ValueError("Invalid line in '%s'' section" % sect)
-            self._compute_crc(True)
+            self._compute_crc(self._eeprom, True)
             if not self._valid:
                 raise ValueError('Loaded RAW section is invalid (CRC mismatch')
             loaded = True
@@ -572,14 +572,14 @@ class FtdiEeprom:
         self._dirty.clear()
         self._modified = True
 
-    def _compute_crc(self, check=False):
+    def _compute_crc(self, eeprom: Union[bytes, bytearray], check=False):
         mtp = self._ftdi.device_version == 0x1000
-        crc_pos = 0x100 if mtp else len(self._eeprom)
+        crc_pos = 0x100 if mtp else len(eeprom)
         crc_size = scalc('<H')
         if not check:
             # check mode: add CRC itself, so that result should be zero
             crc_pos -= crc_size
-        crc = self._ftdi.calc_eeprom_checksum(self._eeprom[:crc_pos])
+        crc = self._ftdi.calc_eeprom_checksum(eeprom[:crc_pos])
         if check:
             self._valid = not bool(crc)
             if not self._valid:
@@ -589,13 +589,13 @@ class FtdiEeprom:
         return crc, crc_pos, crc_size
 
     def _update_crc(self):
-        crc, crc_pos, crc_size = self._compute_crc()
+        crc, crc_pos, crc_size = self._compute_crc(self._eeprom, False)
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
 
     def _read_eeprom(self) -> bytes:
         buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
         eeprom = bytearray(buf)
-        crc = self._compute_crc(True)[0]
+        crc = self._compute_crc(eeprom, True)[0]
         if crc:
             if self.is_empty:
                 self.log.info('No EEPROM or EEPROM erased')
