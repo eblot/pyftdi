@@ -76,6 +76,19 @@ class GpioAsyncTestCase(TestCase):
         else:
             cls.loader = None
         cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        if cls.url == 'ftdi:///1':
+            # assumes that if not specific device is used, and a multiport
+            # device is connected, there is no loopback wires between pins of
+            # the same port. This hack allows to run the same test with a
+            # FT232H, then a FT2232H for ex, to that with two test sessions
+            # the whole test set is run. If a specific device is selected
+            # assume the HW always match the expected configuration.
+            ftdi = Ftdi()
+            ftdi.open_from_url(cls.url)
+            count = ftdi.device_port_count
+            cls.skip_loopback = count > 1
+        else:
+            cls.skip_loopback = False
 
     @classmethod
     def tearDownClass(cls):
@@ -85,6 +98,8 @@ class GpioAsyncTestCase(TestCase):
     def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
         """
+        if self.skip_loopback:
+            raise SkipTest('Skip loopback test on multiport device')
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio = GpioAsyncController()
         gpio.configure(self.url, direction=direction, frequency=1e4,
@@ -121,6 +136,8 @@ class GpioAsyncTestCase(TestCase):
     def test_gpio_loopback(self):
         """Check I/O.
         """
+        if self.skip_loopback:
+            raise SkipTest('Skip loopback test on multiport device')
         gpio = GpioAsyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction, frequency=800000)
@@ -198,10 +215,25 @@ class GpioSyncTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        if cls.url == 'ftdi:///1':
+            # assumes that if not specific device is used, and a multiport
+            # device is connected, there is no loopback wires between pins of
+            # the same port. This hack allows to run the same test with a
+            # FT232H, then a FT2232H for ex, to that with two test sessions
+            # the whole test set is run. If a specific device is selected
+            # assume the HW always match the expected configuration.
+            ftdi = Ftdi()
+            ftdi.open_from_url(cls.url)
+            count = ftdi.device_port_count
+            cls.skip_loopback = count > 1
+        else:
+            cls.skip_loopback = False
 
     def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
         """
+        if self.skip_loopback:
+            raise SkipTest('Skip loopback test on multiport device')
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio = GpioSyncController()
         gpio.configure(self.url, direction=direction, initial=0xee)
