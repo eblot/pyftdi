@@ -322,8 +322,9 @@ class Ftdi:
     BUS_CLOCK_HIGH = 30.0E6  # 30 MHz
     BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
     BAUDRATE_REF_HIGH = int(12.0E6)  # 12 MHz
+    BITBANG_BAUDRATE_RATIO_BASE = 16
+    BITBANG_BAUDRATE_RATIO_HIGH = 5
     BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift for UART, in %
-    BITBANG_CLOCK_MULTIPLIER = 4
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
 
@@ -784,7 +785,6 @@ class Ftdi:
            :param direction: a bitfield specifying the FTDI GPIO direction,
                 where high level defines an output, and low level defines an
                 input
-           :param initial: ignored
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
            :param baudrate: pace to sequence GPIO exchanges
@@ -2171,18 +2171,22 @@ class Ftdi:
            :return: a 3-uple of the apprimated baudrate, the value and index
                     to use as the USB configuration parameter
         """
-        if self.ic_name.endswith('am'):
+        if self.device_version == 0x200:
             return self._convert_baudrate_legacy(baudrate)
         if self.is_H_series and baudrate >= 1200:
             hispeed = True
             clock = self.BAUDRATE_REF_HIGH
+            bb_ratio = self.BITBANG_BAUDRATE_RATIO_HIGH
         else:
             hispeed = False
             clock = self.BAUDRATE_REF_BASE
+            bb_ratio = self.BITBANG_BAUDRATE_RATIO_BASE
         if baudrate > clock:
             raise ValueError('Invalid baudrate (too high)')
         if baudrate < ((clock >> 14) + 1):
             raise ValueError('Invalid baudrate (too low)')
+        if self.is_bitbang_enabled:
+            baudrate //= bb_ratio
         div8 = int(round((8 * clock) / baudrate))
         div = div8 >> 3
         div |= self.FRAC_DIV_CODE[div8 & 0x7] << 14
@@ -2198,21 +2202,15 @@ class Ftdi:
             index <<= 8
             index |= self._index
         estimate = int(((8 * clock) + (div8//2))//div8)
+        if self.is_bitbang_enabled:
+            estimate *= bb_ratio
         return estimate, value, index
 
     def _set_baudrate(self, baudrate: int, constrain: bool) -> int:
         if self.is_mpsse:
             raise FtdiFeatureError('Cannot change frequency w/ current mode')
-        if self.is_bitbang_enabled:
-            # not the slighest idea of where this value comes from, but
-            # this generates the expected bitrate...
-            baudrate = baudrate//5
-            # baudrate //= Ftdi.BITBANG_CLOCK_MULTIPLIER
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
-        if self.is_bitbang_enabled:
-            actual = actual*5
-            # actual *= Ftdi.BITBANG_CLOCK_MULTIPLIER
         self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
                        actual, delta, index, value)
         # return actual
