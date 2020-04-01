@@ -157,8 +157,8 @@ def main():
                 hexa = ' '.join(['%02x' % x for x in eeprom.data[pos:pos+16]])
                 print(indent, hexa, sep='')
         if args.update:
-            eeprom.commit(False)
-            # eeprom.reset_device()
+            if eeprom.commit(False):
+                eeprom.reset_device()
         if args.verbose > 0:
             eeprom.dump_config()
         if args.output:

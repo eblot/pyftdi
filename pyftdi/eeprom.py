@@ -492,10 +492,10 @@ class FtdiEeprom:
 
            :return: True if some changes have been committed to the EEPROM
         """
-        if not self._modified:
-            self.log.info('No change to commit')
-            return False
         self._sync_eeprom()
+        if not self._modified:
+            self.log.warning('No change to commit, EEPROM not modified')
+            return False
         self._ftdi.overwrite_eeprom(self._eeprom, dry_run=dry_run)
         if not dry_run:
             eeprom = self._read_eeprom()
@@ -562,6 +562,7 @@ class FtdiEeprom:
 
     def _sync_eeprom(self):
         if not self._dirty:
+            self.log.debug('No change detected for EEPROM content')
             return
         if any([x in self._dirty for x in self.VAR_STRINGS]):
             self._generate_var_strings()
@@ -571,6 +572,7 @@ class FtdiEeprom:
         self._decode_eeprom()
         self._dirty.clear()
         self._modified = True
+        self.log.debug('EEPROM content regenerated (not yet committed)')
 
     def _compute_crc(self, eeprom: Union[bytes, bytearray], check=False):
         mtp = self._ftdi.device_version == 0x1000
