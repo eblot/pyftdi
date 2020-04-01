@@ -136,7 +136,7 @@ class Ftdi:
     # Note that the FTDI datasheets contradict themselves, so
     # the following values may not be the right ones...
     FIFO_SIZES = {
-        0x0200: (128, 128),    # FT232AM
+        0x0200: (128, 128),    # FT232AM: TX: 128, RX: 128
         0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
         0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
         0x0600: (256, 128),    # FT232R:  TX: 256, RX: 128

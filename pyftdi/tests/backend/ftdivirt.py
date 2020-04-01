@@ -15,11 +15,12 @@
 from array import array
 from binascii import hexlify
 from collections import deque
+from enum import IntEnum, unique
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
 from threading import Event, Lock, Thread
-from time import sleep
+from time import sleep, time as now
 from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from pyftdi.tracer import FtdiMpsseTracer
@@ -40,12 +41,13 @@ class VirtMpsseTracer(FtdiMpsseTracer):
 
 
 class Fifo:
-    """Communication queues."""
+    """Communication queue."""
 
-    def __init__(self):
+    def __init__(self, size: int = 0):
         self.q = deque()
         self.lock = Lock()
         self.event = Event()
+        self.size: int = size
         self.stamp: int = 0
 
 
@@ -62,16 +64,59 @@ class VirtFtdiPort:
         tx: Fifo  # FTDI-to-host
 
 
+    @unique
+    class BitMode(IntEnum):
+        """Function mode selection.
+
+           It is used so many times hereafter than relying on FTDICONST is
+           not very handy, so redefine it
+        """
+
+        RESET = 0x00    # switch off altnerative mode (default to UART)
+        BITBANG = 0x01  # classical asynchronous bitbang mode
+        MPSSE = 0x02    # MPSSE mode, available on 2232x chips
+        SYNCBB = 0x04   # synchronous bitbang mode
+        MCU = 0x08      # MCU Host Bus Emulation mode,
+        OPTO = 0x10     # Fast Opto-Isolated Serial Interface Mode
+        CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
+        SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
+
+    FIFO_SIZES = {
+        0x0200: (128, 128),    # FT232AM: TX: 128, RX: 128
+        0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
+        0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
+        0x0600: (256, 128),    # FT232R:  TX: 256, RX: 128
+        0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
+        0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
+        0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
+        0x1000: (512, 512),    # FT-X:    TX: 512, RX: 512
+    }
+    """FTDI chip internal FIFO sizes.
+
+       TX: to-host, RX: from-host
+    """
+
+    @unique
+    class Command(IntEnum):
+        """Command type for command queue."""
+
+        SET_BITMODE = 0x1  # Change the bitmode
+
+
     def __init__(self, parent: 'VirtFtdi', iface: int):
         self.log = getLogger('pyftdi.virt.ftdi[{iface}]')
         self._parent = parent
         self._iface: int = iface
-        self._bitmode = FTDICONST.get_value('bitmode', 'reset')
+        self._bitmode = self.BitMode.RESET
+        self._hispeed: bool = False
         self._baudrate: int = 0
+        self._bb_clock: int = 0
         self._mpsse: Optional[VirtMpsseTracer] = None
         self._direction: int = 0
         self._gpio: int = 0
-        self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(Fifo(), Fifo())
+        self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(
+            Fifo(self.FIFO_SIZES[self._parent.version][1]),
+            Fifo(self.FIFO_SIZES[self._parent.version][0]))
         self._cbus_dir: int = 0  # logical (commands)
         self._cbus: int = 0  # logical (commands)
         self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
@@ -79,13 +124,18 @@ class VirtFtdiPort:
         self._cbusp_force: int = 0  # physical (pins)
         self._cbusp_active: int = 0  # physical (pins)
         self._resume: bool = True
-        bus = parent.bus
-        address = parent.address
-        self._rx_thread = Thread(target=self._rx_worker,
-                                 name=f'Ftdi-{bus}:{address}/{iface}',
-                                 daemon=True)
-        self._rx_thread.start()
         self._next_stamp = 0
+        self._cmd_q = Fifo()
+        self._rx_thread = Thread(
+            target=self._rx_worker,
+            name=f'Ftdi-{parent.bus}:{parent.address}/{iface}-Rx',
+            daemon=True)
+        self._tx_thread = Thread(
+            target=self._tx_worker,
+            name=f'Ftdi-{parent.bus}:{parent.address}/{iface}-Tx',
+            daemon=True)
+        self._rx_thread.start()
+        self._tx_thread.start()
         self._stream_txd = deque()  # represent the TXD pin
 
     def terminate(self):
@@ -93,6 +143,9 @@ class VirtFtdiPort:
         if self._rx_thread:
             self._rx_thread.join()
             self._rx_thread = None
+        if self._tx_thread:
+            self._tx_thread.join()
+            self._tx_thread = None
 
     @property
     def baudrate(self) -> int:
@@ -137,21 +190,24 @@ class VirtFtdiPort:
         return len(data)
 
     def read(self, buff: array, timeout: int) -> int:
-        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
-            count = len(buff)
-            if count < 2:
-                return 0
+        fifo = self._fifos.tx
+        count = len(buff)
+        if count < 2:
+            self.log.warning('Never handle buffers that cannot fit status')
+            return 0
+        if self._bitmode in (self.BitMode.RESET, self.BitMode.BITBANG):
             status = self.modem_status
             buff[0], buff[1] = status[0], status[1]
             pos = 2
-            with self._fifos.tx.lock:
-                while self._fifos.tx.q and pos < count:
-                    buff[pos] = self._fifos.tx.q.popleft()
+            with fifo.lock:
+                while fifo.q and pos < count:
+                    buff[pos] = fifo.q.popleft()
                     pos += 1
+            self.log.debug('popped %d bytes', pos)
             return pos
         mode = FTDICONST.get_name('bitmode', self._bitmode)
-        self.log.debug('Read buffer discarded, mode %s', mode)
-        self.log.debug('. (%d)', len(buff))
+        self.log.warning('Read buffer discarded, mode %s', mode)
+        self.log.warning('. bbr (%d)', len(buff))
         return 0
 
     def uart_write(self, buffer: bytes) -> None:
@@ -188,7 +244,7 @@ class VirtFtdiPort:
         # B1.6  Transmitter empty (TEMT)
         # B1.7  Error in RCVR FIFO
         buf0 = 0x02  # magic constant, no idea for now
-        if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
+        if self._bitmode == self.BitMode.RESET:
             cts = 0x01 if self._gpio & 0x08 else 0
             dsr = 0x02 if self._gpio & 0x20 else 0
             ri = 0x04 if self._gpio & 0x80 else 0
@@ -234,6 +290,9 @@ class VirtFtdiPort:
         if mode == 'mpsse':
             if not self._mpsse:
                 self._mpsse = VirtMpsseTracer(self._parent.version)
+        with self._cmd_q.lock:
+            self._cmd_q.q.append((self.Command.SET_BITMODE, self._bitmode))
+            self._cmd_q.event.set()
 
     def control_set_latency_timer(self, wValue: int, wIndex: int,
                                   data: array) -> None:
@@ -288,8 +347,13 @@ class VirtFtdiPort:
         else:
             subdiv = FRAC_INV_DIV[subdiv_code]
             baudrate = round((refclock * 8) / (div * 8 + subdiv))
-        self.log.info('> ftdi set_baudrate %d bps', baudrate)
+        self._hispeed = hispeed
         self._baudrate = int(baudrate)
+        multiplier = FTDICONST.get_value('BITBANG_BAUDRATE_RATIO',
+                                         'HIGH' if hispeed else 'BASE')
+        self._bb_clock = self._baudrate * multiplier
+        self.log.warning('> ftdi set_baudrate %d bps, HS: %s, bb %d Hz',
+                         baudrate, hispeed, self._bb_clock)
 
     def control_set_data(self, wValue: int, wIndex: int,
                          data: array) -> None:
@@ -451,30 +515,72 @@ class VirtFtdiPort:
                     continue
                 self._fifos.rx.event.clear()
                 if not self._fifos.rx.q:
-                    self.log.warning('wake up w/o RX data')
+                    self.log.error('wake up w/o RX data')
                     continue
                 # TODO: for now, handle all in once, which does not match
                 # real HW
                 self._fifos.rx.stamp += 1
                 data = bytes(self._fifos.rx.q)
                 self._fifos.rx.q.clear()
-            if self._bitmode == FTDICONST.get_value('bitmode', 'mpsse'):
+            if self._bitmode == self.BitMode.MPSSE:
                 self._mpsse.send(self._iface, data)
                 return len(data)
-            if self._bitmode == FTDICONST.get_value('bitmode', 'reset'):
+            if self._bitmode == self.BitMode.RESET:
                 self._stream_txd.extend(data)
-            elif self._bitmode == FTDICONST.get_value('bitmode', 'bitbang'):
+            elif self._bitmode == self.BitMode.BITBANG:
                 for byte in data:
                     # only 8 LSBs are addressable through this command
                     self._gpio &= ~0xFF
                     self._gpio |= byte & self._direction
-                    self.log.info('. %02x: %s', self._gpio, f'{self._gpio:08b}')
+                    self.log.debug('. bbw %02x: %s',
+                                   self._gpio, f'{self._gpio:08b}')
             else:
-                mode = FTDICONST.get_name('bitmode', self._bitmode)
+                try:
+                    mode = self.BitMode(self._bitmode).name
+                except ValueError:
+                    mode = 'unknown'
                 self.log.warning('Write buffer discarded, mode %s', mode)
                 self.log.warning('. (%d) %s',
                                  len(data), hexlify(data).decode())
         self.log.debug('End of worker %s', self._rx_thread.name)
+
+    def _tx_worker(self):
+        """Background handling of data sent to host."""
+        bitmode = self.BitMode.RESET
+        last_ts = 0
+        while self._resume:
+            with self._cmd_q.lock:
+                command = None
+                if self._cmd_q.event.wait(self.POLL_DELAY):
+                    self._cmd_q.event.clear()
+                    if not self._cmd_q.q:
+                        self.log.error('wake up w/o CMD')
+                        continue
+                    command = self._cmd_q.q.popleft()
+            if command is not None:
+                if command[0] == self.Command.SET_BITMODE:
+                    bitmode = command[1]
+                    last_ts = now()
+                    continue
+                self.log.error('Unimplemented support for command %d', command)
+                continue
+            # background task handling starts here
+            if bitmode == self.BitMode.BITBANG:
+                ts = now()
+                # how much time has elapsed since last background action
+                elapsed = ts-last_ts
+                last_ts = ts
+                # how many bytes should have been captured since last action
+                byte_count = round(self._baudrate*elapsed)
+                # fill the TX FIFO with as many bytes, stop if full
+                if byte_count:
+                    fifo = self._fifos.tx
+                    with fifo.lock:
+                        free_count = fifo.size - len(fifo.q)
+                        push_count = min(free_count, byte_count)
+                        fifo.q.extend([self._gpio] * push_count)
+                    elapsed *= 1000
+                    self.log.debug('in %.3fms -> %d', elapsed, push_count)
 
     def _wait_for_sync(self) -> None:
         """Introduce a small delay so that direct access to periphal side of
@@ -495,7 +601,7 @@ class VirtFtdiPort:
                 continue
             self._fifos.rx.lock.release()
             break
-        self.log.debug(f'Sync {self._fifos.rx.stamp} < {self._next_stamp}')
+        self.log.debug('Sync %s < %s', self._fifos.rx.stamp, self._next_stamp)
 
 
 class VirtFtdi:
