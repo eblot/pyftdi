@@ -71,7 +71,7 @@ class GpioAsyncTestCase(TestCase):
     def setUpClass(cls):
         if VirtLoader:
             cls.loader = VirtLoader()
-            with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            with open('pyftdi/tests/resources/ft232r.yaml', 'rb') as yfp:
                 cls.loader.load(yfp)
         else:
             cls.loader = None
@@ -114,13 +114,13 @@ class GpioAsyncTestCase(TestCase):
         # stream mode always gives a bytes buffer
         port.write([0xaa for _ in range(256)])
         ingress = port.read(100, peek=False, noflush=False)
-    #    self.assertIsInstance(ingress, bytes)
-    #    self.assertEqual(len(ingress), 1)
+        self.assertIsInstance(ingress, bytes)
+        self.assertEqual(len(ingress), 100)
         # direct mode is not available with multi-byte mode
         self.assertRaises(ValueError, port.read, 3, True)
-    #     ingress = port.read(3)
-    #     self.assertIsInstance(ingress, bytes)
-    #     self.assertEqual(len(ingress), 3)
+        ingress = port.read(3)
+        self.assertIsInstance(ingress, bytes)
+        self.assertEqual(len(ingress), 3)
         port.write(0x00)
         port.write(0xFF)
         # only 8 bit values are accepted
@@ -133,7 +133,7 @@ class GpioAsyncTestCase(TestCase):
         port.set_direction(0xFF, 0xFF & ~direction)
         gpio.close()
 
-    def test_gpio_loopback(self):
+    def _test_gpio_loopback(self):
         """Check I/O.
         """
         if self.skip_loopback:
@@ -467,9 +467,9 @@ class GpioMpsseTestCase(TestCase):
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
+    #suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
+    #suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    #suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
     return suite_
 
 def virtualize():
