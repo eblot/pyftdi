@@ -87,7 +87,8 @@ class GpioAsyncTestCase(TestCase):
         """
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio = GpioAsyncController()
-        gpio.configure(self.url, direction=direction, frequency=1e4)
+        gpio.configure(self.url, direction=direction, frequency=1e4,
+                       initial=0x0)
         port = gpio.get_gpio()  # useless, for API duck typing
         # legacy API: peek mode, 1 byte
         ingress = port.read()
@@ -98,7 +99,6 @@ class GpioAsyncTestCase(TestCase):
         # stream mode always gives a bytes buffer
         port.write([0xaa for _ in range(256)])
         ingress = port.read(100, peek=False, noflush=False)
-        print('ingress', len(ingress), ingress)
     #    self.assertIsInstance(ingress, bytes)
     #    self.assertEqual(len(ingress), 1)
         # direct mode is not available with multi-byte mode
@@ -118,7 +118,7 @@ class GpioAsyncTestCase(TestCase):
         port.set_direction(0xFF, 0xFF & ~direction)
         gpio.close()
 
-    def _test_gpio_loopback(self):
+    def test_gpio_loopback(self):
         """Check I/O.
         """
         gpio = GpioAsyncController()
@@ -151,26 +151,27 @@ class GpioAsyncTestCase(TestCase):
         gpio.close()
 
     def test_gpio_baudate(self):
+        # this test requires an external device (logic analyser or scope) to
+        # check the bitbang read and bitbang write signal (BB_RD, BB_WR) and
+        # mesure their frequency. The EEPROM should be configured to enable
+        # those signal on some of the CBUS pins, for example.
         gpio = GpioAsyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction)
         buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
-        gpio.set_frequency(50e3)
-        sleep(0.01)
-        gpio.write(buf)
-        gpio.read(1024)
-        gpio.set_frequency(200e3)
-        sleep(0.01)
-        gpio.write(buf)
-        gpio.read(1024)
-        gpio.set_frequency(1e6)
-        sleep(0.01)
-        gpio.write(buf)
-        gpio.read(1024)
-        gpio.set_frequency(5e6)
-        sleep(0.01)
-        gpio.write(buf)
-        gpio.read(1024)
+        freqs = [50e3, 200e3, 1e6, 3e6]
+        if gpio.ftdi.is_H_series:
+            freqs.extend([6e6, 10e6, 12e6])
+        gpio.read(128)
+        for freq in freqs:
+            # set the bitbang refresh rate
+            gpio.set_frequency(freq)
+            self.assertEqual(gpio.frequency, freq)
+            # be sure to leave enough time to purge buffers (HW FIFO) or
+            # the frequency changes occur on the current buffer...
+            gpio.write(buf)
+            gpio.read(128)
+            sleep(0.01)
         gpio.close()
 
 
@@ -224,22 +225,25 @@ class GpioSyncTestCase(TestCase):
         gpio.close()
 
     def test_gpio_baudate(self):
+        # this test requires an external device (logic analyser or scope) to
+        # check the bitbang read and bitbang write signal (BB_RD, BB_WR) and
+        # mesure their frequency. The EEPROM should be configured to enable
+        # those signal on some of the CBUS pins, for example.
         gpio = GpioSyncController()
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction)
-        buf = bytes([0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00, 0xf0, 0x00])
-        gpio.set_frequency(50e3)
-        sleep(0.01)
-        gpio.exchange(buf)
-        gpio.set_frequency(200e3)
-        sleep(0.01)
-        gpio.exchange(buf)
-        gpio.set_frequency(1e6)
-        sleep(0.01)
-        gpio.exchange(buf)
-        gpio.set_frequency(5e6)
-        sleep(0.01)
-        gpio.exchange(buf)
+        buf = bytes([0xf0, 0x00] * 64)
+        freqs = [50e3, 200e3, 1e6, 3e6]
+        if gpio.ftdi.is_H_series:
+            freqs.extend([6e6, 10e6, 12e6])
+        for freq in freqs:
+            # set the bitbang refresh rate
+            gpio.set_frequency(freq)
+            self.assertEqual(gpio.frequency, freq)
+            # be sure to leave enough time to purge buffers (HW FIFO) or
+            # the frequency changes occur on the current buffer...
+            gpio.exchange(buf)
+            sleep(0.01)
         gpio.close()
 
 
@@ -373,7 +377,7 @@ class GpioMpsseTestCase(TestCase):
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         cls.debug = debug
 
-    def _test_default_gpio(self):
+    def test_default_gpio(self):
         """Check I/O.
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
@@ -392,7 +396,7 @@ class GpioMpsseTestCase(TestCase):
         gpio_in.close()
         gpio_out.close()
 
-    def _test_peek_gpio(self):
+    def test_peek_gpio(self):
         """Check I/O.
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
@@ -431,9 +435,9 @@ class GpioMpsseTestCase(TestCase):
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
-    # suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    # suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
-    # suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
     return suite_
 
 def virtualize():
