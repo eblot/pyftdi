@@ -316,6 +316,7 @@ class VirtFtdiPort:
                           data: array) -> bytes:
         mode = FTDICONST.get_name('bitmode', self._bitmode)
         self.log.info('> ftdi read_pins %s', mode)
+        self._wait_for_sync()
         if mode == 'cbus':
             cbus = self._cbus & ~self._cbus_dir & 0xF
             self.log.info('< cbus 0x%01x: %s', cbus, f'{cbus:04b}')
@@ -551,6 +552,11 @@ class VirtFtdiPort:
         while self._resume:
             with self._cmd_q.lock:
                 command = None
+                # in order not to overload CPU with real-time computation,
+                # time is sliced into POLL_DELAY period; every POLL_DELAY
+                # period, this thead generates as many data as the real HW
+                # would have generated during this period (~ epsilon due to
+                # rounding)
                 if self._cmd_q.event.wait(self.POLL_DELAY):
                     self._cmd_q.event.clear()
                     if not self._cmd_q.q:
@@ -579,8 +585,7 @@ class VirtFtdiPort:
                         free_count = fifo.size - len(fifo.q)
                         push_count = min(free_count, byte_count)
                         fifo.q.extend([self._gpio] * push_count)
-                    elapsed *= 1000
-                    self.log.debug('in %.3fms -> %d', elapsed, push_count)
+                    self.log.debug('in %.3fms -> %d', elapsed*1000, push_count)
 
     def _wait_for_sync(self) -> None:
         """Introduce a small delay so that direct access to periphal side of
