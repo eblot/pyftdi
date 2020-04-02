@@ -102,14 +102,14 @@ class GpioAsyncTestCase(TestCase):
         if cls.loader:
             cls.loader.unload()
 
-    def _test_gpio_values(self):
+    def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
         """
         if self.skip_loopback:
             raise SkipTest('Skip loopback test on multiport device')
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio = GpioAsyncController()
-        gpio.configure(self.url, direction=direction, frequency=1e4,
+        gpio.configure(self.url, direction=direction, frequency=1e6,
                        initial=0x0)
         port = gpio.get_gpio()  # useless, for API duck typing
         # legacy API: peek mode, 1 byte
@@ -122,12 +122,13 @@ class GpioAsyncTestCase(TestCase):
         port.write([0xaa for _ in range(256)])
         ingress = port.read(100, peek=False, noflush=False)
         self.assertIsInstance(ingress, bytes)
-        self.assertEqual(len(ingress), 100)
+        self.assertGreater(len(ingress), 2)
         # direct mode is not available with multi-byte mode
         self.assertRaises(ValueError, port.read, 3, True)
         ingress = port.read(3)
         self.assertIsInstance(ingress, bytes)
-        self.assertEqual(len(ingress), 3)
+        self.assertGreater(len(ingress), 0)
+        self.assertLessEqual(len(ingress), 3)
         port.write(0x00)
         port.write(0xFF)
         # only 8 bit values are accepted
@@ -149,7 +150,7 @@ class GpioAsyncTestCase(TestCase):
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction, frequency=800000)
         for out in range(16):
-            print(f'Write {out:04b} -> {out << 4:08b}')
+            # print(f'Write {out:04b} -> {out << 4:08b}')
             gpio.write(out << 4)
             fback = gpio.read()
             lsbs = fback & ~direction
@@ -162,7 +163,8 @@ class GpioAsyncTestCase(TestCase):
         gpio.write(outs)
         gpio.ftdi.read_data(512)
         for _ in range(len(outs)):
-            gpio.read(14)
+            ingress = gpio.read(14)
+            # print('READ', ingress)
         last = outs[-1] >> 4
         for _ in range(10):
             fbacks = gpio.read(1000)
@@ -175,7 +177,7 @@ class GpioAsyncTestCase(TestCase):
                 self.assertEqual(msbs, last)
         gpio.close()
 
-    def _test_gpio_baudate(self):
+    def test_gpio_baudate(self):
         # this test requires an external device (logic analyser or scope) to
         # check the bitbang read and bitbang write signal (BB_RD, BB_WR) and
         # mesure their frequency. The EEPROM should be configured to enable
@@ -500,8 +502,9 @@ def main():
     doctest.testmod(modules[__name__])
     debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
     if debug:
-        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(name)-20s '
-                                      '%(message)s', '%H:%M:%S')
+        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
+                                      ' %(name)-18s [%(lineno)4d] %(message)s',
+                                      '%H:%M:%S')
     else:
         formatter = logging.Formatter('%(message)s')
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
@@ -517,4 +520,9 @@ def main():
 
 
 if __name__ == '__main__':
+    # Useful environment variables:
+    #  FTDI_DEVICE: a specific FTDI URL, default to ftdi:///1
+    #  FTDI_LOGLEVEL: a Logger debug level, to define log verbosity
+    #  FTDI_DEBUG: to enable/disable debug mode
+    #  FTDI_VIRTUAL: to use a virtual device rather than a physical device
     main()
