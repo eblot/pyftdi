@@ -8,6 +8,7 @@
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-branches
 #pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
@@ -25,6 +26,7 @@ from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
+
 
 # need support for f-string syntax
 if version_info[:2] < (3, 6):
@@ -311,8 +313,7 @@ class VirtFtdiPort:
             # first request
             while not self._rx_pop_event.wait(4*self.POLL_DELAY):
                 if not self._resume:
-                    self.log.error('Bailing out on error')
-                    return 0
+                    break
                 # timeout, need to wait more
                 self.log.warning('Waiting for RX FIFO')
         return len(data)
@@ -747,10 +748,13 @@ class VirtFtdiPort:
                 with rx_fifo.lock:
                     rx_fifo.q.popleft()
                     self._rx_pop_event.set()
+            self.log.debug('End of worker %s', self._rx_thread.name)
+        except Exception as exc:
+            self.log.error('Dead of worker %s: %s', self._rx_thread.name, exc)
+            raise
         finally:
             # ensure other threads to not run forever if this one is on error
             self._resume = False
-        self.log.debug('End of worker %s', self._rx_thread.name)
 
     def _tx_worker(self):
         """Background handling of data sent to host."""
@@ -783,7 +787,7 @@ class VirtFtdiPort:
                         # loop delay
                     else:
                         self.log.error('Unimplemented support for command %d',
-                                   command)
+                                       command)
                         continue
                 # background task handling starts here
                 if bitmode == self.BitMode.BITBANG:
@@ -812,10 +816,13 @@ class VirtFtdiPort:
                             with tx_fifo.lock:
                                 tx_fifo.q.clear()
                     purge_tx = False
+            self.log.debug('End of worker %s', self._tx_thread.name)
+        except Exception as exc:
+            self.log.error('Dead of worker %s: %s', self._tx_thread.name, exc)
+            raise
         finally:
             # ensure other threads to not run forever if this one is on error
             self._resume = False
-        self.log.debug('End of worker %s', self._tx_thread.name)
 
 class VirtFtdi:
     """Virtual FTDI device.

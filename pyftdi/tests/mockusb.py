@@ -26,6 +26,7 @@ from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 
@@ -453,8 +454,8 @@ class MockSimpleGpioTestCase(TestCase):
         vftdi = self.loader.get_virtual_ftdi(1, 1)
         vport = vftdi.get_port(1)
         baudrate = 1000000
-        gpio.set_frequency(1000000)
-        print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
+        gpio.set_frequency(baudrate)
+        #print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
         gpio.close()
 
 class MockSimpleUartTestCase(TestCase):
@@ -873,13 +874,21 @@ def suite():
 
 def main():
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
+    debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+    if debug:
+        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
+                                      ' %(name)-18s [%(lineno)4d] %(message)s',
+                                      '%H:%M:%S')
+    else:
+        formatter = logging.Formatter('%(message)s')
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
         raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
+    FtdiLogger.set_formatter(formatter)
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('backend.usbvirt', )
     # Ensure the virtual backend can be found and is loaded
