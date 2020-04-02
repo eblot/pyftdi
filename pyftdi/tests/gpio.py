@@ -73,6 +73,13 @@ class GpioAsyncTestCase(TestCase):
             cls.loader = VirtLoader()
             with open('pyftdi/tests/resources/ft232r.yaml', 'rb') as yfp:
                 cls.loader.load(yfp)
+            vftdi = cls.loader.get_virtual_ftdi(1, 1)
+            vport = vftdi.get_port(1)
+            # create virtual connections as real HW
+            in_pins = [vport[pos] for pos in range(4)]
+            out_pins = [vport[pos] for pos in range(4, 8)]
+            for in_pin, out_pin in zip(in_pins, out_pins):
+                out_pin.connect_to(in_pin)
         else:
             cls.loader = None
         cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
@@ -95,7 +102,7 @@ class GpioAsyncTestCase(TestCase):
         if cls.loader:
             cls.loader.unload()
 
-    def test_gpio_values(self):
+    def _test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
         """
         if self.skip_loopback:
@@ -133,7 +140,7 @@ class GpioAsyncTestCase(TestCase):
         port.set_direction(0xFF, 0xFF & ~direction)
         gpio.close()
 
-    def _test_gpio_loopback(self):
+    def test_gpio_loopback(self):
         """Check I/O.
         """
         if self.skip_loopback:
@@ -142,6 +149,7 @@ class GpioAsyncTestCase(TestCase):
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         gpio.configure(self.url, direction=direction, frequency=800000)
         for out in range(16):
+            print(f'Write {out:04b} -> {out << 4:08b}')
             gpio.write(out << 4)
             fback = gpio.read()
             lsbs = fback & ~direction
@@ -150,7 +158,7 @@ class GpioAsyncTestCase(TestCase):
             self.assertEqual(lsbs, out)
             # check level of outputs match the ones written
             self.assertEqual(msbs, out)
-        outs = list([(out & 0xf)<<4 for out in range(1000)])
+        outs = list([(out & 0xf) << 4 for out in range(1000)])
         gpio.write(outs)
         gpio.ftdi.read_data(512)
         for _ in range(len(outs)):
@@ -167,7 +175,7 @@ class GpioAsyncTestCase(TestCase):
                 self.assertEqual(msbs, last)
         gpio.close()
 
-    def test_gpio_baudate(self):
+    def _test_gpio_baudate(self):
         # this test requires an external device (logic analyser or scope) to
         # check the bitbang read and bitbang write signal (BB_RD, BB_WR) and
         # mesure their frequency. The EEPROM should be configured to enable
@@ -490,13 +498,20 @@ def virtualize():
 def main():
     import doctest
     doctest.testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+    if debug:
+        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(name)-20s '
+                                      '%(message)s', '%H:%M:%S')
+    else:
+        formatter = logging.Formatter('%(message)s')
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
         raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
+    FtdiLogger.set_formatter(formatter)
     virtualize()
     ut_main(defaultTest='suite')
 

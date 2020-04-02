@@ -15,7 +15,7 @@
 from array import array
 from binascii import hexlify
 from collections import deque
-from enum import IntEnum, unique
+from enum import IntEnum, IntFlag, unique
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
@@ -49,6 +49,92 @@ class Fifo:
         self.event = Event()
         self.size: int = size
         self.stamp: int = 0
+
+
+class VirtualFtdiPin:
+    """Virtual FTDI pin to enable interconnexion/communication
+    """
+
+    class Function(IntEnum):
+
+        TRISTATE = 0
+        GPIO = 1
+        CLOCK = 2
+        STREAM_IN = 3
+        STREAM_OUT = 4
+
+    def __init__(self, port, position):
+        self.log = getLogger(f'pyftdi.vftdi[{port.iface}].{position}')
+        self._port = port
+        self._position = position
+        self._next_pin = None
+        self._function = self.Function.TRISTATE
+        self._fifo = None
+
+    def connect_to(self, pin: 'VirtualFtdiPin') -> None:
+        self._next_pin = pin
+
+    def disconnect(self, pin: 'VirtualFtdiPin') -> None:
+        self._next_pin = None
+
+    def set_function(self,
+                     function: Optional['VirtualFtdiPin.Function'] = None) \
+            -> None:
+        self._function = function or self.Function.TRISTATE
+        if self._function in (self.Function.STREAM_IN,
+                              self.Function.STREAM_OUT):
+            self._fifo = Fifo()
+        elif self._fifo:
+            with self._fifo.lock:
+                self._fifo.event.clear()
+                self._fifo.q.clear()
+                self._fifo = None
+
+    def set(self, source: bool, signal: bool) -> None:
+        self.log.info('set %d <- %s', int(signal), 'ext' if source else 'int')
+        #from sys import _current_frames, stdout
+        #from threading import current_thread
+        #from traceback import print_stack
+        #print_stack(_current_frames()[current_thread().ident], file=stdout)
+        if self._function == self.Function.TRISTATE:
+            return
+        if self._function == self.Function.GPIO:
+            if self.direction:
+                if self._next_pin:
+                    # when propagate to another pin, always an external source
+                    self._next_pin.set(True, signal)
+            else:
+                self._port.set_io(self, signal)
+            return
+        self.log.error('GPIO update on a featured pin: %s', self._function)
+
+    @property
+    def port(self) -> 'VirtFtdiPort':
+        return self._port
+
+    @property
+    def connection(self) -> Optional['VirtualFtdiPin']:
+        return self._next_pin
+
+    @property
+    def is_connected(self) -> bool:
+        return bool(self._next_pin)
+
+    @property
+    def position(self) -> int:
+        return self._position
+
+    @property
+    def direction(self) -> bool:
+        return bool(self._port.direction & (1 << self._position))
+
+    @property
+    def signal(self) -> Optional[bool]:
+        if self._function == self.Function.TRISTATE:
+            return None
+        if self._function == self.Function.GPIO:
+            return bool(self._port.gpio & (1 << self._position))
+        raise IOError('No signal available from this pin')
 
 
 class VirtFtdiPort:
@@ -96,6 +182,20 @@ class VirtFtdiPort:
        TX: to-host, RX: from-host
     """
 
+    WIDTHS = {
+        0x0200: 8,
+        0x0400: 8,
+        0x0500: 12,
+        0x0600: 8,
+        0x0700: 16,
+        0x0800: 8,
+        0x0900: 16,
+        0x1000: 8}
+    """Interterface pin count."""
+
+    UART_PINS = IntFlag('UartPins', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    """Function of pins in UART mode."""
+
     @unique
     class Command(IntEnum):
         """Command type for command queue."""
@@ -104,7 +204,7 @@ class VirtFtdiPort:
 
 
     def __init__(self, parent: 'VirtFtdi', iface: int):
-        self.log = getLogger('pyftdi.virt.ftdi[{iface}]')
+        self.log = getLogger(f'pyftdi.vftdi[{iface}]')
         self._parent = parent
         self._iface: int = iface
         self._bitmode = self.BitMode.RESET
@@ -114,6 +214,8 @@ class VirtFtdiPort:
         self._mpsse: Optional[VirtMpsseTracer] = None
         self._direction: int = 0
         self._gpio: int = 0
+        self._width = self.WIDTHS[parent.version]
+        self._pins: List[VirtualFtdiPin] = []
         self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(
             Fifo(self.FIFO_SIZES[self._parent.version][1]),
             Fifo(self.FIFO_SIZES[self._parent.version][0]))
@@ -126,6 +228,8 @@ class VirtFtdiPort:
         self._resume: bool = True
         self._next_stamp = 0
         self._cmd_q = Fifo()
+        for pin in range(self._width):
+            self._pins.append(VirtualFtdiPin(self, pin))
         self._rx_thread = Thread(
             target=self._rx_worker,
             name=f'Ftdi-{parent.bus}:{parent.address}/{iface}-Rx',
@@ -136,6 +240,7 @@ class VirtFtdiPort:
             daemon=True)
         self._rx_thread.start()
         self._tx_thread.start()
+        # TODO: move to pin/stream
         self._stream_txd = deque()  # represent the TXD pin
 
     def terminate(self):
@@ -146,6 +251,19 @@ class VirtFtdiPort:
         if self._tx_thread:
             self._tx_thread.join()
             self._tx_thread = None
+
+    def __getitem__(self, index: int) -> VirtualFtdiPin:
+        if not isinstance(index, int):
+            raise TypeError(f"sequence index must be integer, "
+                            f"not '{index.__class__.__name__}'")
+        try:
+            return self._pins[index]
+        except IndexError:
+            raise IndexError(f'Invalid pin: {index}') from None
+
+    @property
+    def iface(self) -> int:
+        return self._iface
 
     @property
     def baudrate(self) -> int:
@@ -161,11 +279,12 @@ class VirtFtdiPort:
         self._wait_for_sync()
         return self._gpio
 
+    # TODO: remove this?
     @gpio.setter
     def gpio(self, gpio: int) -> None:
         """Emulate GPIO input (from peripheral to FTDI)."""
         mask = (1 << self._parent.properties.ifwidth) - 1
-        self._gpio |= gpio & ~self._direction & mask
+        self._update_gpio(True, gpio & ~self._direction & mask)
 
     @property
     def cbus(self) -> Tuple[int, int]:
@@ -209,6 +328,15 @@ class VirtFtdiPort:
         self.log.warning('Read buffer discarded, mode %s', mode)
         self.log.warning('. bbr (%d)', len(buff))
         return 0
+
+    def set_io(self, pin: VirtualFtdiPin, signal: bool) -> None:
+        position = pin.position
+        if not 0 <= position < self._width:
+            raise ValueError(f'Invalid pin: {position}')
+        if signal:
+            self._update_gpio(True, self._gpio | (1 << position))
+        else:
+            self._update_gpio(True, self._gpio & ~(1 << position))
 
     def uart_write(self, buffer: bytes) -> None:
         with self._fifos.tx.lock:
@@ -269,10 +397,10 @@ class VirtFtdiPort:
                             data: array) -> None:
         direction = wValue & 0xff
         bitmode = (wValue >> 8) & 0x7F
-        mode = FTDICONST.get_name('bitmode', bitmode)
+        mode = self.BitMode(bitmode).name
         self.log.info('> ftdi bitmode %s: %s', mode, f'{direction:08b}')
         self._bitmode = bitmode
-        if mode == 'cbus':
+        if bitmode == self.BitMode.CBUS:
             self._cbus_dir = direction >> 4
             mask = (1 << self._parent.properties.cbuswidth) - 1
             self._cbus_dir &= mask
@@ -285,9 +413,24 @@ class VirtFtdiPort:
                           f'{self._cbus_dir:04b}',
                           f'{self._cbus:04b}',
                           f'{mask:04b}')
+        elif bitmode == self.BitMode.RESET:
+            self._direction = (VirtFtdiPort.UART_PINS.TXD |
+                               VirtFtdiPort.UART_PINS.RTS |
+                               VirtFtdiPort.UART_PINS.DTR)
+            self._pins[0].set_function(VirtualFtdiPin.Function.STREAM_OUT)
+            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM_IN)
+            for pin in self._pins[2:]:
+                pin.set_function(VirtualFtdiPin.Function.GPIO)
         else:
             self._direction = direction
-        if mode == 'mpsse':
+            for pin in self._pins:
+                pin.set_function(VirtualFtdiPin.Function.GPIO)
+        if bitmode == self.BitMode.MPSSE:
+            self._pins[0].set_function(VirtualFtdiPin.Function.CLOCK)
+            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM_OUT)
+            self._pins[2].set_function(VirtualFtdiPin.Function.STREAM_IN)
+            for pin in self._pins[3:]:
+                pin.set_function(VirtualFtdiPin.Function.GPIO)
             if not self._mpsse:
                 self._mpsse = VirtMpsseTracer(self._parent.version)
         with self._cmd_q.lock:
@@ -370,6 +513,16 @@ class VirtFtdiPort:
         self.log.info('> ftdi poll_modem_status %02x%02x',
                       status[0], status[1])
         return status
+
+    def _update_gpio(self, source: bool, gpio: int) -> None:
+        changed = self._gpio ^ gpio
+        self._gpio = gpio
+        if source:
+            # call comes from an external source, no need to propagate more
+            return
+        for pos, pin in enumerate(self._pins):
+            if (1 << pos) & changed:
+                pin.set(False, bool(gpio & (1 << pos)),)
 
     def _decode_cbus_x1000(self) -> None:
         cbus_gpio = 0
@@ -531,9 +684,9 @@ class VirtFtdiPort:
             elif self._bitmode == self.BitMode.BITBANG:
                 for byte in data:
                     # only 8 LSBs are addressable through this command
-                    self._gpio &= ~0xFF
-                    self._gpio |= byte & self._direction
-                    self.log.debug('. bbw %02x: %s',
+                    gpio = (self._gpio & ~0xFF) | (byte & self._direction)
+                    self._update_gpio(False, gpio)
+                    self.log.warning('. bbw %02x: %s',
                                    self._gpio, f'{self._gpio:08b}')
             else:
                 try:
@@ -652,7 +805,7 @@ class VirtFtdi:
 
     def __init__(self, version: int, bus: int, address: int,
                  eeprom: Optional[dict] = None):
-        self.log = getLogger('pyftdi.virt.ftdi')
+        self.log = getLogger('pyftdi.vftdi')
         self._version = version
         self._bus: int = bus
         self._address: int = address
