@@ -90,34 +90,34 @@ class FtdiEeprom:
     """EEPROM properties."""
 
 
-    CBUS = IntEnum('CBUS',
+    CBUS = IntEnum('CBus',
                    'TXDEN PWREN TXLED RXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
                    'CLK6 GPIO BB_WR BB_RD', start=0)
     """Alternate features for legacy FT232R devices."""
 
-    CBUSH = IntEnum('CBUSH',
+    CBUSH = IntEnum('CBusH',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
                     'GPIO TXDEN CLK30 CLK15 CLK7_5', start=0)
     """Alternate features for FT232H/FT2232H/FT4232H devices."""
 
-    CBUSX = IntEnum('CBUSX',
+    CBUSX = IntEnum('CBusX',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
                     'GPIO TXDEN CLK24 CLK12 CLK6 BAT_DETECT BAT_NDETECT '
                     'I2C_TXE I2C_RXF VBUS_SENSE BB_WR BB_RD TIMESTAMP AWAKE',
                     start=0)
     """Alternate features for FT230X devices."""
 
-    INVERT = IntFlag('INVERT', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    UART_PINS = IntFlag('UartPins', 'TXD RXD RTS CTS DTR DSR DCD RI')
     """Inversion flags for FT232R and FT-X devices."""
 
-    CHANNEL = IntFlag('CHANNEL', 'FIFO OPTO CPU FT128 RS485')
+    CHANNEL = IntFlag('Channel', 'FIFO OPTO CPU FT128 RS485')
     """Alternate port mode."""
 
-    DRIVE = IntFlag('DRIVE',
+    DRIVE = IntFlag('Drive',
                     'LOW HIGH SLOW_SLEW SCHMITT _10 _20 _40 PWRSAVE_DIS')
     """Driver options for I/O pins."""
 
-    CFG1 = IntFlag('CFG1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
+    CFG1 = IntFlag('Cfg1', 'CLK_IDLE_STATE DATA_LSB FLOW_CONTROL _08 '
                            'HIGH_CURRENTDRIVE _20 _40 SUSPEND_DBUS7')
     """Configuration bits stored @ 0x01."""
 
@@ -768,10 +768,10 @@ class FtdiEeprom:
         if value == '?' and out:
             print('off, on', file=out)
             return
-        if name.upper() not in self.INVERT.__members__:
+        if name.upper() not in self.UART_PINS.__members__:
             raise ValueError('Unknown property: %s' % name)
         value = to_bool(value, permissive=False)
-        code = getattr(self.INVERT, name.upper())
+        code = getattr(self.UART_PINS, name.upper())
         invert = self._eeprom[0x0B]
         if value:
             invert |= code
@@ -784,9 +784,9 @@ class FtdiEeprom:
         cfg = self._config
         misc, = sunpack('<H', self._eeprom[0x00:0x02])
         cfg['channel_a_driver'] = 'VCP' if misc & (1 << 7) else 'D2XX'
-        for bit in self.INVERT:
+        for bit in self.UART_PINS:
             value = self._eeprom[0x0B]
-            cfg['invert_%s' % self.INVERT(bit).name] = bool(value & bit)
+            cfg['invert_%s' % self.UART_PINS(bit).name] = bool(value & bit)
         max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
         value = self._eeprom[0x0c]
         for grp in range(2):
@@ -840,9 +840,9 @@ class FtdiEeprom:
         cfg['channel_a_driver'] = 'VCP' if (~cfg0 & (1 << 3)) else ''
         cfg['high_current'] = bool(~cfg0 & (1 << 2))
         cfg['external_oscillator'] = cfg0 & 0x02
-        for bit in self.INVERT:
+        for bit in self.UART_PINS:
             value = self._eeprom[0x0B]
-            cfg['invert_%s' % self.INVERT(bit).name] = bool(value & bit)
+            cfg['invert_%s' % self.UART_PINS(bit).name] = bool(value & bit)
         bix = 0
         while True:
             value = self._eeprom[0x14 + bix]
