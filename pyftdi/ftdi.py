@@ -939,7 +939,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        if self.device_version in (0x0500, 0x0700, 0x0900):
+        if self.device_version in (0x0700, 0x0900):
             return 16
         if self.device_version in (0x0500, ):
             return 12
