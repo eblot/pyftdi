@@ -9,6 +9,7 @@
 #pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-locals
 #pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
 #pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
@@ -141,6 +142,9 @@ class VirtFtdiPort:
     """
 
     POLL_DELAY = 1e-3
+    """Delay between processing (generating) a chunk of data."""
+    SLEEP_DELAY = 200e-3
+    """Timeout when the worker is idle."""
 
     class Fifos(NamedTuple):
         rx: Fifo  # Host-to-FTDI
@@ -195,12 +199,14 @@ class VirtFtdiPort:
 
     @unique
     class Command(IntEnum):
-        """Command type for command queue."""
+        """Command type for command queue (TX thread)."""
 
-        SET_BITMODE = 0x1  # Change the bitmode
-        PURGE_TX = 0x2     # The TX buffer has been purged
+        TERMINATE = 0x1    # Terminate thread
+        SET_BITMODE = 0x2  # Change the bitmode
+        PURGE_TX = 0x3     # The TX buffer has been purged
 
     def __init__(self, parent: 'VirtFtdi', iface: int):
+        self._wait_delay = 0  # TODO REMOVE
         self.log = getLogger(f'pyftdi.vftdi[{iface}]')
         self._parent = parent
         self._iface: int = iface
@@ -225,6 +231,7 @@ class VirtFtdiPort:
         self._cbusp_active: int = 0  # physical (pins)
         self._resume: bool = True
         self._cmd_q = Fifo()
+        self._last_txw_ts = 0
         for pin in range(self._width):
             self._pins.append(VirtualFtdiPin(self, pin))
         self._rx_thread = Thread(
@@ -241,6 +248,10 @@ class VirtFtdiPort:
         self._stream_txd = deque()  # represent the TXD pin
 
     def terminate(self):
+        if self._tx_thread:
+            with self._cmd_q.lock:
+                self._cmd_q.q.append((self.Command.TERMINATE,))
+                self._cmd_q.event.set()
         self._resume = False
         if self._rx_thread:
             self._rx_thread.join()
@@ -273,7 +284,6 @@ class VirtFtdiPort:
     @property
     def gpio(self) -> int:
         """Emulate GPIO output (from FTDI to peripheral)."""
-        # self._wait_for_rx_sync()
         return self._gpio
 
     # TODO: remove this?
@@ -302,6 +312,8 @@ class VirtFtdiPort:
         with rx_fifo.lock:
             count = len(rx_fifo.q)
             if not count:
+                # remove any previous notification to be sure to wait for
+                # the next one
                 self._rx_pop_event.clear()
             rx_fifo.q.append(data)
             # print(f'> RX Q {hexlify(bytes(rx_fifo.q))}')
@@ -315,7 +327,7 @@ class VirtFtdiPort:
                 if not self._resume:
                     break
                 # timeout, need to wait more
-                self.log.warning('Waiting for RX FIFO')
+                self.log.info('Waiting for RX FIFO')
         return len(data)
 
     def read(self, buff: array, timeout: int) -> int:
@@ -324,7 +336,9 @@ class VirtFtdiPort:
         if count < 2:
             self.log.warning('Never handle buffers that cannot fit status')
             return 0
-        if self._bitmode in (self.BitMode.RESET, self.BitMode.BITBANG):
+        if self._bitmode in (self.BitMode.RESET,
+                             self.BitMode.BITBANG,
+                             self.BitMode.SYNCBB):
             status = self.modem_status
             buff[0], buff[1] = status[0], status[1]
             pos = 2
@@ -355,7 +369,6 @@ class VirtFtdiPort:
 
     def uart_read(self, count: int) -> bytes:
         buf = bytearray()
-        # self._wait_for_rx_sync()
         while self._stream_txd and count:
             buf.append(self._stream_txd.popleft())
             count -= 1
@@ -408,7 +421,13 @@ class VirtFtdiPort:
         if reset == 'sio':
             # the thruth is that FTDI does not document what this command
             # exactly does...
-            self.log.warning('Reset not implemented')
+            with self._cmd_q.lock:
+                self._cmd_q.q.append((self.Command.PURGE_TX,))
+                self._cmd_q.event.set()
+            fifo = self._fifos.rx
+            with fifo.lock:
+                fifo.q.clear()
+            self.log.info('> ftdi reset is not fully implemented')
             return
         if reset == 'purge_tx':
             self.log.info('> ftdi %s: %d requests', reset,
@@ -436,6 +455,12 @@ class VirtFtdiPort:
         mode = self.BitMode(bitmode).name
         self.log.info('> ftdi bitmode %s: %s', mode, f'{direction:08b}')
         self._bitmode = bitmode
+        with self._cmd_q.lock:
+            self._cmd_q.q.append((self.Command.SET_BITMODE, self._bitmode))
+            self._cmd_q.event.set()
+        while self._cmd_q.q:
+            # be sure to wait for the command to be popped out before resuming
+            sleep(0.1)
         if bitmode == self.BitMode.CBUS:
             self._cbus_dir = direction >> 4
             mask = (1 << self._parent.properties.cbuswidth) - 1
@@ -469,9 +494,6 @@ class VirtFtdiPort:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
             if not self._mpsse:
                 self._mpsse = VirtMpsseTracer(self._parent.version)
-        with self._cmd_q.lock:
-            self._cmd_q.q.append((self.Command.SET_BITMODE, self._bitmode))
-            self._cmd_q.event.set()
 
     def control_set_latency_timer(self, wValue: int, wIndex: int,
                                   data: array) -> None:
@@ -495,7 +517,6 @@ class VirtFtdiPort:
                           data: array) -> bytes:
         mode = FTDICONST.get_name('bitmode', self._bitmode)
         self.log.info('> ftdi read_pins %s', mode)
-        # self._wait_for_rx_sync()
         if mode == 'cbus':
             cbus = self._cbus & ~self._cbus_dir & 0xF
             self.log.info('< cbus 0x%01x: %s', cbus, f'{cbus:04b}')
@@ -717,8 +738,6 @@ class VirtFtdiPort:
                         self.log.error('wake up w/o RX data')
                         rx_fifo.lock.release()
                         continue
-                # TODO: for now, handle all in once, which does not match
-                # real HW
                 rx_fifo.event.clear()
                 data = rx_fifo.q[0]
                 rx_fifo.lock.release()
@@ -729,6 +748,21 @@ class VirtFtdiPort:
                     self._stream_txd.extend(data)
                 elif self._bitmode == self.BitMode.BITBANG:
                     for byte in data:
+                        # only 8 LSBs are addressable through this command
+                        gpi = self._gpio & ~self._direction & 0xFF
+                        gpo = byte & self._direction & 0xFF
+                        msb = byte & ~0xFF
+                        gpio = gpi | gpo | msb
+                        self._update_gpio(False, gpio)
+                        self.log.debug('. bbw %02x: %s',
+                                       self._gpio, f'{self._gpio:08b}')
+                elif self._bitmode == self.BitMode.SYNCBB:
+                    tx_fifo = self._fifos.tx
+                    for byte in data:
+                        with tx_fifo.lock:
+                            free_count = tx_fifo.size - len(tx_fifo.q)
+                            if free_count > 0:
+                                tx_fifo.q.append(self._gpio & 0xFF)
                         # only 8 LSBs are addressable through this command
                         gpi = self._gpio & ~self._direction & 0xFF
                         gpo = byte & self._direction & 0xFF
@@ -759,63 +793,49 @@ class VirtFtdiPort:
     def _tx_worker(self):
         """Background handling of data sent to host."""
         bitmode = self.BitMode.RESET
-        last_ts = 0
         purge_tx = False
+        self._wait_delay = self.SLEEP_DELAY
         try:
             while self._resume:
+                # in order not to overload CPU with real-time computation,
+                # time is sliced into POLL_DELAY period; every POLL_DELAY
+                # period, this thead generates as many data as the real HW
+                # would have generated during this period (~ epsilon due to
+                # rounding)
+                if not self._cmd_q.q:
+                    if not self._cmd_q.event.wait(self._wait_delay):
+                        purge_tx = self._tx_worker_generate(bitmode, purge_tx)
+                        continue
                 with self._cmd_q.lock:
-                    command = None
-                    # in order not to overload CPU with real-time computation,
-                    # time is sliced into POLL_DELAY period; every POLL_DELAY
-                    # period, this thead generates as many data as the real HW
-                    # would have generated during this period (~ epsilon due to
-                    # rounding)
-                    if self._cmd_q.event.wait(self.POLL_DELAY):
-                        self._cmd_q.event.clear()
-                        if not self._cmd_q.q:
-                            self.log.error('wake up w/o CMD')
-                            continue
-                        command = self._cmd_q.q.popleft()
-                if command is not None:
-                    if command[0] == self.Command.SET_BITMODE:
-                        bitmode = command[1]
-                        last_ts = now()
+                    if not self._cmd_q.q:
+                        self.log.error('wake up w/o CMD')
                         continue
-                    elif command[0] == self.Command.PURGE_TX:
-                        purge_tx = True
-                        # reload the buffer immediately w/o waiting for the
-                        # loop delay
+                    self._cmd_q.event.clear()
+                    command = self._cmd_q.q.popleft()
+                if command[0] == self.Command.TERMINATE:
+                    break
+                if command[0] == self.Command.SET_BITMODE:
+                    bitmode = command[1]
+                    self._last_txw_ts = now()
+                    if bitmode in (self.BitMode.BITBANG,
+                                   self.BitMode.SYNCBB):
+                        self._wait_delay = self.POLL_DELAY
                     else:
-                        self.log.error('Unimplemented support for command %d',
-                                       command)
-                        continue
-                # background task handling starts here
-                if bitmode == self.BitMode.BITBANG:
-                    ts = now()
-                    # how much time has elapsed since last background action
-                    elapsed = ts-last_ts
-                    last_ts = ts
-                    # how many bytes should have been captured since last
-                    # action
-                    byte_count = round(self._baudrate*elapsed)
-                    if purge_tx and not byte_count:
-                        byte_count = 1
-                    # fill the TX FIFO with as many bytes, stop if full
+                        self._wait_delay = self.SLEEP_DELAY
+                    continue
+                elif command[0] == self.Command.PURGE_TX:
+                    purge_tx = self._tx_worker_generate(bitmode, True)
+                    # reload the buffer immediately w/o waiting for the
+                    # loop delay
+                else:
+                    self.log.error('Unimplemented support for command %d',
+                                   command)
+                    continue
+                if purge_tx:
                     tx_fifo = self._fifos.tx
-                    if byte_count:
-                        with tx_fifo.lock:
-                            free_count = tx_fifo.size - len(tx_fifo.q)
-                            push_count = min(free_count, byte_count)
-                            if purge_tx:
-                                tx_fifo.q.clear()
-                            tx_fifo.q.extend([self._gpio] * push_count)
-                        self.log.debug('in %.3fms -> %d',
-                                       elapsed*1000, push_count)
-                    else:
-                        if purge_tx:
-                            with tx_fifo.lock:
-                                tx_fifo.q.clear()
-                    purge_tx = False
+                    with tx_fifo.lock:
+                        tx_fifo.q.clear()
+                        purge_tx = False
             self.log.debug('End of worker %s', self._tx_thread.name)
         except Exception as exc:
             self.log.error('Dead of worker %s: %s', self._tx_thread.name, exc)
@@ -823,6 +843,32 @@ class VirtFtdiPort:
         finally:
             # ensure other threads to not run forever if this one is on error
             self._resume = False
+
+    def _tx_worker_generate(self, bitmode, purge_tx: bool) -> bool:
+        tx_fifo = self._fifos.tx
+        if bitmode == self.BitMode.BITBANG:
+            ts = now()
+            # how much time has elapsed since last background action
+            elapsed = ts-self._last_txw_ts
+            self._last_txw_ts = ts
+            # how many bytes should have been captured since last
+            # action
+            byte_count = round(self._baudrate*elapsed)
+            if purge_tx and not byte_count:
+                byte_count = 1
+            # fill the TX FIFO with as many bytes, stop if full
+            if byte_count:
+                with tx_fifo.lock:
+                    free_count = tx_fifo.size - len(tx_fifo.q)
+                    push_count = min(free_count, byte_count)
+                    if purge_tx:
+                        tx_fifo.q.clear()
+                        purge_tx = False
+                    tx_fifo.q.extend([self._gpio] * push_count)
+                self.log.debug('in %.3fms -> %d',
+                               elapsed*1000, push_count)
+        return purge_tx
+
 
 class VirtFtdi:
     """Virtual FTDI device.
