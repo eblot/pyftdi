@@ -48,7 +48,6 @@ class MockUsbToolsTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -130,7 +129,6 @@ class MockFtdiDiscoveryTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -174,7 +172,6 @@ class MockSimpleDeviceTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -205,7 +202,6 @@ class MockDualDeviceTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -237,7 +233,6 @@ class MockTwoPortDeviceTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft2232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -269,7 +264,6 @@ class MockFourPortDeviceTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft4232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -301,7 +295,6 @@ class MockManyDevicesTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -346,7 +339,6 @@ class MockSimpleDirectTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
@@ -382,7 +374,6 @@ class MockSimpleMpsseTestCase(TestCase):
         cls.loader = MockLoader()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
