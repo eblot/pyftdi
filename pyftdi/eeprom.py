@@ -107,7 +107,7 @@ class FtdiEeprom:
                     start=0)
     """Alternate features for FT230X devices."""
 
-    UART_PINS = IntFlag('UartPins', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    UART_BITS = IntFlag('UartBits', 'TXD RXD RTS CTS DTR DSR DCD RI')
     """Inversion flags for FT232R and FT-X devices."""
 
     CHANNEL = IntFlag('Channel', 'FIFO OPTO CPU FT128 RS485')
@@ -768,10 +768,10 @@ class FtdiEeprom:
         if value == '?' and out:
             print('off, on', file=out)
             return
-        if name.upper() not in self.UART_PINS.__members__:
+        if name.upper() not in self.UART_BITS.__members__:
             raise ValueError('Unknown property: %s' % name)
         value = to_bool(value, permissive=False)
-        code = getattr(self.UART_PINS, name.upper())
+        code = getattr(self.UART_BITS, name.upper())
         invert = self._eeprom[0x0B]
         if value:
             invert |= code
@@ -784,9 +784,9 @@ class FtdiEeprom:
         cfg = self._config
         misc, = sunpack('<H', self._eeprom[0x00:0x02])
         cfg['channel_a_driver'] = 'VCP' if misc & (1 << 7) else 'D2XX'
-        for bit in self.UART_PINS:
+        for bit in self.UART_BITS:
             value = self._eeprom[0x0B]
-            cfg['invert_%s' % self.UART_PINS(bit).name] = bool(value & bit)
+            cfg['invert_%s' % self.UART_BITS(bit).name] = bool(value & bit)
         max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
         value = self._eeprom[0x0c]
         for grp in range(2):
@@ -840,9 +840,9 @@ class FtdiEeprom:
         cfg['channel_a_driver'] = 'VCP' if (~cfg0 & (1 << 3)) else ''
         cfg['high_current'] = bool(~cfg0 & (1 << 2))
         cfg['external_oscillator'] = cfg0 & 0x02
-        for bit in self.UART_PINS:
+        for bit in self.UART_BITS:
             value = self._eeprom[0x0B]
-            cfg['invert_%s' % self.UART_PINS(bit).name] = bool(value & bit)
+            cfg['invert_%s' % self.UART_BITS(bit).name] = bool(value & bit)
         bix = 0
         while True:
             value = self._eeprom[0x14 + bix]
