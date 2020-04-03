@@ -11,6 +11,7 @@
 #pylint: disable-msg=too-many-branches
 #pylint: disable-msg=too-many-statements
 #pylint: disable-msg=too-many-instance-attributes
+#pylint: disable-msg=too-many-public-methods
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
 
@@ -27,7 +28,7 @@ from time import sleep, time as now
 from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from .consts import FTDICONST, USBCONST
-from .mpsse import VirtMpsseTracer
+from .mpsse import VirtMpsseEngine, VirtMpsseTracer
 
 
 # need support for f-string syntax
@@ -339,20 +340,16 @@ class VirtFtdiPort:
         return self._baudrate
 
     @property
+    def width(self) -> int:
+        return self._width
+
+    @property
     def direction(self) -> int:
         return self._direction
 
     @property
     def gpio(self) -> int:
-        """Emulate GPIO output (from FTDI to peripheral)."""
         return self._gpio
-
-    # TODO: remove this?
-    @gpio.setter
-    def gpio(self, gpio: int) -> None:
-        """Emulate GPIO input (from peripheral to FTDI)."""
-        mask = (1 << self._parent.properties.ifwidth) - 1
-        self._update_gpio(True, gpio & ~self._direction & mask)
 
     @property
     def cbus(self) -> Tuple[int, int]:
@@ -399,7 +396,8 @@ class VirtFtdiPort:
             return 0
         if self._bitmode in (self.BitMode.RESET,
                              self.BitMode.BITBANG,
-                             self.BitMode.SYNCBB):
+                             self.BitMode.SYNCBB,
+                             self.BitMode.MPSSE):
             status = self.modem_status
             buff[0], buff[1] = status[0], status[1]
             pos = 2
@@ -422,6 +420,12 @@ class VirtFtdiPort:
             self._update_gpio(True, self._gpio | (1 << position))
         else:
             self._update_gpio(True, self._gpio & ~(1 << position))
+
+    def update_gpio(self, mpsse: VirtMpsseEngine, source: bool,
+                    direction: int, gpio: int) -> None:
+        self._direction = direction
+        self._update_gpio(source, gpio)
+        mpsse.complete()
 
     @property
     def modem_status(self) -> Tuple[int, int]:
@@ -547,13 +551,14 @@ class VirtFtdiPort:
             for pin in self._pins:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
         if bitmode == self.BitMode.MPSSE:
-            self._pins[0].set_function(VirtualFtdiPin.Function.CLOCK)
-            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
-            self._pins[2].set_function(VirtualFtdiPin.Function.STREAM)
-            for pin in self._pins[3:]:
+            #self._pins[0].set_function(VirtualFtdiPin.Function.CLOCK)
+            #self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
+            #self._pins[2].set_function(VirtualFtdiPin.Function.STREAM)
+            #for pin in self._pins[3:]:
+            for pin in self._pins:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
             if not self._mpsse:
-                self._mpsse = VirtMpsseTracer(self._parent.version)
+                self._mpsse = VirtMpsseTracer(self, self._parent.version)
 
     def control_set_latency_timer(self, wValue: int, wIndex: int,
                                   data: array) -> None:
@@ -639,6 +644,17 @@ class VirtFtdiPort:
                 tx_fifo.q.extend(buf[:free_count])
         if free_count < len(buf):
             self.log.warning('FIFO full, truncated buffer from %d', pin)
+
+    def write_from_mpsse(self, mpsse: VirtMpsseTracer, buf: bytes) -> None:
+        tx_fifo = self._fifos.tx
+        with tx_fifo.lock:
+            free_count = tx_fifo.size - len(tx_fifo.q)
+            if free_count > 0:
+                tx_fifo.q.extend(buf[:free_count])
+        if free_count < len(buf):
+            self.log.warning('FIFO full (%d bytes), truncated buffer',
+                             len(tx_fifo.q))
+        self._mpsse.receive(self._iface, buf)
 
     def _update_gpio(self, source: bool, gpio: int) -> None:
         changed = self._gpio ^ gpio
@@ -819,7 +835,7 @@ class VirtFtdiPort:
                         # only 8 LSBs are addressable through this command
                         gpi = self._gpio & ~self._direction & 0xFF
                         gpo = byte & self._direction & 0xFF
-                        msb = byte & ~0xFF
+                        msb = self._gpio & ~0xFF
                         gpio = gpi | gpo | msb
                         self._update_gpio(False, gpio)
                         self.log.debug('. bbw %02x: %s',
@@ -834,7 +850,7 @@ class VirtFtdiPort:
                         # only 8 LSBs are addressable through this command
                         gpi = self._gpio & ~self._direction & 0xFF
                         gpo = byte & self._direction & 0xFF
-                        msb = byte & ~0xFF
+                        msb = self._gpio & ~0xFF
                         gpio = gpi | gpo | msb
                         self._update_gpio(False, gpio)
                         self.log.debug('. bbw %02x: %s',

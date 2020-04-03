@@ -461,8 +461,11 @@ class GpioMpsseTestCase(TestCase):
             out_pins = [vport2[pos] for pos in range(16)]
             for in_pin, out_pin in zip(in_pins, out_pins):
                 out_pin.connect_to(in_pin)
+            # prevent from using the tracer twice (Ftdi & VirtualFtdi)
+            debug = False
         else:
             cls.loader = None
+            debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         ftdi = Ftdi()
         ftdi.open_from_url(url)
@@ -475,7 +478,6 @@ class GpioMpsseTestCase(TestCase):
             raise SkipTest('FTDI device does not support wide ports')
         url = url[:-1]
         cls.urls = [f'{url}1', f'{url}2']
-        debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         cls.debug = debug
 
     @classmethod
@@ -491,7 +493,7 @@ class GpioMpsseTestCase(TestCase):
                           debug=self.debug)
         gpio_out.configure(self.urls[1], direction=0xFFFF, frequency=10e6,
                            debug=self.debug)
-        for out in range(0, 0x10000, 29):
+        for out in range(3, 0x10000, 29):
             gpio_out.write(out)
             outv = gpio_out.read()[0]
             inv = gpio_in.read()[0]
@@ -531,6 +533,9 @@ class GpioMpsseTestCase(TestCase):
         gpio_out.configure(self.urls[1], direction=0xFFFF, frequency=10e6,
                            debug=self.debug)
         outv = list(range(0, 0x10000, 29))
+        max_count = min(gpio_out.ftdi.fifo_sizes[0],
+                        gpio_in.ftdi.fifo_sizes[1])//2  # 2 bytes/value
+        outv = outv[:max_count]
         gpio_out.write(outv)
         inv = gpio_in.read(len(outv))
         # for now, it is hard to test value exactness
@@ -538,12 +543,13 @@ class GpioMpsseTestCase(TestCase):
         gpio_in.close()
         gpio_out.close()
 
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
     suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
     suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
-    #suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
     return suite_
 
 def virtualize():
