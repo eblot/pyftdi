@@ -29,6 +29,7 @@
 #pylint: disable-msg=empty-docstring
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=invalid-name
+#pylint: disable-msg=global-statement
 
 import logging
 from collections import deque
@@ -93,6 +94,8 @@ class GpioAsyncTestCase(TestCase):
             ftdi = Ftdi()
             ftdi.open_from_url(cls.url)
             count = ftdi.device_port_count
+            ftdi.close()
+            # ftdi.close()
             cls.skip_loopback = count > 1
         else:
             cls.skip_loopback = False
@@ -122,12 +125,16 @@ class GpioAsyncTestCase(TestCase):
         port.write([0xaa for _ in range(256)])
         ingress = port.read(100, peek=False, noflush=False)
         self.assertIsInstance(ingress, bytes)
-        self.assertGreater(len(ingress), 2)
+        if not VirtLoader:
+            # the virtual task may sometimes not be triggered soon enough
+            self.assertGreater(len(ingress), 2)
         # direct mode is not available with multi-byte mode
         self.assertRaises(ValueError, port.read, 3, True)
         ingress = port.read(3)
         self.assertIsInstance(ingress, bytes)
-        self.assertGreater(len(ingress), 0)
+        if not VirtLoader:
+            # the virtual task may sometimes not be triggered soon enough
+            self.assertGreater(len(ingress), 0)
         self.assertLessEqual(len(ingress), 3)
         port.write(0x00)
         port.write(0xFF)
@@ -163,8 +170,7 @@ class GpioAsyncTestCase(TestCase):
         gpio.write(outs)
         gpio.ftdi.read_data(512)
         for _ in range(len(outs)):
-            ingress = gpio.read(14)
-            # print('READ', ingress)
+            _ = gpio.read(14)
         last = outs[-1] >> 4
         for _ in range(10):
             fbacks = gpio.read(1000)
@@ -224,6 +230,19 @@ class GpioSyncTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if VirtLoader:
+            cls.loader = VirtLoader()
+            with open('pyftdi/tests/resources/ft232r.yaml', 'rb') as yfp:
+                cls.loader.load(yfp)
+            vftdi = cls.loader.get_virtual_ftdi(1, 1)
+            vport = vftdi.get_port(1)
+            # create virtual connections as real HW
+            in_pins = [vport[pos] for pos in range(4)]
+            out_pins = [vport[pos] for pos in range(4, 8)]
+            for in_pin, out_pin in zip(in_pins, out_pins):
+                out_pin.connect_to(in_pin)
+        else:
+            cls.loader = None
         cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         if cls.url == 'ftdi:///1':
             # assumes that if not specific device is used, and a multiport
@@ -235,9 +254,15 @@ class GpioSyncTestCase(TestCase):
             ftdi = Ftdi()
             ftdi.open_from_url(cls.url)
             count = ftdi.device_port_count
+            ftdi.close()
             cls.skip_loopback = count > 1
         else:
             cls.skip_loopback = False
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.loader:
+            cls.loader.unload()
 
     def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
@@ -249,7 +274,8 @@ class GpioSyncTestCase(TestCase):
         gpio.configure(self.url, direction=direction, initial=0xee)
         outs = bytes([(out & 0xf)<<4 for out in range(1000)])
         ins = gpio.exchange(outs)
-        self.assertEqual(len(outs), len(ins))
+        exp_in_count = min(len(outs), gpio.ftdi.fifo_sizes[0])
+        self.assertEqual(len(ins), exp_in_count)
         last = None
         for sout, sin in zip(outs, ins):
             if last is not None:
@@ -311,6 +337,20 @@ class GpioMultiportTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if VirtLoader:
+            cls.loader = VirtLoader()
+            with open('pyftdi/tests/resources/ft2232h.yaml', 'rb') as yfp:
+                cls.loader.load(yfp)
+            vftdi = cls.loader.get_virtual_ftdi(1, 1)
+            vport1 = vftdi.get_port(1)
+            vport2 = vftdi.get_port(2)
+            # create virtual connections as real HW
+            in_pins = [vport1[pos] for pos in range(8)]
+            out_pins = [vport2[pos] for pos in range(8)]
+            for in_pin, out_pin in zip(in_pins, out_pins):
+                out_pin.connect_to(in_pin)
+        else:
+            cls.loader = None
         url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         ftdi = Ftdi()
         ftdi.open_from_url(url)
@@ -323,6 +363,11 @@ class GpioMultiportTestCase(TestCase):
             raise SkipTest('FTDI device is not a multi-port device')
         url = url[:-1]
         cls.urls = [f'{url}1', f'{url}2']
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.loader:
+            cls.loader.unload()
 
     def test_gpio_peek(self):
         """Check I/O.
@@ -419,6 +464,10 @@ class GpioMpsseTestCase(TestCase):
         debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
         cls.debug = debug
 
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
     def test_default_gpio(self):
         """Check I/O.
         """
@@ -477,8 +526,8 @@ class GpioMpsseTestCase(TestCase):
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
-    #suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    #suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
     #suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
     return suite_
 
@@ -516,7 +565,10 @@ def main():
     FtdiLogger.set_level(loglevel)
     FtdiLogger.set_formatter(formatter)
     virtualize()
-    ut_main(defaultTest='suite')
+    try:
+        ut_main(defaultTest='suite')
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == '__main__':

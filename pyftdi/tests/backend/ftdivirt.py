@@ -327,7 +327,7 @@ class VirtFtdiPort:
                 if not self._resume:
                     break
                 # timeout, need to wait more
-                self.log.info('Waiting for RX FIFO')
+                self.log.debug(' waiting for RX FIFO')
         return len(data)
 
     def read(self, buff: array, timeout: int) -> int:
@@ -411,8 +411,6 @@ class VirtFtdiPort:
             if not rx_fifo.q:
                 # TX empty -> flag THRE & TEMT ("TX empty")
                 buf1 |= 0x40 | 0x20
-        self.log.info('TX depth: %d, RX depth: %d',
-                       len(self._fifos.tx.q), len(rx_fifo.q))
         return buf0, buf1
 
     def control_reset(self, wValue: int, wIndex: int,
