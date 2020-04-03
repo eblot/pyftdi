@@ -470,10 +470,29 @@ class MockSimpleUartTestCase(TestCase):
         vport = vftdi.get_port(1)
         msg = ascii_letters
         port.write(msg.encode())
-        buf = vport.uart_read(len(ascii_letters)+10).decode()
+        txd = vport[vport.UART_PINS.TXD]
+        buf = txd.read(len(ascii_letters)+10).decode()
         self.assertEqual(msg, buf)
         msg = ''.join(reversed(msg))
-        vport.uart_write(msg.encode())
+        rxd = vport[vport.UART_PINS.TXD]
+        rxd.write(msg.encode())
+        buf = port.read(len(ascii_letters)).decode()
+        self.assertEqual(msg, buf)
+        port.close()
+
+    def test_uart_loopback(self):
+        """Check TXD/RXD loopback."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1')
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        txd = vport[vport.UART_PINS.TXD]
+        rxd = vport[vport.UART_PINS.RXD]
+        txd.connect_to(rxd)
+        msg = ascii_letters
+        port.write(msg.encode())
         buf = port.read(len(ascii_letters)).decode()
         self.assertEqual(msg, buf)
         port.close()

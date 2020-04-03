@@ -14,10 +14,11 @@
 #pylint: disable-msg=too-few-public-methods
 #pylint: disable-msg=no-self-use
 
+import os
 from array import array
 from binascii import hexlify
 from collections import deque
-from enum import IntEnum, IntFlag, unique
+from enum import IntEnum, unique
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import version_info
@@ -25,8 +26,8 @@ from threading import Event, Lock, Thread
 from time import sleep, time as now
 from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
-from pyftdi.tracer import FtdiMpsseTracer
 from .consts import FTDICONST, USBCONST
+from .mpsse import VirtMpsseTracer
 
 
 # need support for f-string syntax
@@ -34,13 +35,51 @@ if version_info[:2] < (3, 6):
     raise AssertionError('Python 3.6 is required for this module')
 
 
-class VirtMpsseTracer(FtdiMpsseTracer):
-    """Reuse MPSSE tracer as a MPSSE command decoder engine.
+class Pipe:
+    """Wrapper around os.pipe
     """
 
-    def __init__(self, version: int):
-        super().__init__(version)
-        self.log = getLogger('pyftdi.virt.mpsse')
+    PIPE = {'r': 0, 'w': 1}
+
+    def __init__(self):
+        self._pipe = None
+        self._zombie = False
+
+    def close(self):
+        if self._pipe is None:
+            return
+        os.close(self._pipe[0])
+        os.close(self._pipe[1])
+        self._pipe = None
+        self._zombie = True
+
+    def read(self, count: int) -> bytes:
+        return os.read(self.r, count)
+
+    def write(self, buf: bytes) -> None:
+        os.write(self.w, buf)
+
+    @property
+    def ep_out(self) -> 'Pipe':
+        # if pin is output, return RX endpoint (so client can read from)
+        return self.r
+
+    @property
+    def ep_in(self) -> 'Pipe':
+        # if pin in input, return TX endpoint (so client can write to)
+        return self.w
+
+    def __getattr__(self, name):
+        if self._zombie:
+            raise IOError(f'Closed pipe')
+        try:
+            pos = self.PIPE[name[0]]
+        except KeyError:
+            raise AttributeError(f'No such pipe attribute: {name}')
+        if not self._pipe:
+            # lazy instanciation
+            self._pipe = os.pipe()
+        return self._pipe[pos]
 
 
 class Fifo:
@@ -70,9 +109,12 @@ class VirtualFtdiPin:
         self._position = position
         self._next_pin = None
         self._function = self.Function.TRISTATE
-        self._fifo = None
+        self._pipe = None
 
     def connect_to(self, pin: 'VirtualFtdiPin') -> None:
+        if self == pin and self._position == pin.position:
+            raise ValueError(f'Cannot connect pin {self._port.iface}:'
+                             f'{self._position} to itself')
         self._next_pin = pin
 
     def disconnect(self, pin: 'VirtualFtdiPin') -> None:
@@ -82,13 +124,10 @@ class VirtualFtdiPin:
                      function: Optional['VirtualFtdiPin.Function'] = None) \
             -> None:
         self._function = function or self.Function.TRISTATE
-        if self._function == self.Function.STREAM:
-            self._fifo = Fifo()
-        elif self._fifo:
-            with self._fifo.lock:
-                self._fifo.event.clear()
-                self._fifo.q.clear()
-                self._fifo = None
+        if self._function != self.Function.STREAM:
+            if self._pipe:
+                self._pipe.close()
+                self._pipe = None
 
     def set(self, source: bool, signal: bool) -> None:
         self.log.debug('set %d <- %s', int(signal), 'ext' if source else 'int')
@@ -103,6 +142,32 @@ class VirtualFtdiPin:
                 self._port.set_io(self, signal)
             return
         self.log.error('GPIO update on a featured pin: %s', self._function)
+
+    def read(self, count: int) -> bytes:
+        # from external
+        if self._function != self.Function.STREAM:
+            raise IOError('Pin is not of stream kind')
+        if self._pipe is None:
+            self._pipe = Pipe()
+        return self._pipe.read(count)
+
+    def push_to_pin(self, buf: bytes) -> None:
+        # from internal
+        if self._function != self.Function.STREAM:
+            raise IOError('Pin is not of stream kind')
+        if self.is_connected:
+            self._next_pin.write(buf)
+        if self._pipe is None:
+            self._pipe = Pipe()
+        self._pipe.write(buf)
+
+    def write(self, buf: bytes) -> None:
+        # from external
+        if self._function != self.Function.STREAM:
+            raise IOError('Pin is not of stream kind')
+        if self.is_connected:
+            raise IOError(f'Cannot write to connected pin ({self._position})')
+        self._port.write_from_pin(self._position, buf)
 
     @property
     def port(self) -> 'VirtFtdiPort':
@@ -192,7 +257,7 @@ class VirtFtdiPort:
         0x1000: 8}
     """Interterface pin count."""
 
-    UART_PINS = IntFlag('UartPins', 'TXD RXD RTS CTS DTR DSR DCD RI')
+    UART_PINS = IntEnum('UartPins', 'TXD RXD RTS CTS DTR DSR DCD RI', start=0)
     """Function of pins in UART mode."""
 
     @unique
@@ -204,7 +269,6 @@ class VirtFtdiPort:
         PURGE_TX = 0x3     # The TX buffer has been purged
 
     def __init__(self, parent: 'VirtFtdi', iface: int):
-        self._wait_delay = 0  # TODO REMOVE
         self.log = getLogger(f'pyftdi.vftdi[{iface}]')
         self._parent = parent
         self._iface: int = iface
@@ -242,8 +306,6 @@ class VirtFtdiPort:
             daemon=True)
         self._rx_thread.start()
         self._tx_thread.start()
-        # TODO: move to pin/stream
-        self._stream_txd = deque()  # represent the TXD pin
 
     def terminate(self):
         self.log.debug('> terminate')
@@ -361,18 +423,6 @@ class VirtFtdiPort:
         else:
             self._update_gpio(True, self._gpio & ~(1 << position))
 
-    def uart_write(self, buffer: bytes) -> None:
-        tx_fifo = self._fifos.tx
-        with tx_fifo.lock:
-            tx_fifo.q.extend(buffer)
-
-    def uart_read(self, count: int) -> bytes:
-        buf = bytearray()
-        while self._stream_txd and count:
-            buf.append(self._stream_txd.popleft())
-            count -= 1
-        return bytes(buf)
-
     @property
     def modem_status(self) -> Tuple[int, int]:
         # For some reason, B0 high nibble matches the LPC214x UART:UxMSR
@@ -485,9 +535,9 @@ class VirtFtdiPort:
                           f'{self._cbus:04b}',
                           f'{mask:04b}')
         elif bitmode == self.BitMode.RESET:
-            self._direction = (VirtFtdiPort.UART_PINS.TXD |
-                               VirtFtdiPort.UART_PINS.RTS |
-                               VirtFtdiPort.UART_PINS.DTR)
+            self._direction = ((1 << VirtFtdiPort.UART_PINS.TXD) |
+                               (1 << VirtFtdiPort.UART_PINS.RTS) |
+                               (1 << VirtFtdiPort.UART_PINS.DTR))
             self._pins[0].set_function(VirtualFtdiPin.Function.STREAM)
             self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
             for pin in self._pins[2:]:
@@ -580,6 +630,15 @@ class VirtFtdiPort:
         self.log.info('> ftdi poll_modem_status %02x%02x',
                       status[0], status[1])
         return status
+
+    def write_from_pin(self, pin: int, buf: bytes) -> None:
+        tx_fifo = self._fifos.tx
+        with tx_fifo.lock:
+            free_count = tx_fifo.size - len(tx_fifo.q)
+            if free_count > 0:
+                tx_fifo.q.extend(buf[:free_count])
+        if free_count < len(buf):
+            self.log.warning('FIFO full, truncated buffer from %d', pin)
 
     def _update_gpio(self, source: bool, gpio: int) -> None:
         changed = self._gpio ^ gpio
@@ -754,7 +813,7 @@ class VirtFtdiPort:
                 if self._bitmode == self.BitMode.MPSSE:
                     self._mpsse.send(self._iface, data)
                 elif self._bitmode == self.BitMode.RESET:
-                    self._stream_txd.extend(data)
+                    self[self.UART_PINS.TXD].push_to_pin(data)
                 elif self._bitmode == self.BitMode.BITBANG:
                     for byte in data:
                         # only 8 LSBs are addressable through this command
@@ -805,7 +864,7 @@ class VirtFtdiPort:
         """Background handling of data sent to host."""
         bitmode = self.BitMode.RESET
         purge_tx = False
-        self._wait_delay = self.SLEEP_DELAY
+        _wait_delay = self.SLEEP_DELAY
         try:
             while self._resume:
                 # in order not to overload CPU with real-time computation,
@@ -814,7 +873,7 @@ class VirtFtdiPort:
                 # would have generated during this period (~ epsilon due to
                 # rounding)
                 if not self._cmd_q.q:
-                    if not self._cmd_q.event.wait(self._wait_delay):
+                    if not self._cmd_q.event.wait(_wait_delay):
                         purge_tx = self._tx_worker_generate(bitmode, purge_tx)
                         continue
                 with self._cmd_q.lock:
@@ -831,9 +890,9 @@ class VirtFtdiPort:
                     self._last_txw_ts = now()
                     if bitmode in (self.BitMode.BITBANG,
                                    self.BitMode.SYNCBB):
-                        self._wait_delay = self.POLL_DELAY
+                        _wait_delay = self.POLL_DELAY
                     else:
-                        self._wait_delay = self.SLEEP_DELAY
+                        _wait_delay = self.SLEEP_DELAY
                     continue
                 elif command[0] == self.Command.PURGE_TX:
                     purge_tx = self._tx_worker_generate(bitmode, True)
