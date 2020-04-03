@@ -123,7 +123,10 @@ class FtdiMpsseEngine:
                                    self._if, code, cmd)
                 cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
                 rdepth = len(self._expect_resp)
-                self._cmd_decoded = cmd_decoder()
+                try:
+                    self._cmd_decoded = cmd_decoder()
+                except AttributeError as exc:
+                    raise ValueError(str(exc))
                 if len(self._expect_resp) > rdepth:
                     self._last_codes.append(code)
                 if self._cmd_decoded:
@@ -136,9 +139,12 @@ class FtdiMpsseEngine:
             except KeyError:
                 self.log.warning('[%d]:Unknown command code: %02X',
                                  self._if, code)
-            except AttributeError:
+            except AttributeError as exc:
                 self.log.warning('[%d]:Decoder for command %s [%02X] is not '
                                  'implemented', self._if, cmd, code)
+            except ValueError as exc:
+                self.log.warning('[%d]:Decoder for command %s [%02X] failed: '
+                                 '%s', self._if, cmd, code, exc)
             # on error, flush all buffers
             self.log.warning('Flush TX/RX buffers')
             self._trace_tx = bytearray()
