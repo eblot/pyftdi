@@ -30,8 +30,8 @@ import sys
 from importlib import import_module
 from string import printable as printablechars
 from threading import RLock
-from typing import (List, Mapping, NamedTuple, Optional, Sequence, Set,
-                    TextIO, Tuple)
+from typing import (List, Mapping, NamedTuple, Optional, Sequence, Set, TextIO,
+                    Type, Tuple)
 from urllib.parse import urlsplit, urlunsplit
 from usb.backend import IBackend
 from usb.core import Device as UsbDevice, USBError
@@ -237,6 +237,28 @@ class UsbTools:
                         dispose_resources(cls.Devices[devkey][0])
                         del cls.Devices[devkey]
                     break
+        finally:
+            cls.Lock.release()
+
+    @classmethod
+    def release_all_devices(cls, devclass: Optional[Type] = None) -> int:
+        """Release all open devices.
+
+           :param devclass: optional class to only release devices of one type
+           :return: the count of device that have been released.
+        """
+        cls.Lock.acquire()
+        try:
+            remove_devs = set()
+            for devkey in cls.Devices:
+                if devclass:
+                    if not isinstance(cls.Devices[devkey][0], devclass):
+                        continue
+                dispose_resources(cls.Devices[devkey][0])
+                remove_devs.add(devkey)
+            for devkey in remove_devs:
+                del cls.Devices[devkey]
+            return len(remove_devs)
         finally:
             cls.Lock.release()
 
