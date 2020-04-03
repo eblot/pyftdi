@@ -62,8 +62,7 @@ class VirtualFtdiPin:
         TRISTATE = 0
         GPIO = 1
         CLOCK = 2
-        STREAM_IN = 3
-        STREAM_OUT = 4
+        STREAM = 3
 
     def __init__(self, port, position):
         self.log = getLogger(f'pyftdi.vftdi[{port.iface}].{position}')
@@ -83,8 +82,7 @@ class VirtualFtdiPin:
                      function: Optional['VirtualFtdiPin.Function'] = None) \
             -> None:
         self._function = function or self.Function.TRISTATE
-        if self._function in (self.Function.STREAM_IN,
-                              self.Function.STREAM_OUT):
+        if self._function == self.Function.STREAM:
             self._fifo = Fifo()
         elif self._fifo:
             with self._fifo.lock:
@@ -248,6 +246,7 @@ class VirtFtdiPort:
         self._stream_txd = deque()  # represent the TXD pin
 
     def terminate(self):
+        self.log.debug('> terminate')
         if self._tx_thread:
             with self._cmd_q.lock:
                 self._cmd_q.q.append((self.Command.TERMINATE,))
@@ -456,9 +455,22 @@ class VirtFtdiPort:
         with self._cmd_q.lock:
             self._cmd_q.q.append((self.Command.SET_BITMODE, self._bitmode))
             self._cmd_q.event.set()
-        while self._cmd_q.q:
-            # be sure to wait for the command to be popped out before resuming
-            sleep(0.1)
+        # be sure to wait for the command to be popped out before resuming
+        loop = 10  # is something goes wrong, do not loop forever
+        while loop:
+            if not self._cmd_q.q:
+                # command queue has been fully processed
+                break
+            if not self._resume:
+                # if the worker threads are ending or have ended, abort
+                self.log.warning('Premature end of worker')
+                return
+            loop -= 1
+            # kepp some time for the commands to be processed
+            sleep(0.05)
+        else:
+            raise RuntimeError(f'Command {self._cmd_q.q[-1][0].name} '
+                               f'not handled')
         if bitmode == self.BitMode.CBUS:
             self._cbus_dir = direction >> 4
             mask = (1 << self._parent.properties.cbuswidth) - 1
@@ -476,8 +488,8 @@ class VirtFtdiPort:
             self._direction = (VirtFtdiPort.UART_PINS.TXD |
                                VirtFtdiPort.UART_PINS.RTS |
                                VirtFtdiPort.UART_PINS.DTR)
-            self._pins[0].set_function(VirtualFtdiPin.Function.STREAM_OUT)
-            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM_IN)
+            self._pins[0].set_function(VirtualFtdiPin.Function.STREAM)
+            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
             for pin in self._pins[2:]:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
         else:
@@ -486,8 +498,8 @@ class VirtFtdiPort:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
         if bitmode == self.BitMode.MPSSE:
             self._pins[0].set_function(VirtualFtdiPin.Function.CLOCK)
-            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM_OUT)
-            self._pins[2].set_function(VirtualFtdiPin.Function.STREAM_IN)
+            self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
+            self._pins[2].set_function(VirtualFtdiPin.Function.STREAM)
             for pin in self._pins[3:]:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
             if not self._mpsse:
@@ -741,8 +753,7 @@ class VirtFtdiPort:
                 rx_fifo.lock.release()
                 if self._bitmode == self.BitMode.MPSSE:
                     self._mpsse.send(self._iface, data)
-                    return len(data)
-                if self._bitmode == self.BitMode.RESET:
+                elif self._bitmode == self.BitMode.RESET:
                     self._stream_txd.extend(data)
                 elif self._bitmode == self.BitMode.BITBANG:
                     for byte in data:
@@ -786,6 +797,8 @@ class VirtFtdiPort:
             raise
         finally:
             # ensure other threads to not run forever if this one is on error
+            if self._resume:
+                self.log.info('RX worker is triggering death')
             self._resume = False
 
     def _tx_worker(self):
@@ -810,6 +823,7 @@ class VirtFtdiPort:
                         continue
                     self._cmd_q.event.clear()
                     command = self._cmd_q.q.popleft()
+                self.log.info('Command %s', self.Command(command[0]).name)
                 if command[0] == self.Command.TERMINATE:
                     break
                 if command[0] == self.Command.SET_BITMODE:
@@ -840,6 +854,8 @@ class VirtFtdiPort:
             raise
         finally:
             # ensure other threads to not run forever if this one is on error
+            if self._resume:
+                self.log.info('TX worker is triggering death')
             self._resume = False
 
     def _tx_worker_generate(self, bitmode, purge_tx: bool) -> bool:
