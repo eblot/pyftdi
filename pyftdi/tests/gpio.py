@@ -322,7 +322,7 @@ class GpioMultiportTestCase(TestCase):
        the encoded configuration. Check your HW setup before running this test
        as it might damage your HW. You've been warned.
 
-       Low nibble is used as input, high nibble is used as output. They should
+       First port is used as input, second port is used as output. They should
        be interconnected as follow:
 
        * AD0 should be connected to BD0
@@ -426,7 +426,7 @@ class GpioMpsseTestCase(TestCase):
        the encoded configuration. Check your HW setup before running this test
        as it might damage your HW. You've been warned.
 
-       Low nibble is used as input, high nibble is used as output. They should
+       First port is used as input, second port is used as output. They should
        be interconnected as follow:
 
        * AD0 should be connected to BD0
@@ -449,6 +449,20 @@ class GpioMpsseTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        if VirtLoader:
+            cls.loader = VirtLoader()
+            with open('pyftdi/tests/resources/ft2232h.yaml', 'rb') as yfp:
+                cls.loader.load(yfp)
+            vftdi = cls.loader.get_virtual_ftdi(1, 1)
+            vport1 = vftdi.get_port(1)
+            vport2 = vftdi.get_port(2)
+            # create virtual connections as real HW
+            in_pins = [vport1[pos] for pos in range(16)]
+            out_pins = [vport2[pos] for pos in range(16)]
+            for in_pin, out_pin in zip(in_pins, out_pins):
+                out_pin.connect_to(in_pin)
+        else:
+            cls.loader = None
         url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         ftdi = Ftdi()
         ftdi.open_from_url(url)
@@ -466,7 +480,8 @@ class GpioMpsseTestCase(TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        if cls.loader:
+            cls.loader.unload()
 
     def test_default_gpio(self):
         """Check I/O.
@@ -552,7 +567,7 @@ def main():
     debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
     if debug:
         formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
-                                      ' %(name)-18s [%(lineno)4d] %(message)s',
+                                      ' %(name)-20s [%(lineno)4d] %(message)s',
                                       '%H:%M:%S')
     else:
         formatter = logging.Formatter('%(message)s')
