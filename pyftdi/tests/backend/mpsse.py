@@ -3,8 +3,10 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
+from collections import deque
 from logging import getLogger
 from struct import unpack as sunpack
+from typing import Union
 from pyftdi.tracer import FtdiMpsseEngine, FtdiMpsseTracer
 
 
@@ -14,7 +16,7 @@ class VirtMpsseTracer(FtdiMpsseTracer):
 
     def __init__(self, port: 'VirtFtdiPort', version: int):
         super().__init__(version)
-        self.log = getLogger('pyftdi.virt.mpsse')
+        self.log = getLogger('pyftdi.virt.mpsse.{port.iface}')
         self._port = port
 
     def _get_engine(self, iface: int):
@@ -30,38 +32,47 @@ class VirtMpsseTracer(FtdiMpsseTracer):
 
 
 class VirtMpsseEngine(FtdiMpsseEngine):
+    """Virtual implementation of a MPSSE.
+
+       Far from being complete for now :-)
+    """
 
     def __init__(self, tracer: VirtMpsseTracer, port: 'VirtFtdiPort'):
         super().__init__(port.iface)
-        # self.log = getLogger('pyftdi.virt.mpsse')
+        self.log = getLogger(f'pyftdi.virt.mpsse.{port.iface}')
         self._tracer = tracer
         self._port = port
         self._width = port.width
         self._mask = (1 << self._width) - 1
-        self._cfunc = None
+        self._reply_q = deque()
 
-    def complete(self):
-        if not self._cfunc:
-            self.log.debug('No post completion')
-            return
-        self._cfunc = None
+    def send(self, buf: Union[bytes, bytearray]) -> None:
+        super().send(buf)
+        # cannot post the response before the send() method has completed
+        # see FtdiMpsseEngine.send() for execution steps: expected reply size
+        # is only known (stored) once the command execution has completed
+        self.reply()
+
+    def reply(self) -> None:
+        """Post the reply to a command back into the virtual FTDI FIFO."""
+        while self._reply_q:
+            self._port.write_from_mpsse(self, self._reply_q.popleft())
 
     def _cmd_get_bits_low(self):
         super()._cmd_get_bits_low()
         byte = self._port.gpio & 0xff
         buf = bytes([byte])
-        self._port.write_from_mpsse(self, buf)
+        self._reply_q.append(buf)
         return True
 
     def _cmd_get_bits_high(self):
         super()._cmd_get_bits_high()
         byte = (self._port.gpio >> 8) & 0xff
         buf = bytes([byte])
-        self._port.write_from_mpsse(self, buf)
+        self._reply_q.append(buf)
         return True
 
     def _cmd_set_bits_low(self):
-        self._cfunc = None
         buf = self._trace_tx[1:3]
         if not super()._cmd_set_bits_low():
             return False
@@ -72,11 +83,10 @@ class VirtMpsseEngine(FtdiMpsseEngine):
         msb = port.gpio & ~0xFF
         gpio = gpi | gpo | msb
         port.update_gpio(self, False, direction, gpio)
-        self.log.info('. bbwl %04x: %s', port.gpio, f'{port.gpio:016b}')
+        self.log.debug('. bbwl %04x: %s', port.gpio, f'{port.gpio:016b}')
         return True
 
     def _cmd_set_bits_high(self):
-        self._cfunc = None
         buf = self._trace_tx[1:3]
         if not super()._cmd_set_bits_high():
             return False
@@ -89,5 +99,5 @@ class VirtMpsseEngine(FtdiMpsseEngine):
         lsb = port.gpio & 0xFF
         gpio = gpi | gpo | lsb
         port.update_gpio(self, False, direction, gpio)
-        self.log.info('. bbwh %04x: %s', port.gpio, f'{port.gpio:016b}')
+        self.log.debug('. bbwh %04x: %s', port.gpio, f'{port.gpio:016b}')
         return True
