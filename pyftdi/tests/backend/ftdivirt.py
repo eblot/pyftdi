@@ -421,7 +421,6 @@ class VirtFtdiPort:
                     direction: int, gpio: int) -> None:
         self._direction = direction
         self._update_gpio(source, gpio)
-        mpsse.complete()
 
     @property
     def modem_status(self) -> Tuple[int, int]:
@@ -475,6 +474,9 @@ class VirtFtdiPort:
             with fifo.lock:
                 fifo.q.clear()
             self.log.info('> ftdi reset is not fully implemented')
+            self._gpio = 0
+            self._direction = 0
+            self._bitmode = self.BitMode.RESET
             return
         if reset == 'purge_tx':
             self.log.info('> ftdi %s: %d requests', reset,
@@ -641,7 +643,7 @@ class VirtFtdiPort:
         if free_count < len(buf):
             self.log.warning('FIFO full, truncated buffer from %d', pin)
 
-    def write_from_mpsse(self, mpsse: VirtMpsseTracer, buf: bytes) -> None:
+    def write_from_mpsse(self, mpsse: VirtMpsseEngine, buf: bytes) -> None:
         tx_fifo = self._fifos.tx
         with tx_fifo.lock:
             free_count = tx_fifo.size - len(tx_fifo.q)
