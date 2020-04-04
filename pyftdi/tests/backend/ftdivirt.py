@@ -285,7 +285,6 @@ class VirtFtdiPort:
         self._fifos: VirtFtdiPort.Fifos = VirtFtdiPort.Fifos(
             Fifo(self.FIFO_SIZES[self._parent.version][1]),
             Fifo(self.FIFO_SIZES[self._parent.version][0]))
-        self._rx_pop_event = Event()
         self._cbus_dir: int = 0  # logical (commands)
         self._cbus: int = 0  # logical (commands)
         self._cbus_map: Optional[Mapping[int, int]] = None  # logical to phys.
@@ -369,23 +368,20 @@ class VirtFtdiPort:
         rx_fifo = self._fifos.rx
         with rx_fifo.lock:
             count = len(rx_fifo.q)
-            if not count:
-                # remove any previous notification to be sure to wait for
-                # the next one
-                self._rx_pop_event.clear()
             rx_fifo.q.append(data)
-            # print(f'> RX Q {hexlify(bytes(rx_fifo.q))}')
             rx_fifo.event.set()
         if not count:
             # the FIFO was empty, so wait for the first request to complete
             # this is a hackish way to ensure a request when the device is
             # not busy handling his FIFOs responds "immediately" to the
             # first request
-            while not self._rx_pop_event.wait(4*self.POLL_DELAY):
-                if not self._resume:
-                    break
-                # timeout, need to wait more
-                self.log.debug(' waiting for RX FIFO')
+            loop = 0
+            while self._resume and rx_fifo.q:
+                sleep(self.POLL_DELAY/2)
+                loop += 1
+                if loop > 100:
+                    raise RuntimeError('RX queue seems stalled')
+                self.log.debug(' waiting for RX FIFO %d', loop)
         return len(data)
 
     def read(self, buff: array, timeout: int) -> int:
@@ -865,7 +861,6 @@ class VirtFtdiPort:
                                      len(data), hexlify(data).decode())
                 with rx_fifo.lock:
                     rx_fifo.q.popleft()
-                    self._rx_pop_event.set()
             self.log.debug('End of worker %s', self._rx_thread.name)
         except Exception as exc:
             self.log.error('Dead of worker %s: %s', self._rx_thread.name, exc)
