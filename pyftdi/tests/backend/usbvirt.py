@@ -91,12 +91,16 @@ class VirtInterface:
             extra_descriptors=extra or  b'')
         desc.update(defs)
         self.alt = 0
-        self.altsettings = [(desc, [])]
+        self.altsettings: List[Tuple[VirtInterface,
+                                     List[VirtEndpoint]]] = [(desc, [])]
 
     def add_endpoint(self, endpoint: VirtEndpoint):
         altsetting = self.altsettings[self.alt]
         altsetting[1].append(endpoint)
         altsetting[0].bNumEndpoints = len(altsetting[1])
+
+    def update_number(self, number: int) -> None:
+        self.altsettings[self.alt][0].bInterfaceNumber = number
 
     @property
     def endpoints(self):
@@ -167,10 +171,10 @@ class VirtConfiguration:
             bMaxPower=150//2,  # 150 mA
             extra_descriptors=extra or  b'')
         self.desc.update(defs)
-        self.interfaces = []
+        self.interfaces: List[VirtInterface] = []
 
     def add_interface(self, interface: VirtInterface):
-        interface.bInterfaceNumber = len(self.interfaces)
+        interface.update_number(len(self.interfaces))
         self.interfaces.append(interface)
         self.desc.bNumInterfaces = len(self.interfaces)
 
