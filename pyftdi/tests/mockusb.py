@@ -39,19 +39,33 @@ if version_info[:2] < (3, 6):
     raise AssertionError('Python 3.6 is required for this module')
 
 
-class MockUsbToolsTestCase(TestCase):
-    """Test UsbTools APIs.
+class FtdiTestCase(TestCase):
+    """Common features for all tests.
     """
 
     @classmethod
     def setUpClass(cls):
         cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
 
     @classmethod
     def tearDownClass(cls):
-        cls.loader.unload()
+        if cls.loader:
+            cls.loader.unload()
+
+    def setUp(self):
+        if self.debug:
+            print('.'.join(self.id().split('.')[-2:]))
+
+
+class MockUsbToolsTestCase(FtdiTestCase):
+    """Test UsbTools APIs.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        FtdiTestCase.setUpClass()
+        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
 
     def test_enumerate(self):
         """Enumerate FTDI devices."""
@@ -119,20 +133,16 @@ class MockUsbToolsTestCase(TestCase):
         self.assertEqual(len(devs), 1)
 
 
-class MockFtdiDiscoveryTestCase(TestCase):
+class MockFtdiDiscoveryTestCase(FtdiTestCase):
     """Test FTDI device discovery APIs.
        These APIs are FTDI wrappers for UsbTools APIs.
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_list_devices(self):
         """List FTDI devices."""
@@ -163,19 +173,15 @@ class MockFtdiDiscoveryTestCase(TestCase):
         self.assertEqual(portmap, reference)
 
 
-class MockSimpleDeviceTestCase(TestCase):
+class MockSimpleDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a single-port FTDI device (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a single FTDI device."""
@@ -193,19 +199,15 @@ class MockSimpleDeviceTestCase(TestCase):
         self.assertTrue(lines[0].split(' ')[0].endswith('/1'))
 
 
-class MockDualDeviceTestCase(TestCase):
+class MockDualDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with two similar single-port FTDI devices (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a 2-port FTDI device."""
@@ -224,19 +226,15 @@ class MockDualDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith('/1'))
 
 
-class MockTwoPortDeviceTestCase(TestCase):
+class MockTwoPortDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a dual-port FTDI device (FT2232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft2232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a 4-port FTDI device."""
@@ -255,19 +253,15 @@ class MockTwoPortDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith(f'/{pos}'))
 
 
-class MockFourPortDeviceTestCase(TestCase):
+class MockFourPortDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a quad-port FTDI device (FT4232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft4232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of two similar FTDI device."""
@@ -286,19 +280,15 @@ class MockFourPortDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith(f'/{pos}'))
 
 
-class MockManyDevicesTestCase(TestCase):
+class MockManyDevicesTestCase(FtdiTestCase):
     """Test FTDI APIs with several, mixed type FTDI devices
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of two similar FTDI device."""
@@ -330,19 +320,15 @@ class MockManyDevicesTestCase(TestCase):
             self.assertRegex(urlparts.path, r'^/\d$')
 
 
-class MockSimpleDirectTestCase(TestCase):
+class MockSimpleDirectTestCase(FtdiTestCase):
     """Test FTDI open/close APIs with a basic featured FTDI device (FT230H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_open_close(self):
         """Check simple open/close sequence."""
@@ -365,19 +351,15 @@ class MockSimpleDirectTestCase(TestCase):
                           ftdi.open_mpsse_from_url, 'ftdi:///1')
 
 
-class MockSimpleMpsseTestCase(TestCase):
+class MockSimpleMpsseTestCase(FtdiTestCase):
     """Test FTDI open/close APIs with a MPSSE featured FTDI device (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_open_close(self):
         """Check simple open/close sequence."""
@@ -399,13 +381,9 @@ class MockSimpleMpsseTestCase(TestCase):
         ftdi.close()
 
 
-class MockSimpleGpioTestCase(TestCase):
+class MockSimpleGpioTestCase(FtdiTestCase):
     """Test FTDI GPIO APIs
     """
-
-    def setUp(self):
-        self.loader = MockLoader()
-        UsbTools.flush_cache()
 
     def tearDown(self):
         self.loader.unload()
@@ -449,13 +427,10 @@ class MockSimpleGpioTestCase(TestCase):
         #print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
         gpio.close()
 
-class MockSimpleUartTestCase(TestCase):
+
+class MockSimpleUartTestCase(FtdiTestCase):
     """Test FTDI UART APIs
     """
-
-    def setUp(self):
-        self.loader = MockLoader()
-        UsbTools.flush_cache()
 
     def tearDown(self):
         self.loader.unload()
@@ -534,20 +509,15 @@ class MockSimpleUartTestCase(TestCase):
         port.close()
 
 
-class MockRawExtEepromTestCase(TestCase):
+class MockRawExtEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM low-level APIs with external EEPROM device
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def _restore_eeprom(self, ftdi):
         bus, address, _ = ftdi.usb_path
@@ -638,20 +608,15 @@ class MockRawExtEepromTestCase(TestCase):
         self.assertNotEqual(checksum1, checksum2)
 
 
-class MockRawIntEepromTestCase(TestCase):
+class MockRawIntEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM low-level APIs with internal EEPROM device
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_descriptor_update(self):
         """Check EEPROM content overrides YaML configuration."""
@@ -673,15 +638,16 @@ class MockRawIntEepromTestCase(TestCase):
         ftdi.close()
 
 
-class MockCBusEepromTestCase(TestCase):
+class MockCBusEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM APIs that manage CBUS feature
     """
 
+    def tearDown(self):
+        self.loader.unload()
+
     def test_ft230x(self):
-        loader = MockLoader()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        UsbTools.flush_cache()
+            self.loader.load(yfp)
         eeprom = FtdiEeprom()
         eeprom.open('ftdi:///1')
         # default EEPROM config does not have any CBUS configured as GPIO
@@ -719,13 +685,10 @@ class MockCBusEepromTestCase(TestCase):
         self.assertEqual(eeprom.cbus_pins, [2, 3])
         self.assertEqual(eeprom.cbus_mask, 0xC)
         eeprom.close()
-        loader.unload()
 
     def test_ft232h(self):
-        loader = MockLoader()
         with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        UsbTools.flush_cache()
+            self.loader.load(yfp)
         eeprom = FtdiEeprom()
         eeprom.open('ftdi://::FT1ABC1/1', ignore=True)
         eeprom.erase()
@@ -753,20 +716,14 @@ class MockCBusEepromTestCase(TestCase):
         self.assertRaises(ValueError, eeprom.set_property,
                           'cbus_func_3', 'gpio')
         eeprom.close()
-        loader.unload()
 
 
-class MockCbusGpioTestCase(TestCase):
+class MockCbusGpioTestCase(FtdiTestCase):
     """Test FTDI CBUS GPIO APIs
     """
 
-    def setUp(self):
-        self.loader = MockLoader()
-        UsbTools.flush_cache()
-
     def tearDown(self):
         self.loader.unload()
-        UsbTools.flush_cache()
 
     def test_230x(self):
         """Check simple GPIO write and read sequence."""
