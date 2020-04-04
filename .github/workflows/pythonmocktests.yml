@@ -24,6 +24,16 @@ jobs:
     - name: Install package
       run: |
         python setup.py install
-    - name: Run tests
+    - name: Run Mock tests
+      env:
+        FTDI_LOGLEVEL: WARNING
+        FTDI_DEBUG: on
       run: |
         python pyftdi/tests/mockusb.py
+    - name: Run GPIO tests
+      env:
+        FTDI_LOGLEVEL: WARNING
+        FTDI_DEBUG: on
+        FTDI_VIRTUAL: on
+      run: |
+        python pyftdi/tests/gpio.py
