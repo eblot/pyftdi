@@ -313,6 +313,12 @@ class VirtFtdiPort:
             with self._cmd_q.lock:
                 self._cmd_q.q.append((self.Command.TERMINATE,))
                 self._cmd_q.event.set()
+        timeout = now()+.5
+        while self._cmd_q.q:
+            sleep(50e-3)
+            if now() >= timeout:
+                self.log.warning('aborting before full completion')
+                break
         self._resume = False
         if self._rx_thread:
             self._rx_thread.join()
@@ -878,6 +884,7 @@ class VirtFtdiPort:
         bitmode = self.BitMode.RESET
         purge_tx = False
         _wait_delay = self.SLEEP_DELAY
+        terminated = False
         try:
             while self._resume:
                 # in order not to overload CPU with real-time computation,
@@ -897,6 +904,7 @@ class VirtFtdiPort:
                     command = self._cmd_q.q.popleft()
                 self.log.info('Command %s', self.Command(command[0]).name)
                 if command[0] == self.Command.TERMINATE:
+                    terminated = True
                     break
                 if command[0] == self.Command.SET_BITMODE:
                     bitmode = command[1]
@@ -926,7 +934,7 @@ class VirtFtdiPort:
             raise
         finally:
             # ensure other threads to not run forever if this one is on error
-            if self._resume:
+            if not terminated and self._resume:
                 self.log.info('TX worker is triggering death')
             self._resume = False
 
