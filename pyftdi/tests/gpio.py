@@ -387,9 +387,11 @@ class GpioMultiportTestCase(FtdiTestCase):
         gpio_out.close()
 
     def test_gpio_stream(self):
-        """Check I/O.
+        """Check I/O streaming
         """
         if VirtLoader:
+            # this would require to synchronize virtual clock between all ports
+            # which is not supported by the virtual framework
             raise SkipTest('Skip gpio stream with virtual device')
         gpio_in, gpio_out = GpioAsyncController(), GpioAsyncController()
         gpio_in.configure(self.urls[0], direction=0x00, frequency=1e4)
@@ -502,7 +504,7 @@ class GpioMpsseTestCase(FtdiTestCase):
         gpio_out.close()
 
     def test_peek_gpio(self):
-        """Check I/O.
+        """Check I/O peeking
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
         gpio_in.configure(self.urls[0], direction=0xFF00, frequency=10e6,
@@ -522,7 +524,9 @@ class GpioMpsseTestCase(FtdiTestCase):
         gpio_out.close()
 
     def test_stream_gpio(self):
-        """Check I/O.
+        """Check I/O streaming.
+
+           Beware this test is CPU intensive w/ virtual framework
         """
         gpio_in, gpio_out = GpioMpsseController(), GpioMpsseController()
         gpio_in.configure(self.urls[0], direction=0x0000, frequency=10e6,
