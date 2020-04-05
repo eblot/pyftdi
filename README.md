@@ -2,6 +2,7 @@
 
 ![Python package](https://github.com/eblot/pyftdi/workflows/Python%20package/badge.svg)
 ![Mock tests](https://github.com/eblot/pyftdi/workflows/Python%20mock%20tests/badge.svg)
+![Syntax tests](https://github.com/eblot/pyftdi/workflows/Python%20syntax%20tests/badge.svg)
 
 ## Documentation
 
