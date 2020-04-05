@@ -389,6 +389,8 @@ class GpioMultiportTestCase(FtdiTestCase):
     def test_gpio_stream(self):
         """Check I/O.
         """
+        if VirtLoader:
+            raise SkipTest('Skip gpio stream with virtual device')
         gpio_in, gpio_out = GpioAsyncController(), GpioAsyncController()
         gpio_in.configure(self.urls[0], direction=0x00, frequency=1e4)
         gpio_out.configure(self.urls[1], direction=0xFF, frequency=1e4)
@@ -408,6 +410,7 @@ class GpioMultiportTestCase(FtdiTestCase):
             qout.popleft()
         # offset is the count of missed bytes
         offset = len(ins)-len(qout)
+        self.assertGreater(offset, 0) # no more output than input
         self.assertLess(offset, 16) # seems to be in the 6..12 range
         # print('Offset', offset)
         # check that the remaining sequence match
