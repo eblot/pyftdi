@@ -381,13 +381,11 @@ class VirtFtdiPort:
             # this is a hackish way to ensure a request when the device is
             # not busy handling his FIFOs responds "immediately" to the
             # first request
-            loop = 0
+            timeout = now()+2  # note that verbose traces may trigger a timeout
             while self._resume and rx_fifo.q:
-                sleep(self.POLL_DELAY/2)
-                loop += 1
-                if loop > 100:
+                sleep(self.POLL_DELAY)
+                if now() >= timeout:
                     raise RuntimeError('RX queue seems stalled')
-                self.log.debug(' waiting for RX FIFO %d', loop)
         return len(data)
 
     def read(self, buff: array, timeout: int) -> int:
