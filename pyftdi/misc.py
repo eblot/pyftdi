@@ -313,6 +313,14 @@ def add_custom_devices(ftdicls=None,
             vidpids[vid].add(pid)
 
 
+def show_call_stack():
+    """Print the current call stack, only useful for debugging purpose."""
+    from sys import _current_frames
+    from threading import current_thread
+    from traceback import print_stack
+    print_stack(_current_frames()[current_thread().ident])
+
+
 class EasyDict(dict):
     """Dictionary whose members can be accessed as instance members
     """
