@@ -9,6 +9,8 @@
 #pylint: disable-msg=no-self-use
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=global-statement
+#pylint: disable-msg=too-many-locals
+
 
 import logging
 from collections import defaultdict
@@ -24,7 +26,7 @@ from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
-from pyftdi.misc import hexdump
+from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
 
@@ -37,20 +39,33 @@ if version_info[:2] < (3, 6):
     raise AssertionError('Python 3.6 is required for this module')
 
 
-class MockUsbToolsTestCase(TestCase):
-    """Test UsbTools APIs.
+class FtdiTestCase(TestCase):
+    """Common features for all tests.
     """
 
     @classmethod
     def setUpClass(cls):
         cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
-        UsbTools.flush_cache()
 
     @classmethod
     def tearDownClass(cls):
-        cls.loader.unload()
+        if cls.loader:
+            cls.loader.unload()
+
+    def setUp(self):
+        if self.debug:
+            print('.'.join(self.id().split('.')[-2:]))
+
+
+class MockUsbToolsTestCase(FtdiTestCase):
+    """Test UsbTools APIs.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        FtdiTestCase.setUpClass()
+        with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
+            cls.loader.load(yfp)
 
     def test_enumerate(self):
         """Enumerate FTDI devices."""
@@ -118,21 +133,16 @@ class MockUsbToolsTestCase(TestCase):
         self.assertEqual(len(devs), 1)
 
 
-class MockFtdiDiscoveryTestCase(TestCase):
+class MockFtdiDiscoveryTestCase(FtdiTestCase):
     """Test FTDI device discovery APIs.
        These APIs are FTDI wrappers for UsbTools APIs.
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_list_devices(self):
         """List FTDI devices."""
@@ -152,7 +162,7 @@ class MockFtdiDiscoveryTestCase(TestCase):
             lines.pop()
         self.assertEqual(len(lines), 10)
         portmap = defaultdict(int)
-        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, '230x': 1}
+        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, 'ft-x': 1}
         for line in lines:
             url = line.split(' ')[0].strip()
             parts = urlsplit(url)
@@ -163,20 +173,15 @@ class MockFtdiDiscoveryTestCase(TestCase):
         self.assertEqual(portmap, reference)
 
 
-class MockSimpleDeviceTestCase(TestCase):
+class MockSimpleDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a single-port FTDI device (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a single FTDI device."""
@@ -194,20 +199,15 @@ class MockSimpleDeviceTestCase(TestCase):
         self.assertTrue(lines[0].split(' ')[0].endswith('/1'))
 
 
-class MockDualDeviceTestCase(TestCase):
+class MockDualDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with two similar single-port FTDI devices (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a 2-port FTDI device."""
@@ -226,20 +226,15 @@ class MockDualDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith('/1'))
 
 
-class MockTwoPortDeviceTestCase(TestCase):
+class MockTwoPortDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a dual-port FTDI device (FT2232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft2232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of a 4-port FTDI device."""
@@ -258,20 +253,15 @@ class MockTwoPortDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith(f'/{pos}'))
 
 
-class MockFourPortDeviceTestCase(TestCase):
+class MockFourPortDeviceTestCase(FtdiTestCase):
     """Test FTDI APIs with a quad-port FTDI device (FT4232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft4232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of two similar FTDI device."""
@@ -290,20 +280,15 @@ class MockFourPortDeviceTestCase(TestCase):
             self.assertTrue(line.split(' ')[0].endswith(f'/{pos}'))
 
 
-class MockManyDevicesTestCase(TestCase):
+class MockManyDevicesTestCase(FtdiTestCase):
     """Test FTDI APIs with several, mixed type FTDI devices
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ftmany.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_enumerate(self):
         """Check simple enumeration of two similar FTDI device."""
@@ -335,20 +320,15 @@ class MockManyDevicesTestCase(TestCase):
             self.assertRegex(urlparts.path, r'^/\d$')
 
 
-class MockSimpleDirectTestCase(TestCase):
+class MockSimpleDirectTestCase(FtdiTestCase):
     """Test FTDI open/close APIs with a basic featured FTDI device (FT230H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_open_close(self):
         """Check simple open/close sequence."""
@@ -371,20 +351,15 @@ class MockSimpleDirectTestCase(TestCase):
                           ftdi.open_mpsse_from_url, 'ftdi:///1')
 
 
-class MockSimpleMpsseTestCase(TestCase):
+class MockSimpleMpsseTestCase(FtdiTestCase):
     """Test FTDI open/close APIs with a MPSSE featured FTDI device (FT232H)
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_open_close(self):
         """Check simple open/close sequence."""
@@ -406,23 +381,17 @@ class MockSimpleMpsseTestCase(TestCase):
         ftdi.close()
 
 
-class MockSimpleGpioTestCase(TestCase):
+class MockSimpleGpioTestCase(FtdiTestCase):
     """Test FTDI GPIO APIs
     """
 
-    @classmethod
-    def setUpClass(cls):
-        cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
-        UsbTools.flush_cache()
+    def tearDown(self):
+        self.loader.unload()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
-
-    def test(self):
+    def _test_gpio(self):
         """Check simple GPIO write and read sequence."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
         gpio = GpioController()
         # access to the virtual GPIO port
         out_pins = 0xAA
@@ -430,59 +399,125 @@ class MockSimpleGpioTestCase(TestCase):
         bus, address, iface = gpio.ftdi.usb_path
         self.assertEqual((bus, address, iface), (4, 5, 0))
         vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
         gpio.write_port(0xF3)
-        self.assertEqual(vftdi.gpio, 0xAA & 0xF3)
-        vftdi.gpio = 0x0c
+        self.assertEqual(vport.gpio, 0xAA & 0xF3)
+        vport.gpio = 0x0c
         vio = gpio.read_port()
         self.assertEqual(vio, (0xAA & 0xF3) | (~0xAA & 0x0c))
         gpio.close()
 
+    def test_baudrate(self):
+        """Check simple GPIO write and read sequence."""
+        # load custom CBUS config, with:
+            # CBUS0: GPIO (gpio)
+            # CBUS1: GPIO (gpio)
+            # CBUS0: DRIVE1 (forced to high level)
+            # CBUS0: TXLED  (eq. to highz for tests)
+        with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        gpio = GpioController()
+        # access to the virtual GPIO port
+        out_pins = 0xAA
+        gpio.configure('ftdi://:230x/1', direction=out_pins)
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        vport = vftdi.get_port(1)
+        baudrate = 1000000
+        gpio.set_frequency(baudrate)
+        #print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
+        gpio.close()
 
-class MockSimpleUartTestCase(TestCase):
+
+class MockSimpleUartTestCase(FtdiTestCase):
     """Test FTDI UART APIs
     """
 
-    @classmethod
-    def setUpClass(cls):
-        cls.loader = MockLoader()
-        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
-            cls.loader.load(yfp)
-        UsbTools.flush_cache()
+    def tearDown(self):
+        self.loader.unload()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
-
-    def test(self):
+    def test_uart(self):
         """Check simple TX/RX sequence."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
         port = serial_for_url('ftdi:///1')
         bus, address, _ = port.usb_path
         vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
         msg = ascii_letters
         port.write(msg.encode())
-        buf = vftdi.uart_read(len(ascii_letters)+10).decode()
+        txd = vport[vport.UART_PINS.TXD]
+        buf = txd.read(len(ascii_letters)+10).decode()
         self.assertEqual(msg, buf)
         msg = ''.join(reversed(msg))
-        vftdi.uart_write(msg.encode())
+        rxd = vport[vport.UART_PINS.TXD]
+        rxd.write(msg.encode())
         buf = port.read(len(ascii_letters)).decode()
         self.assertEqual(msg, buf)
         port.close()
 
+    def test_uart_loopback(self):
+        """Check TXD/RXD loopback."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1')
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        txd = vport[vport.UART_PINS.TXD]
+        rxd = vport[vport.UART_PINS.RXD]
+        txd.connect_to(rxd)
+        msg = ascii_letters
+        port.write(msg.encode())
+        buf = port.read(len(ascii_letters)).decode()
+        self.assertEqual(msg, buf)
+        port.close()
 
-class MockRawExtEepromTestCase(TestCase):
+    def test_baudrate_fs_dev(self):
+        """Check baudrate settings for full speed devices."""
+        with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1', baudrate=1200)
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 100)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 3100000)
+        for baudrate in (200, 600, 1200, 2400, 4800, 9600, 115200, 230400,
+                         460800, 490000, 921600, 1000000, 1200000, 1500000,
+                         2000000, 3000000):
+            port.baudrate = baudrate
+            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
+            self.assertEqual(port.ftdi.baudrate, vport.baudrate)
+        port.close()
+
+    def test_baudrate_hs_dev(self):
+        """Check baudrate settings for high speed devices."""
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port = serial_for_url('ftdi:///1', baudrate=1200)
+        bus, address, _ = port.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        vport = vftdi.get_port(1)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 100)
+        self.assertRaises(ValueError, setattr, port, 'baudrate', 12100000)
+        for baudrate in (200, 600, 1200, 2400, 4800, 9600, 115200, 230400,
+                         460800, 490000, 921600, 1000000, 1200000, 1500000,
+                         2000000, 3000000, 4000000, 6000000):
+            port.baudrate = baudrate
+            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
+            self.assertEqual(port.ftdi.baudrate, vport.baudrate)
+        port.close()
+
+
+class MockRawExtEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM low-level APIs with external EEPROM device
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def _restore_eeprom(self, ftdi):
         bus, address, _ = ftdi.usb_path
@@ -573,20 +608,15 @@ class MockRawExtEepromTestCase(TestCase):
         self.assertNotEqual(checksum1, checksum2)
 
 
-class MockRawIntEepromTestCase(TestCase):
+class MockRawIntEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM low-level APIs with internal EEPROM device
     """
 
     @classmethod
     def setUpClass(cls):
-        cls.loader = MockLoader()
+        FtdiTestCase.setUpClass()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
             cls.loader.load(yfp)
-        UsbTools.flush_cache()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.loader.unload()
 
     def test_descriptor_update(self):
         """Check EEPROM content overrides YaML configuration."""
@@ -608,29 +638,30 @@ class MockRawIntEepromTestCase(TestCase):
         ftdi.close()
 
 
-class MockCBusEepromTestCase(TestCase):
+class MockCBusEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM APIs that manage CBUS feature
     """
 
+    def tearDown(self):
+        self.loader.unload()
+
     def test_ft230x(self):
-        loader = MockLoader()
         with open('pyftdi/tests/resources/ft230x.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        UsbTools.flush_cache()
+            self.loader.load(yfp)
         eeprom = FtdiEeprom()
         eeprom.open('ftdi:///1')
         # default EEPROM config does not have any CBUS configured as GPIO
         self.assertEqual(eeprom.cbus_pins, [])
         self.assertEqual(eeprom.cbus_mask, 0)
         # enable CBUS1 and CBUS3 as GPIO
-        eeprom.set_property('cbus_func_1', 'iomode')
-        eeprom.set_property('cbus_func_3', 'iomode')
+        eeprom.set_property('cbus_func_1', 'gpio')
+        eeprom.set_property('cbus_func_3', 'gpio')
         eeprom.sync()
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0xA)
         # enable CBUS0 and CBUS2 as GPIO
-        eeprom.set_property('cbus_func_0', 'iomode')
-        eeprom.set_property('cbus_func_2', 'iomode')
+        eeprom.set_property('cbus_func_0', 'gpio')
+        eeprom.set_property('cbus_func_2', 'gpio')
         # not yet committed
         self.assertEqual(eeprom.cbus_pins, [1, 3])
         self.assertEqual(eeprom.cbus_mask, 0xA)
@@ -640,13 +671,13 @@ class MockCBusEepromTestCase(TestCase):
         self.assertEqual(eeprom.cbus_mask, 0xF)
         # invalid CBUS pin
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func_4', 'iomode')
+                          'cbus_func_4', 'gpio')
         # invalid pin function
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func_0', 'iomode_')
+                          'cbus_func_0', 'gpio_')
         # invalid pin
         self.assertRaises(ValueError, eeprom.set_property,
-                          'cbus_func', 'iomode')
+                          'cbus_func', 'gpio')
         # valid alternative mode
         eeprom.set_property('cbus_func_0', 'txled')
         eeprom.set_property('cbus_func_1', 'rxled')
@@ -654,13 +685,10 @@ class MockCBusEepromTestCase(TestCase):
         self.assertEqual(eeprom.cbus_pins, [2, 3])
         self.assertEqual(eeprom.cbus_mask, 0xC)
         eeprom.close()
-        loader.unload()
 
     def test_ft232h(self):
-        loader = MockLoader()
         with open('pyftdi/tests/resources/ft232h_x2.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        UsbTools.flush_cache()
+            self.loader.load(yfp)
         eeprom = FtdiEeprom()
         eeprom.open('ftdi://::FT1ABC1/1', ignore=True)
         eeprom.erase()
@@ -668,135 +696,128 @@ class MockCBusEepromTestCase(TestCase):
         # default EEPROM config does not have any CBUS configured as GPIO
         self.assertEqual(eeprom.cbus_pins, [])
         self.assertEqual(eeprom.cbus_mask, 0)
-        eeprom.set_property('cbus_func_1', 'iomode')
-        eeprom.set_property('cbus_func_3', 'iomode')
-        eeprom.sync()
-        # CBUS1 and CBUS3 are not addressable as GPIOs
-        # they should appear in cbus_pins, but not in cbus_mask
-        self.assertEqual(eeprom.cbus_pins, [1, 3])
-        self.assertEqual(eeprom.cbus_mask, 0)
-        eeprom.set_property('cbus_func_6', 'iomode')
-        eeprom.set_property('cbus_func_9', 'iomode')
+        eeprom.set_property('cbus_func_6', 'gpio')
+        eeprom.set_property('cbus_func_9', 'gpio')
         # not yet committed
-        self.assertEqual(eeprom.cbus_pins, [1, 3])
+        self.assertEqual(eeprom.cbus_pins, [])
         self.assertEqual(eeprom.cbus_mask, 0)
         eeprom.sync()
         # committed
-        self.assertEqual(eeprom.cbus_pins, [1, 3, 6, 9])
+        self.assertEqual(eeprom.cbus_pins, [6, 9])
         self.assertEqual(eeprom.cbus_mask, 0xA)
-        eeprom.set_property('cbus_func_5', 'iomode')
-        eeprom.set_property('cbus_func_8', 'iomode')
+        eeprom.set_property('cbus_func_5', 'gpio')
+        eeprom.set_property('cbus_func_8', 'gpio')
         eeprom.sync()
-        self.assertEqual(eeprom.cbus_pins, [1, 3, 5, 6, 8, 9])
+        self.assertEqual(eeprom.cbus_pins, [5, 6, 8, 9])
         self.assertEqual(eeprom.cbus_mask, 0xF)
+        # pin1 and pin3 is not configurable as GPIO
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_1', 'gpio')
+        self.assertRaises(ValueError, eeprom.set_property,
+                          'cbus_func_3', 'gpio')
         eeprom.close()
-        loader.unload()
 
 
-class MockCbusGpioTestCase(TestCase):
+class MockCbusGpioTestCase(FtdiTestCase):
     """Test FTDI CBUS GPIO APIs
     """
 
+    def tearDown(self):
+        self.loader.unload()
+
     def test_230x(self):
         """Check simple GPIO write and read sequence."""
-        loader = MockLoader()
         # load custom CBUS config, with:
-            # CBUS0: IOMODE (gpio)
-            # CBUS1: IOMODE (gpio)
+            # CBUS0: GPIO (gpio)
+            # CBUS1: GPIO (gpio)
             # CBUS0: DRIVE1 (forced to high level)
             # CBUS0: TXLED  (eq. to highz for tests)
         with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        try:
-            UsbTools.flush_cache()
-            ftdi = Ftdi()
-            ftdi.open_from_url('ftdi:///1')
-            self.assertEqual(ftdi.has_cbus, True)
-            vftdi = loader.get_virtual_ftdi(1, 1)
-            # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
-            #   however, only CBUS0 and CBUS1 are mapped as GPIO,
-            #   CBUS2 forced to 1 and CBUS3 not usable as IO
-            #   even if use mask is 1111
-            eeprom_mask = 0b0011
-            eeprom_force = 0b0100
-            cbus_mask = 0b1111
-            cbus_dir = 0b1010
-            ftdi.set_cbus_direction(cbus_mask, cbus_dir)
-            cbus_out = 0b0011
-            # CBUS0: 1, CBUS1: 1
-            #   however, only CBUS1 is out, so CBUS0 output value should be ignored
-            ftdi.set_cbus_gpio(cbus_out)
-            exp_out = cbus_dir & cbus_out
-            exp_out &= eeprom_mask
-            exp_out |= eeprom_force
-            vcbus, vactive = vftdi.cbus
-            self.assertEqual(vcbus, exp_out)
-            self.assertEqual(vactive, eeprom_mask | eeprom_force)
-            cbus_out = 0b0000
-            ftdi.set_cbus_gpio(cbus_out)
-            exp_out = cbus_dir & cbus_out
-            exp_out &= eeprom_mask
-            exp_out |= eeprom_force
-            vcbus, vactive = vftdi.cbus
-            self.assertEqual(vcbus, exp_out)
-            cbus_in = 0b0101
-            vftdi.cbus = cbus_in
-            cbus = ftdi.get_cbus_gpio()
-            exp_in = cbus_in & eeprom_mask
-            self.assertEqual(cbus, exp_in)
-            ftdi.close()
-        finally:
-            loader.unload()
+            self.loader.load(yfp)
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        self.assertEqual(ftdi.has_cbus, True)
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        vport = vftdi.get_port(1)
+        # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
+        #   however, only CBUS0 and CBUS1 are mapped as GPIO,
+        #   CBUS2 forced to 1 and CBUS3 not usable as IO
+        #   even if use mask is 1111
+        eeprom_mask = 0b0011
+        eeprom_force = 0b0100
+        cbus_mask = 0b1111
+        cbus_dir = 0b1010
+        ftdi.set_cbus_direction(cbus_mask, cbus_dir)
+        cbus_out = 0b0011
+        # CBUS0: 1, CBUS1: 1
+        #   however, only CBUS1 is out, so CBUS0 output value should be ignored
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        exp_out |= eeprom_force
+        vcbus, vactive = vport.cbus
+        self.assertEqual(vcbus, exp_out)
+        self.assertEqual(vactive, eeprom_mask | eeprom_force)
+        cbus_out = 0b0000
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        exp_out |= eeprom_force
+        vcbus, vactive = vport.cbus
+        self.assertEqual(vcbus, exp_out)
+        cbus_in = 0b0101
+        vport.cbus = cbus_in
+        cbus = ftdi.get_cbus_gpio()
+        exp_in = cbus_in & eeprom_mask
+        self.assertEqual(cbus, exp_in)
+        ftdi.close()
 
     def test_lc231x(self):
         """Check simple GPIO write and read sequence."""
-        loader = MockLoader()
-            # load custom CBUS config, with:
-            # CBUS0: IOMODE (gpio)
+         # load custom CBUS config, with:
+            # CBUS0: GPIO (gpio)
             # CBUS1: TXLED
             # CBUS2: DRIVE0 (to light up RX green led)
-            # CBUS3: IOMODE (gpio)
+            # CBUS3: GPIO (gpio)
             # only CBUS0 and CBUS3 are available on LC231X
             # CBUS1 is connected to TX led, CBUS2 to RX led
         with open('pyftdi/tests/resources/ft231x_cbus.yaml', 'rb') as yfp:
-            loader.load(yfp)
-        try:
-            UsbTools.flush_cache()
-            ftdi = Ftdi()
-            ftdi.open_from_url('ftdi:///1')
-            self.assertEqual(ftdi.has_cbus, True)
-            vftdi = loader.get_virtual_ftdi(1, 1)
-            # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
-            #   however, only CBUS0 and CBUS3 are mapped as GPIO,
-            #   CBUS1 not usable as IO, CBUS2 is fixed to low
-            #   even if use mask is 1111
-            eeprom_mask = 0b1001
-            eeprom_force_low = 0b0100
-            cbus_mask = 0b1111
-            cbus_dir = 0b1010
-            ftdi.set_cbus_direction(cbus_mask, cbus_dir)
-            cbus_out = 0b1111
-            # however, only CBUS0 & 3 are out, so CBUS1/CBUS2 should be ignored
-            ftdi.set_cbus_gpio(cbus_out)
-            exp_out = cbus_dir & cbus_out
-            exp_out &= eeprom_mask
-            vcbus, vactive = vftdi.cbus
-            self.assertEqual(vcbus, exp_out)
-            self.assertEqual(vactive, eeprom_mask | eeprom_force_low)
-            cbus_out = 0b0000
-            ftdi.set_cbus_gpio(cbus_out)
-            exp_out = cbus_dir & cbus_out
-            exp_out &= eeprom_mask
-            vcbus, vactive = vftdi.cbus
-            self.assertEqual(vcbus, exp_out)
-            cbus_in = 0b0101
-            vftdi.cbus = cbus_in
-            cbus = ftdi.get_cbus_gpio()
-            exp_in = cbus_in & eeprom_mask
-            self.assertEqual(cbus, exp_in)
-            ftdi.close()
-        finally:
-            loader.unload()
+            self.loader.load(yfp)
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        self.assertEqual(ftdi.has_cbus, True)
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        vport = vftdi.get_port(1)
+        # CBUS0: in, CBUS1: out, CBUS2: in, CBUS3: out
+        #   however, only CBUS0 and CBUS3 are mapped as GPIO,
+        #   CBUS1 not usable as IO, CBUS2 is fixed to low
+        #   even if use mask is 1111
+        eeprom_mask = 0b1001
+        eeprom_force_low = 0b0100
+        cbus_mask = 0b1111
+        cbus_dir = 0b1010
+        ftdi.set_cbus_direction(cbus_mask, cbus_dir)
+        cbus_out = 0b1111
+        # however, only CBUS0 & 3 are out, so CBUS1/CBUS2 should be ignored
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        vcbus, vactive = vport.cbus
+        self.assertEqual(vcbus, exp_out)
+        self.assertEqual(vactive, eeprom_mask | eeprom_force_low)
+        cbus_out = 0b0000
+        ftdi.set_cbus_gpio(cbus_out)
+        exp_out = cbus_dir & cbus_out
+        exp_out &= eeprom_mask
+        vcbus, vactive = vport.cbus
+        self.assertEqual(vcbus, exp_out)
+        cbus_in = 0b0101
+        vport.cbus = cbus_in
+        cbus = ftdi.get_cbus_gpio()
+        exp_in = cbus_in & eeprom_mask
+        self.assertEqual(cbus, exp_in)
+        ftdi.close()
+
 
 def suite():
     suite_ = TestSuite()
@@ -820,13 +841,21 @@ def suite():
 
 def main():
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
+    debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+    if debug:
+        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
+                                      ' %(name)-18s [%(lineno)4d] %(message)s',
+                                      '%H:%M:%S')
+    else:
+        formatter = logging.Formatter('%(message)s')
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
         raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
+    FtdiLogger.set_formatter(formatter)
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('backend.usbvirt', )
     # Ensure the virtual backend can be found and is loaded

@@ -27,9 +27,9 @@ devices:
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
          00 00 00 00 00 00 00 00 00 00 00 00 00 00 d0 67
-        # CBUS0: IOMODE (gpio)
+        # CBUS0: GPIO (gpio)
         # CBUS1: TXLED
         # CBUS2: DRIVE0 (to light up RX green led)
-        # CBUS3: IOMODE (gpio)
+        # CBUS3: GPIO (gpio)
         # only CBUS0 and CBUS3 are available on LC231X
         # CBUS1 is connected to TX led, CBUS2 to RX led

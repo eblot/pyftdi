@@ -30,8 +30,8 @@ import sys
 from importlib import import_module
 from string import printable as printablechars
 from threading import RLock
-from typing import (List, Mapping, NamedTuple, Optional, Sequence, Set,
-                    TextIO, Tuple)
+from typing import (Any, List, Mapping, NamedTuple, Optional, Sequence, Set,
+                    TextIO, Type, Tuple)
 from urllib.parse import urlsplit, urlunsplit
 from usb.backend import IBackend
 from usb.core import Device as UsbDevice, USBError
@@ -83,9 +83,9 @@ class UsbTools:
     # limitation in pyusb that prevents from opening several times the same
     # USB device. The following dictionary used bus/address/vendor/product keys
     # to track (device, refcount) pairs
-    Devices = {}
     Lock = RLock()
-    UsbDevices = {}
+    Devices = {}  # (bus, address, vid, pid): (usb.core.Device, refcount)
+    UsbDevices = {}  # (vid, pid): usb.core.Device
     UsbApi = None
 
     @classmethod
@@ -120,7 +120,7 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
-    def flush_cache(cls):
+    def flush_cache(cls, ):
         """Flush the FTDI device cache.
 
            It is highly recommanded to call this method a FTDI device is
@@ -132,7 +132,7 @@ class UsbTools:
            ``Device may have been disconnected``.
         """
         cls.Lock.acquire()
-        cls.UsbDevices = {}
+        cls.UsbDevices.clear()
         cls.Lock.release()
 
     @classmethod
@@ -241,6 +241,29 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
+    def release_all_devices(cls, devclass: Optional[Type] = None) -> int:
+        """Release all open devices.
+
+           :param devclass: optional class to only release devices of one type
+           :return: the count of device that have been released.
+        """
+        cls.Lock.acquire()
+        try:
+            remove_devs = set()
+            for devkey in cls.Devices:
+                if devclass:
+                    dev = cls._get_backend_device(cls.Devices[devkey][0])
+                    if dev is None or not isinstance(dev, devclass):
+                        continue
+                dispose_resources(cls.Devices[devkey][0])
+                remove_devs.add(devkey)
+            for devkey in remove_devs:
+                del cls.Devices[devkey]
+            return len(remove_devs)
+        finally:
+            cls.Lock.release()
+
+    @classmethod
     def list_devices(cls, urlstr: str,
                      vdict: Mapping[str, int],
                      pdict: Mapping[int, Mapping[str, int]],
@@ -315,7 +338,7 @@ class UsbTools:
             vendor, product = desc[:2]
         except IndexError:
             raise UsbToolsError('No USB device matches URL %s' %
-                                urlstr)
+                                urlstr) from None
         if not vendor:
             cvendors = {candidate[0] for candidate in candidates}
             if len(cvendors) == 1:
@@ -488,7 +511,6 @@ class UsbTools:
                     if productids[prdc] == desc.pid:
                         products.append(prdc)
                 if products:
-                    products.sort(key=len)
                     product = products[0]
             except KeyError:
                 pass
@@ -540,9 +562,13 @@ class UsbTools:
                 cls.UsbApi = 1
             else:
                 cls.UsbApi = 2
-        if cls.UsbApi == 2:
-            return usb_get_string(device, stridx)
-        return usb_get_string(device, 64, stridx)
+        try:
+            if cls.UsbApi == 2:
+                return usb_get_string(device, stridx)
+            return usb_get_string(device, 64, stridx)
+        except UnicodeDecodeError:
+            # do not abort if EEPROM data is somewhat incoherent
+            return ''
 
     @classmethod
     def find_backend(cls) -> IBackend:
@@ -621,6 +647,22 @@ class UsbTools:
                 devs = set(filtered_devs.values())
             cls.UsbDevices[vidpid] = devs
         return cls.UsbDevices[vidpid]
+
+    @classmethod
+    def _get_backend_device(cls, device: UsbDevice) -> Any:
+        """Return the backend implementation of a device.
+
+           :param device: the UsbDevice (usb.core.Device)
+           :return: the implementation of any
+        """
+        try:
+            #pylint: disable-msg=protected-access
+            # need to access private member _ctx of PyUSB device
+            # (resource manager) until PyUSB #302 is addressed
+            return device._ctx.dev
+            #pylint: disable-msg=protected-access
+        except AttributeError:
+            return None
 
     @classmethod
     def _load_backend(cls) -> IBackend:

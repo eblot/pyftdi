@@ -18,6 +18,7 @@ from typing import BinaryIO
 from ruamel.yaml import load_all as yaml_load
 from ruamel.yaml.loader import Loader
 from pyftdi.misc import to_bool
+from pyftdi.usbtools import UsbTools
 from .usbvirt import (VirtConfiguration, VirtDevice, VirtInterface,
                       VirtEndpoint, get_backend)
 from .consts import USBCONST
@@ -50,15 +51,21 @@ class VirtLoader:
             except Exception as exc:
                 raise ValueError(f'Invalid configuration: {exc}')
         self._validate()
+        UsbTools.release_all_devices(VirtDevice)
+        UsbTools.flush_cache()
 
     def unload(self) -> None:
-        """Unload current USB topology.
+        """Unload current USB topology, release all allocated devices, and
+           flush UsbTools cache.
 
            Note that the application should also flush UsbTools cache,
            or reference to 'disconnected' devices may persist.
         """
         backend = get_backend()
         backend.flush_devices()
+        count = UsbTools.release_all_devices(VirtDevice)
+        UsbTools.flush_cache()
+        return count
 
     def get_virtual_ftdi(self, bus, address):
         return get_backend().get_virtual_ftdi(bus, address)

@@ -159,7 +159,7 @@ class FtdiConstants:
         if prefix not in self._rcache:
             self._rcache[prefix] = self._load_constants(prefix, True)
         try:
-            return self._rcache[prefix][name]
+            return self._rcache[prefix][name.lower()]
         except KeyError:
             raise ValueError(f'Unknown name {prefix}.{name}')
 

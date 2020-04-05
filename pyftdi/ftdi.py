@@ -27,6 +27,7 @@
 """FTDI core driver."""
 
 from binascii import hexlify
+from collections import OrderedDict
 from enum import IntEnum, unique
 from errno import ENODEV
 from logging import getLogger
@@ -40,17 +41,17 @@ from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
-# pylint: disable-msg=invalid-name
-# pylint: disable-msg=too-many-arguments
-# pylint: disable=too-many-arguments
-# pylint: disable=too-many-branches
-# pylint: disable=too-many-statements
-# pylint: disable=too-many-nested-blocks
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-nested-blocks
-# pylint: disable=too-many-public-methods
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-lines
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=too-many-arguments
+#pylint: disable=too-many-arguments
+#pylint: disable=too-many-branches
+#pylint: disable=too-many-statements
+#pylint: disable=too-many-nested-blocks
+#pylint: disable=too-many-instance-attributes
+#pylint: disable=too-many-nested-blocks
+#pylint: disable=too-many-public-methods
+#pylint: disable=too-many-locals
+#pylint: disable=too-many-lines
 
 
 class FtdiError(IOError):
@@ -84,31 +85,34 @@ class Ftdi:
     """
 
     PRODUCT_IDS = {
-        FTDI_VENDOR:
-            {'232': 0x6001,
-             '232r': 0x6001,
-             '232h': 0x6014,
-             '2232': 0x6010,
-             '2232c': 0x6010,
-             '2232d': 0x6010,
-             '2232h': 0x6010,
-             '4232': 0x6011,
-             '4232h': 0x6011,
-             '230x': 0x6015,
-             '231x': 0x6015,
-             '234x': 0x6015,
-             'ft232': 0x6001,
-             'ft232r': 0x6001,
-             'ft232h': 0x6014,
-             'ft2232': 0x6010,
-             'ft2232c': 0x6010,
-             'ft2232d': 0x6010,
-             'ft2232h': 0x6010,
-             'ft4232': 0x6011,
-             'ft4232h': 0x6011,
-             'ft230x': 0x6015,
-             'ft231x': 0x6015,
-             'ft234x': 0x6015}
+        FTDI_VENDOR: OrderedDict((
+            # use an ordered dict so that the first occurence of a PID takes
+            # precedence when generating URLs - order does matter.
+            ('232', 0x6001),
+            ('232r', 0x6001),
+            ('232h', 0x6014),
+            ('2232', 0x6010),
+            ('2232c', 0x6010),
+            ('2232d', 0x6010),
+            ('2232h', 0x6010),
+            ('4232', 0x6011),
+            ('4232h', 0x6011),
+            ('ft-x', 0x6015),
+            ('230x', 0x6015),
+            ('231x', 0x6015),
+            ('234x', 0x6015),
+            ('ft232', 0x6001),
+            ('ft232r', 0x6001),
+            ('ft232h', 0x6014),
+            ('ft2232', 0x6010),
+            ('ft2232c', 0x6010),
+            ('ft2232d', 0x6010),
+            ('ft2232h', 0x6010),
+            ('ft4232', 0x6011),
+            ('ft4232h', 0x6011),
+            ('ft230x', 0x6015),
+            ('ft231x', 0x6015),
+            ('ft234x', 0x6015)))
         }
     """Supported products, only FTDI officials ones.
        To add third parties and customized products, see
@@ -126,20 +130,20 @@ class Ftdi:
         0x0700: 'ft2232h',
         0x0800: 'ft4232h',
         0x0900: 'ft232h',
-        0x1000: 'ft230x'}
+        0x1000: 'ft-x'}
     """Common names of FTDI supported devices."""
 
     # Note that the FTDI datasheets contradict themselves, so
     # the following values may not be the right ones...
     FIFO_SIZES = {
-        0x0200: (128, 128),    # FT232AM
+        0x0200: (128, 128),    # FT232AM: TX: 128, RX: 128
         0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
         0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
-        0x0600: (128, 256),    # FT232R:  TX: 128, RX: 256
+        0x0600: (256, 128),    # FT232R:  TX: 256, RX: 128
         0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
         0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
         0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
-        0x1000: (512, 512),    # FT230X:  TX: 512, RX: 512
+        0x1000: (512, 512),    # FT-X:    TX: 512, RX: 512
     }
     """FTDI chip internal FIFO sizes
 
@@ -161,7 +165,7 @@ class Ftdi:
         CBUS = 0x20     # Bitbang on CBUS pins of R-type chips
         SYNCFF = 0x40   # Single Channel Synchronous FIFO mode
 
-    # Commands
+    # MPSSE Commands
     WRITE_BYTES_PVE_MSB = 0x10
     WRITE_BYTES_NVE_MSB = 0x11
     WRITE_BITS_PVE_MSB = 0x12
@@ -250,18 +254,18 @@ class Ftdi:
                                 CTRL_RECIPIENT_DEVICE)
 
     # Requests
-    SIO_REQ_RESET = 0               # Reset the port
-    SIO_REQ_SET_MODEM_CTRL = 1      # Set the modem control register
-    SIO_REQ_SET_FLOW_CTRL = 2       # Set flow control register
-    SIO_REQ_SET_BAUDRATE = 3        # Set baud rate
-    SIO_REQ_SET_DATA = 4            # Set the data characteristics of the port
-    SIO_REQ_POLL_MODEM_STATUS = 5   # Get line status
-    SIO_REQ_SET_EVENT_CHAR = 6      # Change event character
-    SIO_REQ_SET_ERROR_CHAR = 7      # Change error character
-    SIO_REQ_SET_LATENCY_TIMER = 9   # Change latency timer
-    SIO_REQ_GET_LATENCY_TIMER = 10  # Get latency timer
-    SIO_REQ_SET_BITMODE = 11        # Change bit mode
-    SIO_REQ_READ_PINS = 12          # Read GPIO pin value
+    SIO_REQ_RESET = 0x0              # Reset the port
+    SIO_REQ_SET_MODEM_CTRL = 0x1     # Set the modem control register
+    SIO_REQ_SET_FLOW_CTRL = 0x2      # Set flow control register
+    SIO_REQ_SET_BAUDRATE = 0x3       # Set baud rate
+    SIO_REQ_SET_DATA = 0x4           # Set the data characteristics of the port
+    SIO_REQ_POLL_MODEM_STATUS = 0x5  # Get line status
+    SIO_REQ_SET_EVENT_CHAR = 0x6     # Change event character
+    SIO_REQ_SET_ERROR_CHAR = 0x7     # Change error character
+    SIO_REQ_SET_LATENCY_TIMER = 0x9  # Change latency timer
+    SIO_REQ_GET_LATENCY_TIMER = 0xa  # Get latency timer
+    SIO_REQ_SET_BITMODE = 0xb        # Change bit mode
+    SIO_REQ_READ_PINS = 0xc          # Read GPIO pin value (or "get bitmode")
 
     # Eeprom requests
     SIO_REQ_EEPROM = 0x90
@@ -269,12 +273,12 @@ class Ftdi:
     SIO_REQ_WRITE_EEPROM = SIO_REQ_EEPROM + 1  # Write EEPROM content
     SIO_REQ_ERASE_EEPROM = SIO_REQ_EEPROM + 2  # Erase EEPROM content
 
-    # Reset commands
+    # Reset arguments
     SIO_RESET_SIO = 0        # Reset device
     SIO_RESET_PURGE_RX = 1   # Drain USB RX buffer (host-to-ftdi)
     SIO_RESET_PURGE_TX = 2   # Drain USB TX buffer (ftdi-to-host)
 
-    # Flow control
+    # Flow control arguments
     SIO_DISABLE_FLOW_CTRL = 0x0
     SIO_RTS_CTS_HS = (0x1 << 8)
     SIO_DTR_DSR_HS = (0x2 << 8)
@@ -309,7 +313,7 @@ class Ftdi:
     # err:  Error in RCVR FIFO
     MODEM_STATUS = [('', '', '', '', 'cts', 'dsr', 'ri', 'dcd'),
                     ('dr', 'overrun', 'parity', 'framing',
-                     'break', 'thre', 'txe', 'rcvr')]
+                     'break', 'thre', 'txe', 'rcve')]
 
     ERROR_BITS = (0x00, 0x8E)
 
@@ -318,15 +322,16 @@ class Ftdi:
     BUS_CLOCK_HIGH = 30.0E6  # 30 MHz
     BAUDRATE_REF_BASE = int(3.0E6)  # 3 MHz
     BAUDRATE_REF_HIGH = int(12.0E6)  # 12 MHz
-    BAUDRATE_REF_SPECIAL = int(2.0E6)  # 3 MHz
+    BITBANG_BAUDRATE_RATIO_BASE = 16
+    BITBANG_BAUDRATE_RATIO_HIGH = 5
     BAUDRATE_TOLERANCE = 3.0  # acceptable clock drift for UART, in %
-    BITBANG_CLOCK_MULTIPLIER = 4
 
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
 
     # Latency
     LATENCY_MIN = 12
     LATENCY_MAX = 255
+    LATENCY_EEPROM_FT232R = 77
 
     # EEPROM Properties
     EXT_EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
@@ -451,7 +456,7 @@ class Ftdi:
            :raise ValueError: if the product id is already referenced
         """
         if vid not in cls.PRODUCT_IDS:
-            cls.PRODUCT_IDS[vid] = {}
+            cls.PRODUCT_IDS[vid] = OrderedDict()
         elif pid in cls.PRODUCT_IDS[vid].values():
             raise ValueError('Product ID 0x%04x:0x%04x already registered' %
                              (vid, pid))
@@ -780,7 +785,6 @@ class Ftdi:
            :param direction: a bitfield specifying the FTDI GPIO direction,
                 where high level defines an output, and low level defines an
                 input
-           :param initial: ignored
            :param latency: low-level latency to select the USB FTDI poll
                 delay. The shorter the delay, the higher the host CPU load.
            :param baudrate: pace to sequence GPIO exchanges
@@ -858,6 +862,8 @@ class Ftdi:
         # interleaved. This is not yet supported with read_data_bytes for now
         self.write_data_set_chunksize()
         self.read_data_set_chunksize()
+        # disable flow control
+        self.set_flowctrl('')
         # Enable BITBANG mode
         self.set_bitmode(direction, Ftdi.BitMode.BITBANG if not sync else
                          Ftdi.BitMode.SYNCBB)
@@ -933,7 +939,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        if self.device_version in (0x0500, 0x0700, 0x0900):
+        if self.device_version in (0x0700, 0x0900):
             return 16
         if self.device_version in (0x0500, ):
             return 12
@@ -1202,7 +1208,7 @@ class Ftdi:
             # FIFO size, so this weird behavior is for now only experienced
             # with FT232R. Any, the following compution should address all
             # devices.
-            chunksize = min(self.fifo_sizes[0], self.fifo_sizes[0],
+            chunksize = min(self.fifo_sizes[0], self.fifo_sizes[1],
                             self._max_packet_size)
         if platform == 'linux':
             if chunksize > 16384:
@@ -1605,6 +1611,8 @@ class Ftdi:
            :return: checksum
         """
         length = len(data)
+        if not length:
+            raise ValueError('No data to checksum')
         if length & 0x1:
             raise ValueError('Length not even')
         # NOTE: checksum is computed using 16-bit values in little endian
@@ -2014,20 +2022,26 @@ class Ftdi:
         except (NotImplementedError, USBError):
             pass
 
+#pylint: disable-msg=protected-access
+# need to access private member _ctx of PyUSB device (resource manager)
+# until PyUSB #302 is addressed
+
     def _reset_usb_device(self) -> None:
         """Reset USB device (USB command, not FTDI specific)."""
         self._usb_dev._ctx.backend.reset_device(self._usb_dev._ctx.handle)
+
+    def _is_pyusb_handle_active(self) -> bool:
+        # Unfortunately, we need to access pyusb ResourceManager
+        # and there is no public API for this.
+        return bool(self._usb_dev._ctx.handle)
+
+#pylint: enable-msg=protected-access
 
     def _reset_device(self):
         """Reset the FTDI device (FTDI vendor command)"""
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_SIO):
             raise FtdiError('Unable to reset FTDI device')
-
-    def _is_pyusb_handle_active(self) -> bool:
-        # Unfortunately, we need to access pyusb ResourceManager
-        # and there is no public API for this.
-        return bool(self._usb_dev._ctx.handle)
 
     def _ctrl_transfer_out(self, reqtype: int, value: int, data: bytes = b''):
         """Send a control message to the device"""
@@ -2090,20 +2104,33 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        length = len(data)
-        if addr & 0x1 or length & 0x1:
-            raise ValueError('Address/length not even')
-        for word in sunpack('<%dH' % (length//2), data):
-            if not dry_run:
-                out = self._usb_dev.ctrl_transfer(Ftdi.REQ_OUT,
-                                                  Ftdi.SIO_REQ_WRITE_EEPROM,
-                                                  word, addr >> 1, b'',
-                                                  self._usb_write_timeout)
-                if out:
-                    raise FtdiEepromError('EEPROM Write Error @ %d' % addr)
-            else:
-                self.log.info('Write EEPROM [0x%02x]: 0x%04x', addr, word)
-            addr += 2
+        if self.device_version == 0x0600:
+            # FT232R internal EEPROM is unstable and latency timer seems
+            # to have a direct impact on EEPROM programming...
+            latency = self.get_latency_timer()
+        else:
+            latency = None
+        try:
+            if latency:
+                self.set_latency_timer(self.LATENCY_EEPROM_FT232R)
+            length = len(data)
+            if addr & 0x1 or length & 0x1:
+                raise ValueError('Address/length not even')
+            for word in sunpack('<%dH' % (length//2), data):
+                if not dry_run:
+                    out = self._usb_dev.ctrl_transfer(
+                        Ftdi.REQ_OUT, Ftdi.SIO_REQ_WRITE_EEPROM,
+                        word, addr >> 1, b'', self._usb_write_timeout)
+                    if out:
+                        raise FtdiEepromError('EEPROM Write Error @ %d' % addr)
+                    self.log.debug('Write EEPROM [0x%02x]: 0x%04x', addr, word)
+                else:
+                    self.log.info('Fake write EEPROM [0x%02x]: 0x%04x',
+                                  addr, word)
+                addr += 2
+        finally:
+            if latency:
+                self.set_latency_timer(latency)
 
     def _get_max_packet_size(self) -> int:
         """Retrieve the maximum length of a data packet"""
@@ -2144,16 +2171,22 @@ class Ftdi:
            :return: a 3-uple of the apprimated baudrate, the value and index
                     to use as the USB configuration parameter
         """
-        if self.ic_name.endswith('am'):
+        if self.device_version == 0x200:
             return self._convert_baudrate_legacy(baudrate)
         if self.is_H_series and baudrate >= 1200:
             hispeed = True
             clock = self.BAUDRATE_REF_HIGH
+            bb_ratio = self.BITBANG_BAUDRATE_RATIO_HIGH
         else:
             hispeed = False
             clock = self.BAUDRATE_REF_BASE
+            bb_ratio = self.BITBANG_BAUDRATE_RATIO_BASE
         if baudrate > clock:
             raise ValueError('Invalid baudrate (too high)')
+        if baudrate < ((clock >> 14) + 1):
+            raise ValueError('Invalid baudrate (too low)')
+        if self.is_bitbang_enabled:
+            baudrate //= bb_ratio
         div8 = int(round((8 * clock) / baudrate))
         div = div8 >> 3
         div |= self.FRAC_DIV_CODE[div8 & 0x7] << 14
@@ -2169,19 +2202,15 @@ class Ftdi:
             index <<= 8
             index |= self._index
         estimate = int(((8 * clock) + (div8//2))//div8)
+        if self.is_bitbang_enabled:
+            estimate *= bb_ratio
         return estimate, value, index
 
     def _set_baudrate(self, baudrate: int, constrain: bool) -> int:
         if self.is_mpsse:
             raise FtdiFeatureError('Cannot change frequency w/ current mode')
-        if self.is_bitbang_enabled:
-            baudrate *= Ftdi.BITBANG_CLOCK_MULTIPLIER
-            baudrate //= 10
         actual, value, index = self._convert_baudrate(baudrate)
         delta = 100*abs(float(actual-baudrate))/baudrate
-        if self.is_bitbang_enabled:
-            actual *= 10
-            actual //= Ftdi.BITBANG_CLOCK_MULTIPLIER
         self.log.debug('Actual baudrate: %d %.1f%% div [%04x:%04x]',
                        actual, delta, index, value)
         # return actual

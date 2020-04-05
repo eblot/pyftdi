@@ -247,7 +247,7 @@ class GpioAsyncController(GpioBaseController):
         # to get in sync with the buffer.
         if noflush:
             return self._ftdi.read_data(readlen)
-        loop = 200
+        loop = 10000
         while loop:
             loop -= 1
             # do not attempt to do anything till the FTDI HW buffer has been
@@ -314,14 +314,19 @@ class GpioAsyncController(GpioBaseController):
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs) -> int:
+        if 'initial' in kwargs:
+            initial = kwargs['initial'] & self._mask
+            del kwargs['initial']
+        else:
+            initial = None
         baudrate = int(frequency) if frequency is not None else None
         baudrate = self._ftdi.open_bitbang_from_url(url,
                                                     direction=direction,
                                                     sync=False,
                                                     baudrate=baudrate,
                                                     **kwargs)
-        if 'initial' in kwargs:
-            self.write(kwargs['initial'] & self._mask)
+        if initial is not None:
+            self.write(initial)
         self._width = 8
         return float(baudrate)
 
@@ -386,16 +391,21 @@ class GpioSyncController(GpioBaseController):
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs):
-        baudrate = int(frequency) if frequency is not None else None
-        frequency = self._ftdi.open_bitbang_from_url(url,
-                                                     direction=direction,
-                                                     sync=True,
-                                                     baudrate=baudrate,
-                                                     **kwargs)
         if 'initial' in kwargs:
-            self.exchange(kwargs['initial'] & self._mask)
+            initial = kwargs['initial'] & self._mask
+            del kwargs['initial']
+        else:
+            initial = None
+        baudrate = int(frequency) if frequency is not None else None
+        baudrate = self._ftdi.open_bitbang_from_url(url,
+                                                    direction=direction,
+                                                    sync=True,
+                                                    baudrate=baudrate,
+                                                    **kwargs)
+        if initial is not None:
+            self.exchange(initial)
         self._width = 8
-        return float(frequency)
+        return float(baudrate)
 
 
 class GpioMpsseController(GpioBaseController):

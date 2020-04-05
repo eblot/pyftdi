@@ -55,6 +55,11 @@ def main():
                                help='dump EEPROM content as ASCII')
         argparser.add_argument('-X', '--hexblock', type=int,
                                help='dump EEPROM as indented hexa blocks')
+        argparser.add_argument('-i', '--input', type=FileType('rt'),
+                               help='input ini file to load EEPROM content')
+        argparser.add_argument('-l', '--load', default='all',
+                               choices=('all', 'raw', 'values'),
+                               help='section(s) to load from input file')
         argparser.add_argument('-o', '--output', type=FileType('wt'),
                                help='output ini file to save EEPROM content')
         argparser.add_argument('-s', '--serial-number',
@@ -114,6 +119,8 @@ def main():
         eeprom.open(args.device)
         if args.erase:
             eeprom.erase()
+        if args.input:
+            eeprom.load_config(args.input, args.load)
         if args.serial_number:
             eeprom.set_serial_number(args.serial_number)
         if args.manufacturer:
@@ -150,7 +157,8 @@ def main():
                 hexa = ' '.join(['%02x' % x for x in eeprom.data[pos:pos+16]])
                 print(indent, hexa, sep='')
         if args.update:
-            eeprom.commit(False)
+            if eeprom.commit(False):
+                eeprom.reset_device()
         if args.verbose > 0:
             eeprom.dump_config()
         if args.output:

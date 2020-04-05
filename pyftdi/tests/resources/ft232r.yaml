@@ -1,0 +1,21 @@
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6015
+      version: 0x0600
+      manufacturer: FTDI
+      product: Basic UART
+      serialnumber: FT2XYZ
+    eeprom:
+      load: yes
+      data: |  # hex byte encode format
+        00 40 03 04 01 60 00 06 a0 32 08 00 00 02 98 0a
+        a2 2c ce 12 32 11 05 00 0a 03 46 00 54 00 44 00
+        49 00 2c 03 55 00 4d 00 32 00 33 00 32 00 52 00
+        20 00 55 00 53 00 42 00 20 00 3c 00 2d 00 3e 00
+        20 00 53 00 65 00 72 00 69 00 61 00 6c 00 12 03
+        46 00 54 00 47 00 58 00 53 00 59 00 57 00 4a 00
+        02 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+        00 00 00 00 00 00 00 00 00 00 00 00 00 00 09 13
