@@ -10,7 +10,7 @@ Documentation
 The latest PyFtdi online documentation is always available from
 `here <https://eblot.github.io/pyftdi>`_.
 
-Feware the online version may be more recent than the PyPI hosted version, as
+Beware the online version may be more recent than the PyPI hosted version, as
 intermediate development versions are not published to
 `PyPi <https://pypi.org/project/pyftdi>`_.
 
