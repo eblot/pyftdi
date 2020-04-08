@@ -140,7 +140,7 @@ class I2cEepromTest(TestCase):
     def setUp(self):
         self._i2c = I2cController()
         self._i2c.configure(self.url, frequency=400e3,
-                            clockstretching=False, debug=True)
+                            clockstretching=False, debug=False, rdoptim=True)
 
     def tearDown(self):
         self._i2c.terminate()

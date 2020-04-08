@@ -1081,11 +1081,12 @@ class I2cController:
         # limit RX chunk size to the count of I2C packable commands in the FTDI
         # TX FIFO (minus one byte for the last 'send immediate' command)
         tx_count = (self._tx_size-1) // cmd_size
-        chunk_size = min(tx_count, chunk_size)//2
+        chunk_size = min(tx_count, chunk_size)
         chunks = []
         cmd = None
         rem = readlen
-        if self._read_optim and rem > 2*chunk_size:
+        if self._read_optim and rem > chunk_size:
+            chunk_size //= 2
             self.log.debug('Use optimized transfer, %d byte at a time',
                            chunk_size)
             cmd_chunk = bytearray()
