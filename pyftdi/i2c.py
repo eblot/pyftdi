@@ -1083,6 +1083,8 @@ class I2cController:
         while rem:
             if rem > chunk_size:
                 if not cmd:
+                    # build the command sequence only once, as it may be
+                    # repeated till the end of the transfer
                     cmd = bytearray()
                     cmd.extend(read_not_last * chunk_size)
                     size = chunk_size

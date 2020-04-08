@@ -27,13 +27,14 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-from unittest import TestCase, TestSuite, main as ut_main
+from unittest import TestCase, TestSuite, main as ut_main, makeSuite
 from binascii import hexlify
 from doctest import testmod
 from os import environ
 from sys import modules, stdout
 from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
+from pyftdi.misc import hexdump
 
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=missing-docstring
@@ -53,7 +54,7 @@ class I2cTca9555TestCase(TestCase):
 
     def _open(self):
         """Open an I2c connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._i2c.configure(url)
 
     def _read_it(self):
@@ -83,7 +84,7 @@ class I2cAccelTest(TestCase):
 
     def _open(self):
         """Open an I2c connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._i2c.configure(url)
 
     def _read_device_id(self):
@@ -110,7 +111,7 @@ class I2cReadTest(TestCase):
 
     def _open(self):
         """Open an I2c connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._i2c.configure(url)
 
     def _read(self):
@@ -130,31 +131,39 @@ class I2cEepromTest(TestCase):
        from an I2C data flash
     """
 
-    def test(self):
-        self._i2c = I2cController()
-        self._open()
-        self._read()
-        self._close()
-
-    def _open(self):
-        """Open an I2c connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        self._i2c.configure(url, clockstretching=True, debug=True)
-
-    def _read(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         address = environ.get('I2C_ADDRESS', '0x50').lower()
-        addr = int(address, 16 if address.startswith('0x') else 10)
-        print('addr', addr)
-        port = self._i2c.get_port(addr)
+        cls.address = int(address, 16 if address.startswith('0x') else 10)
+
+    def setUp(self):
+        self._i2c = I2cController()
+        self._i2c.configure(self.url, frequency=400e3,
+                            clockstretching=False, debug=True)
+
+    def tearDown(self):
+        self._i2c.terminate()
+
+    def test_short(self):
+        port = self._i2c.get_port(self.address)
+        # select start address
         port.write(b'\x00\x08')
         data = port.read(4)
         text = data.decode('utf8', errors='replace')
         print(hexlify(data).decode(), text)
         self.assertEqual(text, 'Worl')
 
-    def _close(self):
-        """Close the I2C connection"""
-        self._i2c.terminate()
+    def test_long(self):
+        port = self._i2c.get_port(self.address)
+        # select start address
+        print('RC', self._i2c.ftdi.read_data_get_chunksize())
+        print('WC', self._i2c.ftdi.write_data_get_chunksize())
+        port.write(b'\x00\x00')
+        data = port.read(256)
+        text = data.decode('utf8', errors='replace')
+        print(hexdump(data))
+        self.assertEqual(text[8:12], 'Worl')
 
 
 class I2cReadGpioTest(TestCase):
@@ -183,7 +192,7 @@ class I2cReadGpioTest(TestCase):
 
     def _open(self):
         """Open an I2c connection to a slave"""
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._i2c.configure(url)
         address = environ.get('I2C_ADDRESS', '0x36').lower()
         addr = int(address, 16 if address.startswith('0x') else 10)
@@ -238,7 +247,7 @@ class I2cClockStrechingGpioCheck(TestCase):
 
     def test(self):
         self._i2c = I2cController()
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         self._i2c.configure(url, clockstretching=True)
         gpio = self._i2c.get_gpio()
         self.assertRaises(I2cIOError, gpio.set_direction, 1 << 7, 0)
@@ -250,7 +259,7 @@ class I2cDualMaster(TestCase):
     """
 
     def test(self):
-        url1 = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url1 = environ.get('FTDI_DEVICE', 'ftdi:///1')
         i2c1 = I2cController()
         i2c1.configure(url1, frequency=100000)
         url2 = '%s%d' % (url1[:-1], int(url1[-1])+1)
@@ -266,7 +275,7 @@ class I2cIssue143(TestCase):
     """
 
     def test(self):
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         address = environ.get('I2C_ADDRESS', '0x50').lower()
         addr = int(address, 16 if address.startswith('0x') else 10)
         i2c = I2cController()
@@ -298,8 +307,8 @@ def suite():
     ste = TestSuite()
     #ste.addTest(I2cTca9555TestCase('test'))
     #ste.addTest(I2cAccelTest('test'))
-    ste.addTest(I2cReadTest('test'))
-    #ste.addTest(I2cEepromTest('test'))
+    #ste.addTest(I2cReadTest('test'))
+    ste.addTest(makeSuite(I2cEepromTest, 'test'))
     #ste.addTest(I2cReadGpioTest('test'))
     #ste.addTest(I2cClockStrechingGpioCheck('test'))
     #ste.addTest(I2cDualMaster('test'))
