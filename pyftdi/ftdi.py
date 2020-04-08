@@ -578,6 +578,7 @@ class Ftdi:
         # Reset feature mode
         self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
+        self._latency_threshold = None
         self.set_latency_timer(self.LATENCY_MIN)
 
     def close(self) -> None:
@@ -1830,10 +1831,7 @@ class Ftdi:
                     # status)
                     if length > 2:
                         if self._latency_threshold:
-                            self._latency_count = 0
-                            if self._latency != self._latency_min:
-                                self.set_latency_timer(self._latency_min)
-                                self._latency = self._latency_min
+                            self._adapt_latency(True)
                         # skip the status bytes
                         chunks = (length+packet_size-1) // packet_size
                         count = packet_size - 2
@@ -1862,16 +1860,7 @@ class Ftdi:
                         self._readbuffer = bytearray()
                         self._readoffset = 0
                         if self._latency_threshold:
-                            self._latency_count += 1
-                            if self._latency != self._latency_max:
-                                if self._latency_count > \
-                                        self._latency_threshold:
-                                    self._latency *= 2
-                                    if self._latency > self._latency_max:
-                                        self._latency = self._latency_max
-                                    else:
-                                        self._latency_count = 0
-                                    self.set_latency_timer(self._latency)
+                            self._adapt_latency(False)
                         # no more data to read?
                         return data
                 if length > 0:
@@ -2078,6 +2067,31 @@ class Ftdi:
             if self._tracer and len(data) > 2:
                 self._tracer.receive(self._index, data[2:])
         return data
+
+    def _adapt_latency(self, payload_detected: bool) -> None:
+        """Dynamic latency adaptation depending on the presence of a
+           payload in a RX buffer.
+
+           :param payload_detected: whether a payload has been received
+                                    within last RX buffer
+        """
+        if payload_detected:
+            self._latency_count = 0
+            if self._latency != self._latency_min:
+                self.set_latency_timer(self._latency_min)
+                self._latency = self._latency_min
+            return
+        # no payload received
+        self._latency_count += 1
+        if self._latency != self._latency_max:
+            if self._latency_count > \
+                    self._latency_threshold:
+                self._latency *= 2
+                if self._latency > self._latency_max:
+                    self._latency = self._latency_max
+                else:
+                    self._latency_count = 0
+                self.set_latency_timer(self._latency)
 
     def _check_eeprom_size(self, eeprom_size: int) -> int:
         if self.device_version in self.INT_EEPROMS:
