@@ -34,7 +34,7 @@ from os import environ
 from sys import modules, stdout
 from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
-from pyftdi.misc import hexdump
+from pyftdi.misc import hexdump, pretty_size
 
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=missing-docstring
@@ -151,18 +151,25 @@ class I2cEepromTest(TestCase):
         port.write(b'\x00\x08')
         data = port.read(4)
         text = data.decode('utf8', errors='replace')
-        print(hexlify(data).decode(), text)
+        # print(hexlify(data).decode(), text)
         self.assertEqual(text, 'Worl')
 
     def test_long(self):
         port = self._i2c.get_port(self.address)
         # select start address
-        print('RC', self._i2c.ftdi.read_data_get_chunksize())
-        print('WC', self._i2c.ftdi.write_data_get_chunksize())
+        #print('RC', self._i2c.ftdi.read_data_get_chunksize())
+        #print('WC', self._i2c.ftdi.write_data_get_chunksize())
+        from time import time as now
+        size = 4096
         port.write(b'\x00\x00')
-        data = port.read(256)
+        start = now()
+        data = port.read(size)
+        stop = now()
         text = data.decode('utf8', errors='replace')
-        print(hexdump(data))
+        # print(hexdump(data))
+        delta = stop-start
+        byterate = pretty_size(len(data)/delta)
+        print(f'Exec time: {1000*delta:.3f} ms, {byterate}/s')
         self.assertEqual(text[8:12], 'Worl')
 
 
