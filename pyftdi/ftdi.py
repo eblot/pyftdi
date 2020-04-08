@@ -30,10 +30,10 @@ from binascii import hexlify
 from collections import OrderedDict
 from enum import IntEnum, unique
 from errno import ENODEV
-from logging import getLogger
+from logging import getLogger, DEBUG
 from struct import unpack as sunpack
 from sys import platform
-from typing import Optional, List, Sequence, TextIO, Tuple, Union
+from typing import Callable, Optional, List, Sequence, TextIO, Tuple, Union
 from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
 from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
@@ -308,7 +308,7 @@ class Ftdi:
     # pe:   Parity error
     # fe:   Framing error
     # bi:   Break interrupt
-    # thre: Transmitter holding register
+    # thre: Transmitter holding register empty
     # temt: Transmitter empty
     # err:  Error in RCVR FIFO
     MODEM_STATUS = [('', '', '', '', 'cts', 'dsr', 'ri', 'dcd'),
@@ -316,6 +316,7 @@ class Ftdi:
                      'break', 'thre', 'txe', 'rcve')]
 
     ERROR_BITS = (0x00, 0x8E)
+    TX_EMPTY_BITS = 0x60
 
     # Clocks and baudrates
     BUS_CLOCK_BASE = 6.0E6  # 6 MHz
@@ -343,6 +344,7 @@ class Ftdi:
 
     def __init__(self):
         self.log = getLogger('pyftdi.ftdi')
+        self._debug_log = False
         self._usb_dev = None
         self._usb_read_timeout = 5000
         self._usb_write_timeout = 5000
@@ -580,6 +582,7 @@ class Ftdi:
         # Init latency
         self._latency_threshold = None
         self.set_latency_timer(self.LATENCY_MIN)
+        self._debug_log = self.log.getEffectiveLevel() == DEBUG
 
     def close(self) -> None:
         """Close the FTDI interface/port."""
@@ -701,7 +704,7 @@ class Ftdi:
     def open_mpsse_from_device(self, device: UsbDevice,
                                interface: int = 1, direction: int = 0x0,
                                initial: int = 0x0, frequency: float = 6.0E6,
-                               latency: int = 16,
+                               latency: int = 16, tracer: bool = False,
                                debug: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
@@ -731,14 +734,15 @@ class Ftdi:
            :param latency: low-level latency in milliseconds. The shorter
                 the delay, the higher the host CPU load. Do not use shorter
                 values than the default, as it triggers data loss in FTDI.
-           :param bool debug: use a tracer to decode MPSSE protocol
+           :param bool tracer: use a tracer to decode MPSSE protocol
+           :param bool debug: add more debug traces
            :return: actual bus frequency in Hz
         """
         self.open_from_device(device, interface)
         if not self.is_mpsse_interface(interface):
             self.close()
             raise FtdiMpsseError('This interface does not support MPSSE')
-        if to_bool(debug):
+        if to_bool(tracer):  # accept strings as boolean
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer(self.device_version)
             self.log.debug('Using MPSSE tracer')
@@ -1770,6 +1774,7 @@ class Ftdi:
                 if offset + write_size > size:
                     write_size = size - offset
                 length = self._write(data[offset:offset+write_size])
+                # print('WRITE', offset, size, length)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
                 offset += length
@@ -1777,7 +1782,9 @@ class Ftdi:
         except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
-    def read_data_bytes(self, size: int, attempt: int = 1) -> bytes:
+    def read_data_bytes(self, size: int, attempt: int = 1,
+                        request_gen: Optional[Callable[[int], bytes]] = None) \
+            -> bytes:
         """Read data from the FTDI interface
 
            In UART mode, data contains the serial stream read from the UART
@@ -1801,6 +1808,11 @@ class Ftdi:
 
            :param size: the number of bytes to received from the device
            :param attempt: attempt cycle count
+           :param request_gen: a callable that takes the number of bytes read
+                               and expect a bytes byffer to send back to the
+                               remote device. This is only useful to perform
+                               optimized/continuous transfer from a slave
+                               device.
            :return: payload bytes, as bytes
         """
         # Packet size sanity check
@@ -1820,16 +1832,27 @@ class Ftdi:
             # end of readbuffer reached
             self._readoffset = len(self._readbuffer)
         # read from USB, filling in the local cache as it is empty
+        retry = attempt
+        req_size = size
         try:
             while (len(data) < size) and (length > 0):
                 while True:
                     tempbuf = self._read()
-                    attempt -= 1
+                    retry -= 1
                     length = len(tempbuf)
                     # the received buffer contains at least one useful databyte
                     # (first 2 bytes in each packet represent the current modem
                     # status)
+                    if length >= 2:
+                        if tempbuf[1] & self.TX_EMPTY_BITS:
+                            if request_gen:
+                                req_size -= length-2
+                                if req_size > 0:
+                                    cmd = request_gen(req_size)
+                                    if cmd:
+                                        self.write_data(cmd)
                     if length > 2:
+                        retry = attempt
                         if self._latency_threshold:
                             self._adapt_latency(True)
                         # skip the status bytes
@@ -1854,7 +1877,7 @@ class Ftdi:
                     else:
                         # received buffer only contains the modem status bytes
                         # no data received, may be late, try again
-                        if attempt > 0:
+                        if retry > 0:
                             continue
                         # no actual data
                         self._readbuffer = bytearray()
@@ -2051,10 +2074,11 @@ class Ftdi:
             raise FtdiError('UsbError: %s' % str(ex))
 
     def _write(self, data: bytes) -> int:
-        try:
-            self.log.debug('> %s', hexlify(data).decode())
-        except TypeError as exc:
-            self.log.error('> (invalid output byte sequence: %s)', exc)
+        if self._debug_log:
+            try:
+                self.log.debug('> %s', hexlify(data).decode())
+            except TypeError as exc:
+                self.log.error('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
             self._tracer.send(self._index, data)
         return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
@@ -2063,7 +2087,8 @@ class Ftdi:
         data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
                                   self._usb_read_timeout)
         if data:
-            self.log.debug('< %s', hexlify(data).decode())
+            if self._debug_log:
+                self.log.debug('< %s', hexlify(data).decode())
             if self._tracer and len(data) > 2:
                 self._tracer.receive(self._index, data[2:])
         return data
@@ -2277,11 +2302,14 @@ class Ftdi:
         self.validate_mpsse()
         # Drain input buffer
         self.purge_rx_buffer()
+        # Note that bus frequency may differ from clock frequency, when
+        # 3-phase clock is enable, in which case bus frequency = 2/3 clock
+        # frequency
         if actual_freq > 1E6:
-            self.log.debug('Bus frequency: %.6f MHz (error: %+.1f %%)',
+            self.log.debug('Clock frequency: %.6f MHz (error: %+.1f %%)',
                            (actual_freq/1E6), error*100)
         else:
-            self.log.debug('Bus frequency: %.3f KHz (error: %+.1f %%)',
+            self.log.debug('Clock frequency: %.3f KHz (error: %+.1f %%)',
                            (actual_freq/1E3), error*100)
         return actual_freq
 
