@@ -29,7 +29,7 @@
 
 from binascii import hexlify
 from collections import deque
-from inspect import stack
+from inspect import currentframe
 from logging import getLogger
 from string import ascii_uppercase
 from struct import unpack as sunpack
@@ -268,103 +268,107 @@ class FtdiMpsseEngine:
         return True
 
     def _cmd_write_bytes_pve_msb(self):
-        return self._decode_output_mpsse_bytes()
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_write_bytes_nve_msb(self):
-        return self._decode_output_mpsse_bytes()
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_write_bytes_pve_lsb(self):
-        return self._decode_output_mpsse_bytes()
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_write_bytes_nve_lsb(self):
-        return self._decode_output_mpsse_bytes()
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_read_bytes_pve_msb(self):
         return self._decode_input_mpsse_byte_request()
 
     def _resp_read_bytes_pve_msb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_read_bytes_nve_msb(self):
         return self._decode_input_mpsse_byte_request()
 
     def _resp_read_bytes_nve_msb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_read_bytes_pve_lsb(self):
         return self._decode_input_mpsse_byte_request()
 
     def _resp_read_bytes_pve_lsb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_read_bytes_nve_lsb(self):
         return self._decode_input_mpsse_byte_request()
 
     def _resp_read_bytes_nve_lsb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_rw_bytes_nve_pve_msb(self):
-        return self._decode_output_mpsse_bytes(True)
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name,
+                                               True)
 
     def _resp_rw_bytes_nve_pve_msb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_rw_bytes_pve_nve_msb(self):
-        return self._decode_output_mpsse_bytes(True)
+        return self._decode_output_mpsse_bytes(currentframe().f_code.co_name,
+                                               True)
 
     def _resp_rw_bytes_pve_nve_msb(self):
-        return self._decode_input_mpsse_bytes()
+        return self._decode_input_mpsse_bytes(currentframe().f_code.co_name)
 
     def _cmd_write_bits_pve_msb(self):
-        return self._decode_output_mpsse_bits()
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_write_bits_nve_msb(self):
-        return self._decode_output_mpsse_bits()
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_write_bits_pve_lsb(self):
-        return self._decode_output_mpsse_bits()
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_write_bits_nve_lsb(self):
-        return self._decode_output_mpsse_bits()
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_read_bits_pve_msb(self):
         return self._decode_input_mpsse_bit_request()
 
     def _resp_read_bits_pve_msb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_read_bits_nve_msb(self):
         return self._decode_input_mpsse_bit_request()
 
     def _resp_read_bits_nve_msb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_read_bits_pve_lsb(self):
         return self._decode_input_mpsse_bit_request()
 
     def _resp_read_bits_pve_lsb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_read_bits_nve_lsb(self):
         return self._decode_input_mpsse_bit_request()
 
     def _resp_read_bits_nve_lsb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_rw_bits_nve_pve_msb(self):
-        return self._decode_output_mpsse_bits(True)
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name,
+                                              True)
 
     def _resp_rw_bits_nve_pve_msb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _cmd_rw_bits_pve_nve_msb(self):
-        return self._decode_output_mpsse_bits(True)
+        return self._decode_output_mpsse_bits(currentframe().f_code.co_name,
+                                              True)
 
     def _resp_rw_bits_pve_nve_msb(self):
-        return self._decode_input_mpsse_bits()
+        return self._decode_input_mpsse_bits(currentframe().f_code.co_name)
 
     def _resp_get_bits_low(self):
-        if len(self._trace_rx) < 1:
+        if self._trace_rx:
             return False
         value = self._trace_rx[0]
         self.log.info(' [%d]:Get gpio[7:0]  %02x %s',
@@ -373,7 +377,7 @@ class FtdiMpsseEngine:
         return True
 
     def _resp_get_bits_high(self):
-        if len(self._trace_rx) < 1:
+        if self._trace_rx:
             return False
         value = self._trace_rx[0]
         self.log.info(' [%d]:Get gpio[15:8] %02x %s',
@@ -381,8 +385,7 @@ class FtdiMpsseEngine:
         self._trace_rx[:] = self._trace_rx[1:]
         return True
 
-    def _decode_output_mpsse_bytes(self, expect_rx=False):
-        caller = stack()[1].function
+    def _decode_output_mpsse_bytes(self, caller, expect_rx=False):
         if len(self._trace_tx) < 4:
             return False
         length = sunpack('<H', self._trace_tx[1:3])[0] + 1
@@ -398,8 +401,7 @@ class FtdiMpsseEngine:
         self._trace_tx[:] = self._trace_tx[3+length:]
         return True
 
-    def _decode_output_mpsse_bits(self, expect_rx=False):
-        caller = stack()[1].function
+    def _decode_output_mpsse_bits(self, caller, expect_rx=False):
         if len(self._trace_tx) < 3:
             return False
         bitlen = self._trace_tx[1] + 1
@@ -429,7 +431,7 @@ class FtdiMpsseEngine:
         self._trace_tx[:] = self._trace_tx[2:]
         return True
 
-    def _decode_input_mpsse_bytes(self):
+    def _decode_input_mpsse_bytes(self, caller):
         if not self._expect_resp:
             self.log.warning('[%d]:Response w/o request?', self._if)
             return False
@@ -439,7 +441,6 @@ class FtdiMpsseEngine:
             return False
         if len(self._trace_rx) < self._expect_resp[0]:  # peek
             return False
-        caller = stack()[1].function
         length = self._expect_resp.popleft()
         payload = self._trace_rx[:length]
         self._trace_rx[:] = self._trace_rx[length:]
@@ -448,16 +449,15 @@ class FtdiMpsseEngine:
                       funcname, length, hexlify(payload).decode('utf8'))
         return True
 
-    def _decode_input_mpsse_bits(self):
+    def _decode_input_mpsse_bits(self, caller):
         if not self._expect_resp:
             self.log.warning('[%d]:Response w/o request?', self._if)
             return False
-        if len(self._trace_rx) < 1:  # peek
+        if not self._trace_rx:  # peek
             return False
         if self._expect_resp[0] > 0:
             self.log.warning('[%d]:Handling bit request w/ byte length',
                              self._if)
-        caller = stack()[1].function
         bitlen = -self._expect_resp.popleft()
         payload = self._trace_rx[0]
         self._trace_rx[:] = self._trace_rx[1:]
@@ -468,17 +468,17 @@ class FtdiMpsseEngine:
         return True
 
     @classmethod
-    def bit2str(cls, value: int, count: int, msb: bool, z: str = '_') -> str:
+    def bit2str(cls, value: int, count: int, msb: bool, hiz: str = '_') -> str:
         mask = (1 << count) - 1
         if msb:
             mask <<= 8 - count
-        return cls.bm2str(value, mask, z)
+        return cls.bm2str(value, mask, hiz)
 
     @classmethod
-    def bm2str(cls, value: int, mask: int, z: str = '_') -> str:
+    def bm2str(cls, value: int, mask: int, hiz: str = '_') -> str:
         vstr = cls.bitfmt(value, 8)
         mstr = cls.bitfmt(mask, 8)
-        return ''.join([m == '1' and v or z for v, m in zip(vstr, mstr)])
+        return ''.join([m == '1' and v or hiz for v, m in zip(vstr, mstr)])
 
     @classmethod
     def bitfmt(cls, value, width):
