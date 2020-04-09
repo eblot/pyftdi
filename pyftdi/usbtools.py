@@ -23,7 +23,6 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 """USB Helpers"""
 
 import sys
@@ -42,14 +41,11 @@ from .misc import to_int
 #pylint: disable-msg=too-many-locals,too-many-branches,too-many-statements
 #pylint: disable-msg=too-many-arguments, too-many-nested-blocks
 
-UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
-                                 (('vid', int),
-                                  ('pid', int),
-                                  ('bus', Optional[int]),
-                                  ('address', Optional[int]),
-                                  ('sn', Optional[str]),
-                                  ('index', Optional[int]),
-                                  ('description', Optional[str])))
+UsbDeviceDescriptor = NamedTuple(
+    'UsbDeviceDescriptor',
+    (('vid', int), ('pid', int), ('bus', Optional[int]),
+     ('address', Optional[int]), ('sn', Optional[str]),
+     ('index', Optional[int]), ('description', Optional[str])))
 """USB Device descriptor are used to report known information about a FTDI
    compatible device, and as a device selection filter
 
@@ -68,6 +64,7 @@ UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
      * Always prefer serial number to other identification methods if available
      * Prefer bus/address selector over index
 """
+
 
 class UsbToolsError(Exception):
     """UsbTools error."""
@@ -112,8 +109,8 @@ class UsbTools:
                 sernum = UsbTools.get_string(dev, dev.iSerialNumber)
                 description = UsbTools.get_string(dev, dev.iProduct)
                 descriptor = UsbDeviceDescriptor(dev.idVendor, dev.idProduct,
-                                                 dev.bus, dev.address,
-                                                 sernum, None, description)
+                                                 dev.bus, dev.address, sernum,
+                                                 None, description)
                 devices.add((descriptor, ifcount))
             return list(devices)
         finally:
@@ -164,17 +161,21 @@ class UsbTools:
                     raise ValueError('Vendor identifier is required')
                 devs = cls._find_devices(devdesc.vid, devdesc.pid)
                 if devdesc.description:
-                    devs = [dev for dev in devs if
-                            UsbTools.get_string(dev, dev.iProduct) ==
-                            devdesc.description]
+                    devs = [
+                        dev for dev in devs if UsbTools.get_string(
+                            dev, dev.iProduct) == devdesc.description
+                    ]
                 if devdesc.sn:
-                    devs = [dev for dev in devs if
-                            UsbTools.get_string(dev, dev.iSerialNumber) ==
-                            devdesc.sn]
+                    devs = [
+                        dev for dev in devs if UsbTools.get_string(
+                            dev, dev.iSerialNumber) == devdesc.sn
+                    ]
                 if devdesc.bus is not None and devdesc.address is not None:
-                    devs = [dev for dev in devs if
-                            (devdesc.bus == dev.bus and
-                             devdesc.address == dev.address)]
+                    devs = [
+                        dev for dev in devs
+                        if (devdesc.bus == dev.bus
+                            and devdesc.address == dev.address)
+                    ]
                 if isinstance(devs, set):
                     # there is no guarantee the same index with lead to the
                     # same device. Indexing should be reworked
@@ -288,8 +289,7 @@ class UsbTools:
         return candidates
 
     @classmethod
-    def parse_url(cls, urlstr: str, scheme: str,
-                  vdict: Mapping[str, int],
+    def parse_url(cls, urlstr: str, scheme: str, vdict: Mapping[str, int],
                   pdict: Mapping[int, Mapping[str, int]],
                   default_vendor: int) -> Tuple[UsbDeviceDescriptor, int]:
         """Parse a device specifier URL.
@@ -325,9 +325,8 @@ class UsbTools:
                                                    default_vendor)
         if report_devices:
             UsbTools.show_devices(scheme, vdict, pdict, candidates)
-            raise SystemExit(candidates and
-                             'Please specify the USB device' or
-                             'No USB-Serial device has been detected')
+            raise SystemExit(candidates and 'Please specify the USB device'
+                             or 'No USB-Serial device has been detected')
         if idx is None:
             if len(candidates) > 1:
                 raise UsbToolsError("%d USB devices match URL '%s'" %
@@ -347,8 +346,10 @@ class UsbTools:
             raise UsbToolsError('Vendor ID %s not supported' %
                                 (vendor and '0x%04x' % vendor))
         if not product:
-            cproducts = {candidate[1] for candidate in candidates
-                         if candidate[0] == vendor}
+            cproducts = {
+                candidate[1]
+                for candidate in candidates if candidate[0] == vendor
+            }
             if len(cproducts) == 1:
                 product = cproducts.pop()
         if product not in pdict[vendor].values():
@@ -416,7 +417,7 @@ class UsbTools:
                         raise ValueError()
                     idx = devidx
                     if idx:
-                        idx = devidx-1
+                        idx = devidx - 1
                 except ValueError:
                     sernum = locators[0]
         candidates = []
@@ -444,7 +445,8 @@ class UsbTools:
         return candidates, idx
 
     @classmethod
-    def show_devices(cls, scheme: str,
+    def show_devices(cls,
+                     scheme: str,
                      vdict: Mapping[str, int],
                      pdict: Mapping[int, Mapping[str, int]],
                      devdescs: Sequence[Tuple[UsbDeviceDescriptor, int]],
@@ -514,7 +516,7 @@ class UsbTools:
                     product = products[0]
             except KeyError:
                 pass
-            for port in range(1, ifcount+1):
+            for port in range(1, ifcount + 1):
                 fmt = '%s://%s/%d'
                 parts = [vendor, product]
                 sernum = desc.sn
@@ -534,8 +536,8 @@ class UsbTools:
                 try:
                     url = fmt % (scheme, ':'.join(parts), port)
                 except Exception:
-                    url = fmt % (scheme, ':'.join([vendor, product, '???']),
-                                 port)
+                    url = fmt % (scheme, ':'.join([vendor, product, '???'
+                                                   ]), port)
                 try:
                     if desc.description:
                         description = '(%s)' % desc.description
@@ -566,7 +568,7 @@ class UsbTools:
             if cls.UsbApi == 2:
                 return usb_get_string(device, stridx)
             return usb_get_string(device, 64, stridx)
-        except UnicodeDecodeError:
+        except (UnicodeDecodeError, NotImplementedError):
             # do not abort if EEPROM data is somewhat incoherent
             return ''
 
@@ -585,7 +587,9 @@ class UsbTools:
             cls.Lock.release()
 
     @classmethod
-    def _find_devices(cls, vendor: int, product: int,
+    def _find_devices(cls,
+                      vendor: int,
+                      product: int,
                       nocache: bool = False) -> Set[UsbDevice]:
         """Find a USB device and return it.
 
