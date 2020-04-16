@@ -95,8 +95,6 @@ class GpioBaseController(GpioPort):
             if k in kwargs:
                 del kwargs[k]
         self._frequency = self._configure(url, direction, frequency, **kwargs)
-        self._mask = (1 << self._width) - 1
-        self._direction = direction & self._mask
 
     def close(self):
         """Close the FTDI interface.
@@ -315,7 +313,7 @@ class GpioAsyncController(GpioBaseController):
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs) -> int:
         if 'initial' in kwargs:
-            initial = kwargs['initial'] & self._mask
+            initial = kwargs['initial']
             del kwargs['initial']
         else:
             initial = None
@@ -325,9 +323,12 @@ class GpioAsyncController(GpioBaseController):
                                                     sync=False,
                                                     baudrate=baudrate,
                                                     **kwargs)
-        if initial is not None:
-            self.write(initial)
         self._width = 8
+        self._mask = (1 << self._width) - 1
+        self._direction = direction & self._mask
+        if initial is not None:
+            initial &= self._mask
+            self.write(initial)
         return float(baudrate)
 
     # old API names
@@ -392,7 +393,7 @@ class GpioSyncController(GpioBaseController):
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs):
         if 'initial' in kwargs:
-            initial = kwargs['initial'] & self._mask
+            initial = kwargs['initial']
             del kwargs['initial']
         else:
             initial = None
@@ -402,9 +403,12 @@ class GpioSyncController(GpioBaseController):
                                                     sync=True,
                                                     baudrate=baudrate,
                                                     **kwargs)
-        if initial is not None:
-            self.exchange(initial)
         self._width = 8
+        self._mask = (1 << self._width) - 1
+        self._direction = direction & self._mask
+        if initial is not None:
+            initial &= self._mask
+            self.exchange(initial)
         return float(baudrate)
 
 
@@ -481,6 +485,8 @@ class GpioMpsseController(GpioBaseController):
                                                    frequency=frequency,
                                                    **kwargs)
         self._width = self._ftdi.port_width
+        self._mask = (1 << self._width) - 1
+        self._direction = direction & self._mask
         return frequency
 
     def _read_mpsse(self, count: int) -> Tuple[int]:

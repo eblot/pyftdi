@@ -162,6 +162,22 @@ class GpioAsyncTestCase(FtdiTestCase):
         port.set_direction(0xFF, 0xFF & ~direction)
         gpio.close()
 
+    def test_gpio_initial(self):
+        """Check initial values.
+        """
+        if self.skip_loopback:
+            raise SkipTest('Skip loopback test on multiport device')
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        vftdi = self.loader.get_virtual_ftdi(1, 1)
+        vport = vftdi.get_port(1)
+        gpio = GpioAsyncController()
+        for initial in (0xaf, 0xf0, 0x13, 0x00):
+            gpio.configure(self.url, direction=direction, frequency=1e6,
+                           initial=initial)
+            expect = (initial & 0xF0) | (initial >> 4)
+            self.assertEqual(vport.gpio, expect)
+            gpio.close()
+
     def test_gpio_loopback(self):
         """Check I/O.
         """
