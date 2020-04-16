@@ -132,7 +132,6 @@ class BuildPy(build_py):
                 continue
             pfd, pyc = mkstemp('.pyc')
             close(pfd)
-            msg = None
             try:
                 pycompile(file, pyc, doraise=True)
                 self._check_line_width(file)
