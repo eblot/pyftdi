@@ -113,7 +113,6 @@ class GpioAsyncTestCase(FtdiTestCase):
             ftdi.open_from_url(cls.url)
             count = ftdi.device_port_count
             ftdi.close()
-            # ftdi.close()
             cls.skip_loopback = count > 1
         else:
             cls.skip_loopback = False
@@ -439,6 +438,39 @@ class GpioMultiportTestCase(FtdiTestCase):
         gpio_in.close()
         gpio_out.close()
 
+    def test_direction(self):
+        if VirtLoader:
+            raise SkipTest('Not yet supported')
+        b5 = 1 << 5
+        for controller in (GpioAsyncController,
+                           GpioSyncController,
+                           GpioMpsseController):
+            gpio_in, gpio_out = controller(), controller()
+            gpio_in.configure(self.urls[0], direction=0x00, frequency=1e6,
+                              debug=self.debug)
+            gpio_out.configure(self.urls[1], direction=0xFF, frequency=1e6,
+                               debug=self.debug)
+            for direction in None, 0xFF, b5, 0xF0:
+                if direction is not None:
+                    gpio_out.set_direction(0xFF, direction)
+                for out in 0 << 5, 1 << 5:
+                    if controller != GpioSyncController:
+                        gpio_out.write(out)
+                        outp = gpio_out.read(1)
+                        inp = gpio_in.read(1)
+                        if controller == GpioMpsseController:
+                            outp = outp[0]
+                            inp = inp[0]
+                    else:
+                        # write twice the output value, only the second value
+                        # matters (see Sync bitbang for details)
+                        outp = gpio_out.exchange(bytes([out, out]))[1]
+                        # write anything as we just need the input value which
+                        # is sampled on each write
+                        inp = gpio_in.exchange(b'\x00')[0]
+                    self.assertEqual(outp & b5, out)
+                    self.assertEqual(inp & b5, out)
+
 
 class GpioMpsseTestCase(FtdiTestCase):
     """FTDI GPIO test for 16-bit port FTDI devices, i.e. FT2232H.
@@ -565,8 +597,8 @@ def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
     suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
     suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
+    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
     return suite_
 
 

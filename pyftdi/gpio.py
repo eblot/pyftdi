@@ -178,11 +178,14 @@ class GpioBaseController(GpioPort):
             raise GpioException("Invalid direction mask")
         self._direction &= ~pins
         self._direction |= (pins & direction)
-        self._ftdi.set_bitmode(self._direction, Ftdi.BitMode.BITBANG)
+        self._update_direction()
 
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs) -> int:
         raise NotImplementedError('GpioBaseController cannot be instanciated')
+
+    def _update_direction(self) -> None:
+        raise NotImplementedError('Missing implementation')
 
 
 class GpioAsyncController(GpioBaseController):
@@ -317,6 +320,9 @@ class GpioAsyncController(GpioBaseController):
             del kwargs['initial']
         else:
             initial = None
+        if 'debug' in kwargs:
+            # debug is not implemented
+            del kwargs['debug']
         baudrate = int(frequency) if frequency is not None else None
         baudrate = self._ftdi.open_bitbang_from_url(url,
                                                     direction=direction,
@@ -330,6 +336,9 @@ class GpioAsyncController(GpioBaseController):
             initial &= self._mask
             self.write(initial)
         return float(baudrate)
+
+    def _update_direction(self) -> None:
+        self._ftdi.set_bitmode(self._direction, Ftdi.BitMode.BITBANG)
 
     # old API names
     open_from_url = GpioBaseController.configure
@@ -380,7 +389,11 @@ class GpioSyncController(GpioBaseController):
                 if val > self._mask:
                     raise GpioException("Invalid value")
         self._ftdi.write_data(out)
-        return self._ftdi.read_data_bytes(len(out), 4)
+        data = self._ftdi.read_data_bytes(len(out), 4)
+        if len(data) != len(out):
+            raise FtdiError('Unable to read data %d bytes out of %d' %
+                            (len(data), len(out)))
+        return data
 
     def set_frequency(self, frequency: Union[int, float]) -> None:
         """Set the frequency at which sequence of GPIO samples are read
@@ -397,6 +410,9 @@ class GpioSyncController(GpioBaseController):
             del kwargs['initial']
         else:
             initial = None
+        if 'debug' in kwargs:
+            # debug is not implemented
+            del kwargs['debug']
         baudrate = int(frequency) if frequency is not None else None
         baudrate = self._ftdi.open_bitbang_from_url(url,
                                                     direction=direction,
@@ -410,6 +426,9 @@ class GpioSyncController(GpioBaseController):
             initial &= self._mask
             self.exchange(initial)
         return float(baudrate)
+
+    def _update_direction(self) -> None:
+        self._ftdi.set_bitmode(self._direction, Ftdi.BitMode.SYNCBB)
 
 
 class GpioMpsseController(GpioBaseController):
@@ -478,6 +497,11 @@ class GpioMpsseController(GpioBaseController):
             raise GpioException('Not connected')
         self._frequency = self._ftdi.set_frequency(float(frequency))
 
+    def _update_direction(self) -> None:
+        # nothing to do in MPSSE mode, as direction is udpated with each
+        # GPIO command
+        pass
+
     def _configure(self, url: str, direction: int,
                    frequency: Union[int, float, None] = None, **kwargs):
         frequency = self._ftdi.open_mpsse_from_url(url,
@@ -503,7 +527,8 @@ class GpioMpsseController(GpioBaseController):
         size = scalc(fmt) if fmt else count
         data = self._ftdi.read_data_bytes(size, 4)
         if len(data) != size:
-            raise FtdiError('Cannot read GPIO')
+            raise FtdiError('Cannot read GPIO, recv %d out of %d bytes' %
+                            (len(data), size))
         if fmt:
             return sunpack(fmt, data)
         return data

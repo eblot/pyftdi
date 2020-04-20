@@ -2061,11 +2061,11 @@ class Ftdi:
         except USBError as ex:
             raise FtdiError('UsbError: %s' % str(ex))
 
-    def _write(self, data: bytes) -> int:
+    def _write(self, data: Union[bytes, bytearray]) -> int:
         try:
             self.log.debug('> %s', hexlify(data).decode())
         except TypeError as exc:
-            self.log.error('> (invalid output byte sequence: %s)', exc)
+            self.log.warning('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
             self._tracer.send(self._index, data)
         return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
