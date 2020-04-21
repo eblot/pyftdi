@@ -748,10 +748,6 @@ class Ftdi:
         self.read_data_set_chunksize()
         # Reset feature mode
         self.set_bitmode(0, Ftdi.BitMode.RESET)
-        # Enable MPSSE mode
-        self.set_bitmode(direction, Ftdi.BitMode.MPSSE)
-        # Reset feature mode
-        self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Drain buffers
         self.purge_buffers()
         # Disable event and error characters
@@ -1159,7 +1155,6 @@ class Ftdi:
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_RESET,
                                    Ftdi.SIO_RESET_PURGE_TX):
             raise FtdiError('Unable to flush TX buffer')
-        self.log.debug('tx buf purged')
 
     def purge_buffers(self) -> None:
         """Clear the buffers on the chip and the internal read buffer."""

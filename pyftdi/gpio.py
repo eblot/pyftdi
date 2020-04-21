@@ -390,9 +390,6 @@ class GpioSyncController(GpioBaseController):
                     raise GpioException("Invalid value")
         self._ftdi.write_data(out)
         data = self._ftdi.read_data_bytes(len(out), 4)
-        if len(data) != len(out):
-            raise FtdiError('Unable to read data %d bytes out of %d' %
-                            (len(data), len(out)))
         return data
 
     def set_frequency(self, frequency: Union[int, float]) -> None:

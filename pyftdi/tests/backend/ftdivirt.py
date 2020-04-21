@@ -267,7 +267,6 @@ class VirtFtdiPort:
 
         TERMINATE = 0x1    # Terminate thread
         SET_BITMODE = 0x2  # Change the bitmode
-        PURGE_TX = 0x3     # The TX buffer has been purged
 
     def __init__(self, parent: 'VirtFtdi', iface: int):
         self.log = getLogger(f'pyftdi.vftdi[{iface}]')
@@ -405,7 +404,6 @@ class VirtFtdiPort:
                 while tx_fifo.q and pos < count:
                     buff[pos] = tx_fifo.q.popleft()
                     pos += 1
-            self.log.debug('popped %d bytes', pos)
             return pos
         self.log.warning('Read buffer discarded, mode %s',
                          self.BitMode(self._bitmode).name)
@@ -471,27 +469,19 @@ class VirtFtdiPort:
         if reset == 'sio':
             # the thruth is that FTDI does not document what this command
             # exactly does...
-            with self._cmd_q.lock:
-                self._cmd_q.q.append((self.Command.PURGE_TX,))
-                self._cmd_q.event.set()
-            fifo = self._fifos.rx
-            with fifo.lock:
-                fifo.q.clear()
+            for fifo in self._fifos:
+                with fifo.lock:
+                    fifo.q.clear()
             self.log.info('> ftdi reset is not fully implemented')
             self._gpio = 0
             self._direction = 0
             self._bitmode = self.BitMode.RESET
             return
         if reset == 'purge_tx':
-            self.log.info('> ftdi %s: %d requests', reset,
-                          len(self._fifos.tx.q))
-            # TX purge is delegated to the TX task, as there would be no
-            # time to reload the TX buffer with new data (for ex. in async
-            # bitbang). This is a bit hackish, but it is hard to simulate
-            # true HW parallelism with a SW scheduler...
-            with self._cmd_q.lock:
-                self._cmd_q.q.append((self.Command.PURGE_TX,))
-                self._cmd_q.event.set()
+            fifo = self._fifos.tx
+            self.log.info('> ftdi %s: %d requests', reset, len(fifo.q))
+            with fifo.lock:
+                fifo.q.clear()
             return
         if reset == 'purge_rx':
             fifo = self._fifos.rx
@@ -553,10 +543,6 @@ class VirtFtdiPort:
             for pin in self._pins:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
         if bitmode == self.BitMode.MPSSE:
-            #self._pins[0].set_function(VirtualFtdiPin.Function.CLOCK)
-            #self._pins[1].set_function(VirtualFtdiPin.Function.STREAM)
-            #self._pins[2].set_function(VirtualFtdiPin.Function.STREAM)
-            #for pin in self._pins[3:]:
             for pin in self._pins:
                 pin.set_function(VirtualFtdiPin.Function.GPIO)
             if not self._mpsse:
@@ -844,11 +830,14 @@ class VirtFtdiPort:
                                        self._gpio, f'{self._gpio:08b}')
                 elif self._bitmode == self.BitMode.SYNCBB:
                     tx_fifo = self._fifos.tx
+                    lost = 0
                     for byte in data:
                         with tx_fifo.lock:
                             free_count = tx_fifo.size - len(tx_fifo.q)
                             if free_count > 0:
                                 tx_fifo.q.append(self._gpio & 0xFF)
+                            else:
+                                lost += 1
                         # only 8 LSBs are addressable through this command
                         gpi = self._gpio & ~self._direction & 0xFF
                         gpo = byte & self._direction & 0xFF
@@ -857,6 +846,8 @@ class VirtFtdiPort:
                         self._update_gpio(False, gpio)
                         self.log.debug('. bbw %02x: %s',
                                        self._gpio, f'{self._gpio:08b}')
+                    if lost:
+                        self.log.debug('%d samples lost, TX full', lost)
                 else:
                     try:
                         mode = self.BitMode(self._bitmode).name
@@ -880,7 +871,6 @@ class VirtFtdiPort:
     def _tx_worker(self):
         """Background handling of data sent to host."""
         bitmode = self.BitMode.RESET
-        purge_tx = False
         _wait_delay = self.SLEEP_DELAY
         terminated = False
         try:
@@ -892,7 +882,7 @@ class VirtFtdiPort:
                 # rounding)
                 if not self._cmd_q.q:
                     if not self._cmd_q.event.wait(_wait_delay):
-                        purge_tx = self._tx_worker_generate(bitmode, purge_tx)
+                        self._tx_worker_generate(bitmode)
                         continue
                 with self._cmd_q.lock:
                     if not self._cmd_q.q:
@@ -913,19 +903,10 @@ class VirtFtdiPort:
                     else:
                         _wait_delay = self.SLEEP_DELAY
                     continue
-                elif command[0] == self.Command.PURGE_TX:
-                    purge_tx = self._tx_worker_generate(bitmode, True)
-                    # reload the buffer immediately w/o waiting for the
-                    # loop delay
                 else:
                     self.log.error('Unimplemented support for command %d',
                                    command)
                     continue
-                if purge_tx:
-                    tx_fifo = self._fifos.tx
-                    with tx_fifo.lock:
-                        tx_fifo.q.clear()
-                        purge_tx = False
             self.log.debug('End of worker %s', self._tx_thread.name)
         except Exception as exc:
             self.log.error('Dead of worker %s: %s', self._tx_thread.name, exc)
@@ -936,7 +917,7 @@ class VirtFtdiPort:
                 self.log.info('TX worker is triggering death')
             self._resume = False
 
-    def _tx_worker_generate(self, bitmode, purge_tx: bool) -> bool:
+    def _tx_worker_generate(self, bitmode) -> None:
         tx_fifo = self._fifos.tx
         if bitmode == self.BitMode.BITBANG:
             ts = now()
@@ -946,20 +927,14 @@ class VirtFtdiPort:
             # how many bytes should have been captured since last
             # action
             byte_count = round(self._baudrate*elapsed)
-            if purge_tx and not byte_count:
-                byte_count = 1
             # fill the TX FIFO with as many bytes, stop if full
             if byte_count:
                 with tx_fifo.lock:
                     free_count = tx_fifo.size - len(tx_fifo.q)
                     push_count = min(free_count, byte_count)
-                    if purge_tx:
-                        tx_fifo.q.clear()
-                        purge_tx = False
                     tx_fifo.q.extend([self._gpio] * push_count)
                 self.log.debug('in %.3fms -> %d',
                                elapsed*1000, push_count)
-        return purge_tx
 
 
 class VirtFtdi:

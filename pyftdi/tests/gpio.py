@@ -439,8 +439,6 @@ class GpioMultiportTestCase(FtdiTestCase):
         gpio_out.close()
 
     def test_direction(self):
-        if VirtLoader:
-            raise SkipTest('Not yet supported')
         b5 = 1 << 5
         for controller in (GpioAsyncController,
                            GpioSyncController,
