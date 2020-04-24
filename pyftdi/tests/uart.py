@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,10 @@ from os import environ
 from multiprocessing import Process, set_start_method
 from random import choice, seed
 from string import printable
+from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import modules, platform, stdout
-from time import sleep
+from time import sleep, time as now
+from threading import Thread
 from unittest import TestCase, TestSuite, skipIf, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
@@ -45,7 +47,7 @@ from pyftdi.serialext import serial_for_url
 
 # Specify the second port for multi port device
 # Unfortunately, auto detection triggers some issue in multiprocess test
-URL_BASE = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232/2')
+URL_BASE = environ.get('FTDI_DEVICE', 'ftdi:///2')
 URL = ''.join((URL_BASE[:-1], '1'))
 IFCOUNT = int(URL_BASE[-1])
 
@@ -56,7 +58,8 @@ class FtdiTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'),
+                                 permissive=False)
 
     def setUp(self):
         if self.debug:
@@ -82,6 +85,7 @@ class UartTestCase(FtdiTestCase):
 
     @classmethod
     def setUpClass(cls):
+        FtdiTestCase.setUpClass()
         seed()
 
     @skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
@@ -169,6 +173,114 @@ class UartTestCase(FtdiTestCase):
             finally:
                 port.close()
 
+    @skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
+    def test2_uart_cross_talk_speed(self):
+        urla = URL
+        urlb = self.build_next_url(urla)
+        porta = serial_for_url(urla, baudrate=6000000)
+        portb = serial_for_url(urlb, baudrate=6000000)
+        size = int(1e6)
+        results = [None, None]
+        chunk = 537
+        source = Thread(target=self._stream_source,
+                        args=(porta, chunk, size, results),
+                        daemon=True)
+        sink = Thread(target=self._stream_sink,
+                      args=(portb, size, results),
+                      daemon=True)
+        sink.start()
+        source.start()
+        source.join()
+        sleep(0.5)
+        sink.join()
+        if isinstance(results[1], Exception):
+            raise results[1]
+        tsize, tdelta = results[0]
+        rsize, rdelta = results[1]
+        self.assertGreater(rsize, 0, 'Not data received')
+        if self.debug:
+            print(f'TX: {tsize} bytes, {tdelta*1000:.3f} ms, '
+                  f'{int(8*tsize/tdelta):d} bps')
+            print(f'RX: {rsize} bytes, {rdelta*1000:.3f} ms, '
+                  f'{int(8*rsize/rdelta):d} bps')
+        self.assertTrue(rsize >= tsize-4*chunk, 'Data loss')
+
+    @skipIf(IFCOUNT != 1, 'Test reserved for single-port FTDI device')
+    def test_loopback_talk_speed(self):
+        port = serial_for_url(URL, baudrate=6000000)
+        size = int(1e6)
+        results = [None, None]
+        chunk = 537
+        source = Thread(target=self._stream_source,
+                        args=(port, chunk, size, results),
+                        daemon=True)
+        sink = Thread(target=self._stream_sink,
+                      args=(port, size, results),
+                      daemon=True)
+        sink.start()
+        source.start()
+        source.join()
+        sleep(0.5)
+        sink.join()
+        if isinstance(results[1], Exception):
+            raise results[1]
+        tsize, tdelta = results[0]
+        rsize, rdelta = results[1]
+        self.assertGreater(rsize, 0, 'Not data received')
+        if self.debug:
+            print(f'TX: {tsize} bytes, {tdelta*1000:.3f} ms, '
+                  f'{int(8*tsize/tdelta):d} bps')
+            print(f'RX: {rsize} bytes, {rdelta*1000:.3f} ms, '
+                  f'{int(8*rsize/rdelta):d} bps')
+        self.assertTrue(rsize >= tsize-4*chunk, 'Data loss')
+
+    @classmethod
+    def _stream_source(cls, port, chunk, size, results):
+        pos = 0
+        tx_size = 0
+        start = now()
+        while tx_size < size:
+            samples = spack('>%dI' % chunk, *range(pos, pos+chunk))
+            pos += chunk
+            port.write(samples)
+            tx_size += len(samples)
+            if results[1] is not None:
+                break
+        delta = now()-start
+        results[0] = tx_size, delta
+
+    @classmethod
+    def _stream_sink(cls, port, size, results):
+        pos = 0
+        first = None
+        data = bytearray()
+        sample_size = scalc('>I')
+        rx_size = 0
+        port.timeout = 1.0
+        start = now()
+        while rx_size < size:
+            buf = port.read(1024)
+            if not buf:
+                print('T')
+                break
+            rx_size += len(buf)
+            data.extend(buf)
+            sample_count = len(data)//sample_size
+            length = sample_count*sample_size
+            samples = sunpack('>%dI' % sample_count, data[:length])
+            data = data[length:]
+            for sample in samples:
+                if first is None:
+                    first = sample
+                    pos = sample
+                    continue
+                pos += 1
+                if sample != pos:
+                    results[1] = AssertionError('Lost byte @ %d', pos-first)
+                    return
+        delta = now()-start
+        results[1] = (rx_size, delta)
+
     @classmethod
     def _cross_talk_write_then_read(cls, url, refstream):
         # use classmethod & direct AssertionError to avoid pickler issues
@@ -235,8 +347,7 @@ class BaudrateTestCase(FtdiTestCase):
 
     def test(self):
         ftdi = Ftdi()
-        url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
-        ftdi.open_from_url(url)
+        ftdi.open_from_url(URL)
         for baudrate in self.BAUDRATES:
             actual, _, _ = ftdi._convert_baudrate(baudrate)
             ratio = baudrate/actual
