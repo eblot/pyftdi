@@ -27,19 +27,21 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
-import unittest
 from doctest import testmod
 from os import environ
-from multiprocessing import Process
+from multiprocessing import Process, set_start_method
 from random import choice, seed
 from string import printable
 from sys import modules, platform, stdout
 from time import sleep
+from unittest import TestCase, TestSuite, skipIf, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
+from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 
 #pylint: disable-msg=missing-docstring
+#pylint: disable-msg=protected-access
 
 # Specify the second port for multi port device
 # Unfortunately, auto detection triggers some issue in multiprocess test
@@ -48,7 +50,20 @@ URL = ''.join((URL_BASE[:-1], '1'))
 IFCOUNT = int(URL_BASE[-1])
 
 
-class UartTestCase(unittest.TestCase):
+class FtdiTestCase(TestCase):
+    """Common features for all tests.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
+
+    def setUp(self):
+        if self.debug:
+            print('.'.join(self.id().split('.')[-2:]))
+
+
+class UartTestCase(FtdiTestCase):
     """FTDI UART driver test case
 
        Simple test to demonstrate UART feature.
@@ -69,7 +84,7 @@ class UartTestCase(unittest.TestCase):
     def setUpClass(cls):
         seed()
 
-    @unittest.skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
+    @skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
     def test_uart_cross_talk_sp(self):
         something_out = self.generate_bytes()
         """Exchange a random byte stream between the two first UART interfaces
@@ -105,8 +120,8 @@ class UartTestCase(unittest.TestCase):
             porta.close()
             portb.close()
 
-    @unittest.skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
-    @unittest.skipIf(platform == 'win32', 'Not tested on Windows')
+    @skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
+    @skipIf(platform == 'win32', 'Not tested on Windows')
     def test_uart_cross_talk_mp(self):
         if IFCOUNT > 4:
             raise IOError('No FTDI device')
@@ -131,7 +146,7 @@ class UartTestCase(unittest.TestCase):
         self.assertEqual(exita, 0)
         self.assertEqual(exitb, 0)
 
-    @unittest.skipIf(IFCOUNT != 1, 'Test reserved for single-port FTDI device')
+    @skipIf(IFCOUNT != 1, 'Test reserved for single-port FTDI device')
     def test_uart_loopback(self):
         something_out = self.generate_bytes()
         """Exchange a random byte stream between the two first UART interfaces
@@ -149,14 +164,16 @@ class UartTestCase(unittest.TestCase):
                 something_out = self.generate_bytes()
                 port.write(something_out)
                 something_in = port.read(len(something_out))
-                print(len(something_in))
                 self.assertEqual(len(something_in), len(something_out))
                 self.assertEqual(something_in, something_out)
             finally:
-                print("close")
                 port.close()
 
-    def _cross_talk_write_then_read(self, url, refstream):
+    @classmethod
+    def _cross_talk_write_then_read(cls, url, refstream):
+        # use classmethod & direct AssertionError to avoid pickler issues
+        # with multiprocessing:
+        # "TypeError: cannot serialize '_io.TextIOWrapper' object"
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
@@ -164,22 +181,30 @@ class UartTestCase(unittest.TestCase):
             port.timeout = 5.0
             port.write(refstream)
             instream = port.read(len(refstream))
-            self.assertEqual(len(instream), len(refstream))
+            if len(instream) != len(refstream):
+                raise AssertionError('Stream length differ')
             # we expect the peer to return the same stream, inverted
             localstream = bytes(reversed(instream))
-            self.assertEqual(localstream, refstream)
+            if localstream != refstream:
+                raise AssertionError('Stream content differ')
         finally:
             port.close()
 
-    def _cross_talk_read_then_write(self, url, refstream):
+    @classmethod
+    def _cross_talk_read_then_write(cls, url, refstream):
+        # use classmethod & direct AssertionError to avoid pickler issues
+        # with multiprocessing:
+        # "TypeError: cannot serialize '_io.TextIOWrapper' object"
         port = serial_for_url(url, baudrate=1000000)
         try:
             if not port.is_open:
                 port.open()
             port.timeout = 5.0
             instream = port.read(len(refstream))
-            self.assertEqual(len(instream), len(refstream))
-            self.assertEqual(instream, refstream)
+            if len(instream) != len(refstream):
+                raise AssertionError('Stream length differ')
+            if instream != refstream:
+                raise AssertionError('Stream content differ')
             # the peer expect us to return the same stream, inverted
             outstream = bytes(reversed(instream))
             port.write(outstream)
@@ -198,7 +223,7 @@ class UartTestCase(unittest.TestCase):
         return '%s%d' % (url[:-1], iface)
 
 
-class BaudrateTestCase(unittest.TestCase):
+class BaudrateTestCase(FtdiTestCase):
     """Simple test to check clock stretching cannot be overwritten with
        GPIOs.
     """
@@ -213,17 +238,15 @@ class BaudrateTestCase(unittest.TestCase):
         url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
         ftdi.open_from_url(url)
         for baudrate in self.BAUDRATES:
-            actual, value, index = ftdi._convert_baudrate(baudrate)
+            actual, _, _ = ftdi._convert_baudrate(baudrate)
             ratio = baudrate/actual
-            # print('%d bps, ratio: %.3f div %04x %04x' %
-            #      (baudrate, ratio, index, value))
             self.assertTrue(0.97 <= ratio <= 1.03, "Invalid baudrate")
 
 
 def suite():
-    suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(BaudrateTestCase, 'test'))
-    suite_.addTest(unittest.makeSuite(UartTestCase, 'test'))
+    suite_ = TestSuite()
+    suite_.addTest(makeSuite(BaudrateTestCase, 'test'))
+    suite_.addTest(makeSuite(UartTestCase, 'test'))
     return suite_
 
 
@@ -236,7 +259,11 @@ def main():
     except AttributeError:
         raise ValueError('Invalid log level: %s' % level)
     FtdiLogger.set_level(loglevel)
-    unittest.main(defaultTest='suite')
+    ut_main(defaultTest='suite')
 
 if __name__ == '__main__':
+    if platform == 'darwin':
+        # avoid the infamous "The process has forked and you cannot use this
+        # CoreFoundation functionality safely. You MUST exec()." error on macOS
+        set_start_method('spawn')
     main()
