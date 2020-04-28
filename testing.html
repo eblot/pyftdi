@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -223,6 +223,10 @@ report and access FTDI devices using the regular <a class="reference internal" h
 <p>This module enables testing <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> APIs. It also re-uses the MPSSE tracker
 engine to decode and verify MPSSE requests used to support I<sup>2</sup>C, SPI and UART
 features.</p>
+<p>For now, it is able to emulate most of GPIO requests (async, sync and MPSSE)
+and UART input/output. It also manages the frequency and baudrate settings.</p>
+<p>It is not able to emulate the MPSSE commands (with the exception of set and get
+GPIO values), as it represents a massive workload…</p>
 <div class="section" id="beware-wip">
 <h3>Beware: WIP<a class="headerlink" href="#beware-wip" title="Permalink to this headline">¶</a></h3>
 <p>This is an experimental work in progress, which is its early inception stage.</p>
@@ -272,7 +276,7 @@ in <code class="docutils literal notranslate"><span class="pre">ft230x.yaml</spa
 <div class="section" id="availability">
 <h2>Availability<a class="headerlink" href="#availability" title="Permalink to this headline">¶</a></h2>
 <p>Note that unit tests and the virtual infrastructure are not included in the
-distributed Python packages, they are only availabke from the git repository.</p>
+distributed Python packages, they are only available from the git repository.</p>
 </div>
 </div>
 

@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -210,13 +210,13 @@ through the dedicated <a class="reference internal" href="index.html"><span clas
 
 <dl class="attribute">
 <dt id="pyftdi.ftdi.Ftdi.DEVICE_NAMES">
-<code class="sig-name descname">DEVICE_NAMES</code><em class="property"> = {512: 'ft232am', 1024: 'ft232bm', 1280: 'ft2232c', 1536: 'ft232r', 1792: 'ft2232h', 2048: 'ft4232h', 2304: 'ft232h', 4096: 'ft230x'}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEVICE_NAMES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">DEVICE_NAMES</code><em class="property"> = {512: 'ft232am', 1024: 'ft232bm', 1280: 'ft2232c', 1536: 'ft232r', 1792: 'ft2232h', 2048: 'ft4232h', 2304: 'ft232h', 4096: 'ft-x'}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEVICE_NAMES" title="Permalink to this definition">¶</a></dt>
 <dd><p>Common names of FTDI supported devices.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="pyftdi.ftdi.Ftdi.FIFO_SIZES">
-<code class="sig-name descname">FIFO_SIZES</code><em class="property"> = {512: (128, 128), 1024: (128, 384), 1280: (128, 384), 1536: (128, 256), 1792: (4096, 4096), 2048: (2048, 2048), 2304: (1024, 1024), 4096: (512, 512)}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FIFO_SIZES" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">FIFO_SIZES</code><em class="property"> = {512: (128, 128), 1024: (128, 384), 1280: (128, 384), 1536: (256, 128), 1792: (4096, 4096), 2048: (2048, 2048), 2304: (1024, 1024), 4096: (512, 512)}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FIFO_SIZES" title="Permalink to this definition">¶</a></dt>
 <dd><p>FTDI chip internal FIFO sizes</p>
 <p>Note that ‘TX’ and ‘RX’ are inverted with the datasheet terminology:
 Values here are seen from the host perspective, whereas datasheet
@@ -231,7 +231,7 @@ values are defined from the device perspective</p>
 
 <dl class="attribute">
 <dt id="pyftdi.ftdi.Ftdi.PRODUCT_IDS">
-<code class="sig-name descname">PRODUCT_IDS</code><em class="property"> = {1027: {'2232': 24592, '2232c': 24592, '2232d': 24592, '2232h': 24592, '230x': 24597, '231x': 24597, '232': 24577, '232h': 24596, '232r': 24577, '234x': 24597, '4232': 24593, '4232h': 24593, 'ft2232': 24592, 'ft2232c': 24592, 'ft2232d': 24592, 'ft2232h': 24592, 'ft230x': 24597, 'ft231x': 24597, 'ft232': 24577, 'ft232h': 24596, 'ft232r': 24577, 'ft234x': 24597, 'ft4232': 24593, 'ft4232h': 24593}}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.PRODUCT_IDS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PRODUCT_IDS</code><em class="property"> = {1027: {'2232': 24592, '2232c': 24592, '2232d': 24592, '2232h': 24592, '230x': 24597, '231x': 24597, '232': 24577, '232h': 24596, '232r': 24577, '234x': 24597, '4232': 24593, '4232h': 24593, 'ft-x': 24597, 'ft2232': 24592, 'ft2232c': 24592, 'ft2232d': 24592, 'ft2232h': 24592, 'ft230x': 24597, 'ft231x': 24597, 'ft232': 24577, 'ft232h': 24596, 'ft232r': 24577, 'ft234x': 24597, 'ft4232': 24593, 'ft4232h': 24593}}</em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.PRODUCT_IDS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Supported products, only FTDI officials ones.
 To add third parties and customized products, see
 <a class="reference internal" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="pyftdi.ftdi.Ftdi.add_custom_product"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_custom_product()</span></code></a>.</p>
@@ -1009,7 +1009,6 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 <li><p><strong>direction</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
-<li><p><strong>initial</strong> – ignored</p></li>
 <li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency to select the USB FTDI poll
 delay. The shorter the delay, the higher the host CPU load.</p></li>
 <li><p><strong>baudrate</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – pace to sequence GPIO exchanges</p></li>
@@ -1106,7 +1105,7 @@ values than the default, as it triggers data loss in FTDI.</p></li>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.open_mpsse_from_device">
-<code class="sig-name descname">open_mpsse_from_device</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">frequency=6000000.0</em>, <em class="sig-param">latency=16</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_device" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">open_mpsse_from_device</code><span class="sig-paren">(</span><em class="sig-param">device</em>, <em class="sig-param">interface=1</em>, <em class="sig-param">direction=0</em>, <em class="sig-param">initial=0</em>, <em class="sig-param">frequency=6000000.0</em>, <em class="sig-param">latency=16</em>, <em class="sig-param">tracer=False</em>, <em class="sig-param">debug=False</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.open_mpsse_from_device" title="Permalink to this definition">¶</a></dt>
 <dd><p>Open a new interface to the specified FTDI device in MPSSE mode.</p>
 <p>MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
 modes (vs. UART mode).</p>
@@ -1133,7 +1132,8 @@ input</p></li>
 <li><p><strong>latency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
-<li><p><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
+<li><p><strong>tracer</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
+<li><p><strong>debug</strong> (<em>bool</em>) – add more debug traces</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>
@@ -1304,7 +1304,7 @@ size.</p>
 
 <dl class="method">
 <dt id="pyftdi.ftdi.Ftdi.read_data_bytes">
-<code class="sig-name descname">read_data_bytes</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">attempt=1</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_bytes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">read_data_bytes</code><span class="sig-paren">(</span><em class="sig-param">size</em>, <em class="sig-param">attempt=1</em>, <em class="sig-param">request_gen=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.read_data_bytes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read data from the FTDI interface</p>
 <p>In UART mode, data contains the serial stream read from the UART
 interface.</p>
@@ -1325,6 +1325,11 @@ requested amount.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – the number of bytes to received from the device</p></li>
 <li><p><strong>attempt</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – attempt cycle count</p></li>
+<li><p><strong>request_gen</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]]) – a callable that takes the number of bytes read
+and expect a bytes byffer to send back to the
+remote device. This is only useful to perform
+optimized/continuous transfer from a slave
+device.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type</dt>

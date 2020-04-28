@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -104,6 +104,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python dependencies</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installing-with-pip">Installing with PIP</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#installing-from-source">Installing from source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generating-the-documentation">Generating the documentation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#post-installation-sanity-check">Post-installation sanity check</a></li>
 </ul>
 </li>
@@ -312,16 +313,27 @@ Always prefer a stable, tagged release.</p>
 </div>
 </div>
 <div class="section" id="installing-from-source">
-<h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h3>
+<span id="install-from-source"></span><h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h3>
 <p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
 github repository.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install pyusb
-pip3 install pyserial
-git clone https://github.com/eblot/pyftdi.git
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/eblot/pyftdi.git
 <span class="nb">cd</span> pyftdi
-python3 setup.py ...
+<span class="c1"># note: &#39;pip3&#39; may simply be &#39;pip&#39; on some hosts</span>
+pip3 install -r requirements.txt
+python3 setup.py install
 </pre></div>
 </div>
+</div>
+<div class="section" id="generating-the-documentation">
+<span id="generate-doc"></span><h3>Generating the documentation<a class="headerlink" href="#generating-the-documentation" title="Permalink to this headline">¶</a></h3>
+<p>Follow <a class="reference internal" href="#install-from-source"><span class="std std-ref">Installing from source</span></a> then:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3 install setuptools wheel sphinx sphinx_autodoc_typehints
+<span class="c1"># Shpinx Read the Doc theme seems to never get a release w/ fixed issues</span>
+pip3 install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg<span class="o">=</span>sphinx_rtd_theme
+sphinx-build -b html pyftdi/doc .
+</pre></div>
+</div>
+<p>The documentation may be accessed from the generated <code class="docutils literal notranslate"><span class="pre">index.html</span></code> entry file.</p>
 </div>
 <div class="section" id="post-installation-sanity-check">
 <h3>Post-installation sanity check<a class="headerlink" href="#post-installation-sanity-check" title="Permalink to this headline">¶</a></h3>

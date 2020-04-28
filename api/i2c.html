@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -1144,15 +1144,20 @@ current to the SCL bus. See the wiring section.</p>
 </div>
 <div class="section" id="speed">
 <h3>Speed<a class="headerlink" href="#speed" title="Permalink to this headline">¶</a></h3>
-<p>Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
-slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
-acknowledged by the peer, a I2C byte cannot be written to the slave before
-the previous byte has been acknowledged by the slave and read back by the
-I2C master, that is the host. This requires several USB transfer for each
-byte, on top of each latency of the USB stack may add up. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is
-therefore not recommended if you need to achieve medium to high speed
-communication with a slave (relative to the I2C clock…), nor than FTDI
-devices are for this kind of usage.</p>
+<p>Due to the FTDI MPSSE engine limitations, the actual bitrate for write
+operations over I2C is very slow. As the I2C protocol enforces that each I2C
+exchanged byte needs to be acknowledged by the peer, a I2C byte cannot be
+written to the slave before the previous byte has been acknowledged by the
+slave and read back by the I2C master, that is the host. This requires several
+USB transfer for each byte, on top of each latency of the USB stack may add up.
+With the introduction of <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> v0.51, read operations have been optimized so
+that long read operations are now much faster thanwith previous <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
+versions, and exhibits far shorter latencies.</p>
+<p>Use of <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> should nevetherless carefully studied and is not recommended if
+you need to achieve medium to high speed write operations with a slave
+(relative to the I2C clock…). Dedicated I2C master such as FT4222H device is
+likely a better option, but is not currently supported with <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> as it uses
+a different communication protocol.</p>
 </div>
 </div>
 <div class="section" id="wiring">

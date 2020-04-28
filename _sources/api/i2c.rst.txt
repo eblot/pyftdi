@@ -151,15 +151,21 @@ current to the SCL bus. See the wiring section.
 Speed
 `````
 
-Due to the FTDI MPSSE engine limitations, the actual bitrate over I2C is very
-slow. As the I2C protocol enforces that each I2C exchanged byte needs to be
-acknowledged by the peer, a I2C byte cannot be written to the slave before
-the previous byte has been acknowledged by the slave and read back by the
-I2C master, that is the host. This requires several USB transfer for each
-byte, on top of each latency of the USB stack may add up. PyFtdi_ is
-therefore not recommended if you need to achieve medium to high speed
-communication with a slave (relative to the I2C clock...), nor than FTDI
-devices are for this kind of usage.
+Due to the FTDI MPSSE engine limitations, the actual bitrate for write
+operations over I2C is very slow. As the I2C protocol enforces that each I2C
+exchanged byte needs to be acknowledged by the peer, a I2C byte cannot be
+written to the slave before the previous byte has been acknowledged by the
+slave and read back by the I2C master, that is the host. This requires several
+USB transfer for each byte, on top of each latency of the USB stack may add up.
+With the introduction of PyFtdi_ v0.51, read operations have been optimized so
+that long read operations are now much faster thanwith previous PyFtdi_
+versions, and exhibits far shorter latencies.
+
+Use of PyFtdi_ should nevetherless carefully studied and is not recommended if
+you need to achieve medium to high speed write operations with a slave
+(relative to the I2C clock...). Dedicated I2C master such as FT4222H device is
+likely a better option, but is not currently supported with PyFtdi_ as it uses
+a different communication protocol. 
 
 .. _i2c_wiring:
 

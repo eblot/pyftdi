@@ -56,6 +56,12 @@ This module enables testing PyFtdi_ APIs. It also re-uses the MPSSE tracker
 engine to decode and verify MPSSE requests used to support |I2C|, SPI and UART
 features.
 
+For now, it is able to emulate most of GPIO requests (async, sync and MPSSE)
+and UART input/output. It also manages the frequency and baudrate settings.
+
+It is not able to emulate the MPSSE commands (with the exception of set and get
+GPIO values), as it represents a massive workload...
+
 Beware: WIP
 ```````````
 
@@ -115,4 +121,4 @@ Availability
 ~~~~~~~~~~~~
 
 Note that unit tests and the virtual infrastructure are not included in the
-distributed Python packages, they are only availabke from the git repository.
+distributed Python packages, they are only available from the git repository.

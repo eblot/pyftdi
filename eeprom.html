@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -100,6 +100,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#supported-features">Supported features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#eeprom-configuration-tool">EEPROM configuration tool</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#option-switches">Option switches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cbus-function">CBUS function</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#examples">Examples</a></li>
 </ul>
 </li>
@@ -181,28 +182,19 @@
 <p>Writing to the EEPROM can cause very <strong>undesired</strong> effects if the wrong
 value is written in the wrong place. You can even essentially <strong>brick</strong> your
 FTDI device. Use this function only with <strong>extreme</strong> caution.</p>
+<p>It is not recommended to use this application with devices that use an
+internal EEPROM such as FT232R or FT-X series, as if something goes wrong,
+recovery options are indeed limited. FT232R internal EEPROM seems to be
+unstable, even the official <a class="reference external" href="https://www.ftdichip.com/Support/Utilities.htm#FT_PROG">FT_PROG</a> tool from FTDI may fail to fix it on
+some conditions.</p>
 <p>If using a Hi-Speed Mini Module and you brick for FTDI device, see
 <a class="reference external" href="http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf">FTDI_Recovery</a></p>
 </div>
 <div class="section" id="supported-features">
 <h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this headline">¶</a></h2>
-<p>EEPROM support is experimental. For now, <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> mostly supports read-only
-feature to report EEPROM configuration.</p>
+<p>EEPROM support is under active development.</p>
 <p>Some features may be wrongly decoded, as each FTDI model implements a different
-feature map, and more test/validation is required.</p>
-<p>Write access is limited to modifying the variable length strings of the EEPROM,
-that is:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>manufacturer name, <em>e.g.</em> <cite>FTDI</cite></p></li>
-<li><p>product description string, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">FT2232H</span> <span class="pre">MiniModule</span></code></p></li>
-<li><p>serial number, <em>e.g.</em> <code class="docutils literal notranslate"><span class="pre">FT123ABC</span></code></p></li>
-</ul>
-</div></blockquote>
-<p>Changing the product description may help to distinguish a specific FTDI device
-when several of them are connected to a host, while changing the serial number
-may help selecting a specific FTDI device from the command line, as the serial
-number may be specified in the <a class="reference internal" href="urlscheme.html"><span class="doc">URL</span></a>.</p>
+feature map, and more test/validation are required.</p>
 <p>The <a class="reference internal" href="api/eeprom.html"><span class="doc">EEPROM API</span></a> implements the upper API to access the
 EEPROM content.</p>
 </div>
@@ -210,10 +202,10 @@ EEPROM content.</p>
 <span id="ftconf"></span><h2>EEPROM configuration tool<a class="headerlink" href="#eeprom-configuration-tool" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> is a companion script to help managing the content of the FTDI
 EEPROM from the command line. See the <a class="reference internal" href="tools.html#tools"><span class="std std-ref">Tools</span></a> chapter to locate this tool.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">]</span>
-          <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span><span class="p">]</span>
-          <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
-          <span class="p">[</span><span class="n">device</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">device</span><span class="p">]</span>
 
 <span class="n">Simple</span> <span class="n">FTDI</span> <span class="n">EEPROM</span> <span class="n">configurator</span><span class="o">.</span>
 
@@ -225,6 +217,10 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
   <span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="o">--</span><span class="n">hexdump</span>         <span class="n">dump</span> <span class="n">EEPROM</span> <span class="n">content</span> <span class="k">as</span> <span class="n">ASCII</span>
   <span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">,</span> <span class="o">--</span><span class="n">hexblock</span> <span class="n">HEXBLOCK</span>
                         <span class="n">dump</span> <span class="n">EEPROM</span> <span class="k">as</span> <span class="n">indented</span> <span class="n">hexa</span> <span class="n">blocks</span>
+  <span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">,</span> <span class="o">--</span><span class="nb">input</span> <span class="n">INPUT</span>
+                        <span class="nb">input</span> <span class="n">ini</span> <span class="n">file</span> <span class="n">to</span> <span class="n">load</span> <span class="n">EEPROM</span> <span class="n">content</span>
+  <span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">},</span> <span class="o">--</span><span class="n">load</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}</span>
+                        <span class="n">section</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">to</span> <span class="n">load</span> <span class="kn">from</span> <span class="nn">input</span> <span class="n">file</span>
   <span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">,</span> <span class="o">--</span><span class="n">output</span> <span class="n">OUTPUT</span>
                         <span class="n">output</span> <span class="n">ini</span> <span class="n">file</span> <span class="n">to</span> <span class="n">save</span> <span class="n">EEPROM</span> <span class="n">content</span>
   <span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">,</span> <span class="o">--</span><span class="n">serial</span><span class="o">-</span><span class="n">number</span> <span class="n">SERIAL_NUMBER</span>
@@ -238,7 +234,7 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
   <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">erase</span>           <span class="n">erase</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">EEPROM</span> <span class="n">content</span>
   <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">--</span><span class="n">update</span>          <span class="n">perform</span> <span class="n">actual</span> <span class="n">update</span><span class="p">,</span> <span class="n">use</span> <span class="n">w</span><span class="o">/</span> <span class="n">care</span>
   <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
-                      <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
+                        <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
   <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
                         <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
   <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
@@ -249,19 +245,18 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
 or this script. You may brick your device if something goes wrong, and there
 may be no way to recover your device.</strong></p>
 <p>Note that to protect the EEPROM content of unexpected modification, it is
-mandatory to specify the <code class="docutils literal notranslate"><span class="pre">-u</span></code> flag along any alteration/change of the EEPROM
-content. Without this flag, the script performs a dry-run execution of the
-changes, <em>i.e.</em> all actions but the write request to the EEPROM are executed.</p>
+mandatory to specify the <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a> flag along any alteration/change
+of the EEPROM content. Without this flag, the script performs a dry-run
+execution of the changes, <em>i.e.</em> all actions but the write request to the
+EEPROM are executed.</p>
 <p>Once updated, you need to unplug/plug back the device to use the new EEPROM
 configuration.</p>
 <p>It is recommended to first save the current content of the EEPROM, using the
-<code class="docutils literal notranslate"><span class="pre">-o</span></code> flag, to have a working copy of the EEPROM data before any attempt to
-modify it. It can help restoring the EEPROM if something gets wrong during a
-subsequence update.</p>
+<a class="reference internal" href="#option-o"><span class="std std-ref">-o</span></a> flag, to have a working copy of the EEPROM data before any
+attempt to modify it. It can help restoring the EEPROM if something gets wrong
+during a subsequence update, thanks to the <a class="reference internal" href="#option-i"><span class="std std-ref">-i</span></a> option switch.</p>
 <p>Most FTDI device can run without an EEPROM. If something goes wrong, try to
-erase the EEPROM content, then restore the original content. For now,
-<code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> does not support EEPROM restoration, but a Windows-only
-application <a class="reference external" href="https://www.ftdichip.com/Support/Utilities.htm#FT_PROG">FT_PROG</a> is available from FTDI web site.</p>
+erase the EEPROM content, then restore the original content.</p>
 <div class="section" id="option-switches">
 <h3>Option switches<a class="headerlink" href="#option-switches" title="Permalink to this headline">¶</a></h3>
 <p>In addition to the <a class="reference internal" href="tools.html#common-option-switches"><span class="std std-ref">Common options switches</span></a> for  <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools,
@@ -278,20 +273,39 @@ alternatively a full column <code class="docutils literal notranslate"><span cla
 <li><p>To obtain the list of supported values for a namw, use the <cite>?</cite> wildcard:
 <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=?</span></code>, where <em>name</em> is a supported name.</p></li>
 </ul>
+<p>See <a class="reference internal" href="#cbus-func"><span class="std std-ref">CBUS function</span></a> table for the alternate function associated with each
+name.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-e">
 <dt><code class="docutils literal notranslate"><span class="pre">-e</span></code></dt><dd><p>Erase the whole EEPROM. This may be useful to recover from a corrupted
 EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
-to a default configuration. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM
-content is not actually modified, the script runs in dry-run mode.</p>
+to a default configuration. Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>,
+the EEPROM content is not actually modified, the script runs in dry-run mode.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-i">
+<dt><code class="docutils literal notranslate"><span class="pre">-i</span></code></dt><dd><p>Load a INI file (as generated with the <a class="reference internal" href="#option-o"><span class="std std-ref">-o</span></a> option switch. It
+is possible to select which section(s) from the INI file are loaded, using
+<a class="reference internal" href="#option-l"><span class="std std-ref">-l</span></a> option switch. The <code class="docutils literal notranslate"><span class="pre">values</span></code> section may be modified,
+as it takes precedence over the <code class="docutils literal notranslate"><span class="pre">raw</span></code> section. Note that without option
+<a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script
+runs in dry-run mode.</p>
+</dd>
+</dl>
+<dl id="option-l">
+<dt><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">&lt;all|raw|values&gt;</span></code></dt><dd><p>Define which section(s) of the INI file are used to update the EEPROM content
+along with the <a class="reference internal" href="#option-i"><span class="std std-ref">-i</span></a> option switch. Defaults to <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p>
+<p>The supported feature set of the <code class="docutils literal notranslate"><span class="pre">values</span></code> is the same as the one exposed
+through the <a class="reference internal" href="#option-c"><span class="std std-ref">-c</span></a> option switch. Unsupported feature are
+ignored, and a warning is emitted for each unsupported feature.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-m">
 <dt><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;manufacturer&gt;</span></code></dt><dd><p>Assign a new manufacturer name to the device. Note that without option
-<code class="docutils literal notranslate"><span class="pre">-u</span></code>, the EEPROM content is not actually modified, the script runs in
-dry-run mode. Manufacturer names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected,
-to avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+<a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script
+runs in dry-run mode. Manufacturer names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are
+rejected, to avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-o">
@@ -301,24 +315,22 @@ to print to the standard output. The output file contains two sections:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">[values]</span></code> that contain the decoded EEPROM configuration as key, value
 pair. Note that the keys and values can be used as configuration input, see
-option <code class="docutils literal notranslate"><span class="pre">-c</span></code>.</p></li>
+option <a class="reference internal" href="#option-c"><span class="std std-ref">-c</span></a>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">[raw]</span></code> that contains a compact representation of the EEPROM raw content,
 encoded as hexadecimal strings.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="simple" id="option-p">
-<dt><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">&lt;product&gt;</span></code></dt><dd><p>Assign a new product name to the device. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>,
-the EEPROM content is not actually modified, the script runs in dry-run mode.
-Product names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to avoid parsing
-issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">-p</span> <span class="pre">&lt;product&gt;</span></code></dt><dd><p>Assign a new product name to the device. Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script runs in
+dry-run mode. Product names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to
+avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-s">
-<dt><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;serial&gt;</span></code></dt><dd><p>Assign a new serial number to the device. Note that without option <code class="docutils literal notranslate"><span class="pre">-u</span></code>,
-the EEPROM content is not actually modified, the script runs in dry-run mode.
-Serial number with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to avoid parsing
-issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;serial&gt;</span></code></dt><dd><p>Assign a new serial number to the device. Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script runs in
+dry-run mode. Serial number with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to
+avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-u">
@@ -335,6 +347,130 @@ content is safe, nor that it is possible to recover from a bricked device.</p>
 the output of the <cite>hexdump -Cv</cite> tool.</p>
 </dd>
 </dl>
+</div>
+<div class="section" id="cbus-function">
+<span id="cbus-func"></span><h3>CBUS function<a class="headerlink" href="#cbus-function" title="Permalink to this headline">¶</a></h3>
+<p>The following table describes the CBUS pin alternate functions. Note that
+depending on the actual device, some alternate function may not be available.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 8%" />
+<col style="width: 76%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Active</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TRISTATE</span></code></p></td>
+<td><p>Hi-Z</p></td>
+<td><p>IO Pad is tri-stated</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TXLED</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>TX activity, can be used as status for LED</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RXLED</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>RX activity, can be used as status for LED</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TXRXLED</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>TX &amp; RX activity, can be used as status for LED</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PWREN</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>USB configured, USB suspend: high</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">SLEEP</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>USB suspend, typically used to power down external devices.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DRIVE0</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Drive a constant (FT232H and FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DRIVE1</span></code></p></td>
+<td><p>High</p></td>
+<td><p>Drive a constant (FT232H and FT-X only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GPIO</span></code></p></td>
+<td></td>
+<td><p>IO port for CBUS bit bang mode</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TXDEN</span></code></p></td>
+<td><p>High</p></td>
+<td><p>Enable transmit for RS485 mode</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLK48</span></code></p></td>
+<td></td>
+<td><p>Output 48 MHz clock (FT232R only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLK30</span></code></p></td>
+<td></td>
+<td><p>Output 30 MHz clock (FT232H only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLK24</span></code></p></td>
+<td></td>
+<td><p>Output 24 MHz clock (FT232R and FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLK15</span></code></p></td>
+<td></td>
+<td><p>Output 12 MHz clock (FT232H only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLK12</span></code></p></td>
+<td></td>
+<td><p>Output 12 MHz clock (FT232R and FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLK7_5</span></code></p></td>
+<td></td>
+<td><p>Output 7.5 MHz clock (FT232H only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLK6</span></code></p></td>
+<td></td>
+<td><p>Output 6 MHz clock (FT232R and FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BAT_DETECT</span></code></p></td>
+<td><p>High</p></td>
+<td><p>Battery Charger Detect (FT-X only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BAT_NDETECT</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Inverse signal of BAT_DETECT (FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">I2C_TXE</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Transmit buffer empty (FT-X only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">I2C_RXF</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Receive buffer full  (FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">VBUS_SENSE</span></code></p></td>
+<td><p>High</p></td>
+<td><p>Detect when VBUS is present via the appropriate AC IO pad (FT-X only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">BB_WR</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Synchronous Bit Bang Write strobe (FT232R and FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">BB_RD</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Synchronous Bit Bang Read strobe (FT232R and FT-X only)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TIMESTAMP</span></code></p></td>
+<td></td>
+<td><p>Toggle signal each time a USB SOF is received (FT-X only)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">AWAKE</span></code></p></td>
+<td><p>Low</p></td>
+<td><p>Do not suspend when unplugged/disconnect/suspsend (FT-X only)</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
@@ -359,8 +495,8 @@ the output of the <cite>hexdump -Cv</cite> tool.</p>
 </li>
 <li><p>List supported configuration values for CBUS0</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pyftdi/bin/ftconf.py ftdi:///1 -c cbus_func_0:?
-  AWAKE, BAT_DETECT, BAT_DETECT_NEG, BB_RD, BB_WR, CLK12, CLK24, CLK6,
-  DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, IOMODE, PWREN, RXLED, SLEEP,
+  AWAKE, BAT_DETECT, BAT_NDETECT, BB_RD, BB_WR, CLK12, CLK24, CLK6,
+  DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, GPIO, PWREN, RXLED, SLEEP,
   TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
 </pre></div>
 </div>
@@ -369,7 +505,7 @@ the output of the <cite>hexdump -Cv</cite> tool.</p>
 <ul id="eeprom-cbus">
 <li><p>Configure CBUS: 0 and 3 as GPIOs, then show the device configuration</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span> <span class="o">-</span><span class="n">v</span>
-   <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_0</span><span class="p">:</span><span class="n">IOMODE</span> <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_3</span><span class="p">:</span><span class="n">IOMODE</span>
+   <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_0</span><span class="p">:</span><span class="n">GPIO</span> <span class="o">-</span><span class="n">c</span> <span class="n">cbus_func_3</span><span class="p">:</span><span class="n">GPIO</span>
 </pre></div>
 </div>
 </li>

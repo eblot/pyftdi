@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -340,7 +340,7 @@ used as programmable GPIOs: <code class="docutils literal notranslate"><span cla
 <h3>CBUS EEPROM configuration<a class="headerlink" href="#cbus-eeprom-configuration" title="Permalink to this headline">¶</a></h3>
 <p>Accessing this extra port requires a specific EEPROM configuration.</p>
 <p>The EEPROM needs to be configured so that the CBUS pins that need to be used
-as GPIOs are defined as <code class="docutils literal notranslate"><span class="pre">IOMODE</span></code>. Without this special configuration, CBUS
+as GPIOs are defined as <code class="docutils literal notranslate"><span class="pre">GPIO</span></code>. Without this special configuration, CBUS
 pins are used for other functions, such as driving leds when data is exchanged
 over the UART port. Remember to power-cycle the FTDI device after changing its
 EEPROM configuration to force load the new configuration.</p>

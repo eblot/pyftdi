@@ -148,6 +148,8 @@ PIP should automatically install the missing dependencies.
      pip3 install pyftdi
 
 
+.. _install_from_source:
+
 Installing from source
 ``````````````````````
 
@@ -156,11 +158,28 @@ github repository.
 
 .. code-block:: shell
 
-     pip3 install pyusb
-     pip3 install pyserial
      git clone https://github.com/eblot/pyftdi.git
      cd pyftdi
-     python3 setup.py ...
+     # note: 'pip3' may simply be 'pip' on some hosts
+     pip3 install -r requirements.txt
+     python3 setup.py install
+
+
+.. _generate_doc:
+
+Generating the documentation
+````````````````````````````
+
+Follow :ref:`install_from_source` then:
+
+.. code-block:: shell
+
+     pip3 install setuptools wheel sphinx sphinx_autodoc_typehints
+     # Shpinx Read the Doc theme seems to never get a release w/ fixed issues
+     pip3 install -U -e git+https://github.com/readthedocs/sphinx_rtd_theme.git@2b8717a3647cc650625c566259e00305f7fb60aa#egg=sphinx_rtd_theme
+     sphinx-build -b html pyftdi/doc .
+
+The documentation may be accessed from the generated ``index.html`` entry file.
 
 
 Post-installation sanity check

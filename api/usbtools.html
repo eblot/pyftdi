@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.49.0
+                0.51.0
               </div>
             
           
@@ -388,6 +388,23 @@ candidates list</p>
 <div><p>protocol://vendor:product[:serial|:index|:bus:addr]/interface</p>
 </div></blockquote>
 </div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyftdi.usbtools.UsbTools.release_all_devices">
+<em class="property">classmethod </em><code class="sig-name descname">release_all_devices</code><span class="sig-paren">(</span><em class="sig-param">devclass=None</em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_all_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Release all open devices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>devclass</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>]) – optional class to only release devices of one type</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the count of device that have been released.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">

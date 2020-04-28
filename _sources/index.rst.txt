@@ -7,8 +7,15 @@ PyFtdi
 Documentation
 -------------
 
-PyFtdi online documentation is available
+The latest PyFtdi online documentation is always available from
 `here <https://eblot.github.io/pyftdi>`_.
+
+Beware the online version may be more recent than the PyPI hosted version, as
+intermediate development versions are not published to
+`PyPi <https://pypi.org/project/pyftdi>`_.
+
+PyFtdi documentation can be locally build with Sphinx, see the installation
+instructions.
 
 Source code
 -----------
@@ -52,7 +59,7 @@ PyFtdi currently supports the following features:
   with support for non-byte sized transfer
 * |I2C| master, with simultanous GPIO support, up to 14 pins per port
 * Basic JTAG master capabilities
-* EEPROM support (some parameters are only available with R/O access)
+* EEPROM support (some parameters cannot yet be modified, only retrieved)
 * Experimental CBUS support on selected devices, 4 pins per port
 
 Supported host OSes
