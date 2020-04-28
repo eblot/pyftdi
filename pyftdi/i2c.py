@@ -42,6 +42,7 @@ from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Tuple, Union
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiFeatureError
+from .misc import to_bool
 
 
 class I2cIOError(IOError):
@@ -416,6 +417,7 @@ class I2cController:
         self._ck_hd_sta = 0
         self._ck_su_sto = 0
         self._ck_idle = 0
+        self._read_optim = True
 
     def set_retry_count(self, count: int) -> None:
         """Change the default retry count when a communication error occurs,
@@ -485,6 +487,9 @@ class I2cController:
             del kwargs['interface']
         else:
             interface = 1
+        if 'rdoptim' in kwargs:
+            self._read_optim = to_bool(kwargs['rdoptim'])
+            del kwargs['rdoptim']
         with self._lock:
             self._ck_hd_sta = self._compute_delay_cycles(timings.t_hd_sta)
             self._ck_su_sto = self._compute_delay_cycles(timings.t_su_sto)
@@ -1080,24 +1085,51 @@ class I2cController:
         chunks = []
         cmd = None
         rem = readlen
-        while rem:
-            if rem > chunk_size:
-                if not cmd:
+        if self._read_optim and rem > chunk_size:
+            chunk_size //= 2
+            self.log.debug('Use optimized transfer, %d byte at a time',
+                           chunk_size)
+            cmd_chunk = bytearray()
+            cmd_chunk.extend(read_not_last * chunk_size)
+            cmd_chunk.extend(self._immediate)
+            def write_command_gen(length: int):
+                if length <= 0:
+                    # no more data
+                    return b''
+                if length <= chunk_size:
                     cmd = bytearray()
-                    cmd.extend(read_not_last * chunk_size)
-                    size = chunk_size
-            else:
-                cmd = bytearray()
-                cmd.extend(read_not_last * (rem-1))
-                cmd.extend(read_last)
-                cmd.extend(self._immediate)
-                size = rem
-            self._ftdi.write_data(cmd)
-            buf = self._ftdi.read_data_bytes(size, 4)
-            self.log.debug('- read %d byte(s): %s',
-                           len(buf), hexlify(buf).decode())
-            chunks.append(buf)
-            rem -= size
+                    cmd.extend(read_not_last * (length-1))
+                    cmd.extend(read_last)
+                    cmd.extend(self._immediate)
+                    return cmd
+                return cmd_chunk
+
+            while rem:
+                buf = self._ftdi.read_data_bytes(rem, 4, write_command_gen)
+                self.log.debug('- read %d bytes, rem: %d', len(buf), rem)
+                chunks.append(buf)
+                rem -= len(buf)
+        else:
+            while rem:
+                if rem > chunk_size:
+                    if not cmd:
+                        # build the command sequence only once, as it may be
+                        # repeated till the end of the transfer
+                        cmd = bytearray()
+                        cmd.extend(read_not_last * chunk_size)
+                        size = chunk_size
+                else:
+                    cmd = bytearray()
+                    cmd.extend(read_not_last * (rem-1))
+                    cmd.extend(read_last)
+                    cmd.extend(self._immediate)
+                    size = rem
+                self._ftdi.write_data(cmd)
+                buf = self._ftdi.read_data_bytes(size, 4)
+                self.log.debug('- read %d byte(s): %s',
+                               len(buf), hexlify(buf).decode())
+                chunks.append(buf)
+                rem -= size
         return bytearray(b''.join(chunks))
 
     def _do_write(self, out: Union[bytes, bytearray, Iterable[int]]):
