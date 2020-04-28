@@ -317,9 +317,9 @@ def suite():
     #ste.addTest(I2cReadTest('test'))
     ste.addTest(makeSuite(I2cEepromTest, 'test'))
     #ste.addTest(I2cReadGpioTest('test'))
-    #ste.addTest(I2cClockStrechingGpioCheck('test'))
+    ste.addTest(I2cClockStrechingGpioCheck('test'))
     #ste.addTest(I2cDualMaster('test'))
-    #ste.addTest(I2cIssue143('test'))
+    ste.addTest(I2cIssue143('test'))
     return ste
 
 

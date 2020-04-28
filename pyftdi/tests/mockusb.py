@@ -46,6 +46,7 @@ class FtdiTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.loader = MockLoader()
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
 
     @classmethod
     def tearDownClass(cls):
@@ -848,7 +849,7 @@ def main():
                                       '%H:%M:%S')
     else:
         formatter = logging.Formatter('%(message)s')
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
     try:
         loglevel = getattr(logging, level)
     except AttributeError:
