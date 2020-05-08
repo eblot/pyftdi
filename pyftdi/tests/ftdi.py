@@ -26,12 +26,15 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 from doctest import testmod
 from os import environ
-from sys import modules
+from sys import modules, stdout
 from time import sleep, time as now
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi.ftdi import Ftdi
+from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.usbtools import UsbTools, UsbToolsError
 
 
