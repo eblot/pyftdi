@@ -168,4 +168,11 @@ def suite():
 
 if __name__ == '__main__':
     testmod(modules[__name__])
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
