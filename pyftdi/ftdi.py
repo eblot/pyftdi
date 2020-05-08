@@ -2060,7 +2060,7 @@ class Ftdi:
                 Ftdi.REQ_OUT, reqtype, value, self._index,
                 bytearray(data), self._usb_write_timeout)
         except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _ctrl_transfer_in(self, reqtype: int, length: int):
         """Request for a control message from the device"""
@@ -2069,7 +2069,7 @@ class Ftdi:
                 Ftdi.REQ_IN, reqtype, 0, self._index, length,
                 self._usb_read_timeout)
         except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _write(self, data: Union[bytes, bytearray]) -> int:
         if self._debug_log:
@@ -2079,11 +2079,18 @@ class Ftdi:
                 self.log.warning('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
             self._tracer.send(self._index, data)
-        return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
+        try:
+            return self._usb_dev.write(self._in_ep, data,
+                                       self._usb_write_timeout)
+        except USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _read(self) -> bytes:
-        data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
-                                  self._usb_read_timeout)
+        try:
+            data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
+                                      self._usb_read_timeout)
+        except USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex)) from None
         if data:
             if self._debug_log:
                 self.log.debug('< %s', hexlify(data).decode())
