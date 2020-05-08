@@ -33,7 +33,6 @@
 
 from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
-from os import environ
 from sys import modules, stderr
 from traceback import format_exc
 from pyftdi import FtdiLogger
@@ -49,9 +48,16 @@ class I2cBusScanner:
        address.
     """
 
-    @staticmethod
-    def scan(url):
-        """Open an I2c connection to a slave."""
+    SMB_READ_RANGE = list(range(0x30, 0x38)) + list(range(0x50, 0x60))
+
+    @classmethod
+    def scan(cls, url: str, smb_mode: bool = True) -> None:
+        """Scan an I2C bus to detect slave device.
+
+           :param url: FTDI URL
+           :param smb_mode: whether to use SMBbus restrictions or regular I2C
+                            mode.
+        """
         i2c = I2cController()
         slaves = []
         getLogger('pyftdi.i2c').setLevel(ERROR)
@@ -60,11 +66,28 @@ class I2cBusScanner:
             i2c.configure(url)
             for addr in range(i2c.HIGHEST_I2C_ADDRESS+1):
                 port = i2c.get_port(addr)
-                try:
-                    port.read(0)
-                    slaves.append('X')
-                except I2cNackError:
-                    slaves.append('.')
+                if smb_mode:
+                    try:
+                        if addr in cls.SMB_READ_RANGE:
+                            port.read(0)
+                            slaves.append('R')
+                        else:
+                            port.write([])
+                            slaves.append('W')
+                    except I2cNackError:
+                        slaves.append('.')
+                else:
+                    try:
+                        port.read(0)
+                        slaves.append('R')
+                        continue
+                    except I2cNackError:
+                        pass
+                    try:
+                        port.write([])
+                        slaves.append('W')
+                    except I2cNackError:
+                        slaves.append('.')
         finally:
             i2c.terminate()
         columns = 16
@@ -85,6 +108,9 @@ def main():
         argparser = ArgumentParser(description=modules[__name__].__doc__)
         argparser.add_argument('device', nargs='?', default='ftdi:///?',
                                help='serial port device name')
+        argparser.add_argument('-S', '--no-smb', action='store_true',
+                               default=False,
+                               help='use regular I2C mode vs. SMBbus scan')
         argparser.add_argument('-P', '--vidpid', action='append',
                                help='specify a custom VID:PID device ID, '
                                     'may be repeated')
@@ -107,9 +133,9 @@ def main():
                                   '%(message)s', '%H:%M:%S')
         else:
             formatter = Formatter('%(message)s')
+        FtdiLogger.log.addHandler(StreamHandler(stderr))
         FtdiLogger.set_formatter(formatter)
         FtdiLogger.set_level(loglevel)
-        FtdiLogger.log.addHandler(StreamHandler(stderr))
 
         if args.virtual:
             from pyftdi.usbtools import UsbTools
@@ -125,7 +151,7 @@ def main():
         except ValueError as exc:
             argparser.error(str(exc))
 
-        I2cBusScanner.scan(args.device)
+        I2cBusScanner.scan(args.device, not args.no_smb)
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
