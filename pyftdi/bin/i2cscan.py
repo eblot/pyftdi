@@ -110,7 +110,7 @@ def main():
                                help='serial port device name')
         argparser.add_argument('-S', '--no-smb', action='store_true',
                                default=False,
-                               help='use regular I2C instead of SMBbus mode')
+                               help='use regular I2C mode vs. SMBbus scan')
         argparser.add_argument('-P', '--vidpid', action='append',
                                help='specify a custom VID:PID device ID, '
                                     'may be repeated')
