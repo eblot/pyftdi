@@ -129,6 +129,8 @@ class ResetTestCase(TestCase):
 
 
 class DisconnectTestCase(TestCase):
+    """This test requires user interaction to unplug/plug back the device.
+    """
 
     def test_close_on_disconnect(self):
         """Validate close after disconnect."""
