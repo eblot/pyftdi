@@ -121,11 +121,48 @@ class ResetTestCase(TestCase):
         self.assertNotEqual(ftdi2.get_latency_timer(), 128)
 
 
+class DisconnectTestCase(TestCase):
+
+    def test_close_on_disconnect(self):
+        """Validate close after disconnect."""
+        log = logging.getLogger('pyftdi.tests.ftdi')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        ftdi = Ftdi()
+        ftdi.open_from_url(url)
+        self.assertTrue(ftdi.is_connected, 'Unable to connect to FTDI')
+        print('Please disconnect FTDI device')
+        while ftdi.is_connected:
+            try:
+                ftdi.poll_modem_status()
+            except FtdiError:
+                break
+            sleep(0.1)
+        ftdi.close()
+        print('Please reconnect FTDI device')
+        while True:
+            UsbTools.flush_cache()
+            try:
+                ftdi.open_from_url(url)
+            except (FtdiError, UsbToolsError):
+                log.debug('FTDI device not detected')
+                sleep(0.1)
+            except ValueError:
+                log.warning('FTDI device not initialized')
+                ftdi.close()
+                sleep(0.1)
+            else:
+                log.info('FTDI device detected')
+                break
+        ftdi.poll_modem_status()
+        ftdi.close()
+
+
 def suite():
     suite_ = TestSuite()
     #suite_.addTest(makeSuite(FtdiTestCase, 'test'))
     #suite_.addTest(makeSuite(HotplugTestCase, 'test'))
     suite_.addTest(makeSuite(ResetTestCase, 'test'))
+    suite_.addTest(makeSuite(DisconnectTestCase, 'test'))
     return suite_
 
 
