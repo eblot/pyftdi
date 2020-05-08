@@ -593,8 +593,11 @@ class Ftdi:
                 # device has been closed: the ResourceManager may attempt
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
-                self.set_bitmode(0, Ftdi.BitMode.RESET)
-                self.set_latency_timer(self.LATENCY_MAX)
+                try:
+                    self.set_bitmode(0, Ftdi.BitMode.RESET)
+                    self.set_latency_timer(self.LATENCY_MAX)
+                except FtdiError as exc:
+                    self.log.warning('FTDI device may be gone: %s', exc)
                 release_interface(dev, self._index - 1)
                 try:
                     self._usb_dev.attach_kernel_driver(self._index - 1)
