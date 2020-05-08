@@ -33,7 +33,6 @@
 
 from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
-from os import environ
 from sys import modules, stderr
 from traceback import format_exc
 from pyftdi import FtdiLogger
@@ -134,9 +133,9 @@ def main():
                                   '%(message)s', '%H:%M:%S')
         else:
             formatter = Formatter('%(message)s')
+        FtdiLogger.log.addHandler(StreamHandler(stderr))
         FtdiLogger.set_formatter(formatter)
         FtdiLogger.set_level(loglevel)
-        FtdiLogger.log.addHandler(StreamHandler(stderr))
 
         if args.virtual:
             from pyftdi.usbtools import UsbTools
