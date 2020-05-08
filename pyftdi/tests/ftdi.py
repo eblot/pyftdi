@@ -31,8 +31,7 @@ from doctest import testmod
 from os import environ
 from sys import modules, stdout
 from time import sleep, time as now
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
-from pyftdi.ftdi import Ftdi
+from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.usbtools import UsbTools, UsbToolsError
@@ -98,10 +97,15 @@ class ResetTestCase(TestCase):
            an FTDI device that is connected after the initial attempt to
            enumerate it on the USB bus."""
         url1 = environ.get('FTDI_DEVICE', 'ftdi:///1')
-        url2 = environ.get('FTDI_DEVICE', 'ftdi:///2')
         ftdi1 = Ftdi()
-        ftdi2 = Ftdi()
         ftdi1.open_from_url(url1)
+        count = ftdi1.device_port_count
+        if count < 2:
+            ftdi1.close()
+            raise SkipTest('FTDI device is not a multi-port device')
+        next_port = (int(url1[-1]) % count) + 1
+        url2 = 'ftdi:///%d' % next_port
+        ftdi2 = Ftdi()
         self.assertTrue(ftdi1.is_connected, 'Unable to connect to FTDI')
         ftdi2.open_from_url(url2)
         # use latenty setting to set/test configuration is preserved
