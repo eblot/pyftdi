@@ -593,8 +593,11 @@ class Ftdi:
                 # device has been closed: the ResourceManager may attempt
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
-                self.set_bitmode(0, Ftdi.BitMode.RESET)
-                self.set_latency_timer(self.LATENCY_MAX)
+                try:
+                    self.set_bitmode(0, Ftdi.BitMode.RESET)
+                    self.set_latency_timer(self.LATENCY_MAX)
+                except FtdiError as exc:
+                    self.log.warning('FTDI device may be gone: %s', exc)
                 release_interface(dev, self._index - 1)
                 try:
                     self._usb_dev.attach_kernel_driver(self._index - 1)
@@ -2057,7 +2060,7 @@ class Ftdi:
                 Ftdi.REQ_OUT, reqtype, value, self._index,
                 bytearray(data), self._usb_write_timeout)
         except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _ctrl_transfer_in(self, reqtype: int, length: int):
         """Request for a control message from the device"""
@@ -2066,7 +2069,7 @@ class Ftdi:
                 Ftdi.REQ_IN, reqtype, 0, self._index, length,
                 self._usb_read_timeout)
         except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _write(self, data: Union[bytes, bytearray]) -> int:
         if self._debug_log:
@@ -2076,11 +2079,18 @@ class Ftdi:
                 self.log.warning('> (invalid output byte sequence: %s)', exc)
         if self._tracer:
             self._tracer.send(self._index, data)
-        return self._usb_dev.write(self._in_ep, data, self._usb_write_timeout)
+        try:
+            return self._usb_dev.write(self._in_ep, data,
+                                       self._usb_write_timeout)
+        except USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex)) from None
 
     def _read(self) -> bytes:
-        data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
-                                  self._usb_read_timeout)
+        try:
+            data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
+                                      self._usb_read_timeout)
+        except USBError as ex:
+            raise FtdiError('UsbError: %s' % str(ex)) from None
         if data:
             if self._debug_log:
                 self.log.debug('< %s', hexlify(data).decode())

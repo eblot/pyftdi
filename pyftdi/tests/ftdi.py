@@ -26,12 +26,14 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 from doctest import testmod
 from os import environ
-from sys import modules
+from sys import modules, stdout
 from time import sleep, time as now
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
-from pyftdi.ftdi import Ftdi
+from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
+from pyftdi import FtdiLogger
+from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.usbtools import UsbTools, UsbToolsError
 
 
@@ -95,10 +97,15 @@ class ResetTestCase(TestCase):
            an FTDI device that is connected after the initial attempt to
            enumerate it on the USB bus."""
         url1 = environ.get('FTDI_DEVICE', 'ftdi:///1')
-        url2 = environ.get('FTDI_DEVICE', 'ftdi:///2')
         ftdi1 = Ftdi()
-        ftdi2 = Ftdi()
         ftdi1.open_from_url(url1)
+        count = ftdi1.device_port_count
+        if count < 2:
+            ftdi1.close()
+            raise SkipTest('FTDI device is not a multi-port device')
+        next_port = (int(url1[-1]) % count) + 1
+        url2 = 'ftdi:///%d' % next_port
+        ftdi2 = Ftdi()
         self.assertTrue(ftdi1.is_connected, 'Unable to connect to FTDI')
         ftdi2.open_from_url(url2)
         # use latenty setting to set/test configuration is preserved
@@ -121,14 +128,60 @@ class ResetTestCase(TestCase):
         self.assertNotEqual(ftdi2.get_latency_timer(), 128)
 
 
+class DisconnectTestCase(TestCase):
+    """This test requires user interaction to unplug/plug back the device.
+    """
+
+    def test_close_on_disconnect(self):
+        """Validate close after disconnect."""
+        log = logging.getLogger('pyftdi.tests.ftdi')
+        url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        ftdi = Ftdi()
+        ftdi.open_from_url(url)
+        self.assertTrue(ftdi.is_connected, 'Unable to connect to FTDI')
+        print('Please disconnect FTDI device')
+        while ftdi.is_connected:
+            try:
+                ftdi.poll_modem_status()
+            except FtdiError:
+                break
+            sleep(0.1)
+        ftdi.close()
+        print('Please reconnect FTDI device')
+        while True:
+            UsbTools.flush_cache()
+            try:
+                ftdi.open_from_url(url)
+            except (FtdiError, UsbToolsError):
+                log.debug('FTDI device not detected')
+                sleep(0.1)
+            except ValueError:
+                log.warning('FTDI device not initialized')
+                ftdi.close()
+                sleep(0.1)
+            else:
+                log.info('FTDI device detected')
+                break
+        ftdi.poll_modem_status()
+        ftdi.close()
+
+
 def suite():
     suite_ = TestSuite()
     #suite_.addTest(makeSuite(FtdiTestCase, 'test'))
     #suite_.addTest(makeSuite(HotplugTestCase, 'test'))
     suite_.addTest(makeSuite(ResetTestCase, 'test'))
+    suite_.addTest(makeSuite(DisconnectTestCase, 'test'))
     return suite_
 
 
 if __name__ == '__main__':
     testmod(modules[__name__])
+    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
+    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
+    try:
+        loglevel = getattr(logging, level)
+    except AttributeError:
+        raise ValueError(f'Invalid log level: {level}')
+    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
