@@ -596,9 +596,9 @@ class Ftdi:
                 try:
                     self.set_bitmode(0, Ftdi.BitMode.RESET)
                     self.set_latency_timer(self.LATENCY_MAX)
+                    release_interface(dev, self._index - 1)
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)
-                release_interface(dev, self._index - 1)
                 try:
                     self._usb_dev.attach_kernel_driver(self._index - 1)
                 except (NotImplementedError, USBError):
