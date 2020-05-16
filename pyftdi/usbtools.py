@@ -30,9 +30,9 @@ import sys
 from importlib import import_module
 from string import printable as printablechars
 from threading import RLock
-from typing import (Any, List, Mapping, NamedTuple, Optional, Sequence, Set,
-                    TextIO, Type, Tuple)
-from urllib.parse import urlsplit, urlunsplit
+from typing import (Any, Dict, List, NamedTuple, Optional, Sequence, Set,
+                    TextIO, Type, Tuple, Union)
+from urllib.parse import SplitResult, urlsplit, urlunsplit
 from usb.backend import IBackend
 from usb.core import Device as UsbDevice, USBError
 from usb.util import dispose_resources, get_string as usb_get_string
@@ -69,6 +69,14 @@ UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
      * Prefer bus/address selector over index
 """
 
+UsbDeviceKey = Union[Tuple[int, int, int, int], Tuple[int, int]]
+"""USB device indentifier on the system.
+
+   This is used as USB device identifiers on the host. On proper hosts,
+   this is a (bus, address, vid, pid) 4-uple. On stupid hosts (such as M$Win),
+   it may be degraded to (vid, pid) 2-uple.
+"""
+
 class UsbToolsError(Exception):
     """UsbTools error."""
 
@@ -84,8 +92,10 @@ class UsbTools:
     # USB device. The following dictionary used bus/address/vendor/product keys
     # to track (device, refcount) pairs
     Lock = RLock()
-    Devices = {}  # (bus, address, vid, pid): (usb.core.Device, refcount)
-    UsbDevices = {}  # (vid, pid): usb.core.Device
+    Devices: Dict[UsbDeviceKey, List[Union[UsbDevice, int]]] = {}
+        # (bus, address, vid, pid): (usb.core.Device, refcount)
+    UsbDevices: Dict[Tuple[int, int], Set[UsbDevice]] = {}
+        # (vid, pid): usb.core.Device
     UsbApi = None
 
     @classmethod
@@ -162,7 +172,8 @@ class UsbTools:
                 dev = None
                 if not devdesc.vid:
                     raise ValueError('Vendor identifier is required')
-                devs = cls._find_devices(devdesc.vid, devdesc.pid)
+                devs: Union[List, Set] = cls._find_devices(devdesc.vid,
+                                                           devdesc.pid)
                 if devdesc.description:
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iProduct) ==
@@ -189,7 +200,8 @@ class UsbTools:
             if not dev:
                 raise IOError('Device not found')
             try:
-                devkey = (dev.bus, dev.address, devdesc.vid, devdesc.pid)
+                devkey: UsbDeviceKey = (dev.bus, dev.address,
+                                        devdesc.vid, devdesc.pid)
                 if None in devkey[0:2]:
                     raise AttributeError('USB backend does not support bus '
                                          'enumeration')
@@ -265,8 +277,8 @@ class UsbTools:
 
     @classmethod
     def list_devices(cls, urlstr: str,
-                     vdict: Mapping[str, int],
-                     pdict: Mapping[int, Mapping[str, int]],
+                     vdict: Dict[str, int],
+                     pdict: Dict[int, Dict[str, int]],
                      default_vendor: int) -> \
             List[Tuple[UsbDeviceDescriptor, int]]:
         """List candidates that match the device URL pattern.
@@ -278,7 +290,7 @@ class UsbTools:
            :param vdict: vendor name map of USB vendor ids
            :param pdict: vendor id map of product name map of product ids
            :param default_vendor: default vendor id
-           :return: List of (UsbDeviceDescriptor, interface)
+           :return: list of (UsbDeviceDescriptor, interface)
         """
         urlparts = urlsplit(urlstr)
         if not urlparts.path:
@@ -289,8 +301,8 @@ class UsbTools:
 
     @classmethod
     def parse_url(cls, urlstr: str, scheme: str,
-                  vdict: Mapping[str, int],
-                  pdict: Mapping[int, Mapping[str, int]],
+                  vdict: Dict[str, int],
+                  pdict: Dict[int, Dict[str, int]],
                   default_vendor: int) -> Tuple[UsbDeviceDescriptor, int]:
         """Parse a device specifier URL.
 
@@ -359,9 +371,9 @@ class UsbTools:
         return devdesc, interface
 
     @classmethod
-    def enumerate_candidates(cls, urlparts: Tuple[str, str, str, str, str],
-                             vdict: Mapping[str, int],
-                             pdict: Mapping[int, Mapping[str, int]],
+    def enumerate_candidates(cls, urlparts: SplitResult,
+                             vdict: Dict[str, int],
+                             pdict: Dict[int, Dict[str, int]],
                              default_vendor: int) -> \
             Tuple[List[Tuple[UsbDeviceDescriptor, int]], Optional[int]]:
         """Enumerate USB device URLs that match partial URL and VID/PID
@@ -445,8 +457,8 @@ class UsbTools:
 
     @classmethod
     def show_devices(cls, scheme: str,
-                     vdict: Mapping[str, int],
-                     pdict: Mapping[int, Mapping[str, int]],
+                     vdict: Dict[str, int],
+                     pdict: Dict[int, Dict[str, int]],
                      devdescs: Sequence[Tuple[UsbDeviceDescriptor, int]],
                      out: Optional[TextIO] = None):
         """Show supported devices. When the joker url ``scheme://*/?`` is
@@ -473,8 +485,8 @@ class UsbTools:
 
     @classmethod
     def build_dev_strings(cls, scheme: str,
-                          vdict: Mapping[str, int],
-                          pdict: Mapping[int, Mapping[str, int]],
+                          vdict: Dict[str, int],
+                          pdict: Dict[int, Dict[str, int]],
                           devdescs: Sequence[Tuple[UsbDeviceDescriptor,
                                                    int]]) -> \
             List[Tuple[str, str]]:
@@ -486,7 +498,7 @@ class UsbTools:
            :param devdescs: USB devices and interfaces
            :return: list of (url, descriptors)
         """
-        indices = {}
+        indices: Dict[Tuple[int, int], int] = {}
         descs = []
         for desc, ifcount in sorted(devdescs):
             ikey = (desc.vid, desc.pid)
@@ -613,7 +625,7 @@ class UsbTools:
             # generated device into a list. To save memory, we only
             # back up the supported devices
             devs = set()
-            vpdict = {}
+            vpdict: Dict[int, List[int]] = {}
             vpdict.setdefault(vendor, [])
             vpdict[vendor].append(product)
             for dev in backend.enumerate_devices():
@@ -666,7 +678,7 @@ class UsbTools:
 
     @classmethod
     def _load_backend(cls) -> IBackend:
-        backend = None
+        backend: Optional[IBackend] = None
         for candidate in cls.BACKENDS:
             mod = import_module(candidate)
             backend = mod.get_backend()
