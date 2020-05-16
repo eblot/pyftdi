@@ -385,11 +385,12 @@ class Ftdi:
         return device
 
     @classmethod
-    def list_devices(cls, url: Optional[str] = None) -> List[Tuple[str, str]]:
+    def list_devices(cls, url: Optional[str] = None) -> \
+            List[Tuple[UsbDeviceDescriptor, int]]:
         """List of URLs of connected FTDI devices.
 
            :param url: a pattern URL to restrict the search
-           :return: list of (urls, descriptor string)
+           :return: list of (UsbDeviceDescriptor, interface)
         """
         return UsbTools.list_devices(url or 'ftdi:///?',
                                      cls.VENDOR_IDS, cls.PRODUCT_IDS,
@@ -468,7 +469,7 @@ class Ftdi:
 
     @classmethod
     def decode_modem_status(cls, value: bytes, error_only: bool = False) -> \
-            Tuple[str]:
+            Tuple[str, ...]:
         """Decode the FTDI modem status bitfield into short strings.
 
            :param value: 2-byte mode status
@@ -841,7 +842,7 @@ class Ftdi:
     def open_bitbang_from_device(self, device: UsbDevice,
                                  interface: int = 1, direction: int = 0x0,
                                  latency: int = 16, baudrate: int = 1000000,
-                                 sync: bool = False) -> None:
+                                 sync: bool = False) -> int:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -1351,7 +1352,7 @@ class Ftdi:
         status, = sunpack('<H', value)
         return status
 
-    def modem_status(self) -> Tuple[str]:
+    def modem_status(self) -> Tuple[str, ...]:
         """Provide the current modem status as a tuple of set signals
 
            :return: decodede modem status as short strings
@@ -2002,7 +2003,7 @@ class Ftdi:
         # only useful in MPSSE mode
         bytes_ = self.read_data(2)
         if (len(bytes_) >= 2) and (bytes_[0] == '\xfa'):
-            raise FtdiError("Invalid command @ %d" % ord(bytes_[1]))
+            raise FtdiError("Invalid command @ %d" % bytes_[1])
 
     @classmethod
     def get_error_string(cls) -> str:
@@ -2123,7 +2124,7 @@ class Ftdi:
                     self._latency_count = 0
                 self.set_latency_timer(self._latency)
 
-    def _check_eeprom_size(self, eeprom_size: int) -> int:
+    def _check_eeprom_size(self, eeprom_size: Optional[int]) -> int:
         if self.device_version in self.INT_EEPROMS:
             if (eeprom_size and
                     eeprom_size != self.INT_EEPROMS[self.device_version]):
@@ -2153,7 +2154,7 @@ class Ftdi:
             # to have a direct impact on EEPROM programming...
             latency = self.get_latency_timer()
         else:
-            latency = None
+            latency = 0
         try:
             if latency:
                 self.set_latency_timer(self.LATENCY_EEPROM_FT232R)
