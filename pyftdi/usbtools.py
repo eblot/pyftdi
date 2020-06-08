@@ -92,10 +92,8 @@ class UsbTools:
     # USB device. The following dictionary used bus/address/vendor/product keys
     # to track (device, refcount) pairs
     Lock = RLock()
-    Devices: Dict[UsbDeviceKey, List[Union[UsbDevice, int]]] = {}
-        # (bus, address, vid, pid): (usb.core.Device, refcount)
-    UsbDevices: Dict[Tuple[int, int], Set[UsbDevice]] = {}
-        # (vid, pid): usb.core.Device
+    Devices = {}  # (bus, address, vid, pid): (usb.core.Device, refcount)
+    UsbDevices = {}  # (vid, pid): {usb.core.Device}
     UsbApi = None
 
     @classmethod
@@ -172,8 +170,7 @@ class UsbTools:
                 dev = None
                 if not devdesc.vid:
                     raise ValueError('Vendor identifier is required')
-                devs: Union[List, Set] = cls._find_devices(devdesc.vid,
-                                                           devdesc.pid)
+                devs = cls._find_devices(devdesc.vid, devdesc.pid)
                 if devdesc.description:
                     devs = [dev for dev in devs if
                             UsbTools.get_string(dev, dev.iProduct) ==
@@ -200,8 +197,7 @@ class UsbTools:
             if not dev:
                 raise IOError('Device not found')
             try:
-                devkey: UsbDeviceKey = (dev.bus, dev.address,
-                                        devdesc.vid, devdesc.pid)
+                devkey = (dev.bus, dev.address, devdesc.vid, devdesc.pid)
                 if None in devkey[0:2]:
                     raise AttributeError('USB backend does not support bus '
                                          'enumeration')
@@ -498,7 +494,7 @@ class UsbTools:
            :param devdescs: USB devices and interfaces
            :return: list of (url, descriptors)
         """
-        indices: Dict[Tuple[int, int], int] = {}
+        indices = {}  # Dict[Tuple[int, int], int]
         descs = []
         for desc, ifcount in sorted(devdescs):
             ikey = (desc.vid, desc.pid)
@@ -625,7 +621,7 @@ class UsbTools:
             # generated device into a list. To save memory, we only
             # back up the supported devices
             devs = set()
-            vpdict: Dict[int, List[int]] = {}
+            vpdict = {}  # Dict[int, List[int]]
             vpdict.setdefault(vendor, [])
             vpdict[vendor].append(product)
             for dev in backend.enumerate_devices():
@@ -678,7 +674,7 @@ class UsbTools:
 
     @classmethod
     def _load_backend(cls) -> IBackend:
-        backend: Optional[IBackend] = None
+        backend = None  # Optional[IBackend]
         for candidate in cls.BACKENDS:
             mod = import_module(candidate)
             backend = mod.get_backend()
