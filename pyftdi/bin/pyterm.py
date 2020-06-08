@@ -438,13 +438,14 @@ def main():
         except ValueError as exc:
             argparser.error(str(exc))
 
-        init_term(args.fullmode)
+        full_mode = args.fullmode if platform != 'win32' else False
+        init_term(full_mode)
         miniterm = MiniTerm(device=args.device,
                             baudrate=to_bps(args.baudrate),
                             parity='N',
                             rtscts=args.hwflow,
                             debug=args.debug)
-        miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho,
+        miniterm.run(full_mode, args.loopback, args.silent, args.localecho,
                      args.crlf)
 
     except (IOError, ValueError) as exc:
