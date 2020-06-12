@@ -556,8 +556,7 @@ class FtdiEeprom:
         if fill:
             mtp = self._ftdi.device_version == 0x1000
             crc_pos = 0x100 if mtp else len(self._eeprom)
-            crc_pos -= crc_size
-            rem = len(self._eeprom) - (dynpos + len(stream)) - crc_size
+            rem = crc_pos - (dynpos + len(stream))
             self._eeprom[dynpos+len(stream):crc_pos] = bytes(rem)
 
     def _sync_eeprom(self):
