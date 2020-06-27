@@ -19,7 +19,7 @@ Scripts
 ``ftdi_urls``
 `````````````
 
-This tiny script ``ftdu_urls.py`` to list the available, *i.e.* detected,
+This tiny script ``ftdi_urls.py`` to list the available, *i.e.* detected,
 FTDI devices connected to the host, and the URLs than can be used to open a
 :py:class:`pyftdi.ftdi.Ftdi` instance with the
 :py:class:`pyftdi.ftdi.Ftdi.open_from_url` family and ``configure`` methods.
