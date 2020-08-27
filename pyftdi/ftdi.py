@@ -1446,7 +1446,7 @@ class Ftdi:
         value = 0
         value |= Ftdi.SIO_SET_DTR_HIGH if dtr else Ftdi.SIO_SET_DTR_LOW
         value |= Ftdi.SIO_SET_RTS_HIGH if rts else Ftdi.SIO_SET_RTS_LOW
-        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_FLOW_CTRL, value):
+        if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_MODEM_CTRL, value):
             raise FtdiError('Unable to set DTR/RTS lines')
 
     def set_break(self, break_: bool) -> None:
