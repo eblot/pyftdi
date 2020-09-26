@@ -34,3 +34,6 @@ Contributors
  * meierphil
  * etherfi
  * sgoadhouse
+ * jnmacd
+ * naushir
+
