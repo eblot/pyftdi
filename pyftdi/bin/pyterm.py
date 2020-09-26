@@ -58,10 +58,14 @@ from pyftdi.misc import to_bps, add_custom_devices
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=import-error
 
-if os_name == 'nt':
+if MSWIN:
     import msvcrt
+    from subprocess import call
+    from pyterm_winkeys import WinEscapes
 else:
     msvcrt = None
+    call = None
+    WinEscapes = None
 
 #pylint: enable-msg=invalid-name
 #pylint: enable-msg=import-error
@@ -99,7 +103,9 @@ class MiniTerm:
         # Ctrl+C break then polls again...
         print('Entering minicom mode @ %d bps' % self._port.baudrate)
         stdout.flush()
-        self._port.timeout = 0.5
+        if MSWIN:
+            call('', shell=True)
+            self._port.timeout = 0.5
         self._resume = True
         # start the reader (target to host direction) within a dedicated thread
         args = [loopback]
@@ -185,33 +191,40 @@ class MiniTerm:
         while self._resume:
             try:
                 char = getkey()
-                if MSWIN:
-                    if ord(char) == 0x3:
-                        raise KeyboardInterrupt()
-                if fullmode and ord(char) == 0x2:  # Ctrl+B
+                if fullmode and ord(char) == 0x2:    # Ctrl+B
                     self._cleanup()
                     return
+                if MSWIN:
+                    if ord(char) in (0, 224):
+                        char = getkey()
+                        self._port.write(WinEscapes().getch_to_escape(char))
+                        continue
+                    if ord(char) == 0x3:    # Ctrl+C
+                        raise KeyboardInterrupt('Ctrl-C break')
                 if silent:
-                    if ord(char) == 0x6:  # Ctrl+F
+                    if ord(char) == 0x6:    # Ctrl+F
                         self._silent = True
                         print('Silent\n')
                         continue
-                    if ord(char) == 0x7:  # Ctrl+G
+                    if ord(char) == 0x7:    # Ctrl+G
                         self._silent = False
                         print('Reg\n')
                         continue
-                else:
-                    if localecho:
-                        stdout.write(char.decode('utf8', errors='replace'))
-                        stdout.flush()
-                    if crlf:
-                        if char == b'\n':
-                            self._port.write(b'\r')
-                            if crlf > 1:
-                                continue
-                    self._port.write(char)
+                if localecho:
+                    stdout.write(char.decode('utf8', errors='replace'))
+                    stdout.flush()
+                if crlf:
+                    if char == b'\n':
+                        self._port.write(b'\r')
+                        if crlf > 1:
+                            continue
+                self._port.write(char)
+            except KeyError:
+                continue
             except KeyboardInterrupt:
                 if fullmode:
+                    if MSWIN:
+                        self._port.write(b'\3')
                     continue
                 print('%sAborting...' % linesep)
                 self._cleanup()
@@ -329,19 +342,14 @@ def getkey() -> str:
     """Return a key from the current console, in a platform independent way"""
     # there's probably a better way to initialize the module without
     # relying onto a singleton pattern. To be fixed
-    if os_name == 'nt':
+    if MSWIN:
         # w/ py2exe, it seems the importation fails to define the global
         # symbol 'msvcrt', to be fixed
         while 1:
             char = msvcrt.getch()
-            if char == '\3':
-                raise KeyboardInterrupt('Ctrl-C break')
-            if char == '\0':
-                msvcrt.getch()
-            else:
-                if char == '\r':
-                    return '\n'
-                return char
+            if char == '\r':
+                return '\n'
+            return char
     elif os_name == 'posix':
         char = os_read(stdin.fileno(), 1)
         return char
@@ -370,8 +378,7 @@ def main():
     try:
         default_device = get_default_device()
         argparser = ArgumentParser(description=modules[__name__].__doc__)
-        if platform != 'win32':
-            argparser.add_argument('-f', '--fullmode', dest='fullmode',
+        argparser.add_argument('-f', '--fullmode', dest='fullmode',
                                    action='store_true',
                                    help='use full terminal mode, exit with '
                                         '[Ctrl]+B')
@@ -438,14 +445,13 @@ def main():
         except ValueError as exc:
             argparser.error(str(exc))
 
-        full_mode = args.fullmode if platform != 'win32' else False
-        init_term(full_mode)
+        init_term(args.fullmode)
         miniterm = MiniTerm(device=args.device,
                             baudrate=to_bps(args.baudrate),
                             parity='N',
                             rtscts=args.hwflow,
                             debug=args.debug)
-        miniterm.run(full_mode, args.loopback, args.silent, args.localecho,
+        miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho,
                      args.crlf)
 
     except (IOError, ValueError) as exc:
