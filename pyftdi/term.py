@@ -176,9 +176,8 @@ class Terminal:
                 new[6][VSUSP] = 0
             tcsetattr(tfd, TCSANOW, new)
         else:
-            # wait forever, although Windows is stupid and does not signal Ctrl+C,
-            # so wait use a 1/2-second timeout that gives some time to check for a
-            # Ctrl+C break then polls again...
+            # Windows black magic
+            # https://stackoverflow.com/questions/12492810
             call('', shell=True)
 
     def reset(self) -> None:
@@ -203,7 +202,9 @@ class Terminal:
 
     @classmethod
     def getkey(cls) -> bytes:
-        """Return a key from the current console, in a platform independent way"""
+        """Return a key from the current console, in a platform independent
+           way.
+        """
         # there's probably a better way to initialize the module without
         # relying onto a singleton pattern. To be fixed
         if cls.IS_MSWIN:
