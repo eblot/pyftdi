@@ -68,6 +68,31 @@ class JtagTestCase(TestCase):
         self.jtag.go_idle()
         print("IDCODE (idcode): 0x%08x" % int(idcode))
 
+    def test_idcode_shift_register(self):
+        """Read the IDCODE using the dedicated instruction with shift_and_update_register"""
+        instruction = JTAG_INSTR['IDCODE']
+        self.jtag.change_state('shift_ir')
+        retval = self.jtag.shift_and_update_register(instruction)
+        print("retval: 0x%x" % int(retval))
+        self.jtag.go_idle()
+        self.jtag.change_state('shift_dr')
+        idcode = self.jtag.shift_and_update_register(BitSequence('0'*32))
+        self.jtag.go_idle()
+        print("IDCODE (idcode): 0x%08x" % int(idcode))
+
+    def test_bypass_shift_register(self):
+        """Test the BYPASS instruction using shift_and_update_register"""
+        instruction = JTAG_INSTR['BYPASS']
+        self.jtag.change_state('shift_ir')
+        retval = self.jtag.shift_and_update_register(instruction)
+        print("retval: 0x%x" % int(retval))
+        self.jtag.go_idle()
+        self.jtag.change_state('shift_dr')
+        _in = BitSequence('011011110000'*2, length=24)
+        out = self.jtag.shift_and_update_register(_in)
+        self.jtag.go_idle()
+        print("BYPASS sent: %s, received: %s  (should be left shifted by one)" % (_in, out))
+
     def _test_detect_ir_length(self):
         """Detect the instruction register length"""
         self.jtag.go_idle()
@@ -76,7 +101,7 @@ class JtagTestCase(TestCase):
 
 
 def suite():
-    return makeSuite(JtagTestCase, '_test')
+    return makeSuite(JtagTestCase, 'test')
 
 
 if __name__ == '__main__':

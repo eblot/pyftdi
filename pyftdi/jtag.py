@@ -252,7 +252,8 @@ class JtagController:
             self._ftdi.write_data(self._write_buff)
             self._write_buff = bytearray()
 
-    def write_tms(self, tms: BitSequence) -> None:
+    def write_tms(self, tms: BitSequence,
+                  should_read: bool=False) -> None:
         """Change the TAP controller state"""
         if not isinstance(tms, BitSequence):
             raise JtagError('Expect a BitSequence')
@@ -266,7 +267,10 @@ class JtagController:
         # print("TMS", tms, (self._last is not None) and 'w/ Last' or '')
         # reset last bit
         self._last = None
-        cmd = bytearray((Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
+        if should_read:
+            cmd = bytearray((Ftdi.RW_BITS_TMS_PVE_NVE, length-1, out.tobyte()))
+        else:
+            cmd = bytearray((Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
         self._stack_cmd(cmd)
         self.sync()
 
@@ -302,10 +306,11 @@ class JtagController:
         if bit_count:
             self._write_bits(out[pos:])
 
-    def shift_register(self, out: BitSequence,
-                       use_last: bool = False) -> BitSequence:
-        """Shift a BitSequence into the current register and retrieve the
-           register output"""
+    def write_with_read(self, out: BitSequence,
+                        use_last: bool = False) -> int:
+        """Write the given BitSequence while reading the same
+           number of bits into the FTDI read buffer.
+           Returns the number of bits written."""
         if not isinstance(out, BitSequence):
             return JtagError('Expect a BitSequence')
         length = len(out)
@@ -330,7 +335,10 @@ class JtagController:
             cmd.append(out[pos:].tobyte())
             self._stack_cmd(cmd)
             # print("push %d bits" % bit_count)
-        self.sync()
+        return len(out)
+
+    def read_from_buffer(self, length) -> BitSequence:
+        """Read the specified number of bits from the FTDI read buffer."""
         bs = BitSequence()
         byte_count = length//8
         pos = 8*byte_count
@@ -463,9 +471,9 @@ class JtagEngine:
         self._ctrl.reset()
         self._sm.reset()
 
-    def write_tms(self, out) -> None:
+    def write_tms(self, out, should_read=False) -> None:
         """Change the TAP controller state"""
-        self._ctrl.write_tms(out)
+        self._ctrl.write_tms(out, should_read=should_read)
 
     def read(self, length):
         """Read out a sequence of bits from TDO"""
@@ -521,6 +529,9 @@ class JtagEngine:
         """Capture the current data register from the TAP controller"""
         self.change_state('capture_dr')
 
+    def sync(self) -> None:
+        self._ctrl.sync()
+
     def shift_register(self, length) -> BitSequence:
         if not self._sm.state_of('shift'):
             raise JtagError("Invalid state: %s" % self._sm.state())
@@ -528,10 +539,42 @@ class JtagEngine:
             bs = BitSequence(False)
             self._ctrl.write_tms(bs)
             self._sm.handle_events(bs)
-        return self._ctrl.shift_register(length)
 
-    def sync(self) -> None:
-        self._ctrl.sync()
+        bits_out = self._ctrl.write_with_read(out)
+        return self._ctrl.read_from_buffer(bits_out)
+
+    def shift_and_update_register(self, out: BitSequence) -> BitSequence:
+        """Shift a BitSequence into the current register and retrieve the
+           register output, advancing the state to update_*r"""
+        if not self._sm.state_of('shift'):
+            raise JtagError("Invalid state: %s" % self._sm.state())
+        if self._sm.state_of('capture'):
+            bs = BitSequence(False)
+            self._ctrl.write_tms(bs)
+            self._sm.handle_events(bs)
+
+        # Write with read using the last bit for next TMS transition
+        bits_out = self._ctrl.write_with_read(out, use_last=True)
+
+        # Advance the state from shift to update
+        events = BitSequence('11')
+        self.write_tms(events, should_read=True)
+        # (write_tms calls sync())
+        # update the current state machine's state
+        self._sm.handle_events(events)
+
+        # Read the bits clocked out as part of the initial write
+        bs = self._ctrl.read_from_buffer(bits_out)
+
+        # Read the last two bits clocked out with TMS above
+        # (but only use the lowest bit in the return data)
+        last_bits = self._ctrl.read_from_buffer(2)
+        bs.append(BitSequence((last_bits.tobyte() & 0x1), length=1))
+
+        if len(bs) != len(out):
+            raise ValueError("Internal error")
+
+        return bs
 
 
 class JtagTool:

@@ -330,7 +330,7 @@ class Ftdi:
     FRAC_DIV_CODE = (0, 3, 2, 4, 1, 5, 6, 7)
 
     # Latency
-    LATENCY_MIN = 12
+    LATENCY_MIN = 1
     LATENCY_MAX = 255
     LATENCY_EEPROM_FT232R = 77
 
