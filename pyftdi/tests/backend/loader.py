@@ -3,6 +3,8 @@
 
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
 
 #pylint: disable-msg=missing-docstring
 #pylint: disable-msg=too-few-public-methods

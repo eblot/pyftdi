@@ -42,13 +42,16 @@ PyFtdi currently supports the following features:
 * EEPROM support (some parameters cannot yet be modified, only retrieved)
 * Experimental CBUS support on selected devices, 4 pins per port
 
-
 ## Supported host OSes
 
 * macOS
 * Linux
 * FreeBSD
 * Windows, although not officially supported
+
+## License
+
+`SPDX-License-Identifier: BSD-3-Clause`
 
 ## Warning
 

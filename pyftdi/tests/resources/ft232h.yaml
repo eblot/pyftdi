@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
 # This file defines a regular FT232H virtual device
 # It also shows supported options and device definition structure
 # In most use cases, far simpler device definitions may be used, as the
