@@ -513,7 +513,7 @@ class JtagEngine:
     def sync(self) -> None:
         self._ctrl.sync()
 
-    def shift_register(self, length) -> BitSequence:
+    def shift_register(self, out: BitSequence) -> BitSequence:
         if not self._sm.state_of('shift'):
             raise JtagError("Invalid state: %s" % self._sm.state())
         if self._sm.state_of('capture'):
