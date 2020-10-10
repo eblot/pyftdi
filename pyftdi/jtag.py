@@ -319,6 +319,7 @@ class JtagController:
 
     def read_from_buffer(self, length) -> BitSequence:
         """Read the specified number of bits from the FTDI read buffer."""
+        self.sync()
         bs = BitSequence()
         byte_count = length//8
         pos = 8*byte_count
