@@ -522,7 +522,12 @@ class JtagEngine:
             self._sm.handle_events(bs)
 
         bits_out = self._ctrl.write_with_read(out)
-        return self._ctrl.read_from_buffer(bits_out)
+        bs = self._ctrl.read_from_buffer(bits_out)
+
+        if len(bs) != len(out):
+            raise ValueError("Internal error")
+
+        return bs
 
     def shift_and_update_register(self, out: BitSequence) -> BitSequence:
         """Shift a BitSequence into the current register and retrieve the
