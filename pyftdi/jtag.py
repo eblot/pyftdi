@@ -319,6 +319,7 @@ class JtagController:
 
     def read_from_buffer(self, length) -> BitSequence:
         """Read the specified number of bits from the FTDI read buffer."""
+        self.sync()
         bs = BitSequence()
         byte_count = length//8
         pos = 8*byte_count
@@ -512,7 +513,7 @@ class JtagEngine:
     def sync(self) -> None:
         self._ctrl.sync()
 
-    def shift_register(self, length) -> BitSequence:
+    def shift_register(self, out: BitSequence) -> BitSequence:
         if not self._sm.state_of('shift'):
             raise JtagError("Invalid state: %s" % self._sm.state())
         if self._sm.state_of('capture'):
@@ -521,7 +522,12 @@ class JtagEngine:
             self._sm.handle_events(bs)
 
         bits_out = self._ctrl.write_with_read(out)
-        return self._ctrl.read_from_buffer(bits_out)
+        bs = self._ctrl.read_from_buffer(bits_out)
+
+        if len(bs) != len(out):
+            raise ValueError("Internal error")
+
+        return bs
 
     def shift_and_update_register(self, out: BitSequence) -> BitSequence:
         """Shift a BitSequence into the current register and retrieve the
