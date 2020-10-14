@@ -22,29 +22,20 @@ from argparse import ArgumentParser, FileType
 from atexit import register
 from collections import deque
 from logging import Formatter, StreamHandler, DEBUG, ERROR
-from os import environ, linesep, name as os_name, read as os_read, stat
-from sys import modules, platform, stderr, stdin, stdout
+from os import environ, linesep, stat
+from sys import exit as sysexit, modules, platform, stderr, stdout
 from time import sleep
 from threading import Event, Thread
 from traceback import format_exc
 from _thread import interrupt_main
-MSWIN = platform == 'win32'
-if not MSWIN:
-    from termios import TCSANOW, tcgetattr, tcsetattr
+
+#pylint: disable-msg=import-error
+#pylint: disable-msg=import-outside-toplevel
+
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import to_bps, add_custom_devices
-
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=import-error
-
-if os_name == 'nt':
-    import msvcrt
-else:
-    msvcrt = None
-
-#pylint: enable-msg=invalid-name
-#pylint: enable-msg=import-error
+from pyftdi.term import Terminal
 
 
 class MiniTerm:
@@ -54,11 +45,7 @@ class MiniTerm:
 
     def __init__(self, device, baudrate=None, parity=None, rtscts=False,
                  debug=False):
-        self._termstates = []
-        if not MSWIN and stdout.isatty():
-            self._termstates = [(fd, tcgetattr(fd)) for fd in
-                                (stdin.fileno(), stdout.fileno(),
-                                 stderr.fileno())]
+        self._terminal = Terminal()
         self._device = device
         self._baudrate = baudrate or self.DEFAULT_BAUDRATE
         self._port = self._open_port(self._device, self._baudrate, parity,
@@ -74,12 +61,9 @@ class MiniTerm:
             localecho=False, autocr=False):
         """Switch to a pure serial terminal application"""
 
-        # wait forever, although Windows is stupid and does not signal Ctrl+C,
-        # so wait use a 1/2-second timeout that gives some time to check for a
-        # Ctrl+C break then polls again...
+        self._terminal.init(fullmode)
         print('Entering minicom mode @ %d bps' % self._port.baudrate)
         stdout.flush()
-        self._port.timeout = 0.5
         self._resume = True
         # start the reader (target to host direction) within a dedicated thread
         args = [loopback]
@@ -164,41 +148,48 @@ class MiniTerm:
         """Loop and copy console->serial until EOF character is found"""
         while self._resume:
             try:
-                char = getkey()
-                if MSWIN:
-                    if ord(char) == 0x3:
-                        raise KeyboardInterrupt()
-                if fullmode and ord(char) == 0x2:  # Ctrl+B
-                    self._cleanup()
+                char = self._terminal.getkey()
+                if fullmode and ord(char) == 0x2:    # Ctrl+B
+                    self._cleanup(True)
                     return
+                if self._terminal.IS_MSWIN:
+                    if ord(char) in (0, 224):
+                        char = self._terminal.getkey()
+                        self._port.write(self._terminal.getch_to_escape(char))
+                        continue
+                    if ord(char) == 0x3:    # Ctrl+C
+                        raise KeyboardInterrupt('Ctrl-C break')
                 if silent:
-                    if ord(char) == 0x6:  # Ctrl+F
+                    if ord(char) == 0x6:    # Ctrl+F
                         self._silent = True
                         print('Silent\n')
                         continue
-                    if ord(char) == 0x7:  # Ctrl+G
+                    if ord(char) == 0x7:    # Ctrl+G
                         self._silent = False
                         print('Reg\n')
                         continue
-                else:
-                    if localecho:
-                        stdout.write(char.decode('utf8', errors='replace'))
-                        stdout.flush()
-                    if crlf:
-                        if char == b'\n':
-                            self._port.write(b'\r')
-                            if crlf > 1:
-                                continue
-                    self._port.write(char)
+                if localecho:
+                    stdout.write(char.decode('utf8', errors='replace'))
+                    stdout.flush()
+                if crlf:
+                    if char == b'\n':
+                        self._port.write(b'\r')
+                        if crlf > 1:
+                            continue
+                self._port.write(char)
+            except KeyError:
+                continue
             except KeyboardInterrupt:
                 if fullmode:
+                    if self._terminal.IS_MSWIN:
+                        self._port.write(b'\x03')
                     continue
-                print('%sAborting...' % linesep)
-                self._cleanup()
-                return
+                self._cleanup(True)
 
-    def _cleanup(self):
+    def _cleanup(self, *args):
         """Cleanup resource before exiting"""
+        if args and args[0]:
+            print('%sAborting...' % linesep)
         try:
             self._resume = False
             if self._port:
@@ -215,10 +206,12 @@ class MiniTerm:
                 self._port.close()
                 self._port = None
                 print('Bye.')
-            for tfd, att in self._termstates:
-                tcsetattr(tfd, TCSANOW, att)
         except Exception as ex:
             print(str(ex), file=stderr)
+        finally:
+            if self._terminal:
+                self._terminal.reset()
+                self._terminal = None
 
     @staticmethod
     def _open_port(device, baudrate, parity, rtscts, debug=False):
@@ -226,22 +219,22 @@ class MiniTerm:
         try:
             from serial.serialutil import SerialException
             from serial import PARITY_NONE
-        except ImportError:
-            raise ImportError("Python serial module not installed")
+        except ImportError as exc:
+            raise ImportError("Python serial module not installed") from exc
         try:
             from serial import serial_for_url, VERSION as serialver
             version = tuple([int(x) for x in serialver.split('.')])
             if version < (3, 0):
                 raise ValueError
-        except (ValueError, IndexError, ImportError):
-            raise ImportError("pyserial 3.0+ is required")
+        except (ValueError, IndexError, ImportError) as exc:
+            raise ImportError("pyserial 3.0+ is required") from exc
         # the following import enables serial protocol extensions
         if device.startswith('ftdi:'):
             try:
                 from pyftdi import serialext
                 serialext.touch()
-            except ImportError:
-                raise ImportError("PyFTDI module not installed")
+            except ImportError as exc:
+                raise ImportError("PyFTDI module not installed") from exc
         try:
             port = serial_for_url(device,
                                   baudrate=baudrate,
@@ -257,7 +250,7 @@ class MiniTerm:
                 print("Using serial backend '%s'" % backend)
             return port
         except SerialException as exc:
-            raise IOError(str(exc))
+            raise IOError(str(exc)) from exc
 
 
 def get_default_device() -> str:
@@ -280,69 +273,6 @@ def get_default_device() -> str:
     return device
 
 
-def init_term(fullterm: bool) -> None:
-    """Internal terminal initialization function"""
-    if os_name == 'nt':
-        return True
-    if os_name == 'posix':
-        import termios
-        tfd = stdin.fileno()
-        old = termios.tcgetattr(tfd)
-        new = termios.tcgetattr(tfd)
-        new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
-        new[6][termios.VMIN] = 1
-        new[6][termios.VTIME] = 0
-        if fullterm:
-            new[6][termios.VINTR] = 0
-            new[6][termios.VSUSP] = 0
-        termios.tcsetattr(tfd, termios.TCSANOW, new)
-        def cleanup_console():
-            termios.tcsetattr(tfd, termios.TCSAFLUSH, old)
-            # terminal modes have to be restored on exit...
-        register(cleanup_console)
-        return True
-    else:
-        return True
-
-
-def getkey() -> str:
-    """Return a key from the current console, in a platform independent way"""
-    # there's probably a better way to initialize the module without
-    # relying onto a singleton pattern. To be fixed
-    if os_name == 'nt':
-        # w/ py2exe, it seems the importation fails to define the global
-        # symbol 'msvcrt', to be fixed
-        while 1:
-            char = msvcrt.getch()
-            if char == '\3':
-                raise KeyboardInterrupt('Ctrl-C break')
-            if char == '\0':
-                msvcrt.getch()
-            else:
-                if char == '\r':
-                    return '\n'
-                return char
-    elif os_name == 'posix':
-        char = os_read(stdin.fileno(), 1)
-        return char
-    else:
-        import time
-        time.sleep(1)
-        return None
-
-
-def is_term():
-    """Tells whether the current stdout/stderr stream are connected to a
-    terminal (vs. a regular file or pipe)"""
-    return stdout.isatty()
-
-
-def is_colorterm():
-    """Tells whether the current terminal (if any) support colors escape
-    sequences"""
-    terms = ['xterm-color', 'ansi']
-    return stdout.isatty() and environ.get('TERM') in terms
-
 
 def main():
     """Main routine"""
@@ -350,8 +280,7 @@ def main():
     try:
         default_device = get_default_device()
         argparser = ArgumentParser(description=modules[__name__].__doc__)
-        if platform != 'win32':
-            argparser.add_argument('-f', '--fullmode', dest='fullmode',
+        argparser.add_argument('-f', '--fullmode', dest='fullmode',
                                    action='store_true',
                                    help='use full terminal mode, exit with '
                                         '[Ctrl]+B')
@@ -418,23 +347,21 @@ def main():
         except ValueError as exc:
             argparser.error(str(exc))
 
-        full_mode = args.fullmode if platform != 'win32' else False
-        init_term(full_mode)
         miniterm = MiniTerm(device=args.device,
                             baudrate=to_bps(args.baudrate),
                             parity='N',
                             rtscts=args.hwflow,
                             debug=args.debug)
-        miniterm.run(full_mode, args.loopback, args.silent, args.localecho,
+        miniterm.run(args.fullmode, args.loopback, args.silent, args.localecho,
                      args.crlf)
 
     except (IOError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
-        exit(1)
+        sysexit(1)
     except KeyboardInterrupt:
-        exit(2)
+        sysexit(2)
 
 
 if __name__ == '__main__':
