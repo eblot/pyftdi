@@ -523,7 +523,6 @@ class JtagEngine:
 
         bits_out = self._ctrl.write_with_read(out)
         bs = self._ctrl.read_from_buffer(bits_out)
-
         if len(bs) != len(out):
             raise ValueError("Internal error")
 
@@ -556,7 +555,6 @@ class JtagEngine:
         # (but only use the lowest bit in the return data)
         last_bits = self._ctrl.read_from_buffer(2)
         bs.append(BitSequence((last_bits.tobyte() & 0x1), length=1))
-
         if len(bs) != len(out):
             raise ValueError("Internal error")
 
