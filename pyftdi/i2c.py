@@ -997,7 +997,8 @@ class I2cController:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
-        cmd = bytearray(self._idle)
+        #cmd = bytearray(self._idle) #original
+        cmd = bytearray(self._idle * self._ck_delay) #new
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
