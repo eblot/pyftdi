@@ -358,7 +358,9 @@ class I2cController:
     SDA_I_BIT = 0x04  #AD2
     SCL_FB_BIT = 0x80  #AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
-    HIGHEST_I2C_ADDRESS = 0x78
+    HIGHEST_I2C_ADDRESS = 0x7F  # slave addresses over 0x78 not allowed, but:
+                                # there is no reason to prevent the ftdi
+                                # from working with slaves there
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
@@ -442,9 +444,9 @@ class I2cController:
         if frequency <= 100E3:
             timings = self.I2C_100K
         elif frequency <= 400E3:
-            timings = self.I2C_100K
+            timings = self.I2C_400K
         else:
-            timings = self.I2C_100K
+            timings = self.I2C_1M
         if 'clockstretching' in kwargs:
             clkstrch = bool(kwargs['clockstretching'])
             del kwargs['clockstretching']
@@ -949,7 +951,8 @@ class I2cController:
 
     @property
     def _stop(self) -> Tuple[int]:
-        return self._clk_lo_data_lo * self._ck_hd_sta + \
+        return self._clk_lo_data_hi * self._ck_hd_sta + \
+               self._clk_lo_data_lo * self._ck_hd_sta + \
                self._data_lo * self._ck_su_sto + \
                self._idle * self._ck_idle
 
