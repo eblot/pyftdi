@@ -111,12 +111,13 @@ class FtdiEeprom:
     def __init__(self, mirror=False):
         """
             :param mirror: [optional] whether to divide the eeprom into 2
-                sectors and mirror those them. For instance on the 4232H
-                which has an eeprom size of 256 bytes, the first 128 bytes
-                will mirror the second block of 128 bytes. For some devices
-                (like the 4232H), this makes the eeprom identical to FT_PROG
-                functionality. It can also help prevent errors in
-                writing/readback
+                sectors and mirror configuration data between them. For
+                instance on the 4232H which has an eeprom size of 256 bytes,
+                the first 128 bytes will mirror the second block of 128 bytes.
+                Configuration properties/strings will be writen to both of
+                these sectors. For some devices (like the 4232H), this
+                makes the pyftdi eeprom functionally similar to FT_PROG.
+                Doing this can help prevent errors in writing/readback.
         """
         self.log = getLogger('pyftdi.eeprom')
         self._ftdi = Ftdi()
@@ -151,6 +152,9 @@ class FtdiEeprom:
             self._eeprom = self._read_eeprom()
             if self._valid:
                 self._decode_eeprom()
+        self._mirror = (self._mirror and
+            self._PROPERTIES[self.device_version].user is not None and
+            self._ftdi.device_version != 0x1000)
 
     def close(self) -> None:
         """Close the current connection to the FTDI USB device,
@@ -489,9 +493,12 @@ class FtdiEeprom:
             return
         raise ValueError(f"unknown property: {name}")
 
-    def erase(self) -> None:
-        """Erase the whole EEPROM."""
-        self._eeprom = bytearray([0xFF] * self.size)
+    def erase(self, erase_byte=0xFF) -> None:
+        """Erase the whole EEPROM.
+
+            :param erase_byte: Erase byte to use. Default to 0xFF
+        """
+        self._eeprom = bytearray([erase_byte] * self.size)
         self._config.clear()
         self._dirty.add('eeprom')
 
