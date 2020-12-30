@@ -108,7 +108,16 @@ class FtdiEeprom:
     VAR_STRINGS = ('manufacturer', 'product', 'serial')
     """EEPROM strings with variable length."""
 
-    def __init__(self):
+    def __init__(self, mirror=False):
+        """
+            :param mirror: [optional] whether to divide the eeprom into 2
+                sectors and mirror those them. For instance on the 4232H
+                which has an eeprom size of 256 bytes, the first 128 bytes
+                will mirror the second block of 128 bytes. For some devices
+                (like the 4232H), this makes the eeprom identical to FT_PROG
+                functionality. It can also help prevent errors in
+                writing/readback
+        """
         self.log = getLogger('pyftdi.eeprom')
         self._ftdi = Ftdi()
         self._eeprom = bytearray()
@@ -118,6 +127,7 @@ class FtdiEeprom:
         self._dirty = set()
         self._modified = False
         self._chip: Optional[int] = None
+        self._mirror = mirror
 
     def __getattr__(self, name):
         if name in self._config:
@@ -163,6 +173,9 @@ class FtdiEeprom:
         self._valid = False
         self._config = OrderedDict()
         self._dirty = set()
+        self._mirror = (self._mirror and
+            self._PROPERTIES[self.device_version].user is not None and
+            self._ftdi.device_version != 0x1000)
         if not ignore:
             self._eeprom = self._read_eeprom()
             if self._valid:
@@ -420,19 +433,38 @@ class FtdiEeprom:
                 raise ValueError('Invalid value for %s' % name)
             offset = hwords[name]
             self._eeprom[offset:offset+2] = spack('<H', val)
+            if self._mirror:
+                # duplicate in 'sector 2'
+                offset2 = (self.size // 2) + offset
+                self._eeprom[offset2:offset2+2] = spack('<H', val)
             return
         if name in confs:
             val = to_bool(value, permissive=False, allow_int=True)
             offset, bit = confs[name]
             mask = 1 << bit
             if val:
-                self._eeprom[0x08+offset] |= mask
+                idx = 0x08 + offset
+                self._eeprom[idx] |= mask
+                if self._mirror:
+                    # duplicate in 'sector 2'
+                    idx2 = (self.size // 2) + idx
+                    self._eeprom[idx2] |= mask
             else:
-                self._eeprom[0x0a+offset] &= ~mask
+                idx = 0x0a + offset
+                self._eeprom[idx] &= ~mask
+                if self._mirror:
+                    # duplicate in 'sector 2'
+                    idx2 = (self.size // 2) + idx
+                    self._eeprom[idx2] &= ~mask
             return
         if name == 'power_max':
             val = to_int(value) >> 1
-            self._eeprom[0x09] = val
+            idx = 0x09
+            self._eeprom[idx] = val
+            if self._mirror:
+                # duplicate in 'sector 2'
+                idx2 = (self.size // 2) + idx
+                self._eeprom[idx2] = val
             return
         if name.startswith('invert_'):
             if not self.device_version in (0x600, 0x1000):
@@ -547,10 +579,16 @@ class FtdiEeprom:
         self._dirty.add(name)
 
     def _generate_var_strings(self, fill=True) -> None:
+        """
+            :param fill: fill the remainder of the space after the var strings
+                with 0s
+        """
         stream = bytearray()
         dynpos = self._PROPERTIES[self.device_version].dynoff
+        userpos = self._PROPERTIES[self.device_version].user
         data_pos = dynpos
         tbl_pos = 0x0e
+        tbl_sector2_pos = (self.size // 2) + tbl_pos
         for name in self.VAR_STRINGS:
             try:
                 ustr = self._config[name].encode('utf-16le')
@@ -561,16 +599,27 @@ class FtdiEeprom:
             stream.append(0x03)  # string descriptor
             stream.extend(ustr)
             self._eeprom[tbl_pos] = data_pos
+            if self._mirror:
+                self._eeprom[tbl_sector2_pos] = data_pos
             tbl_pos += 1
+            tbl_sector2_pos += 1
             self._eeprom[tbl_pos] = length
+            if self._mirror:
+                self._eeprom[tbl_sector2_pos] = length
             tbl_pos += 1
+            tbl_sector2_pos += 1
             data_pos += length
+        if self._mirror:
+            self._eeprom[userpos:userpos+len(stream)] = stream
         self._eeprom[dynpos:dynpos+len(stream)] = stream
         if fill:
             mtp = self._ftdi.device_version == 0x1000
             crc_pos = 0x100 if mtp else len(self._eeprom)
             rem = crc_pos - (dynpos + len(stream))
             self._eeprom[dynpos+len(stream):crc_pos] = bytes(rem)
+            if self._mirror and userpos is not None:
+                crc_user_pos = (self.size // 2)
+                self._eeprom[userpos+len(stream):crc_user_pos] = bytes(rem)
 
     def _sync_eeprom(self):
         if not self._dirty:
@@ -589,22 +638,33 @@ class FtdiEeprom:
     def _compute_crc(self, eeprom: Union[bytes, bytearray], check=False):
         mtp = self._ftdi.device_version == 0x1000
         crc_pos = 0x100 if mtp else len(eeprom)
+        crc_user_pos = (self.size // 2)
         crc_size = scalc('<H')
         if not check:
             # check mode: add CRC itself, so that result should be zero
             crc_pos -= crc_size
-        crc = self._ftdi.calc_eeprom_checksum(eeprom[:crc_pos])
+            crc_user_pos -= crc_size
+        if self._mirror:
+            # if mirroring, only calculate the crc for the first sector/half
+            #   of the eeprom. Data (including this crc) are duplicated in
+            #   the second sector/half
+            crc = self._ftdi.calc_eeprom_checksum(eeprom[:crc_user_pos])
+        else:
+            crc = self._ftdi.calc_eeprom_checksum(eeprom[:crc_pos])
         if check:
             self._valid = not bool(crc)
             if not self._valid:
                 self.log.debug('CRC is now 0x%04x', crc)
             else:
                 self.log.debug('CRC OK')
-        return crc, crc_pos, crc_size
+        return crc, crc_pos, crc_user_pos, crc_size
 
     def _update_crc(self):
-        crc, crc_pos, crc_size = self._compute_crc(self._eeprom, False)
+        crc, crc_pos, crc_user_pos, crc_size = self._compute_crc(
+            self._eeprom, False)
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
+        if self._mirror:
+            self._eeprom[crc_user_pos:crc_user_pos+crc_size] = spack('<H', crc)
 
     def _compute_size(self, eeprom: Union[bytes, bytearray]) -> int:
         if self._ftdi.is_eeprom_internal:
