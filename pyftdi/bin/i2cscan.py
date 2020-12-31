@@ -120,6 +120,7 @@ def main():
         FtdiLogger.set_level(loglevel)
 
         if args.virtual:
+            #pylint: disable-msg=import-outside-toplevel
             from pyftdi.usbtools import UsbTools
             # Force PyUSB to use PyFtdi test framework for USB backends
             UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )

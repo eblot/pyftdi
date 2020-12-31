@@ -6,13 +6,16 @@
 
 """Miscelleanous helpers"""
 
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=import-outside-toplevel
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-arguments
+
 from array import array
 from copy import deepcopy
 from re import match
 from typing import Any, Iterable, Optional, Sequence, Union
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-arguments
 
 # String values evaluated as true boolean values
 TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
@@ -59,8 +62,7 @@ def hexdump(data: Union[bytes, bytearray, Iterable[int]],
                     result.append('*\n')
                     abv = True
                 continue
-            else:
-                abv = False
+            abv = False
         hexa = ' '.join(["%02x" % x for x in s])
         printable = s.translate(ASCIIFILTER).decode('ascii')
         if full:
@@ -154,10 +156,9 @@ def to_bool(value: Union[int, bool, str], permissive: bool = True,
     if isinstance(value, int):
         if allow_int:
             return bool(value)
-        else:
-            if permissive:
-                return False
-            raise ValueError("Invalid boolean value: '%d'" % value)
+        if permissive:
+            return False
+        raise ValueError("Invalid boolean value: '%d'" % value)
     if value.lower() in TRUE_BOOLEANS:
         return True
     if permissive or (value.lower() in FALSE_BOOLEANS):
@@ -197,6 +198,7 @@ def xor(_a_: bool, _b_: bool) -> bool:
        :param _b_: second argument
        :return: xor-ed value
     """
+    #pylint: disable-msg=superfluous-parens
     return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
 
 

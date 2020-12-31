@@ -728,6 +728,7 @@ class Ftdi:
             self.close()
             raise FtdiMpsseError('This interface does not support MPSSE')
         if to_bool(tracer):  # accept strings as boolean
+            #pylint: disable-msg=import-outside-toplevel
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer(self.device_version)
             self.log.debug('Using MPSSE tracer')
@@ -1854,18 +1855,17 @@ class Ftdi:
                             srcoff += packet_size
                         length = len(self._readbuffer)
                         break
-                    else:
-                        # received buffer only contains the modem status bytes
-                        # no data received, may be late, try again
-                        if retry > 0:
-                            continue
-                        # no actual data
-                        self._readbuffer = bytearray()
-                        self._readoffset = 0
-                        if self._latency_threshold:
-                            self._adapt_latency(False)
-                        # no more data to read?
-                        return data
+                    # received buffer only contains the modem status bytes
+                    # no data received, may be late, try again
+                    if retry > 0:
+                        continue
+                    # no actual data
+                    self._readbuffer = bytearray()
+                    self._readoffset = 0
+                    if self._latency_threshold:
+                        self._adapt_latency(False)
+                    # no more data to read?
+                    return data
                 if length > 0:
                     # data still fits in buf?
                     if (len(data) + length) <= size:

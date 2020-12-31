@@ -6,12 +6,13 @@
 
 """JTAG support for PyFdti"""
 
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=missing-function-docstring
+
 from time import sleep
 from typing import List, Tuple, Union
 from .ftdi import Ftdi
 from .bits import BitSequence
-
-#pylint: disable-msg=invalid-name
 
 
 class JtagError(Exception):
@@ -139,7 +140,8 @@ class JtagStateMachine:
                        key=lambda x: x[0])[1] if paths else []
         return next_path(source, target, [])
 
-    def get_events(self, path):
+    @classmethod
+    def get_events(cls, path):
         """Build up an event sequence from a state sequence, so that the
            resulting event sequence allows the JTAG state machine to advance
            from the first state to the last one of the input sequence"""
@@ -608,7 +610,7 @@ class JtagTool:
         for length in range(1, MAX_REG_LEN):
             print("Testing for length %d" % length)
             if length > 5:
-                return
+                raise ValueError('Abort detection over reg length %d' % length)
             zero = BitSequence(length=length)
             inj = BitSequence(length=length+PATTERN_LEN)
             inj.inc()

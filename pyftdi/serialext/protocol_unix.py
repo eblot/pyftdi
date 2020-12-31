@@ -4,9 +4,15 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+# this file has not been updated for a while, so coding style needs some love
 #pylint: disable-msg=broad-except
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=redefined-outer-name
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=too-few-public-methods
+#pylint: disable-msg=missing-function-docstring
+#pylint: disable-msg=missing-class-docstring
+#pylint: disable-msg=missing-module-docstring
 
 import errno
 import os
@@ -66,8 +72,7 @@ class SocketSerial(SerialBase):
             if isinstance(e, socket.error):
                 # pylint: disable-msg=no-member
                 raise SerialExceptionWithErrno(msg, e.errno) from e
-            else:
-                raise SerialException(msg) from e
+            raise SerialException(msg) from e
         self._set_open_state(True)
         self._lastdtr = None
 
@@ -86,6 +91,7 @@ class SocketSerial(SerialBase):
 
     def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
+        #pylint: disable-msg=no-self-use
         return 0
 
     def read(self, size=1):
@@ -101,7 +107,7 @@ class SocketSerial(SerialBase):
                 if not ready:
                     break   # timeout
                 buf = self.sock.recv(size-len(read))
-                if not len(buf):
+                if not buf:
                     # Some character is ready, but none can be read
                     # it is a marker for a disconnected peer
                     raise portNotOpenError

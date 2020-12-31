@@ -6,6 +6,7 @@
 """MPSSE command debug tracer."""
 
 #pylint: disable-msg=missing-docstring
+#pylint: disable-msg=too-many-instance-attributes
 
 from binascii import hexlify
 from collections import deque

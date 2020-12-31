@@ -169,8 +169,8 @@ class UsbTools:
                     devs = list(devs)
                 try:
                     dev = devs[devdesc.index or 0]
-                except IndexError:
-                    raise IOError("No such device")
+                except IndexError as exc:
+                    raise IOError("No such device") from exc
             else:
                 devs = cls._find_devices(devdesc.vid, devdesc.pid)
                 dev = list(devs)[0] if devs else None
@@ -307,8 +307,8 @@ class UsbTools:
             else:
                 interface = to_int(path)
                 report_devices = False
-        except (IndexError, ValueError):
-            raise UsbToolsError('Invalid device URL: %s' % urlstr)
+        except (IndexError, ValueError) as exc:
+            raise UsbToolsError('Invalid device URL: %s' % urlstr) from exc
         candidates, idx = cls.enumerate_candidates(urlparts, vdict, pdict,
                                                    default_vendor)
         if report_devices:
@@ -376,14 +376,14 @@ class UsbTools:
             if plcomps[1]:
                 try:
                     product = to_int(plcomps[1])
-                except ValueError:
+                except ValueError as exc:
                     raise UsbToolsError('Product %s is not referenced' %
-                                        plcomps[1])
+                                        plcomps[1]) from exc
             else:
                 product = None
-        except (IndexError, ValueError):
+        except (IndexError, ValueError) as exc:
             raise UsbToolsError('Invalid device URL: %s' %
-                                urlunsplit(urlparts))
+                                urlunsplit(urlparts)) from exc
         sernum = None
         idx = None
         bus = None
@@ -393,9 +393,9 @@ class UsbTools:
             try:
                 bus = int(locators[0], 16)
                 address = int(locators[1], 16)
-            except ValueError:
+            except ValueError as exc:
                 raise UsbToolsError('Invalid bus/address: %s' %
-                                    ':'.join(locators))
+                                    ':'.join(locators)) from exc
         else:
             if locators and locators[0]:
                 try:
@@ -543,6 +543,7 @@ class UsbTools:
            :return: the string read from the USB device
         """
         if cls.UsbApi is None:
+            #pylint: disable-msg=import-outside-toplevel
             import inspect
             args, _, _, _ = \
                 inspect.signature(UsbDevice.read).parameters

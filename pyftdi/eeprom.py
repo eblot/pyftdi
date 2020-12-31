@@ -6,7 +6,9 @@
 """EEPROM management for PyFdti"""
 
 #pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-public-methods
 #pylint: disable-msg=wrong-import-position
 #pylint: disable-msg=import-error
 

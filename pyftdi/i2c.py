@@ -836,10 +836,9 @@ class I2cController:
                     if (cond & mask) == value:
                         self.log.debug('Poll condition matched')
                         break
-                    else:
-                        data = None
-                        self.log.debug('Poll condition not fulfilled: %x/%x',
-                                       cond & mask, value)
+                    data = None
+                    self.log.debug('Poll condition not fulfilled: %x/%x',
+                                   cond & mask, value)
                 do_epilog = relax
                 if not data:
                     self.log.warning('Poll condition failed')

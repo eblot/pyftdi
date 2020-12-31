@@ -4,13 +4,17 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+# this file has not been updated for a while, so coding style needs some love
 #pylint: disable-msg=attribute-defined-outside-init
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=missing-class-docstring
+#pylint: disable-msg=missing-module-docstring
 
 from io import RawIOBase
+from time import sleep, time as now
+from serial import SerialBase, SerialException, VERSION as pyserialver
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbToolsError
-from serial import SerialBase, SerialException, VERSION as pyserialver
-from time import sleep, time as now
 
 
 class FtdiSerial(SerialBase):

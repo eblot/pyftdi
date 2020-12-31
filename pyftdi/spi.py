@@ -6,19 +6,20 @@
 
 """SPI support for PyFdti"""
 
+#pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-statements
+#pylint: disable-msg=too-many-instance-attributes
+#pylint: disable-msg=too-many-public-methods
+#pylint: disable-msg=invalid-name
+
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Set, Union
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
-
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=invalid-name
 
 
 class SpiIOError(FtdiError):
