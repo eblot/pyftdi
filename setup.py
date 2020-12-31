@@ -14,7 +14,7 @@
 
 from codecs import open as codec_open
 from distutils.cmd import Command
-from distutils.log import INFO
+from distutils.log import DEBUG, INFO
 from os import close, unlink, walk
 from os.path import abspath, dirname, join as joinpath
 from py_compile import compile as pycompile, PyCompileError
@@ -145,6 +145,7 @@ class CheckStyle(Command):
                          if not d.startswith('.') and d != 'doc']
             for filename in (joinpath(dpath, f)
                              for f in fnames if f.endswith('.py')):
+                self.announce('checking %s' % filename, level=DEBUG)
                 with open(filename, 'rt') as pfp:
                     for lpos, line in enumerate(pfp, start=1):
                         if len(line) > 80:

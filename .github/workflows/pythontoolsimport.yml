@@ -22,9 +22,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install setuptools wheel ruamel.yaml
+    - name: Check style
+      run: |
+        python setup.py check_style
     - name: Install package
       run: |
-        python setup.py check_style install
+        python setup.py install
     - name: Run tests
       run: |
         python pyftdi/tests/toolsimport.py
