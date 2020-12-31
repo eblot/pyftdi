@@ -358,7 +358,9 @@ class I2cController:
     SDA_I_BIT = 0x04  #AD2
     SCL_FB_BIT = 0x80  #AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
-    HIGHEST_I2C_ADDRESS = 0x78
+    HIGHEST_I2C_ADDRESS = 0x7F  # slave addresses over 0x78 not allowed, but:
+                                # there is no reason to prevent the ftdi
+                                # from working with slaves there
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
