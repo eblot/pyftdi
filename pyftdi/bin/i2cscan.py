@@ -30,6 +30,8 @@ class I2cBusScanner:
 
     SMB_READ_RANGE = list(range(0x30, 0x38)) + list(range(0x50, 0x60))
 
+    HIGHEST_I2C_SLAVE_ADDRESS = 0x78
+
     @classmethod
     def scan(cls, url: str, smb_mode: bool = True) -> None:
         """Scan an I2C bus to detect slave device.
@@ -44,7 +46,7 @@ class I2cBusScanner:
         try:
             i2c.set_retry_count(1)
             i2c.configure(url)
-            for addr in range(i2c.HIGHEST_I2C_ADDRESS+1):
+            for addr in range(cls.HIGHEST_I2C_SLAVE_ADDRESS+1):
                 port = i2c.get_port(addr)
                 if smb_mode:
                     try:
