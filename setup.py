@@ -13,7 +13,9 @@
 #pylint: disable-msg=no-self-use
 
 from codecs import open as codec_open
-from os import close, unlink
+from distutils.cmd import Command
+from distutils.log import INFO
+from os import close, unlink, walk
 from os.path import abspath, dirname, join as joinpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
@@ -124,17 +126,40 @@ class BuildPy(build_py):
                 unlink(pyc)
         super().byte_compile(files)
 
-    def _check_line_width(self, file):
-        with open(file, 'rt') as pfp:
-            for lpos, line in enumerate(pfp, start=1):
-                if len(line) > 80:
-                    print('\n  %d: %s' % (lpos, line.rstrip()))
-                    raise RuntimeError("Invalid line width '%s'" % file)
+
+class CheckStyle(Command):
+    """A custom command to check Python coding style."""
+
+    description = 'check coding style'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        self.announce('Checking coding style', level=INFO)
+        for dpath, dnames, fnames in walk(dirname(__file__)):
+            dnames[:] = [d for d in dnames
+                         if not d.startswith('.') and d != 'doc']
+            for filename in (joinpath(dpath, f)
+                             for f in fnames if f.endswith('.py')):
+                with open(filename, 'rt') as pfp:
+                    for lpos, line in enumerate(pfp, start=1):
+                        if len(line) > 80:
+                            print('\n  %d: %s' % (lpos, line.rstrip()))
+                            raise RuntimeError("Invalid line width '%s'" %
+                                               filename)
 
 
 def main():
     setup(
-        cmdclass={'build_py': BuildPy},
+        cmdclass={
+            'build_py': BuildPy,
+            'check_style': CheckStyle
+        },
         name=NAME,
         description=find_meta('description'),
         license=find_meta('license'),

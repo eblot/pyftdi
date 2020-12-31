@@ -24,7 +24,7 @@ jobs:
         pip install setuptools wheel ruamel.yaml
     - name: Install package
       run: |
-        python setup.py install
+        python setup.py check_style install
     - name: Run tests
       run: |
         python pyftdi/tests/toolsimport.py
