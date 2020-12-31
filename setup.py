@@ -116,7 +116,6 @@ class BuildPy(build_py):
             close(pfd)
             try:
                 pycompile(file, pyc, doraise=True)
-                self._check_line_width(file)
                 continue
             except PyCompileError as exc:
                 # avoid chaining exceptions
@@ -140,7 +139,7 @@ class CheckStyle(Command):
         pass
 
     def run(self):
-        self.announce('Checking coding style', level=INFO)
+        self.announce('checking coding style', level=INFO)
         for dpath, dnames, fnames in walk(dirname(__file__)):
             dnames[:] = [d for d in dnames
                          if not d.startswith('.') and d != 'doc']
