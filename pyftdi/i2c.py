@@ -442,9 +442,9 @@ class I2cController:
         if frequency <= 100E3:
             timings = self.I2C_100K
         elif frequency <= 400E3:
-            timings = self.I2C_100K
+            timings = self.I2C_400K
         else:
-            timings = self.I2C_100K
+            timings = self.I2C_1M
         if 'clockstretching' in kwargs:
             clkstrch = bool(kwargs['clockstretching'])
             del kwargs['clockstretching']
