@@ -561,7 +561,7 @@ class I2cController:
         return self._ftdi.is_connected and bool(self._start)
 
     @classmethod
-    def validate_address(cls, address: int) -> None:
+    def validate_address(cls, address: Optional[int]) -> None:
         """Assert an I2C slave address is in the supported range.
            None is a special bypass address.
 
