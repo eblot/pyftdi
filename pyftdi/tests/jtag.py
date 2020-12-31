@@ -49,7 +49,8 @@ class JtagTestCase(TestCase):
         print("IDCODE (idcode): 0x%08x" % int(idcode))
 
     def test_idcode_shift_register(self):
-        """Read the IDCODE using the dedicated instruction with shift_and_update_register"""
+        """Read the IDCODE using the dedicated instruction with
+           shift_and_update_register"""
         instruction = JTAG_INSTR['IDCODE']
         self.jtag.change_state('shift_ir')
         retval = self.jtag.shift_and_update_register(instruction)
@@ -71,7 +72,8 @@ class JtagTestCase(TestCase):
         _in = BitSequence('011011110000'*2, length=24)
         out = self.jtag.shift_and_update_register(_in)
         self.jtag.go_idle()
-        print("BYPASS sent: %s, received: %s  (should be left shifted by one)" % (_in, out))
+        print("BYPASS sent: %s, received: %s  (should be left shifted by one)"
+              % (_in, out))
 
     def _test_detect_ir_length(self):
         """Detect the instruction register length"""
