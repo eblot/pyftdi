@@ -358,9 +358,7 @@ class I2cController:
     SDA_I_BIT = 0x04  #AD2
     SCL_FB_BIT = 0x80  #AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
-    HIGHEST_I2C_ADDRESS = 0x7F  # slave addresses over 0x78 not allowed, but:
-                                # there is no reason to prevent the ftdi
-                                # from working with slaves there
+    HIGHEST_I2C_ADDRESS = 0x7F
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
@@ -997,7 +995,7 @@ class I2cController:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
-        cmd = bytearray(self._idle * self._ck_delay)  # use delay on setclk idle
+        cmd = bytearray(self._idle * self._ck_delay)
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
