@@ -140,6 +140,7 @@ class CheckStyle(Command):
 
     def run(self):
         self.announce('checking coding style', level=INFO)
+        filecount = 0
         for dpath, dnames, fnames in walk(dirname(__file__)):
             dnames[:] = [d for d in dnames
                          if not d.startswith('.') and d != 'doc']
@@ -152,6 +153,10 @@ class CheckStyle(Command):
                             print('\n  %d: %s' % (lpos, line.rstrip()))
                             raise RuntimeError("Invalid line width '%s'" %
                                                filename)
+                filecount += 1
+        if not filecount:
+            raise RuntimeError('No Python file found from %s' %
+                               dirname(__file__))
 
 
 def main():
