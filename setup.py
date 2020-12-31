@@ -13,6 +13,8 @@
 #pylint: disable-msg=no-self-use
 
 from codecs import open as codec_open
+from setuptools import find_packages, setup
+from setuptools.command.build_py import build_py
 from distutils.cmd import Command
 from distutils.log import DEBUG, INFO
 from os import close, unlink, walk
@@ -21,8 +23,6 @@ from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
 from sys import stderr
 from tempfile import mkstemp
-from setuptools import find_packages, setup
-from setuptools.command.build_py import build_py
 
 
 NAME = 'pyftdi'
