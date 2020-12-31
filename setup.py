@@ -145,7 +145,7 @@ class CheckStyle(Command):
                          if not d.startswith('.') and d != 'doc']
             for filename in (joinpath(dpath, f)
                              for f in fnames if f.endswith('.py')):
-                self.announce('checking %s' % filename, level=DEBUG)
+                self.announce('checking %s' % filename, level=INFO)
                 with open(filename, 'rt') as pfp:
                     for lpos, line in enumerate(pfp, start=1):
                         if len(line) > 80:
