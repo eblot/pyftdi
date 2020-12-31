@@ -162,8 +162,8 @@ class FtdiConstants:
             self._rcache[prefix] = self._load_constants(prefix, True)
         try:
             return self._rcache[prefix][name.lower()]
-        except KeyError:
-            raise ValueError(f'Unknown name {prefix}.{name}')
+        except KeyError as exc:
+            raise ValueError(f'Unknown name {prefix}.{name}') from exc
 
     def dec_req_name(self, request: int) -> str:
         return self.get_name('sio_req', request)

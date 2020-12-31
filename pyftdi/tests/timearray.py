@@ -9,7 +9,7 @@ from time import perf_counter
 
 def timing(f, n, a):
     start = perf_counter()
-    for i in range(n):
+    for _ in range(n):
         f(a); f(a); f(a); f(a); f(a); f(a); f(a); f(a); f(a); f(a)
     finish = perf_counter()
     return '%s\t%f' % (f.__name__, finish - start)
@@ -49,7 +49,7 @@ def str_bytearray(addr):
 def struct_pack(addr):
     return pack('4B', *addr)
 
-if __name__ == '__main__':
+def main():
     count = 100000
     addr = '192.168.4.2'
     addr = tuple([int(i) for i in addr.split('.')])
@@ -83,3 +83,6 @@ if __name__ == '__main__':
                  setup='from __main__ import struct_pack'),
           timeit("pack('4B', *(192,168,4,2))", number=count,
                  setup='from struct import pack')))
+
+if __name__ == '__main__':
+    main()

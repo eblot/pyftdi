@@ -422,10 +422,9 @@ class MockSimpleGpioTestCase(FtdiTestCase):
         out_pins = 0xAA
         gpio.configure('ftdi://:230x/1', direction=out_pins)
         vftdi = self.loader.get_virtual_ftdi(1, 1)
-        vport = vftdi.get_port(1)
+        vftdi.get_port(1)
         baudrate = 1000000
         gpio.set_frequency(baudrate)
-        #print(f'{baudrate} -> {gpio.frequency} -> {vport.baudrate}')
         gpio.close()
 
 
@@ -852,8 +851,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
     FtdiLogger.set_formatter(formatter)
@@ -865,8 +864,8 @@ def main():
         # obtain the loader class associated with the virtual backend
         global MockLoader
         MockLoader = backend.create_loader()
-    except AttributeError:
-        raise AssertionError('Cannot load virtual USB backend')
+    except AttributeError as exc:
+        raise AssertionError('Cannot load virtual USB backend') from exc
     ut_main(defaultTest='suite')
 
 

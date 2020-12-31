@@ -13,6 +13,7 @@ from .misc import is_iterable, xor
 #pylint: disable-msg=unneeded-not
 #pylint: disable-msg=too-many-branches
 #pylint: disable-msg=too-many-arguments
+#pylint: disable-msg=duplicate-key
 
 class BitSequenceError(Exception):
     """Bit sequence error"""
@@ -178,8 +179,9 @@ class BitSequence:
                 seq.extend([smap[bit] for bit in reversed(iterable)])
             else:
                 seq.extend([smap[bit] for bit in iterable])
-        except KeyError:
-            raise BitSequenceError("Invalid binary character in initializer")
+        except KeyError as exc:
+            raise BitSequenceError('Invalid binary character in initializer') \
+                    from exc
 
     def _init_from_sibling(self, value: 'BitSequence', msb: bool) -> None:
         """Initialize from a fellow object"""
@@ -337,8 +339,8 @@ class BitSequence:
         """
         try:
             ref = self._seq[0]
-        except IndexError:
-            raise ValueError('Empty sequence')
+        except IndexError as exc:
+            raise ValueError('Empty sequence') from exc
         if len(self._seq) == 1:
             return ref
         for b in self._seq[1:]:
@@ -402,8 +404,9 @@ class BitZSequence(BitSequence):
                 seq.extend([smap[bit] for bit in reversed(iterable)])
             else:
                 seq.extend([smap[bit] for bit in iterable])
-        except KeyError:
-            raise BitSequenceError("Invalid binary character in initializer")
+        except KeyError as exc:
+            raise BitSequenceError("Invalid binary character in initializer") \
+                    from exc
 
     def __repr__(self):
         smap = {False: '0', True: '1', BitZSequence.Z: 'Z'}

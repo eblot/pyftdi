@@ -4,6 +4,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+#pylint: disable-msg=no-member
+#pylint: disable-msg=broad-except
+
 from sys import stderr
 from time import time
 from ..misc import hexdump

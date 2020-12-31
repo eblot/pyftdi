@@ -722,6 +722,7 @@ class Ftdi:
            :param bool debug: add more debug traces
            :return: actual bus frequency in Hz
         """
+        # pylint: disable-msg=unused-argument
         self.open_from_device(device, interface)
         if not self.is_mpsse_interface(interface):
             self.close()
@@ -1057,9 +1058,9 @@ class Ftdi:
         """
         try:
             return Ftdi.FIFO_SIZES[self.device_version]
-        except KeyError:
+        except KeyError as exc:
             raise FtdiFeatureError('Unsupported device: 0x%04x' %
-                                   self.device_version)
+                                   self.device_version) from exc
 
     @property
     def mpsse_bit_delay(self) -> float:
@@ -1389,15 +1390,15 @@ class Ftdi:
                 '': Ftdi.SIO_DISABLE_FLOW_CTRL}
         try:
             value = ctrl[flowctrl] | self._index
-        except KeyError:
-            raise ValueError('Unknown flow control: %s' % flowctrl)
+        except KeyError as exc:
+            raise ValueError('Unknown flow control: %s' % flowctrl) from exc
         try:
             if self._usb_dev.ctrl_transfer(
                     Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_FLOW_CTRL, 0, value,
                     bytearray(), self._usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % str(exc))
+            raise FtdiError('UsbError: %s' % str(exc)) from exc
 
     def set_dtr(self, state: bool) -> None:
         """Set dtr line
@@ -1519,8 +1520,8 @@ class Ftdi:
                       Ftdi.STOP_BIT_2: 0x02 << 11}[stopbits[stopbit]]
             if break_ == Ftdi.BREAK_ON:
                 value |= 0x01 << 14
-        except KeyError:
-            raise ValueError('Invalid line property')
+        except KeyError as exc:
+            raise ValueError('Invalid line property') from exc
         if self._ctrl_transfer_out(Ftdi.SIO_REQ_SET_DATA, value):
             raise FtdiError('Unable to set line property')
         self._lineprop = value
@@ -1647,8 +1648,8 @@ class Ftdi:
                 word_addr += 1
             start = addr & 0x1
             return bytes(data[start:start+length])
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % ex)
+        except USBError as exc:
+            raise FtdiError('UsbError: %s' % exc) from exc
 
     def write_eeprom(self, addr: int, data: Union[bytes, bytearray],
                      eeprom_size: Optional[int] = None,
@@ -1758,8 +1759,8 @@ class Ftdi:
                     raise FtdiError("Usb bulk write error")
                 offset += length
             return offset
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+        except USBError as exc:
+            raise FtdiError('UsbError: %s' % str(exc)) from exc
 
     def read_data_bytes(self, size: int, attempt: int = 1,
                         request_gen: Optional[Callable[[int], bytes]] = None) \
@@ -1885,8 +1886,8 @@ class Ftdi:
                                                  self._readoffset+part_size]
                         self._readoffset += part_size
                         return data
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+        except USBError as exc:
+            raise FtdiError('UsbError: %s' % str(exc)) from exc
         # never reached
         raise FtdiError("Internal error")
 
@@ -2249,8 +2250,8 @@ class Ftdi:
                     bytearray(), self._usb_write_timeout):
                 raise FtdiError('Unable to set baudrate')
             return actual
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex))
+        except USBError as exc:
+            raise FtdiError('UsbError: %s' % str(exc)) from exc
 
     def _set_frequency(self, frequency: float) -> float:
         """Convert a frequency value into a TCK divisor setting"""

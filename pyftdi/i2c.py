@@ -76,8 +76,8 @@ class I2cPort:
         """
         try:
             self._format = self.FORMATS[width]
-        except KeyError:
-            raise I2cIOError('Unsupported integer width')
+        except KeyError as exc:
+            raise I2cIOError('Unsupported integer width') from exc
         self._endian = '>' if bigendian else '<'
 
     def shift_address(self, offset: int):
@@ -199,8 +199,8 @@ class I2cPort:
         """
         try:
             fmt = ''.join((self._endian, self.FORMATS[width]))
-        except KeyError:
-            raise I2cIOError('Unsupported integer width')
+        except KeyError as exc:
+            raise I2cIOError('Unsupported integer width') from exc
         return self._controller.poll_cond(
             self._address+self._shift if start else None,
             fmt, mask, value, count, relax=relax)

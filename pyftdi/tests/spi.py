@@ -377,8 +377,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.set_level(loglevel)
     unittest.main(defaultTest='suite')
 

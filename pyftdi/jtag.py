@@ -7,7 +7,7 @@
 """JTAG support for PyFdti"""
 
 from time import sleep
-from typing import Any, List, Tuple, Union
+from typing import List, Tuple, Union
 from .ftdi import Ftdi
 from .bits import BitSequence
 
@@ -122,7 +122,7 @@ class JtagStateMachine:
                 return path+[state]
             # candidate paths
             paths = []
-            for n, x in enumerate(state.exits):
+            for x in state.exits:
                 # next state is self (loop around), kill the path
                 if x == state:
                     continue
@@ -293,7 +293,6 @@ class JtagController:
            Returns the number of bits written."""
         if not isinstance(out, BitSequence):
             return JtagError('Expect a BitSequence')
-        length = len(out)
         if use_last:
             (out, self._last) = (out[:-1], int(out[-1]))
         byte_count = len(out)//8
@@ -614,7 +613,7 @@ class JtagTool:
             inj = BitSequence(length=length+PATTERN_LEN)
             inj.inc()
             ok = False
-            for p in range(1, 1 << PATTERN_LEN):
+            for _ in range(1, 1 << PATTERN_LEN):
                 ok = False
                 self._engine.write(zero, False)
                 rcv = self._engine.shift_register(inj)

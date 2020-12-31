@@ -42,8 +42,8 @@ class EepromTestCase(unittest.TestCase):
             #                   direction=out_pins)
             ftdi.open_bitbang_from_url(self.url, direction=out_pins)
             self.ftdi = ftdi
-        except IOError as ex:
-            raise IOError('Unable to open USB port: %s' % str(ex))
+        except IOError as exc:
+            raise IOError('Unable to open USB port: %s' % str(exc)) from exc
 
     def tearDown(self):
         """Close the FTDI connection"""
@@ -106,8 +106,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError('Invalid log level: %s' %level)
+    except AttributeError as exc:
+        raise ValueError('Invalid log level: %s' % level) from exc
     FtdiLogger.set_level(loglevel)
     testmod(modules[__name__])
     unittest.main(defaultTest='suite')

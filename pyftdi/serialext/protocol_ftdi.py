@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+#pylint: disable-msg=attribute-defined-outside-init
+
 from io import RawIOBase
 from pyftdi.ftdi import Ftdi
 from pyftdi.usbtools import UsbToolsError
@@ -30,7 +32,7 @@ class FtdiSerial(SerialBase):
             device = Ftdi.create_from_url(self.port)
         except (UsbToolsError, IOError) as ex:
             raise SerialException('Unable to open USB port %s: %s' %
-                                  (self.portstr, str(ex)))
+                                  (self.portstr, str(ex))) from ex
         self.udev = device
         self._set_open_state(True)
         self._reconfigure_port()
@@ -70,7 +72,6 @@ class FtdiSerial(SerialBase):
     def flush(self):
         """Flush of file like objects. In this case, wait until all data
            is written."""
-        pass
 
     def reset_input_buffer(self):
         """Clear input buffer, discarding all that is in the buffer."""
@@ -174,7 +175,7 @@ class FtdiSerial(SerialBase):
                 pass
         except IOError as exc:
             err = self.udev.get_error_string()
-            raise SerialException("%s (%s)" % (str(exc), err))
+            raise SerialException("%s (%s)" % (str(exc), err)) from exc
 
     def _set_open_state(self, open_):
         self.is_open = bool(open_)

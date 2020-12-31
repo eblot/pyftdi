@@ -7,6 +7,8 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+#pylint: disable-msg=broad-except
+
 import unittest
 from pyftdi.bits import BitSequence, BitZSequence, BitSequenceError
 
@@ -134,7 +136,7 @@ class BitSequenceTestCase(unittest.TestCase):
         bs = BitSequence(bytes_=(0x44, 0x66, 0xcc), msby=True)
         self.assertEqual(int(bs), 0xcc6644)
         try:
-           bs = BitSequence(bytes_=[0x44, 0x666, 0xcc], msby=False)
+            bs = BitSequence(bytes_=[0x44, 0x666, 0xcc], msby=False)
         except BitSequenceError:
             pass
         except Exception as e:

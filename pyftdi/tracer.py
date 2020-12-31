@@ -45,9 +45,9 @@ class FtdiMpsseTracer:
         iface -= 1
         try:
             self._engines[iface]
-        except IndexError:
+        except IndexError as exc:
             raise ValueError('No MPSSE engine available on interface %d' %
-                             iface)
+                             iface) from exc
         if not self._engines[iface]:
             self._engines[iface] = FtdiMpsseEngine(iface)
         return self._engines[iface]
@@ -106,7 +106,7 @@ class FtdiMpsseEngine:
                 try:
                     self._cmd_decoded = cmd_decoder()
                 except AttributeError as exc:
-                    raise ValueError(str(exc))
+                    raise ValueError(str(exc)) from exc
                 if len(self._expect_resp) > rdepth:
                     self._last_codes.append(code)
                 if self._cmd_decoded:

@@ -74,11 +74,11 @@ class Pipe:
 
     def __getattr__(self, name):
         if self._zombie:
-            raise IOError(f'Closed pipe')
+            raise IOError('Closed pipe')
         try:
             pos = self.PIPE[name[0]]
-        except KeyError:
-            raise AttributeError(f'No such pipe attribute: {name}')
+        except KeyError as exc:
+            raise AttributeError(f'No such pipe attribute: {name}') from exc
         if not self._pipe:
             # lazy instanciation
             self._pipe = os.pipe()
@@ -1102,8 +1102,9 @@ class VirtFtdi:
                                      'device')
                 try:
                     size = cls.EXT_EEPROMS[model.lower()]
-                except KeyError:
-                    raise ValueError('Unsupported EEPROM model: {model}')
+                except KeyError as exc:
+                    raise ValueError('Unsupported EEPROM model: {model}') \
+                            from exc
             data = eeprom.get('data', b'')
         if version in cls.INT_EEPROMS:
             int_size = cls.INT_EEPROMS[version]

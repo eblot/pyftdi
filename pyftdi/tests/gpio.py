@@ -592,8 +592,8 @@ def virtualize():
         # obtain the loader class associated with the virtual backend
         global VirtLoader
         VirtLoader = backend.create_loader()
-    except AttributeError:
-        raise AssertionError('Cannot load virtual USB backend')
+    except AttributeError as exc:
+        raise AssertionError('Cannot load virtual USB backend') from exc
 
 
 def main():
@@ -609,8 +609,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
     FtdiLogger.set_formatter(formatter)
