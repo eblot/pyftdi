@@ -41,4 +41,5 @@ Contributors
  * mpratt14
  * alexforencich
  * TedKus
+ * Amanita-muscaria
 
