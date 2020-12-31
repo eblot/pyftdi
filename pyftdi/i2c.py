@@ -949,7 +949,8 @@ class I2cController:
 
     @property
     def _stop(self) -> Tuple[int]:
-        return self._clk_lo_data_lo * self._ck_hd_sta + \
+        return self._clk_lo_data_hi * self._ck_hd_sta + \
+               self._clk_lo_data_lo * self._ck_hd_sta + \
                self._data_lo * self._ck_su_sto + \
                self._idle * self._ck_idle
 
