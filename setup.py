@@ -17,8 +17,8 @@ from setuptools import find_packages, setup
 from setuptools.command.build_py import build_py
 from distutils.cmd import Command
 from distutils.log import DEBUG, INFO
-from os import close, unlink, walk
-from os.path import abspath, dirname, join as joinpath
+from os import close, getcwd, unlink, walk
+from os.path import abspath, dirname, join as joinpath, relpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
 from sys import stderr
@@ -141,22 +141,24 @@ class CheckStyle(Command):
     def run(self):
         self.announce('checking coding style', level=INFO)
         filecount = 0
-        for dpath, dnames, fnames in walk(dirname(__file__)):
+        topdir = dirname(__file__) or getcwd()
+        for dpath, dnames, fnames in walk(topdir):
             dnames[:] = [d for d in dnames
                          if not d.startswith('.') and d != 'doc']
             for filename in (joinpath(dpath, f)
                              for f in fnames if f.endswith('.py')):
-                self.announce('checking %s' % filename, level=INFO)
+                self.announce('checking %s' % relpath(filename, topdir),
+                              level=INFO)
                 with open(filename, 'rt') as pfp:
                     for lpos, line in enumerate(pfp, start=1):
                         if len(line) > 80:
                             print('\n  %d: %s' % (lpos, line.rstrip()))
                             raise RuntimeError("Invalid line width '%s'" %
-                                               filename)
+                                               relpath(filename, topdir))
                 filecount += 1
         if not filecount:
-            raise RuntimeError('No Python file found from %s' %
-                               dirname(__file__))
+            raise RuntimeError('No Python file found from "%s"' %
+                               topdir)
 
 
 def main():
