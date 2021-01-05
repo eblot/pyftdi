@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
+"""Check readline feature."""
+
 from os.path import dirname
 from sys import path
 from serial import serial_for_url
 
 path.append(dirname(dirname(dirname(dirname(__file__)))))
 
+#pylint: disable-msg=wrong-import-position
 from pyftdi import serialext
 
 

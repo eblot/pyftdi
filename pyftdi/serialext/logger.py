@@ -4,6 +4,13 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+#pylint: disable-msg=no-member
+#pylint: disable-msg=broad-except
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=super-with-arguments
+#pylint: disable-msg=missing-function-docstring
+#pylint: disable-msg=missing-module-docstring
+
 from sys import stderr
 from time import time
 from ..misc import hexdump
@@ -44,7 +51,7 @@ class SerialLogger:
         return data
 
     def write(self, data):
-        if len(data):
+        if data:
             self._log_write(data)
         super(SerialLogger, self).write(data)
 

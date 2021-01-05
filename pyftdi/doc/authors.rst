@@ -40,4 +40,6 @@ Contributors
  * stiebrs
  * mpratt14
  * alexforencich
-
+ * TedKus
+ * Amanita-muscaria
+ * 

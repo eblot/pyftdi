@@ -70,13 +70,13 @@ class UartTestCase(FtdiTestCase):
 
     @skipIf(IFCOUNT < 2, 'Device has not enough UART interfaces')
     def test_uart_cross_talk_sp(self):
-        something_out = self.generate_bytes()
         """Exchange a random byte stream between the two first UART interfaces
            of the same FTDI device, from the same process
 
            This also validates PyFtdi support to use several interfaces on the
            same FTDI device from the same Python process
         """
+        something_out = self.generate_bytes()
         urla = URL
         urlb = self.build_next_url(urla)
         porta = serial_for_url(urla, baudrate=1000000)
@@ -132,13 +132,13 @@ class UartTestCase(FtdiTestCase):
 
     @skipIf(IFCOUNT != 1, 'Test reserved for single-port FTDI device')
     def test_uart_loopback(self):
-        something_out = self.generate_bytes()
         """Exchange a random byte stream between the two first UART interfaces
            of the same FTDI device, from the same process
 
            This also validates PyFtdi support to use several interfaces on the
            same FTDI device from the same Python process
         """
+        something_out = self.generate_bytes()
         port = serial_for_url(URL, baudrate=1000000)
         for _ in range(10):
             try:
@@ -174,7 +174,9 @@ class UartTestCase(FtdiTestCase):
         sleep(0.5)
         sink.join()
         if isinstance(results[1], Exception):
+            #pylint: disable-msg=raising-bad-type
             raise results[1]
+        #pylint: disable-msg=unpacking-non-sequence
         tsize, tdelta = results[0]
         rsize, rdelta = results[1]
         self.assertGreater(rsize, 0, 'Not data received')
@@ -203,7 +205,9 @@ class UartTestCase(FtdiTestCase):
         sleep(0.5)
         sink.join()
         if isinstance(results[1], Exception):
+            #pylint: disable-msg=raising-bad-type
             raise results[1]
+        #pylint: disable-msg=unpacking-non-sequence
         tsize, tdelta = results[0]
         rsize, rdelta = results[1]
         self.assertGreater(rsize, 0, 'Not data received')
@@ -347,8 +351,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError('Invalid log level: %s' % level)
+    except AttributeError as exc:
+        raise ValueError('Invalid log level: %s' % level) from exc
     FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
 

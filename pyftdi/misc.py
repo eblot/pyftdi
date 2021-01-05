@@ -6,13 +6,16 @@
 
 """Miscelleanous helpers"""
 
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=import-outside-toplevel
+#pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-arguments
+
 from array import array
 from copy import deepcopy
 from re import match
 from typing import Any, Iterable, Optional, Sequence, Union
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-arguments
 
 # String values evaluated as true boolean values
 TRUE_BOOLEANS = ['on', 'true', 'enable', 'enabled', 'yes', 'high', '1']
@@ -44,8 +47,8 @@ def hexdump(data: Union[bytes, bytearray, Iterable[int]],
             src = bytearray(b''.join(data))
         else:
             src = data
-    except Exception:
-        raise TypeError("Unsupported data type '%s'" % type(data))
+    except Exception as exc:
+        raise TypeError("Unsupported data type '%s'" % type(data)) from exc
 
     length = 16
     result = []
@@ -59,8 +62,7 @@ def hexdump(data: Union[bytes, bytearray, Iterable[int]],
                     result.append('*\n')
                     abv = True
                 continue
-            else:
-                abv = False
+            abv = False
         hexa = ' '.join(["%02x" % x for x in s])
         printable = s.translate(ASCIIFILTER).decode('ascii')
         if full:
@@ -94,8 +96,8 @@ def hexline(data: Union[bytes, bytearray, Iterable[int]],
             src = bytearray(b''.join(data))
         else:
             src = data
-    except Exception:
-        raise TypeError("Unsupported data type '%s'" % type(data))
+    except Exception as exc:
+        raise TypeError("Unsupported data type '%s'" % type(data)) from exc
 
     hexa = sep.join(["%02x" % x for x in src])
     printable = src.translate(ASCIIFILTER).decode('ascii')
@@ -154,10 +156,9 @@ def to_bool(value: Union[int, bool, str], permissive: bool = True,
     if isinstance(value, int):
         if allow_int:
             return bool(value)
-        else:
-            if permissive:
-                return False
-            raise ValueError("Invalid boolean value: '%d'", value)
+        if permissive:
+            return False
+        raise ValueError("Invalid boolean value: '%d'" % value)
     if value.lower() in TRUE_BOOLEANS:
         return True
     if permissive or (value.lower() in FALSE_BOOLEANS):
@@ -197,6 +198,7 @@ def xor(_a_: bool, _b_: bool) -> bool:
        :param _b_: second argument
        :return: xor-ed value
     """
+    #pylint: disable-msg=superfluous-parens
     return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
 
 
@@ -283,8 +285,8 @@ def add_custom_devices(ftdicls=None,
             if '=' in pid:
                 pname, pid = pid.split('=', 1)
             vid, pid = [to_int(v) for v in (vid, pid)]
-        except ValueError:
-            raise ValueError('Invalid VID:PID value')
+        except ValueError as exc:
+            raise ValueError('Invalid VID:PID value') from exc
         if vid not in vidpids:
             ftdicls.add_custom_vendor(vid, vname)
             vidpids[vid] = set()
@@ -314,9 +316,9 @@ class EasyDict(dict):
     def __getattr__(self, name):
         try:
             return self.__getitem__(name)
-        except KeyError:
+        except KeyError as exc:
             raise AttributeError("'%s' object has no attribute '%s'" %
-                                 (self.__class__.__name__, name))
+                                 (self.__class__.__name__, name)) from exc
 
     def __setattr__(self, name, value):
         self.__setitem__(name, value)

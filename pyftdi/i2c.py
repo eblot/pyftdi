@@ -76,8 +76,8 @@ class I2cPort:
         """
         try:
             self._format = self.FORMATS[width]
-        except KeyError:
-            raise I2cIOError('Unsupported integer width')
+        except KeyError as exc:
+            raise I2cIOError('Unsupported integer width') from exc
         self._endian = '>' if bigendian else '<'
 
     def shift_address(self, offset: int):
@@ -199,8 +199,8 @@ class I2cPort:
         """
         try:
             fmt = ''.join((self._endian, self.FORMATS[width]))
-        except KeyError:
-            raise I2cIOError('Unsupported integer width')
+        except KeyError as exc:
+            raise I2cIOError('Unsupported integer width') from exc
         return self._controller.poll_cond(
             self._address+self._shift if start else None,
             fmt, mask, value, count, relax=relax)
@@ -358,9 +358,7 @@ class I2cController:
     SDA_I_BIT = 0x04  #AD2
     SCL_FB_BIT = 0x80  #AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
-    HIGHEST_I2C_ADDRESS = 0x7F  # slave addresses over 0x78 not allowed, but:
-                                # there is no reason to prevent the ftdi
-                                # from working with slaves there
+    HIGHEST_I2C_ADDRESS = 0x7F
     DEFAULT_BUS_FREQUENCY = 100000.0
     HIGH_BUS_FREQUENCY = 400000.0
     RETRY_COUNT = 3
@@ -563,7 +561,7 @@ class I2cController:
         return self._ftdi.is_connected and bool(self._start)
 
     @classmethod
-    def validate_address(cls, address: int) -> None:
+    def validate_address(cls, address: Optional[int]) -> None:
         """Assert an I2C slave address is in the supported range.
            None is a special bypass address.
 
@@ -838,10 +836,9 @@ class I2cController:
                     if (cond & mask) == value:
                         self.log.debug('Poll condition matched')
                         break
-                    else:
-                        data = None
-                        self.log.debug('Poll condition not fulfilled: %x/%x',
-                                       cond & mask, value)
+                    data = None
+                    self.log.debug('Poll condition not fulfilled: %x/%x',
+                                   cond & mask, value)
                 do_epilog = relax
                 if not data:
                     self.log.warning('Poll condition failed')
@@ -997,7 +994,7 @@ class I2cController:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
-        cmd = bytearray(self._idle * self._ck_delay)  # use delay on set clk idle
+        cmd = bytearray(self._idle * self._ck_delay)
         cmd.extend(self._start)
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)

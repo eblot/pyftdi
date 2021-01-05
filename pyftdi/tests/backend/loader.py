@@ -51,7 +51,7 @@ class VirtLoader:
                 for ydef in ydefs:
                     self._build_root(backend, ydef)
             except Exception as exc:
-                raise ValueError(f'Invalid configuration: {exc}')
+                raise ValueError(f'Invalid configuration: {exc}') from exc
         self._validate()
         UsbTools.release_all_devices(VirtDevice)
         UsbTools.flush_cache()
@@ -146,15 +146,15 @@ class VirtLoader:
             if ykey == 'speed' and isinstance(yval, str):
                 try:
                     yval = USBCONST.speeds[yval]
-                except KeyError:
-                    raise ValueError(f'Invalid device speed {yval}')
+                except KeyError as exc:
+                    raise ValueError(f'Invalid device speed {yval}') from exc
             if ykey == 'eeprom':
                 if not isinstance(yval, dict):
-                    raise ValueError(f'Invalid EEPROM section')
+                    raise ValueError('Invalid EEPROM section')
                 for pkey, pval in yval.items():
                     if pkey == 'model':
                         if not isinstance(pval, str):
-                            raise ValueError(f'Invalid EEPROM model')
+                            raise ValueError('Invalid EEPROM model')
                         continue
                     if pkey == 'load':
                         try:
@@ -162,8 +162,9 @@ class VirtLoader:
                                            allow_int=True)
                             yval[pkey] = pval
                             delayed_load = pval
-                        except ValueError:
-                            raise ValueError(f'Invalid EEPROM load option')
+                        except ValueError as exc:
+                            raise ValueError('Invalid EEPROM load option') \
+                                    from exc
                         continue
                     if pkey == 'data':
                         if isinstance(pval, str):
@@ -171,8 +172,9 @@ class VirtLoader:
                             try:
                                 pval = unhexlify(hexstr)
                                 yval[pkey] = pval
-                            except ValueError:
-                                raise ValueError('Invalid EEPROM hex format')
+                            except ValueError as exc:
+                                raise ValueError('Invalid EEPROM hex format') \
+                                        from exc
                         if not isinstance(pval, bytes):
                             raise ValueError(f'Invalid EEPROM data '
                                              f'{type(pval)}')
@@ -210,8 +212,8 @@ class VirtLoader:
         for ckey, cval in container.items():
             try:
                 dkey = kmap[ckey]
-            except KeyError:
-                raise ValueError(f'Unknown descriptor field {dkey}')
+            except KeyError as exc:
+                raise ValueError(f'Unknown descriptor field {dkey}') from exc
             kwargs[dkey] = cval
         return kwargs
 
@@ -250,8 +252,8 @@ class VirtLoader:
         for ckey, cval in container.items():
             try:
                 dkey = kmap[ckey]
-            except KeyError:
-                raise ValueError(f'Unknown descriptor field {ckey}')
+            except KeyError as exc:
+                raise ValueError(f'Unknown descriptor field {ckey}') from exc
             if ckey == 'maxpower':
                 cval //= 2
             elif ckey == 'attributes':
@@ -339,8 +341,8 @@ class VirtLoader:
         for ckey, cval in container.items():
             try:
                 dkey = kmap[ckey]
-            except KeyError:
-                raise ValueError(f'Unknown descriptor field {ckey}')
+            except KeyError as exc:
+                raise ValueError(f'Unknown descriptor field {ckey}') from exc
             kwargs[dkey] = cval
         return kwargs
 
@@ -379,8 +381,8 @@ class VirtLoader:
             if ekey == 'direction':
                 try:
                     value = USBCONST.endpoints[val.lower()]
-                except KeyError:
-                    raise ValueError('Unknown endpoint direction')
+                except KeyError as exc:
+                    raise ValueError('Unknown endpoint direction') from exc
                 kwargs.setdefault('bEndpointAddress', 0)
                 kwargs['bEndpointAddress'] |= value
                 continue
@@ -394,8 +396,8 @@ class VirtLoader:
                 try:
                     kwargs['bmAttributes'] = \
                         USBCONST.endpoint_types[val.lower()]
-                except KeyError:
-                    raise ValueError('Unknown endpoint type')
+                except KeyError as exc:
+                    raise ValueError('Unknown endpoint type') from exc
                 continue
             if ekey == 'endpoint':
                 kwargs['iEndpoint'] = val

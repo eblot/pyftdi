@@ -6,12 +6,13 @@
 
 """JTAG support for PyFdti"""
 
+#pylint: disable-msg=invalid-name
+#pylint: disable-msg=missing-function-docstring
+
 from time import sleep
-from typing import Any, List, Tuple, Union
+from typing import List, Tuple, Union
 from .ftdi import Ftdi
 from .bits import BitSequence
-
-#pylint: disable-msg=invalid-name
 
 
 class JtagError(Exception):
@@ -122,7 +123,7 @@ class JtagStateMachine:
                 return path+[state]
             # candidate paths
             paths = []
-            for n, x in enumerate(state.exits):
+            for x in state.exits:
                 # next state is self (loop around), kill the path
                 if x == state:
                     continue
@@ -139,7 +140,8 @@ class JtagStateMachine:
                        key=lambda x: x[0])[1] if paths else []
         return next_path(source, target, [])
 
-    def get_events(self, path):
+    @classmethod
+    def get_events(cls, path):
         """Build up an event sequence from a state sequence, so that the
            resulting event sequence allows the JTAG state machine to advance
            from the first state to the last one of the input sequence"""
@@ -293,7 +295,6 @@ class JtagController:
            Returns the number of bits written."""
         if not isinstance(out, BitSequence):
             return JtagError('Expect a BitSequence')
-        length = len(out)
         if use_last:
             (out, self._last) = (out[:-1], int(out[-1]))
         byte_count = len(out)//8
@@ -609,12 +610,12 @@ class JtagTool:
         for length in range(1, MAX_REG_LEN):
             print("Testing for length %d" % length)
             if length > 5:
-                return
+                raise ValueError('Abort detection over reg length %d' % length)
             zero = BitSequence(length=length)
             inj = BitSequence(length=length+PATTERN_LEN)
             inj.inc()
             ok = False
-            for p in range(1, 1 << PATTERN_LEN):
+            for _ in range(1, 1 << PATTERN_LEN):
                 ok = False
                 self._engine.write(zero, False)
                 rcv = self._engine.shift_register(inj)

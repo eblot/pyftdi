@@ -6,7 +6,9 @@
 """EEPROM management for PyFdti"""
 
 #pylint: disable-msg=too-many-branches
+#pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-many-locals
+#pylint: disable-msg=too-many-public-methods
 #pylint: disable-msg=wrong-import-position
 #pylint: disable-msg=import-error
 
@@ -186,8 +188,8 @@ class FtdiEeprom:
         """
         try:
             eeprom_size = self._PROPERTIES[self.device_version].size
-        except (AttributeError, KeyError):
-            raise FtdiError('No EEPROM')
+        except (AttributeError, KeyError) as exc:
+            raise FtdiError('No EEPROM') from exc
         return eeprom_size
 
     @property
@@ -303,10 +305,12 @@ class FtdiEeprom:
                     hexval = cfg.get(sect, opt).strip()
                     buf = unhexlify(hexval)
                     self._eeprom[address:address+len(buf)] = buf
-            except IndexError:
-                raise ValueError("Invalid address in '%s'' section" % sect)
-            except ValueError:
-                raise ValueError("Invalid line in '%s'' section" % sect)
+            except IndexError as exc:
+                raise ValueError("Invalid address in '%s'' section" %
+                                 sect) from exc
+            except ValueError as exc:
+                raise ValueError("Invalid line in '%s'' section" %
+                                 sect) from exc
             self._compute_crc(self._eeprom, True)
             if not self._valid:
                 raise ValueError('Loaded RAW section is invalid (CRC mismatch')
@@ -532,12 +536,10 @@ class FtdiEeprom:
             tbl_pos += 1
             data_pos += length
         self._eeprom[dynpos:dynpos+len(stream)] = stream
-        crc_size = scalc('<H')
         if fill:
             mtp = self._ftdi.device_version == 0x1000
             crc_pos = 0x100 if mtp else len(self._eeprom)
-            crc_pos -= crc_size
-            rem = len(self._eeprom) - (dynpos + len(stream)) - crc_size
+            rem = crc_pos - (dynpos + len(stream))
             self._eeprom[dynpos+len(stream):crc_pos] = bytes(rem)
 
     def _sync_eeprom(self):
@@ -631,8 +633,9 @@ class FtdiEeprom:
                 0x1000: (self.CBUSX, 4, 0x1A, 8)}  # FT230X/FT231X/FT234X
         try:
             cbus, count, offset, width = cmap[self.device_version]
-        except KeyError:
-            raise ValueError('This property is not supported on this device')
+        except KeyError as exc:
+            raise ValueError('This property is not supported on this '
+                             'device') from exc
         pin_filter = getattr(self,
                              '_filter_cbus_func_x%x' % self.device_version,
                              None)
@@ -646,9 +649,9 @@ class FtdiEeprom:
             raise ValueError("Unsupported CBUS pin '%d'" % cpin)
         try:
             code = cbus[value.upper()].value
-        except KeyError:
+        except KeyError as exc:
             raise ValueError("CBUS pin %d does not have function '%s'" %
-                             (cpin, value))
+                             (cpin, value)) from exc
         if pin_filter and not pin_filter(cpin, value.upper()):
             raise ValueError("Unsupported CBUS function '%s' for pin '%d'" %
                              (value, cpin))
@@ -719,8 +722,9 @@ class FtdiEeprom:
                 value = int(to_bool(value))
             else:
                 raise ValueError('Unsupported control: %s' % control)
-        except (ValueError, TypeError):
-            raise ValueError('Invalid %s value: %s' % (control, value))
+        except (ValueError, TypeError) as exc:
+            raise ValueError('Invalid %s value: %s' %
+                             (control, value)) from exc
         config = self._eeprom[0x0c]
         if bus == 'd':
             conf = config & 0x0F

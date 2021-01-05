@@ -25,9 +25,9 @@ class VirtMpsseTracer(FtdiMpsseTracer):
         iface -= 1
         try:
             self._engines[iface]
-        except IndexError:
+        except IndexError as exc:
             raise ValueError('No MPSSE engine available on interface %d' %
-                             iface)
+                             iface) from exc
         if not self._engines[iface]:
             self._engines[iface] = VirtMpsseEngine(self, self._port)
         return self._engines[iface]

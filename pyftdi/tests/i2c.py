@@ -14,7 +14,7 @@ from os import environ
 from sys import modules, stdout
 from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
-from pyftdi.misc import hexdump, pretty_size
+from pyftdi.misc import pretty_size
 
 #pylint: disable-msg=attribute-defined-outside-init
 #pylint: disable-msg=missing-docstring
@@ -146,7 +146,6 @@ class I2cEepromTest(TestCase):
         data = port.read(size)
         stop = now()
         text = data.decode('utf8', errors='replace')
-        # print(hexdump(data))
         delta = stop-start
         byterate = pretty_size(len(data)/delta)
         print(f'Exec time: {1000*delta:.3f} ms, {byterate}/s')
@@ -309,8 +308,8 @@ def main():
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
 

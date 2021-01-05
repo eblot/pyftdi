@@ -27,7 +27,7 @@ class FtdiTestCase(TestCase):
         ftdi1.open(vendor=0x403, product=0x6010, interface=1)
         ftdi2 = Ftdi()
         ftdi2.open(vendor=0x403, product=0x6010, interface=2)
-        for x in range(5):
+        for _ in range(5):
             print("If#1: ", hex(ftdi1.poll_modem_status()))
             print("If#2: ", ftdi2.modem_status())
             sleep(0.500)
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     level = environ.get('FTDI_LOGLEVEL', 'info').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
