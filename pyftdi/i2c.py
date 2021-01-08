@@ -431,6 +431,7 @@ class I2cController:
            * ``frequency`` float value the I2C bus frequency in Hz
            * ``clockstretching`` boolean value to enable clockstreching.
              xD7 (GPIO7) pin should be connected back to xD0 (SCK)
+           * ``threephaseclock`` boolean value to disable three-phase clocking.
            * ``debug`` to increase log verbosity, using MPSSE tracer
         """
         if 'frequency' in kwargs:
@@ -450,6 +451,11 @@ class I2cController:
             del kwargs['clockstretching']
         else:
             clkstrch = False
+        if 'threephaseclock' in kwargs:
+            threephaseclock = bool(kwargs['threephaseclock'])
+            del kwargs['threephaseclock']
+        else:
+            threephaseclock = True
         if 'direction' in kwargs:
             io_dir = int(kwargs['direction'])
             del kwargs['direction']
@@ -498,7 +504,8 @@ class I2cController:
             self._frequency = (2.0*frequency)/3.0
             self._tx_size, self._rx_size = self._ftdi.fifo_sizes
             self._ftdi.enable_adaptive_clock(clkstrch)
-            self._ftdi.enable_3phase_clock(True)
+            if threephaseclock:
+                self._ftdi.enable_3phase_clock(True)
             try:
                 self._ftdi.enable_drivezero_mode(self.SCL_BIT |
                                                  self.SDA_O_BIT |
