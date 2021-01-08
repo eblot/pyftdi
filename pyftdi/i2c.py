@@ -398,6 +398,7 @@ class I2cController:
         self._ck_su_sto = 0
         self._ck_idle = 0
         self._read_optim = True
+        self._force_clock_mode = False
 
     def set_retry_count(self, count: int) -> None:
         """Change the default retry count when a communication error occurs,
@@ -498,7 +499,8 @@ class I2cController:
             self._frequency = (2.0*frequency)/3.0
             self._tx_size, self._rx_size = self._ftdi.fifo_sizes
             self._ftdi.enable_adaptive_clock(clkstrch)
-            self._ftdi.enable_3phase_clock(True)
+            if not self._force_clock_mode:
+                self._ftdi.enable_3phase_clock(True)
             try:
                 self._ftdi.enable_drivezero_mode(self.SCL_BIT |
                                                  self.SDA_O_BIT |
@@ -511,6 +513,22 @@ class I2cController:
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
                 self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
+
+    def force_clock_mode(self, enable: bool) -> None:
+        """Force unsupported I2C clock signalling on devices that have no I2C
+            capabilities (i.e. FT2232D). I2cController cowardly refuses to use
+            unsupported devices. When this mode is enabled, I2cController can
+            drive such devices, but I2C signalling is not compliant with I2C
+            specifications and may not work with most I2C slaves.
+            This is a fully unsupported feature (bug reports will be ignored)
+
+            :param enable: whether to drive non-I2C capable devices.
+        """
+        if enable:
+            self.log.warning('I2C clock mode is forced to non three-phase \
+                clocking. I2C signalling is not compliant with I2C \
+                specifications and may not work')
+        self._force_clock_mode = enable
 
     def terminate(self) -> None:
         """Close the FTDI interface.
