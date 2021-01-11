@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -398,7 +398,7 @@ class I2cController:
         self._ck_su_sto = 0
         self._ck_idle = 0
         self._read_optim = True
-        self._force_clock_mode = False
+        self._disable_3phase_clock = False
 
     def set_retry_count(self, count: int) -> None:
         """Change the default retry count when a communication error occurs,
@@ -499,7 +499,7 @@ class I2cController:
             self._frequency = (2.0*frequency)/3.0
             self._tx_size, self._rx_size = self._ftdi.fifo_sizes
             self._ftdi.enable_adaptive_clock(clkstrch)
-            if not self._force_clock_mode:
+            if not self._disable_3phase_clock:
                 self._ftdi.enable_3phase_clock(True)
             try:
                 self._ftdi.enable_drivezero_mode(self.SCL_BIT |
@@ -516,19 +516,21 @@ class I2cController:
 
     def force_clock_mode(self, enable: bool) -> None:
         """Force unsupported I2C clock signalling on devices that have no I2C
-            capabilities (i.e. FT2232D). I2cController cowardly refuses to use
-            unsupported devices. When this mode is enabled, I2cController can
-            drive such devices, but I2C signalling is not compliant with I2C
-            specifications and may not work with most I2C slaves.
-            This is a fully unsupported feature (bug reports will be ignored)
+           capabilities (i.e. FT2232D). I2cController cowardly refuses to use
+           unsupported devices. When this mode is enabled, I2cController can
+           drive such devices, but I2C signalling is not compliant with I2C
+           specifications and may not work with most I2C slaves.
 
-            :param enable: whether to drive non-I2C capable devices.
+           :py:meth:`force_clock_mode` should always be called before
+           :py:meth:`configure` to be effective.
+
+           This is a fully unsupported feature (bug reports will be ignored).
+
+           :param enable: whether to drive non-I2C capable devices.
         """
         if enable:
-            self.log.warning('I2C clock mode is forced to non three-phase \
-                clocking. I2C signalling is not compliant with I2C \
-                specifications and may not work')
-        self._force_clock_mode = enable
+            self.log.info('I2C signalling forced to non-I2C compliant mode.')
+        self._disable_3phase_clock = enable
 
     def terminate(self) -> None:
         """Close the FTDI interface.
