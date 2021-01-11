@@ -1,19 +1,26 @@
 
 
-
 <!DOCTYPE html>
-<html lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Index &mdash; PyFtdi  documentation</title>
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+
   
   
+
+  
+  
+
   
 
   
@@ -26,16 +33,10 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
@@ -51,7 +52,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
+            <a href="index.html" class="icon icon-home"> PyFtdi
           
 
           
@@ -61,7 +62,7 @@
             
             
               <div class="version">
-                0.51.0
+                0.52.9
               </div>
             
           
@@ -140,6 +141,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -151,7 +154,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
         
       </li>
     
@@ -382,6 +385,8 @@
       </ul></li>
       <li><a href="api/usbtools.html#pyftdi.usbtools.UsbTools.flush_cache">flush_cache() (pyftdi.usbtools.UsbTools class method)</a>
 </li>
+      <li><a href="api/i2c.html#pyftdi.i2c.I2cController.force_clock_mode">force_clock_mode() (pyftdi.i2c.I2cController method)</a>
+</li>
       <li><a href="api/spi.html#pyftdi.spi.SpiController.force_control">force_control() (pyftdi.spi.SpiController method)</a>
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiPort.force_select">force_select() (pyftdi.spi.SpiPort method)</a>
@@ -582,10 +587,29 @@
 </li>
       <li><a href="api/spi.html#pyftdi.spi.SpiPort.mode">mode() (pyftdi.spi.SpiPort property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.modem_status">modem_status() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="api/eeprom.html#module-pyftdi.eeprom">pyftdi.eeprom</a>
+</li>
+        <li><a href="api/ftdi.html#module-pyftdi.ftdi">pyftdi.ftdi</a>
+</li>
+        <li><a href="api/gpio.html#module-pyftdi.gpio">pyftdi.gpio</a>
+</li>
+        <li><a href="api/i2c.html#module-pyftdi.i2c">pyftdi.i2c</a>
+</li>
+        <li><a href="api/misc.html#module-pyftdi.misc">pyftdi.misc</a>
+</li>
+        <li><a href="api/spi.html#module-pyftdi.spi">pyftdi.spi</a>
+</li>
+        <li><a href="api/usbtools.html#module-pyftdi.usbtools">pyftdi.usbtools</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.mpsse_bit_delay">mpsse_bit_delay() (pyftdi.ftdi.Ftdi property)</a>
 </li>
   </ul></td>
@@ -658,8 +682,6 @@
 </li>
       <li><a href="api/misc.html#pyftdi.misc.pretty_size">pretty_size() (in module pyftdi.misc)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.PRODUCT_IDS">PRODUCT_IDS (pyftdi.ftdi.Ftdi attribute)</a>
 </li>
       <li><a href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.properties">properties() (pyftdi.eeprom.FtdiEeprom property)</a>
@@ -668,22 +690,59 @@
 </li>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_rx_buffer">purge_rx_buffer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/ftdi.html#pyftdi.ftdi.Ftdi.purge_tx_buffer">purge_tx_buffer() (pyftdi.ftdi.Ftdi method)</a>
 </li>
-      <li><a href="api/eeprom.html#module-pyftdi.eeprom">pyftdi.eeprom (module)</a>
+      <li>
+    pyftdi.eeprom
+
+      <ul>
+        <li><a href="api/eeprom.html#module-pyftdi.eeprom">module</a>
 </li>
-      <li><a href="api/ftdi.html#module-pyftdi.ftdi">pyftdi.ftdi (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.ftdi
+
+      <ul>
+        <li><a href="api/ftdi.html#module-pyftdi.ftdi">module</a>
 </li>
-      <li><a href="api/gpio.html#module-pyftdi.gpio">pyftdi.gpio (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.gpio
+
+      <ul>
+        <li><a href="api/gpio.html#module-pyftdi.gpio">module</a>
 </li>
-      <li><a href="api/i2c.html#module-pyftdi.i2c">pyftdi.i2c (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.i2c
+
+      <ul>
+        <li><a href="api/i2c.html#module-pyftdi.i2c">module</a>
 </li>
-      <li><a href="api/misc.html#module-pyftdi.misc">pyftdi.misc (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.misc
+
+      <ul>
+        <li><a href="api/misc.html#module-pyftdi.misc">module</a>
 </li>
-      <li><a href="api/spi.html#module-pyftdi.spi">pyftdi.spi (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.spi
+
+      <ul>
+        <li><a href="api/spi.html#module-pyftdi.spi">module</a>
 </li>
-      <li><a href="api/usbtools.html#module-pyftdi.usbtools">pyftdi.usbtools (module)</a>
+      </ul></li>
+      <li>
+    pyftdi.usbtools
+
+      <ul>
+        <li><a href="api/usbtools.html#module-pyftdi.usbtools">module</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -959,23 +1018,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+        &#169; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
 
     </p>
   </div>
     
     
-      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

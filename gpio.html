@@ -1,18 +1,26 @@
 
 
 <!DOCTYPE html>
-<html lang="en" >
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>GPIOs &mdash; PyFtdi  documentation</title>
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+
   
   
+
+  
+  
+
   
 
   
@@ -25,16 +33,10 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="EEPROM management" href="eeprom.html" />
@@ -52,7 +54,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PyFtdi
+            <a href="index.html" class="icon icon-home"> PyFtdi
           
 
           
@@ -62,7 +64,7 @@
             
             
               <div class="version">
-                0.51.0
+                0.52.9
               </div>
             
           
@@ -185,6 +187,8 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
@@ -196,7 +200,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/gpio.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -542,8 +546,8 @@ the bits configured as input, or an exception is triggered:</p>
 <div class="section" id="synchronous-gpio-access">
 <h3>Synchronous GPIO access<a class="headerlink" href="#synchronous-gpio-access" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioSyncController</span><span class="p">()</span>
-<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1, direction=0x0F, frequency=1e6)</span>
-<span class="n">outs</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">})</span>
+<span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x0F</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="mf">1e6</span><span class="p">)</span>
+<span class="n">outs</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
 <span class="n">ins</span> <span class="o">=</span> <span class="n">gpio</span><span class="o">.</span><span class="n">exchange</span><span class="p">(</span><span class="n">outs</span><span class="p">)</span>
 <span class="c1"># ins contains as many bytes as outs</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -555,15 +559,12 @@ the bits configured as input, or an exception is triggered:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ftdi</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="p">()</span>
 <span class="n">ftdi</span><span class="o">.</span><span class="n">open_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">)</span>
 <span class="c1"># validate CBUS feature with the current device</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">ftdi</span><span class="o">.</span><span class="n">has_cbus</span><span class="p">:</span>
-   <span class="k">return</span>
+<span class="k">assert</span> <span class="n">ftdi</span><span class="o">.</span><span class="n">has_cbus</span>
 <span class="c1"># validate CBUS EEPROM configuration with the current device</span>
 <span class="n">eeprom</span> <span class="o">=</span> <span class="n">FtdiEeprom</span><span class="p">()</span>
 <span class="n">eeprom</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">ftdi</span><span class="p">)</span>
 <span class="c1"># here we use CBUS0 and CBUS3 (or CBUS5 and CBUS9 on FT232H)</span>
-<span class="k">if</span> <span class="ow">not</span> <span class="n">eeprom</span><span class="o">.</span><span class="n">cbus_mask</span> <span class="o">&amp;</span> <span class="mb">0b1001</span> <span class="o">==</span> <span class="mb">0b1001</span><span class="p">:</span>
-   <span class="k">return</span>
-<span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">eeprom</span><span class="o">.</span><span class="n">cbus_mask</span> <span class="o">&amp;</span> <span class="mb">0b1001</span><span class="p">,</span> <span class="mb">0b1001</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">eeprom</span><span class="o">.</span><span class="n">cbus_mask</span> <span class="o">&amp;</span> <span class="mb">0b1001</span> <span class="o">==</span> <span class="mb">0b1001</span>
 <span class="c1"># configure CBUS0 as output and CBUS3 as input</span>
 <span class="n">ftdi</span><span class="o">.</span><span class="n">set_cbus_direction</span><span class="p">(</span><span class="mb">0b1001</span><span class="p">,</span> <span class="mb">0b0001</span><span class="p">)</span>
 <span class="c1"># set CBUS0</span>
@@ -622,32 +623,29 @@ means that b<sub>3</sub>becomes the lowest bit which can be read/written.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="eeprom.html" class="btn btn-neutral float-right" title="EEPROM management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="pinout.html" class="btn btn-neutral float-left" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="eeprom.html" class="btn btn-neutral float-right" title="EEPROM management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pinout.html" class="btn btn-neutral float-left" title="FTDI device pinout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        
-        &copy; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;
+        &#169; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.
 
     </p>
   </div>
     
     
-      Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 

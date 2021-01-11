@@ -34,3 +34,12 @@ Contributors
  * meierphil
  * etherfi
  * sgoadhouse
+ * jnmacd
+ * naushir
+ * markmelvin (Mark Melvin)
+ * stiebrs
+ * mpratt14
+ * alexforencich
+ * TedKus
+ * Amanita-muscaria
+ * 

@@ -373,8 +373,8 @@ Synchronous GPIO access
 .. code-block:: python
 
     gpio = GpioSyncController()
-    gpio.configure('ftdi:///1, direction=0x0F, frequency=1e6)
-    outs = bytes(range(16})
+    gpio.configure('ftdi:///1', direction=0x0F, frequency=1e6)
+    outs = bytes(range(16))
     ins = gpio.exchange(outs)
     # ins contains as many bytes as outs
     gpio.close()
@@ -388,15 +388,12 @@ CBUS GPIO access
    ftdi = Ftdi()
    ftdi.open_from_url('ftdi:///1')
    # validate CBUS feature with the current device
-   if not ftdi.has_cbus:
-      return
+   assert ftdi.has_cbus
    # validate CBUS EEPROM configuration with the current device
    eeprom = FtdiEeprom()
    eeprom.connect(ftdi)
    # here we use CBUS0 and CBUS3 (or CBUS5 and CBUS9 on FT232H)
-   if not eeprom.cbus_mask & 0b1001 == 0b1001:
-      return
-   self.assertEqual(eeprom.cbus_mask & 0b1001, 0b1001)
+   assert eeprom.cbus_mask & 0b1001 == 0b1001
    # configure CBUS0 as output and CBUS3 as input
    ftdi.set_cbus_direction(0b1001, 0b0001)
    # set CBUS0
