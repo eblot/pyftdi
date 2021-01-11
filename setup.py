@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #

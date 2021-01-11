@@ -53,7 +53,15 @@ PyFtdi currently supports the following features:
 
 `SPDX-License-Identifier: BSD-3-Clause`
 
-## Warning
+## Warnings
+
+### Python support
+
+Python 3.5 has reached end-of-life on September 5th, 2020.
+PyFtdi *v0.52* is the last PyFtdi version to support Python 3.5.
+Next PyFtdi series will require Python 3.6+.
+
+### API break
 
 Starting with version *v0.40.0*, several API changes are being introduced.
 While PyFtdi tries to maintain backward compatibility with previous versions,
