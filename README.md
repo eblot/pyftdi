@@ -4,6 +4,10 @@
 ![Mock tests](https://github.com/eblot/pyftdi/workflows/Python%20mock%20tests/badge.svg)
 ![Syntax tests](https://github.com/eblot/pyftdi/workflows/Python%20syntax%20tests/badge.svg)
 
+[![PyPI](https://img.shields.io/pypi/v/pyftdi.svg?maxAge=2592000)](https://pypi.org/project/pyftdi/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyftdi.svg)](https://pypi.org/project/pyftdi/)
+[![Downloads](https://img.shields.io/pypi/dm/pyftdi.svg)](https://pypi.org/project/pyftdi/)
+
 ## Documentation
 
 PyFtdi documentation is available from https://eblot.github.io/pyftdi/
