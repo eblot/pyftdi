@@ -819,18 +819,18 @@ class SpiController:
                 cmd.extend(write_cmd)
         if readlen:
             if not droptail:
-                rcmd = (Ftdi.READ_BYTES_PVE_MSB if not cpol else
+                rcmd = (Ftdi.READ_BYTES_NVE_MSB if cpol else
                         Ftdi.READ_BYTES_PVE_MSB)
                 read_cmd = spack('<BH', rcmd, readlen-1)
                 cmd.extend(read_cmd)
             else:
                 bytelen = readlen-1
                 if bytelen:
-                    rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
+                    rcmd = (Ftdi.READ_BYTES_NVE_MSB if cpol else
                             Ftdi.READ_BYTES_PVE_MSB)
                     read_cmd = spack('<BH', rcmd, bytelen-1)
                     cmd.extend(read_cmd)
-                rcmd = (Ftdi.READ_BITS_NVE_MSB if not cpol else
+                rcmd = (Ftdi.READ_BITS_NVE_MSB if cpol else
                         Ftdi.READ_BITS_PVE_MSB)
                 read_cmd = spack('<BB', rcmd, 7-droptail)
                 cmd.extend(read_cmd)
