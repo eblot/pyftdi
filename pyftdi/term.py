@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
+"""Terminal management helpers"""
 
-"""Windows getch().msvcrt key scan code to ANSI escape code dictionary:
-"""
-
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2020, Michael Pratt <mpratt51@gmail.com>
 # All rights reserved.
 #

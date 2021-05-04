@@ -1,10 +1,10 @@
-# Copyright (c) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Miscelleanous helpers"""
+"""Miscellaneous helpers"""
 
 #pylint: disable-msg=invalid-name
 #pylint: disable-msg=import-outside-toplevel
