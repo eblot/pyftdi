@@ -21,7 +21,7 @@ from os import close, getcwd, unlink, walk
 from os.path import abspath, dirname, join as joinpath, relpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
-from sys import stderr
+from sys import stderr, exit as sysexit
 from tempfile import mkstemp
 
 
@@ -38,7 +38,6 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
-    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
@@ -49,10 +48,6 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
-]
-INSTALL_REQUIRES_3_5 = [
-    # only for old Python 3.5 support
-    'aenum >= 2.1.0'
 ]
 
 HERE = abspath(dirname(__file__))
@@ -190,11 +185,7 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
-        extras_require={
-            ':python_version == "3.5"': INSTALL_REQUIRES_3_5,
-        },
-        # tests requires >=3.6
-        python_requires='>=3.5',
+        python_requires='>=3.6',
     )
 
 
@@ -203,4 +194,4 @@ if __name__ == '__main__':
         main()
     except Exception as exc:
         print(exc, file=stderr)
-        exit(1)
+        sysexit(1)

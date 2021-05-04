@@ -61,11 +61,12 @@ PyFtdi currently supports the following features:
 
 ### Python support
 
-Python 3.5 has reached end-of-life on September 5th, 2020.
-PyFtdi *v0.52* is the last PyFtdi version to support Python 3.5.
-Next PyFtdi series will require Python 3.6+.
+PyFtdi requires Python 3.6+.
 
 ### API break
+
+PyFtdi *v0.52* was the last PyFtdi version to support Python 3.5.
+Python 3.5 has reached end-of-life on September 5th, 2020.
 
 Starting with version *v0.40.0*, several API changes are being introduced.
 While PyFtdi tries to maintain backward compatibility with previous versions,

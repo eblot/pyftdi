@@ -1,7 +1,7 @@
 """Virtual USB backend loader.
 """
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -24,10 +24,6 @@ from pyftdi.usbtools import UsbTools
 from .usbvirt import (VirtConfiguration, VirtDevice, VirtInterface,
                       VirtEndpoint, get_backend)
 from .consts import USBCONST
-
-# need support for f-string syntax
-if version_info[:2] < (3, 6):
-    raise AssertionError('Python 3.6 is required for this module')
 
 
 class VirtLoader:

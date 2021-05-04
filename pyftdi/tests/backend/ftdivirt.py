@@ -1,6 +1,6 @@
 """PyUSB virtual FTDI device."""
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -31,11 +31,6 @@ from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from .consts import FTDICONST, USBCONST
 from .mpsse import VirtMpsseEngine, VirtMpsseTracer
-
-
-# need support for f-string syntax
-if version_info[:2] < (3, 6):
-    raise AssertionError('Python 3.6 is required for this module')
 
 
 class Pipe:
