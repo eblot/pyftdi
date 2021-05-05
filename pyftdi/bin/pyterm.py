@@ -224,7 +224,8 @@ class MiniTerm:
             raise ImportError("Python serial module not installed") from exc
         try:
             from serial import serial_for_url, VERSION as serialver
-            # use simple regex rather than adding new dep. on 'packaging' module
+            # use a simple regex rather than adding a new dependency on the
+            # more complete 'packaging' module
             vmo = search(r'^(\d+)\.(\d+)', serialver)
             if not vmo:
                 # unable to parse version
