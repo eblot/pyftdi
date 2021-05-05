@@ -145,7 +145,9 @@ class GpioAsyncTestCase(FtdiTestCase):
         """Check initial values.
         """
         if self.skip_loopback:
-            raise SkipTest('Skip loopback test on multiport device')
+            raise SkipTest('Skip initial test on multiport device')
+        if not self.loader:
+            raise SkipTest('Skip initial test on physical device')
         direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
         vftdi = self.loader.get_virtual_ftdi(1, 1)
         vport = vftdi.get_port(1)
