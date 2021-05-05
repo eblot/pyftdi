@@ -567,7 +567,7 @@ class Ftdi:
 
     def close(self, freeze: bool = False) -> None:
         """Close the FTDI interface/port.
-        
+
            :param freeze: if set, FTDI port is not reset to its default
                           state on close. This means the port is left with
                           its current configuration and output signals.

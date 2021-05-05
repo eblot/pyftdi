@@ -97,6 +97,40 @@ class GpioAsyncTestCase(FtdiTestCase):
         else:
             cls.skip_loopback = False
 
+    def test_gpio_freeze(self):
+        """Simple test to demonstrate freeze on close.
+
+           For now, it requires a logic analyzer to verify the output,
+           this is not automatically validated by SW
+        """
+        direction = 0xFF & ~((1 << 4) - 1) # 4 Out, 4 In
+        gpio = GpioAsyncController()
+        gpio.configure(self.url, direction=direction, frequency=1e3,
+                       initial=0x0)
+        port = gpio.get_gpio()
+        # emit a sequence as a visual marker on b3,b2,b1,b0
+        port.write([x<<4 for x in range(16)])
+        sleep(0.01)
+        # write 0b0110 to the port
+        port.write(0x6<<4)
+        sleep(0.001)
+        # close w/o freeze: all the outputs should be reset (usually 0b1111)
+        # it might need pull up (or pull down) to observe the change as
+        # output are not high-Z.
+        gpio.close()
+        sleep(0.01)
+        gpio.configure(self.url, direction=direction, frequency=1e3,
+                       initial=0x0)
+        port = gpio.get_gpio()
+        # emit a sequence as a visual marker with on b3 and b1
+        port.write([(x<<4)&0x90 for x in range(16)])
+        sleep(0.01)
+        # write 0b0110 to the port
+        port.write(0x6<<4)
+        sleep(0.01)
+        # close w/ freeze: outputs should not be reset (usually 0b0110)
+        gpio.close(True)
+
 
     def test_gpio_values(self):
         """Simple test to demonstrate bit-banging.
