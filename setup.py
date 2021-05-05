@@ -49,6 +49,9 @@ INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
 ]
+TEST_REQUIRES = [
+    'ruamel.yaml >= 0.16',
+]
 
 HERE = abspath(dirname(__file__))
 
@@ -185,6 +188,7 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
+        test_requires=TEST_REQUIRES,
         python_requires='>=3.6',
     )
 
