@@ -240,6 +240,9 @@ class VirtDevice:
                               self.desc.bus, self.desc.address,
                               kwargs.get('eeprom', {}))
 
+    def close(self, freeze: bool = False):
+        self._ftdi.close(freeze)
+
     def terminate(self):
         self._ftdi.terminate()
 

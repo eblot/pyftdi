@@ -303,8 +303,8 @@ class VirtFtdiPort:
         self._rx_thread.start()
         self._tx_thread.start()
 
-    def terminate(self):
-        self.log.debug('> terminate')
+    def close(self, freeze: bool = False) -> None:
+        self.log.debug('> close %d', freeze)
         if self._tx_thread:
             with self._cmd_q.lock:
                 self._cmd_q.q.append((self.Command.TERMINATE,))
@@ -322,6 +322,9 @@ class VirtFtdiPort:
         if self._tx_thread:
             self._tx_thread.join()
             self._tx_thread = None
+
+    def terminate(self):
+        self.close()
 
     def __getitem__(self, index: int) -> VirtualFtdiPin:
         if not isinstance(index, int):
@@ -986,9 +989,12 @@ class VirtFtdi:
         for iface in range(self.PROPERTIES[self._version].ifcount):
             self._ports.append(VirtFtdiPort(self, iface+1))
 
-    def terminate(self):
+    def close(self, freeze: bool = False) -> None:
         for port in self._ports:
-            port.terminate()
+            port.close(freeze)
+
+    def terminate(self):
+        self.close()
 
     @property
     def version(self) -> int:

@@ -565,8 +565,15 @@ class Ftdi:
         self.set_latency_timer(self.LATENCY_MIN)
         self._debug_log = self.log.getEffectiveLevel() == DEBUG
 
-    def close(self) -> None:
-        """Close the FTDI interface/port."""
+    def close(self, freeze: bool = False) -> None:
+        """Close the FTDI interface/port.
+        
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close. This means the port is left with
+                          its current configuration and output signals.
+                          This feature should not be used except for very
+                          specific needs.
+        """
         if self._usb_dev:
             dev = self._usb_dev
             if self._is_pyusb_handle_active():
@@ -575,8 +582,9 @@ class Ftdi:
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
                 try:
-                    self.set_bitmode(0, Ftdi.BitMode.RESET)
-                    self.set_latency_timer(self.LATENCY_MAX)
+                    if not freeze:
+                        self.set_bitmode(0, Ftdi.BitMode.RESET)
+                        self.set_latency_timer(self.LATENCY_MAX)
                     release_interface(dev, self._index - 1)
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)

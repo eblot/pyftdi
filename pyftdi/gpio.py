@@ -76,11 +76,17 @@ class GpioBaseController(GpioPort):
                 del kwargs[k]
         self._frequency = self._configure(url, direction, frequency, **kwargs)
 
-    def close(self):
-        """Close the FTDI interface.
+    def close(self, freeze: bool = False) -> None:
+        """Close the GPIO port.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close. This means the port is left with
+                          its current configuration and output signals.
+                          This feature should not be used except for very
+                          specific needs.
         """
         if self._ftdi.is_connected:
-            self._ftdi.close()
+            self._ftdi.close(freeze)
 
     def get_gpio(self) -> GpioPort:
         """Retrieve the GPIO port.

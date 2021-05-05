@@ -532,12 +532,22 @@ class I2cController:
             self.log.info('I2C signalling forced to non-I2C compliant mode.')
         self._disable_3phase_clock = enable
 
-    def terminate(self) -> None:
+    def close(self, freeze: bool = False) -> None:
         """Close the FTDI interface.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close.
         """
         with self._lock:
             if self._ftdi.is_connected:
-                self._ftdi.close()
+                self._ftdi.close(freeze)
+
+    def terminate(self) -> None:
+        """Close the FTDI interface.
+
+           :note: deprecated API, use close()
+        """
+        self.close()
 
     def get_port(self, address: int) -> I2cPort:
         """Obtain an I2cPort to drive an I2c slave.
