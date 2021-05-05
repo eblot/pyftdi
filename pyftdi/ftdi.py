@@ -1044,6 +1044,28 @@ class Ftdi:
     bitbang_enabled = is_bitbang_enabled
 
     @property
+    def is_eeprom_internal(self) -> bool:
+        """Tell whether the device has an internal EEPROM.
+
+           :return: True if the device has an internal EEPROM.
+        """
+        return self.device_version in self.INT_EEPROMS
+
+    @property
+    def max_eeprom_size(self) -> int:
+        """Report the maximum size of the EEPROM.
+           The actual size may be lower, of even 0 if no EEPROM is connected
+           or supported.
+
+           :return: the maximum size in bytes.
+        """
+        if self.device_version in self.INT_EEPROMS:
+            return self.INT_EEPROMS[self.device_version]
+        if self.device_version == 0x0600:
+            return 0x80
+        return 0x100
+
+    @property
     def frequency_max(self) -> float:
         """Tells the maximum frequency for MPSSE clock.
 
@@ -1724,7 +1746,7 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        if self.device_version in self.INT_EEPROMS:
+        if self.is_eeprom_internal:
             eeprom_size = self.INT_EEPROMS[self.device_version]
             if len(data) != eeprom_size:
                 raise ValueError('Invalid EEPROM size')
@@ -2113,7 +2135,7 @@ class Ftdi:
             eeprom_size = self.INT_EEPROMS[self.device_version]
         else:
             if eeprom_size is None:
-                eeprom_size = self.EXT_EEPROM_SIZES[-1]
+                eeprom_size = self.max_eeprom_size
             if eeprom_size not in self.EXT_EEPROM_SIZES:
                 raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
         return eeprom_size

@@ -576,9 +576,24 @@ class FtdiEeprom:
         crc, crc_pos, crc_size = self._compute_crc(self._eeprom, False)
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
 
+    def _compute_size(self, eeprom: Union[bytes, bytearray]) -> int:
+        if self._ftdi.is_eeprom_internal:
+            return self._ftdi.max_eeprom_size
+        if all([x == 0xFF for x in eeprom]):
+            # erased EEPROM, size is unknown
+            return self._ftdi.max_eeprom_size
+        if eeprom[0:0x80] == eeprom[0x80:0x100]:
+            return 0x80
+        if eeprom[0:0x40] == eeprom[0x40:0x80]:
+            return 0x40
+        return 0x100
+
     def _read_eeprom(self) -> bytes:
-        buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
+        buf = self._ftdi.read_eeprom(0)
         eeprom = bytearray(buf)
+        size = self._compute_size(eeprom)
+        if size < len(eeprom):
+            eeprom = eeprom[:size]
         crc = self._compute_crc(eeprom, True)[0]
         if crc:
             if self.is_empty:
