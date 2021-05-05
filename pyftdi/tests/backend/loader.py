@@ -17,8 +17,7 @@ from binascii import unhexlify
 from logging import getLogger
 from sys import version_info
 from typing import BinaryIO
-from ruamel.yaml import load_all as yaml_load
-from ruamel.yaml.loader import Loader
+from ruamel.yaml import YAML
 from pyftdi.misc import to_bool
 from pyftdi.usbtools import UsbTools
 from .usbvirt import (VirtConfiguration, VirtDevice, VirtInterface,
@@ -42,9 +41,8 @@ class VirtLoader:
         """
         backend = get_backend()
         with yamlfp:
-            ydefs = yaml_load(yamlfp, Loader=Loader)
             try:
-                for ydef in ydefs:
+                for ydef in YAML().load_all(yamlfp):
                     self._build_root(backend, ydef)
             except Exception as exc:
                 raise ValueError(f'Invalid configuration: {exc}') from exc
