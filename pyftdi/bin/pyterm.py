@@ -23,6 +23,7 @@ from atexit import register
 from collections import deque
 from logging import Formatter, StreamHandler, DEBUG, ERROR
 from os import environ, linesep, stat
+from re import search
 from sys import exit as sysexit, modules, platform, stderr, stdout
 from time import sleep
 from threading import Event, Thread
@@ -223,9 +224,14 @@ class MiniTerm:
             raise ImportError("Python serial module not installed") from exc
         try:
             from serial import serial_for_url, VERSION as serialver
-            version = tuple([int(x) for x in serialver.split('.')])
-            if version < (3, 0):
-                raise ValueError
+            # use simple regex rather than adding new dep. on 'packaging' module
+            vmo = search(r'^(\d+)\.(\d+)', serialver)
+            if not vmo:
+                # unable to parse version
+                raise ValueError()
+            if tuple([int(x) for x in vmo.groups()]) < (3, 0):
+                # pysrial version is too old
+                raise ValueError()
         except (ValueError, IndexError, ImportError) as exc:
             raise ImportError("pyserial 3.0+ is required") from exc
         # the following import enables serial protocol extensions
