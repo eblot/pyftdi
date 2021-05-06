@@ -92,7 +92,7 @@ def main():
             loader.load(args.virtual)
 
         try:
-            add_custom_devices(Ftdi, args.vidpid)
+            add_custom_devices(Ftdi, args.vidpid, force_hex=True)
         except ValueError as exc:
             argparser.error(str(exc))
 

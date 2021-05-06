@@ -248,7 +248,8 @@ def pretty_size(size, sep: str = ' ',
 
 
 def add_custom_devices(ftdicls=None,
-                       vpstr: Optional[Sequence[str]] = None) -> None:
+                       vpstr: Optional[Sequence[str]] = None,
+                       force_hex: bool = False) -> None:
     """Helper function to add custom VID/PID to FTDI device identifer map.
 
        The string to parse should match the following format:
@@ -270,6 +271,8 @@ def add_custom_devices(ftdicls=None,
        :param vpstr: typically, a option switch string describing the device
                      to add
        :param ftdicls: the Ftdi class that should support the new device.
+       :param force_hex: if set, consider that the pid/vid string are
+                         hexadecimal encoded values.
     """
     from inspect import isclass
     if not isclass(ftdicls):
@@ -284,7 +287,10 @@ def add_custom_devices(ftdicls=None,
                 vname, vid = vid.split('=', 1)
             if '=' in pid:
                 pname, pid = pid.split('=', 1)
-            vid, pid = [to_int(v) for v in (vid, pid)]
+            if force_hex:
+                vid, pid = [int(v, 16) for v in (vid, pid)]
+            else:
+                vid, pid = [to_int(v) for v in (vid, pid)]
         except ValueError as exc:
             raise ValueError('Invalid VID:PID value') from exc
         if vid not in vidpids:
