@@ -51,23 +51,24 @@ class FtdiEeprom:
     """FTDI EEPROM management
     """
 
-    _PROPS = namedtuple('PROPS', 'size user dynoff')
+    _PROPS = namedtuple('PROPS', 'size user dynoff chipoff')
     """Properties for each FTDI device release.
 
        * size is the size in bytes of the EEPROM storage area
        * user is the size in bytes of the user storage area, if any/supported
        * dynoff is the offset in EEPROM of the first bytes to store strings
+       * chipoff is the offset in EEPROM of the EEPROM chip type
     """
 
     _PROPERTIES = {
-        0x0200: _PROPS(0, None, 0),        # FT232AM
-        0x0400: _PROPS(256, 0x14, 0x94),   # FT232BM
-        0x0500: _PROPS(256, 0x16, 0x96),   # FT2232D
-        0x0600: _PROPS(128, None, 0x18),   # FT232R
-        0x0700: _PROPS(256, 0x1A, 0x9A),   # FT2232H
-        0x0800: _PROPS(256, 0x1A, 0x9A),   # FT4232H
-        0x0900: _PROPS(256, 0x1A, 0xA0),   # FT232H
-        0x1000: _PROPS(1024, 0x1A, 0xA0),  # FT230X/FT231X/FT234X
+        0x0200: _PROPS(0, None, 0, None),        # FT232AM
+        0x0400: _PROPS(256, 0x14, 0x94, None),   # FT232BM
+        0x0500: _PROPS(256, 0x16, 0x96, 0x14),   # FT2232D
+        0x0600: _PROPS(128, None, 0x18, None),   # FT232R
+        0x0700: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT2232H
+        0x0800: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232H
+        0x0900: _PROPS(256, 0x1A, 0xA0, 0x1e),   # FT232H
+        0x1000: _PROPS(1024, 0x1A, 0xA0, None),  # FT230X/FT231X/FT234X
     }
     """EEPROM properties."""
 
@@ -115,6 +116,7 @@ class FtdiEeprom:
         self._config = OrderedDict()
         self._dirty = set()
         self._modified = False
+        self._chip: Optional[int] = None
 
     def __getattr__(self, name):
         if name in self._config:
@@ -186,6 +188,12 @@ class FtdiEeprom:
 
            :return: the size in bytes
         """
+        if self._chip == 0x46:
+            return 0x80  # 93C46
+        if self._chip == 0x56:
+            return 0x100  # 93C56
+        if self._chip == 0x66:
+            return 0x100  # 93C66 (512 bytes, only 256 are used)
         try:
             eeprom_size = self._PROPERTIES[self.device_version].size
         except (AttributeError, KeyError) as exc:
@@ -218,7 +226,7 @@ class FtdiEeprom:
 
            :return: True if no content is detected
         """
-        if len(self._eeprom) != self._PROPERTIES[self.device_version].size:
+        if len(self._eeprom) != self.size:
             return False
         for byte in self._eeprom:
             if byte != 0xFF:
@@ -605,6 +613,10 @@ class FtdiEeprom:
     def _decode_eeprom(self):
         cfg = self._config
         cfg.clear()
+        chipoff = self._PROPERTIES[self.device_version].chipoff
+        if chipoff is not None:
+            self._chip = Hex2Int(self._eeprom[chipoff])
+            cfg['chip'] = self._chip
         cfg['vendor_id'] = Hex4Int(sunpack('<H', self._eeprom[0x02:0x04])[0])
         cfg['product_id'] = Hex4Int(sunpack('<H', self._eeprom[0x04:0x06])[0])
         cfg['type'] = Hex4Int(sunpack('<H', self._eeprom[0x06:0x08])[0])
@@ -801,7 +813,6 @@ class FtdiEeprom:
                 cfg['cbus_func_%d' % bix] = self.CBUSX(value).name
             except ValueError:
                 pass
-        cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232h(self):
         cfg = self._config
@@ -831,7 +842,6 @@ class FtdiEeprom:
                 cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUSH(high).name
             except ValueError:
                 pass
-        cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232r(self):
         cfg = self._config
@@ -891,4 +901,3 @@ class FtdiEeprom:
             cfg['group_%d_drive' % bix] = bool(val & max_drive)
             cfg['group_%d_schmitt' % bix] = bool(val & self.DRIVE.SCHMITT)
             cfg['group_%d_slew' % bix] = bool(val & self.DRIVE.SLOW_SLEW)
-        cfg['chip'] = Hex2Int(self._eeprom[0x18])
