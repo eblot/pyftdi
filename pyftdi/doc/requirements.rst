@@ -3,8 +3,7 @@
 Requirements
 ------------
 
-Python_ 3.5 or above is required; new tests require 3.6 or above, as they rely
-on fstring_ syntax (PEP_498_) and variable annotation syntax (PEP_526_).
+Python_ 3.6 or above is required.
 
 Python 3.5 has reached end-of-life on September 5th, 2020.
 PyFtdi *v0.52* is the last PyFtdi version to support Python 3.5.

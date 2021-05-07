@@ -102,9 +102,8 @@ class BuildPy(build_py):
        syntax error is catched, raised and setup.py actually fails should this
        event arise.
 
-       This step is critical to check that an unsupported syntax (for ex. 3.6
-       syntax w/ a 3.5 interpreter) does not end into a 'valid' package from
-       setuptools perspective...
+       This step is critical to check that an unsupported syntax does not end
+       up as a 'valid' package from setuptools perspective...
     """
 
     def byte_compile(self, files):
