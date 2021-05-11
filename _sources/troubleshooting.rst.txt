@@ -38,6 +38,18 @@ libusb native library cannot be loaded. Try helping the dynamic loader:
   where ``<path>`` is the directory containing the ``libusb-1.*.dylib``
   library file
 
+* On Windows:
+
+  Try to copy the USB dll where the Python executable is installed, along
+  with the other Python DLLs.
+
+  If this happens while using an exe created by pyinstaller:
+  ``copy C:\Windows\System32\libusb0.dll <path>``
+
+  where ``<path>`` is the directory containing the executable created
+  by pyinstaller. This assumes you have installed libusb (using a tool
+  like Zadig) as referenced in the installation guide for Windows.
+
 
 "Error: Access denied (insufficient permissions)"
 `````````````````````````````````````````````````

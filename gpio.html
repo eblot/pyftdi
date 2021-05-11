@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.52.9
+                0.53.0
               </div>
             
           
@@ -357,18 +357,18 @@ configuration. See the EEPROM configuration <a class="reference internal" href="
 is <em>not</em> mapped as regular GPIO, a dedicated API is reserved to drive those
 pins:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.has_cbus" title="pyftdi.ftdi.Ftdi.has_cbus"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.has_cbus()</span></code></a> to report whether the device supports
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.has_cbus()</span></code> to report whether the device supports
 CBUS gpios,</p></li>
-<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_cbus_direction" title="pyftdi.ftdi.Ftdi.set_cbus_direction"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_direction()</span></code></a> to configure the port,</p></li>
-<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.get_cbus_gpio" title="pyftdi.ftdi.Ftdi.get_cbus_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.get_cbus_gpio()</span></code></a> to get the logical values from the
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_direction()</span></code> to configure the port,</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.get_cbus_gpio()</span></code> to get the logical values from the
 port,</p></li>
-<li><p><a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.set_cbus_gpio" title="pyftdi.ftdi.Ftdi.set_cbus_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_gpio()</span></code></a> to set new logical values to the
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.set_cbus_gpio()</span></code> to set new logical values to the
 port</p></li>
 </ul>
 <p>Additionally, the EEPROM configuration can be queried to retrieve which CBUS
 pins have been assigned to GPIO functions:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="api/eeprom.html#pyftdi.eeprom.FtdiEeprom.cbus_pins" title="pyftdi.eeprom.FtdiEeprom.cbus_pins"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.eeprom.FtdiEeprom.cbus_pins()</span></code></a> to report CBUS GPIO pins</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.eeprom.FtdiEeprom.cbus_pins()</span></code> to report CBUS GPIO pins</p></li>
 </ul>
 <p>The CBUS port is <strong>not</strong> available through the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.gpio.GpioController</span></code> API, as it cannot be considered as a

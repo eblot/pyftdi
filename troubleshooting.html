@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.52.9
+                0.53.0
               </div>
             
           
@@ -211,6 +211,15 @@ library file</p>
 <li><p>On macOS: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">DYLD_LIBRARY_PATH=.../lib</span></code></p>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal notranslate"><span class="pre">libusb-1.*.dylib</span></code>
 library file</p>
+</li>
+<li><p>On Windows:</p>
+<p>Try to copy the USB dll where the Python executable is installed, along
+with the other Python DLLs.</p>
+<p>If this happens while using an exe created by pyinstaller:
+<code class="docutils literal notranslate"><span class="pre">copy</span> <span class="pre">C:\Windows\System32\libusb0.dll</span> <span class="pre">&lt;path&gt;</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the executable created
+by pyinstaller. This assumes you have installed libusb (using a tool
+like Zadig) as referenced in the installation guide for Windows.</p>
 </li>
 </ul>
 </div>
