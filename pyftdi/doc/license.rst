@@ -18,7 +18,7 @@ BSD 3-clause
 
 ::
 
-  Copyright (c) 2008-2020 Emmanuel Blot <emmanuel.blot@free.fr>
+  Copyright (c) 2008-2021 Emmanuel Blot <emmanuel.blot@free.fr>
   All Rights Reserved.
 
   Redistribution and use in source and binary forms, with or without
