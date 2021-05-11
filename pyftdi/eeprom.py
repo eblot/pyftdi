@@ -455,7 +455,7 @@ class FtdiEeprom:
                 raise NotImplementedError("not yet supported")
             # no-op change is silently ignored
             return
-        raise TypeError("unknown property")
+        raise ValueError(f"unknown property: {name}")
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
