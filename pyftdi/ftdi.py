@@ -565,8 +565,15 @@ class Ftdi:
         self.set_latency_timer(self.LATENCY_MIN)
         self._debug_log = self.log.getEffectiveLevel() == DEBUG
 
-    def close(self) -> None:
-        """Close the FTDI interface/port."""
+    def close(self, freeze: bool = False) -> None:
+        """Close the FTDI interface/port.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close. This means the port is left with
+                          its current configuration and output signals.
+                          This feature should not be used except for very
+                          specific needs.
+        """
         if self._usb_dev:
             dev = self._usb_dev
             if self._is_pyusb_handle_active():
@@ -575,8 +582,9 @@ class Ftdi:
                 # to re-open the device that has been already closed, and
                 # this may lead to a (native) crash in libusb.
                 try:
-                    self.set_bitmode(0, Ftdi.BitMode.RESET)
-                    self.set_latency_timer(self.LATENCY_MAX)
+                    if not freeze:
+                        self.set_bitmode(0, Ftdi.BitMode.RESET)
+                        self.set_latency_timer(self.LATENCY_MAX)
                     release_interface(dev, self._index - 1)
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)
@@ -1042,6 +1050,28 @@ class Ftdi:
 
     # legacy API
     bitbang_enabled = is_bitbang_enabled
+
+    @property
+    def is_eeprom_internal(self) -> bool:
+        """Tell whether the device has an internal EEPROM.
+
+           :return: True if the device has an internal EEPROM.
+        """
+        return self.device_version in self.INT_EEPROMS
+
+    @property
+    def max_eeprom_size(self) -> int:
+        """Report the maximum size of the EEPROM.
+           The actual size may be lower, of even 0 if no EEPROM is connected
+           or supported.
+
+           :return: the maximum size in bytes.
+        """
+        if self.device_version in self.INT_EEPROMS:
+            return self.INT_EEPROMS[self.device_version]
+        if self.device_version == 0x0600:
+            return 0x80
+        return 0x100
 
     @property
     def frequency_max(self) -> float:
@@ -1724,7 +1754,7 @@ class Ftdi:
            :param dry_run: log what should be written, do not actually
                            change the EEPROM content
         """
-        if self.device_version in self.INT_EEPROMS:
+        if self.is_eeprom_internal:
             eeprom_size = self.INT_EEPROMS[self.device_version]
             if len(data) != eeprom_size:
                 raise ValueError('Invalid EEPROM size')
@@ -2113,7 +2143,7 @@ class Ftdi:
             eeprom_size = self.INT_EEPROMS[self.device_version]
         else:
             if eeprom_size is None:
-                eeprom_size = self.EXT_EEPROM_SIZES[-1]
+                eeprom_size = self.max_eeprom_size
             if eeprom_size not in self.EXT_EEPROM_SIZES:
                 raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
         return eeprom_size

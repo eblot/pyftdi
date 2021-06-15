@@ -442,12 +442,23 @@ class SpiController:
             if not self._wide_port:
                 self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
 
+    def close(self, freeze: bool = False) -> None:
+        """Close the FTDI interface.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close.
+        """
+        with self._lock:
+            if self._ftdi.is_connected:
+                self._ftdi.close(freeze)
+        self._frequency = 0.0
+
     def terminate(self) -> None:
         """Close the FTDI interface.
+
+           :note: deprecated API, use close()
         """
-        if self._ftdi:
-            self._ftdi.close()
-        self._frequency = 0.0
+        self.close()
 
     def get_port(self, cs: int, freq: Optional[float] = None,
                  mode: int = 0) -> SpiPort:

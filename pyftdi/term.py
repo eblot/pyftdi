@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
+"""Terminal management helpers"""
 
-"""Windows getch().msvcrt key scan code to ANSI escape code dictionary:
-"""
-
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2020, Michael Pratt <mpratt51@gmail.com>
 # All rights reserved.
 #
@@ -142,19 +139,19 @@ class Terminal:
     def init(self, fullterm: bool) -> None:
         """Internal terminal initialization function"""
         if not self.IS_MSWIN:
-            if stdout.isatty():
-                self._termstates = [(fd, tcgetattr(fd)) for fd in
-                                    (stdin.fileno(), stdout.fileno(),
-                                     stderr.fileno())]
-            tfd = stdin.fileno()
-            new = tcgetattr(tfd)
-            new[3] = new[3] & ~ICANON & ~ECHO
-            new[6][VMIN] = 1
-            new[6][VTIME] = 0
-            if fullterm:
-                new[6][VINTR] = 0
-                new[6][VSUSP] = 0
-            tcsetattr(tfd, TCSANOW, new)
+            self._termstates = [(t.fileno(),
+                                tcgetattr(t.fileno()) if t.isatty() else None)
+                                    for t in (stdin, stdout, stderr)]
+            tfd, istty = self._termstates[0]
+            if istty:
+                new = tcgetattr(tfd)
+                new[3] = new[3] & ~ICANON & ~ECHO
+                new[6][VMIN] = 1
+                new[6][VTIME] = 0
+                if fullterm:
+                    new[6][VINTR] = 0
+                    new[6][VSUSP] = 0
+                tcsetattr(tfd, TCSANOW, new)
         else:
             # Windows black magic
             # https://stackoverflow.com/questions/12492810
@@ -164,8 +161,9 @@ class Terminal:
         """Reset the terminal to its original state."""
         for tfd, att in self._termstates:
             # terminal modes have to be restored on exit...
-            tcsetattr(tfd, TCSANOW, att)
-            tcsetattr(tfd, TCSAFLUSH, att)
+            if att is not None:
+                tcsetattr(tfd, TCSANOW, att)
+                tcsetattr(tfd, TCSAFLUSH, att)
 
     @staticmethod
     def is_term() -> bool:

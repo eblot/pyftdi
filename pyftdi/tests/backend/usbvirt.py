@@ -4,7 +4,7 @@
    hardware.
 """
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -28,11 +28,6 @@ from usb.backend import IBackend
 from pyftdi.misc import EasyDict
 from .consts import USBCONST
 from .ftdivirt import VirtFtdi
-
-
-# need support for f-string syntax
-if version_info[:2] < (3, 6):
-    raise AssertionError('Python 3.6 is required for this module')
 
 
 class VirtEndpoint:
@@ -244,6 +239,9 @@ class VirtDevice:
         self._ftdi = VirtFtdi(self.desc.bcdDevice,
                               self.desc.bus, self.desc.address,
                               kwargs.get('eeprom', {}))
+
+    def close(self, freeze: bool = False):
+        self._ftdi.close(freeze)
 
     def terminate(self):
         self._ftdi.terminate()

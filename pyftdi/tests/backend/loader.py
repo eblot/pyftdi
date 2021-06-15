@@ -1,7 +1,7 @@
 """Virtual USB backend loader.
 """
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -17,17 +17,12 @@ from binascii import unhexlify
 from logging import getLogger
 from sys import version_info
 from typing import BinaryIO
-from ruamel.yaml import load_all as yaml_load
-from ruamel.yaml.loader import Loader
+from ruamel.yaml import YAML
 from pyftdi.misc import to_bool
 from pyftdi.usbtools import UsbTools
 from .usbvirt import (VirtConfiguration, VirtDevice, VirtInterface,
                       VirtEndpoint, get_backend)
 from .consts import USBCONST
-
-# need support for f-string syntax
-if version_info[:2] < (3, 6):
-    raise AssertionError('Python 3.6 is required for this module')
 
 
 class VirtLoader:
@@ -46,9 +41,8 @@ class VirtLoader:
         """
         backend = get_backend()
         with yamlfp:
-            ydefs = yaml_load(yamlfp, Loader=Loader)
             try:
-                for ydef in ydefs:
+                for ydef in YAML().load_all(yamlfp):
                     self._build_root(backend, ydef)
             except Exception as exc:
                 raise ValueError(f'Invalid configuration: {exc}') from exc

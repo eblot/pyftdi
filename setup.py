@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2020 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
@@ -21,7 +21,7 @@ from os import close, getcwd, unlink, walk
 from os.path import abspath, dirname, join as joinpath, relpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
-from sys import stderr
+from sys import stderr, exit as sysexit
 from tempfile import mkstemp
 
 
@@ -38,10 +38,10 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
-    'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: System :: Hardware :: Hardware Drivers',
 ]
@@ -49,9 +49,8 @@ INSTALL_REQUIRES = [
     'pyusb >= 1.0.0',
     'pyserial >= 3.0',
 ]
-INSTALL_REQUIRES_3_5 = [
-    # only for old Python 3.5 support
-    'aenum >= 2.1.0'
+TEST_REQUIRES = [
+    'ruamel.yaml >= 0.16',
 ]
 
 HERE = abspath(dirname(__file__))
@@ -103,9 +102,8 @@ class BuildPy(build_py):
        syntax error is catched, raised and setup.py actually fails should this
        event arise.
 
-       This step is critical to check that an unsupported syntax (for ex. 3.6
-       syntax w/ a 3.5 interpreter) does not end into a 'valid' package from
-       setuptools perspective...
+       This step is critical to check that an unsupported syntax does not end
+       up as a 'valid' package from setuptools perspective...
     """
 
     def byte_compile(self, files):
@@ -189,11 +187,8 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
-        extras_require={
-            ':python_version == "3.5"': INSTALL_REQUIRES_3_5,
-        },
-        # tests requires >=3.6
-        python_requires='>=3.5',
+        test_requires=TEST_REQUIRES,
+        python_requires='>=3.6',
     )
 
 
@@ -202,4 +197,4 @@ if __name__ == '__main__':
         main()
     except Exception as exc:
         print(exc, file=stderr)
-        exit(1)
+        sysexit(1)

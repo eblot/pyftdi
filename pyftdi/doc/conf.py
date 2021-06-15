@@ -1,8 +1,14 @@
+# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 import os
 import re
 import sys
 
-# pip3 install sphinx-autodoc-typehints sphinx-pypi-upload
+# pip3 install wheel
+# pip3 install sphinx-autodoc-typehints sphinx-pypi-upload sphinx_rtd_theme
 # python3 setup.py build_sphinx
 # sphinx-build -b html ../pyftdi/pyftdi/doc .
 
@@ -98,4 +104,4 @@ texinfo_documents = [
 
 
 def setup(app):
-    app.add_stylesheet('https://fonts.googleapis.com/css?family=Raleway')
+    app.add_css_file('https://fonts.googleapis.com/css?family=Raleway')

@@ -195,9 +195,17 @@ class JtagController:
         cmd = bytearray((Ftdi.SET_BITS_LOW, 0x0, self.direction))
         self._ftdi.write_data(cmd)
 
-    def close(self) -> None:
+    def close(self, freeze: bool = False) -> None:
+        """Close the JTAG interface/port.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close. This means the port is left with
+                          its current configuration and output signals.
+                          This feature should not be used except for very
+                          specific needs.
+        """
         if self._ftdi.is_connected:
-            self._ftdi.close()
+            self._ftdi.close(freeze)
 
     def purge(self) -> None:
         self._ftdi.purge_buffers()
@@ -440,9 +448,13 @@ class JtagEngine:
         """Configure the FTDI interface as a JTAG controller"""
         self._ctrl.configure(url)
 
-    def close(self) -> None:
-        """Terminate a JTAG session/connection"""
-        self._ctrl.close()
+    def close(self, freeze: bool = False) -> None:
+        """Terminate a JTAG session/connection.
+
+           :param freeze: if set, FTDI port is not reset to its default
+                          state on close.
+        """
+        self._ctrl.close(freeze)
 
     def purge(self) -> None:
         """Purge low level HW buffers"""

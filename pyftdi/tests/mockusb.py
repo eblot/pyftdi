@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
 #pylint: disable-msg=empty-docstring
@@ -32,11 +32,6 @@ from pyftdi.usbtools import UsbTools
 
 # MockLoader is assigned in ut_main
 MockLoader = None
-
-
-# need support for f-string syntax
-if version_info[:2] < (3, 6):
-    raise AssertionError('Python 3.6 is required for this module')
 
 
 class FtdiTestCase(TestCase):

@@ -1,10 +1,11 @@
-# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2021, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 """EEPROM management for PyFdti"""
 
+#pylint: disable-msg=too-many-arguments
 #pylint: disable-msg=too-many-branches
 #pylint: disable-msg=too-many-instance-attributes
 #pylint: disable-msg=too-many-locals
@@ -51,23 +52,24 @@ class FtdiEeprom:
     """FTDI EEPROM management
     """
 
-    _PROPS = namedtuple('PROPS', 'size user dynoff')
+    _PROPS = namedtuple('PROPS', 'size user dynoff chipoff')
     """Properties for each FTDI device release.
 
        * size is the size in bytes of the EEPROM storage area
        * user is the size in bytes of the user storage area, if any/supported
        * dynoff is the offset in EEPROM of the first bytes to store strings
+       * chipoff is the offset in EEPROM of the EEPROM chip type
     """
 
     _PROPERTIES = {
-        0x0200: _PROPS(0, None, 0),        # FT232AM
-        0x0400: _PROPS(256, 0x14, 0x94),   # FT232BM
-        0x0500: _PROPS(256, 0x16, 0x96),   # FT2232D
-        0x0600: _PROPS(128, None, 0x18),   # FT232R
-        0x0700: _PROPS(256, 0x1A, 0x9A),   # FT2232H
-        0x0800: _PROPS(256, 0x1A, 0x9A),   # FT4232H
-        0x0900: _PROPS(256, 0x1A, 0xA0),   # FT232H
-        0x1000: _PROPS(1024, 0x1A, 0xA0),  # FT230X/FT231X/FT234X
+        0x0200: _PROPS(0, None, 0, None),        # FT232AM
+        0x0400: _PROPS(256, 0x14, 0x94, None),   # FT232BM
+        0x0500: _PROPS(256, 0x16, 0x96, 0x14),   # FT2232D
+        0x0600: _PROPS(128, None, 0x18, None),   # FT232R
+        0x0700: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT2232H
+        0x0800: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232H
+        0x0900: _PROPS(256, 0x1A, 0xA0, 0x1e),   # FT232H
+        0x1000: _PROPS(1024, 0x1A, 0xA0, None),  # FT230X/FT231X/FT234X
     }
     """EEPROM properties."""
 
@@ -115,6 +117,7 @@ class FtdiEeprom:
         self._config = OrderedDict()
         self._dirty = set()
         self._modified = False
+        self._chip: Optional[int] = None
 
     def __getattr__(self, name):
         if name in self._config:
@@ -186,6 +189,12 @@ class FtdiEeprom:
 
            :return: the size in bytes
         """
+        if self._chip == 0x46:
+            return 0x80  # 93C46
+        if self._chip == 0x56:
+            return 0x100  # 93C56
+        if self._chip == 0x66:
+            return 0x100  # 93C66 (512 bytes, only 256 are used)
         try:
             eeprom_size = self._PROPERTIES[self.device_version].size
         except (AttributeError, KeyError) as exc:
@@ -218,7 +227,7 @@ class FtdiEeprom:
 
            :return: True if no content is detected
         """
-        if len(self._eeprom) != self._PROPERTIES[self.device_version].size:
+        if len(self._eeprom) != self.size:
             return False
         for byte in self._eeprom:
             if byte != 0xFF:
@@ -262,7 +271,10 @@ class FtdiEeprom:
         cfg = ConfigParser()
         cfg.add_section('values')
         for name, value in self._config.items():
-            cfg.set('values', name, str(value))
+            val = str(value)
+            if isinstance(value, bool):
+                val = val.lower()
+            cfg.set('values', name, val)
         cfg.add_section('raw')
         length = 16
         for i in range(0, len(self._eeprom), length):
@@ -331,11 +343,11 @@ class FtdiEeprom:
                     func = getattr(self, 'set_%s' % vmap[opt])
                     func(value)
                 else:
+                    self.log.debug('Assigning opt %s = %s', opt, value)
                     try:
                         self.set_property(opt, value)
-                    except ValueError:
-                        self.log.warning("Ignoring setting '%s': "
-                                         "not implemented", opt)
+                    except (TypeError, ValueError, NotImplementedError) as exc:
+                        self.log.warning("Ignoring setting '%s': %s", opt, exc)
             loaded = True
         if not loaded:
             raise ValueError('Invalid section: %s' % section)
@@ -380,18 +392,9 @@ class FtdiEeprom:
             self._set_bus_control(mobj.group(1), mobj.group(2), value, out)
             self._dirty.add(name)
             return
-        hwords = {
-            'vendor_id': 0x02,
-            'product_id': 0x04,
-            'type': 0x06,
-            'usb_version': 0x0c
-        }
-        if name in hwords:
-            val = to_int(value)
-            if not 0 <= val <= 0xFFFF:
-                raise ValueError('Invalid value for %s' % name)
-            offset = hwords[name]
-            self._eeprom[offset:offset+2] = spack('<H', val)
+        mobj = match(r'group_(\d)_(drive|schmitt|slow_slew)', name)
+        if mobj:
+            self._set_group(int(mobj.group(1)), mobj.group(2), value, out)
             return
         confs = {
             'remote_wakeup': (0, 5),
@@ -401,6 +404,23 @@ class FtdiEeprom:
             'suspend_pull_down': (2, 2),
             'has_serial': (2, 3),
         }
+        hwords = {
+            'vendor_id': 0x02,
+            'product_id': 0x04,
+            'type': 0x06,
+        }
+        if self.device_version in (0x0400, 0x0500):
+            # Type BM and 2232C/D use 0xc to encode the USB version to expose
+            # H device use this location to encode bus/group properties
+            hwords['usb_version'] = 0x0c
+            confs['use_usb_version'] = (2, 4)
+        if name in hwords:
+            val = to_int(value)
+            if not 0 <= val <= 0xFFFF:
+                raise ValueError('Invalid value for %s' % name)
+            offset = hwords[name]
+            self._eeprom[offset:offset+2] = spack('<H', val)
+            return
         if name in confs:
             val = to_bool(value, permissive=False, allow_int=True)
             offset, bit = confs[name]
@@ -422,9 +442,20 @@ class FtdiEeprom:
             self._dirty.add(name)
             return
         if name in self.properties:
-            raise NotImplementedError("Change to '%s' is not yet supported" %
-                                      name)
-        raise ValueError("Unknown property '%s'" % name)
+            if name not in self._config:
+                raise NotImplementedError("change is not supported")
+            curval = self._config[name]
+            try:
+                curtype = type(curval)
+                value = curtype(value)
+            except (ValueError, TypeError) as exc:
+                raise ValueError("cannot be converted to "
+                    "the proper type '%s'" % curtype) from exc
+            if value != curval:
+                raise NotImplementedError("not yet supported")
+            # no-op change is silently ignored
+            return
+        raise ValueError(f"unknown property: {name}")
 
     def erase(self) -> None:
         """Erase the whole EEPROM."""
@@ -446,7 +477,6 @@ class FtdiEeprom:
         self.set_property('vendor_id', vid)
         self.set_property('product_id', pid)
         self.set_property('type', dev_ver)
-        self.set_property('usb_version', 0x200)
         self.set_property('power_max', 150)
         self._sync_eeprom()
 
@@ -576,9 +606,24 @@ class FtdiEeprom:
         crc, crc_pos, crc_size = self._compute_crc(self._eeprom, False)
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
 
+    def _compute_size(self, eeprom: Union[bytes, bytearray]) -> int:
+        if self._ftdi.is_eeprom_internal:
+            return self._ftdi.max_eeprom_size
+        if all([x == 0xFF for x in eeprom]):
+            # erased EEPROM, size is unknown
+            return self._ftdi.max_eeprom_size
+        if eeprom[0:0x80] == eeprom[0x80:0x100]:
+            return 0x80
+        if eeprom[0:0x40] == eeprom[0x40:0x80]:
+            return 0x40
+        return 0x100
+
     def _read_eeprom(self) -> bytes:
-        buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
+        buf = self._ftdi.read_eeprom(0)
         eeprom = bytearray(buf)
+        size = self._compute_size(eeprom)
+        if size < len(eeprom):
+            eeprom = eeprom[:size]
         crc = self._compute_crc(eeprom, True)[0]
         if crc:
             if self.is_empty:
@@ -590,6 +635,10 @@ class FtdiEeprom:
     def _decode_eeprom(self):
         cfg = self._config
         cfg.clear()
+        chipoff = self._PROPERTIES[self.device_version].chipoff
+        if chipoff is not None:
+            self._chip = Hex2Int(self._eeprom[chipoff])
+            cfg['chip'] = self._chip
         cfg['vendor_id'] = Hex4Int(sunpack('<H', self._eeprom[0x02:0x04])[0])
         cfg['product_id'] = Hex4Int(sunpack('<H', self._eeprom[0x04:0x06])[0])
         cfg['type'] = Hex4Int(sunpack('<H', self._eeprom[0x06:0x08])[0])
@@ -601,10 +650,14 @@ class FtdiEeprom:
         cfg['suspend_pull_down'] = bool(conf & (1 << 2))
         cfg['out_isochronous'] = bool(conf & (1 << 1))
         cfg['in_isochronous'] = bool(conf & (1 << 0))
-        cfg['usb_version'] = Hex4Int(sunpack('<H', self._eeprom[0x0c:0x0e])[0])
         cfg['manufacturer'] = self._decode_string(0x0e)
         cfg['product'] = self._decode_string(0x10)
         cfg['serial'] = self._decode_string(0x12)
+        if self.device_version in (0x0400, 0x0500):
+            cfg['use_usb_version'] = bool(conf & (1 << 3))
+            if cfg['use_usb_version']:
+                cfg['usb_version'] = \
+                    Hex4Int(sunpack('<H', self._eeprom[0x0c:0x0e])[0])
         name = None
         try:
             name = Ftdi.DEVICE_NAMES[cfg['type']].replace('-', '')
@@ -699,11 +752,33 @@ class FtdiEeprom:
         # for now, only support FT-X devices
         raise ValueError('Bus control not implemented for this device')
 
+    def _set_group(self, group: int, value: Union[str, int, bool],
+                   out: Optional[TextIO]) -> None:
+        if self.device_version in (0x0700, 0x0800, 0x0900):
+            self._set_group_x232h(group, value, out)
+            return
+        raise ValueError('Group not implemented for this device')
+
     def _set_bus_control_230x(self, bus: str, control: str,
                               value: Union[str, int, bool],
                               out: Optional[TextIO]) -> None:
         if bus not in 'cd':
             raise ValueError('Invalid bus: %s' % bus)
+        self._set_bus_xprop(0x0c, bus == 'c', control, value, out)
+
+    def _set_group_x232h(self, group: int, control: str, value: str,
+                         out: Optional[TextIO]) -> None:
+        if self.device_version in (0x0700, 0x800):  # 2232H/4232H
+            offset = 0x0c + group//2
+            nibble = group & 1
+        else:  # 232H
+            offset = 0x0c + group
+            nibble = 0
+        self._set_bus_xprop(offset, nibble, control, value, out)
+
+    def _set_bus_xprop(self, offset: int, high_nibble: bool, control: str,
+                       value: Union[str, int, bool], out: Optional[TextIO]) \
+            -> None:
         try:
             if control == 'drive':
                 candidates = (4, 8, 12, 16)
@@ -725,8 +800,8 @@ class FtdiEeprom:
         except (ValueError, TypeError) as exc:
             raise ValueError('Invalid %s value: %s' %
                              (control, value)) from exc
-        config = self._eeprom[0x0c]
-        if bus == 'd':
+        config = self._eeprom[offset]
+        if not high_nibble:
             conf = config & 0x0F
             config &= 0xF0
             cshift = 0
@@ -746,7 +821,7 @@ class FtdiEeprom:
         else:
             raise RuntimeError('Internal error')
         config |= conf << cshift
-        self._eeprom[0x0c] = config
+        self._eeprom[offset] = config
 
     def _set_invert(self, name, value, out):
         if value == '?' and out:
@@ -771,7 +846,7 @@ class FtdiEeprom:
         for bit in self.UART_BITS:
             value = self._eeprom[0x0B]
             cfg['invert_%s' % self.UART_BITS(bit).name] = bool(value & bit)
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        max_drive = self.DRIVE.LOW.value | self.DRIVE.HIGH.value
         value = self._eeprom[0x0c]
         for grp in range(2):
             conf = value & 0xF
@@ -786,7 +861,6 @@ class FtdiEeprom:
                 cfg['cbus_func_%d' % bix] = self.CBUSX(value).name
             except ValueError:
                 pass
-        cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232h(self):
         cfg = self._config
@@ -799,12 +873,14 @@ class FtdiEeprom:
         cfg['flow_control'] = 'on' if (cfg1 & self.CFG1.FLOW_CONTROL) \
                               else 'off'
         cfg['powersave'] = bool(cfg1 & self.DRIVE.PWRSAVE_DIS)
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        max_drive = self.DRIVE.LOW.value | self.DRIVE.HIGH.value
         for grp in range(2):
             conf = self._eeprom[0x0c+grp]
-            cfg['group_%d_drive' % grp] = bool((conf & max_drive) == max_drive)
-            cfg['group_%d_schmitt' % grp] = conf & self.DRIVE.SCHMITT
-            cfg['group_%d_slew' % grp] = conf & self.DRIVE.SLOW_SLEW
+            cfg['group_%d_drive' % grp] = 4 * (1+(conf & max_drive))
+            cfg['group_%d_schmitt' % grp] = \
+                bool(conf & self.DRIVE.SCHMITT.value)
+            cfg['group_%d_slow_slew' % grp] = \
+                bool(conf & self.DRIVE.SLOW_SLEW.value)
         for bix in range(5):
             value = self._eeprom[0x18 + bix]
             low, high = value & 0x0F, value >> 4
@@ -816,7 +892,6 @@ class FtdiEeprom:
                 cfg['cbus_func_%d' % ((2*bix)+1)] = self.CBUSH(high).name
             except ValueError:
                 pass
-        cfg['chip'] = Hex2Int(self._eeprom[0x1E])
 
     def _decode_232r(self):
         cfg = self._config
@@ -849,7 +924,7 @@ class FtdiEeprom:
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_type'] = self.CHANNEL(cfg0 & 0x7).name or 'UART'
         cfg['channel_b_type'] = self.CHANNEL(cfg1 & 0x7).name or 'UART'
-        cfg['suspend_dbus7'] = cfg1 & self.CFG1.SUSPEND_DBUS7
+        cfg['suspend_dbus7'] = bool(cfg1 & self.CFG1.SUSPEND_DBUS7.value)
 
     def _decode_4232h(self):
         cfg = self._config
@@ -863,17 +938,18 @@ class FtdiEeprom:
             cfg['channel_%x_rs485' % (0xa+chix)] = bool(conf & (rs485 << chix))
 
     def _decode_x232h(self, cfg):
-        # common code for2232h and 4232h
+        # common code for 2232h and 4232h
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else 'D2XX'
         cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else 'D2XX'
-        max_drive = self.DRIVE.LOW | self.DRIVE.HIGH
+        max_drive = self.DRIVE.LOW.value | self.DRIVE.HIGH.value
         for bix in range(4):
             if not bix & 1:
                 val = self._eeprom[0x0c + bix//2]
             else:
                 val >>= 4
-            cfg['group_%d_drive' % bix] = bool(val & max_drive)
-            cfg['group_%d_schmitt' % bix] = bool(val & self.DRIVE.SCHMITT)
-            cfg['group_%d_slew' % bix] = bool(val & self.DRIVE.SLOW_SLEW)
-        cfg['chip'] = Hex2Int(self._eeprom[0x18])
+            cfg['group_%d_drive' % bix] = 4 * (1+(val & max_drive))
+            cfg['group_%d_schmitt' % bix] = \
+                bool(val & self.DRIVE.SCHMITT.value)
+            cfg['group_%d_slow_slew' % bix] = \
+                bool(val & self.DRIVE.SLOW_SLEW.value)
