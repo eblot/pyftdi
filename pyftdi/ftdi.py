@@ -501,7 +501,8 @@ class Ftdi:
     def open(self, vendor: int, product: int, bus: Optional[int] = None,
              address: Optional[int] = None, index: int = 0,
              serial: Optional[str] = None,
-             interface: int = 1) -> None:
+             interface: int = 1,
+             reset: bool = True) -> None:
         """Open a new interface to the specified FTDI device.
 
            If several FTDI devices of the same kind (vid, pid) are connected
@@ -525,18 +526,21 @@ class Ftdi:
            :param str serial: optional selector, specified the FTDI device
                               by its serial number
            :param str interface: FTDI interface/port
+           :param bool reset: If set, reset the device on open
         """
         devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
                                       index, None)
         device = UsbTools.get_device(devdesc)
-        self.open_from_device(device, interface)
+        self.open_from_device(device, interface, reset=reset)
 
     def open_from_device(self, device: UsbDevice,
-                         interface: int = 1) -> None:
+                         interface: int = 1,
+                         reset: bool = True) -> None:
         """Open a new interface from an existing USB device.
 
            :param device: FTDI USB device (PyUSB instance)
            :param interface: FTDI interface to use (integer starting from 1)
+           :param bool reset: If set, reset the device on open
         """
         if not isinstance(device, UsbDevice):
             raise FtdiError("Device '%s' is not a PyUSB device" % device)
@@ -556,10 +560,11 @@ class Ftdi:
         self._readbuffer = bytearray()
         # Drain input buffer
         self.purge_buffers()
-        # Shallow reset
-        self._reset_device()
-        # Reset feature mode
-        self.set_bitmode(0, Ftdi.BitMode.RESET)
+        if reset:
+            # Shallow reset
+            self._reset_device()
+            # Reset feature mode
+            self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
         self._latency_threshold = None
         self.set_latency_timer(self.LATENCY_MIN)
