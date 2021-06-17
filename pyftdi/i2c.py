@@ -925,14 +925,23 @@ class I2cController:
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._i2c_mask
 
-    def set_gpio_direction(self, pins: int, direction: int) -> None:
+    def set_gpio_direction(self, pins: int, direction: int,
+                           immediate: bool = False) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (on for output)
+           :param immediate: force update the pin states NOW, otherwise
+                             waits for next write_gpio command
         """
         with self._lock:
             self._set_gpio_direction(pins, direction)
+            if immediate:
+                # perform read-without_modify-write to force new pins
+                use_high = self._wide_port and (self.direction & 0xff00)
+                data = self._read_raw(use_high)
+                self._write_raw(data, use_high)
+                self._gpio_low = data & 0xFF & ~self._i2c_mask
 
     def _set_gpio_direction(self, pins: int,
                             direction: int) -> None:
