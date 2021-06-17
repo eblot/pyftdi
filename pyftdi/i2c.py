@@ -317,13 +317,14 @@ class I2cGpioPort:
         """
         return self._controller.write_gpio(value)
 
-    def set_direction(self, pins: int, direction: int) -> None:
+    def set_direction(self, pins: int, direction: int,
+                      immediate: bool = False) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (high level for output)
         """
-        self._controller.set_gpio_direction(pins, direction)
+        self._controller.set_gpio_direction(pins, direction, immediate)
 
 
 I2CTimings = namedtuple('I2CTimings', 't_hd_sta t_su_sta t_su_sto t_buf')
