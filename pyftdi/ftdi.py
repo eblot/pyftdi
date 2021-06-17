@@ -315,7 +315,7 @@ class Ftdi:
     LATENCY_EEPROM_FT232R = 77
 
     # EEPROM Properties
-    EXT_EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
+    EXT_EEPROM_SIZES = (128, 256)  # in bytes (93C66 seen as 93C56)
 
     INT_EEPROMS = {
         0x0600: 0x80,  # FT232R: 128 bytes, 1024 bits
@@ -501,7 +501,7 @@ class Ftdi:
     def open(self, vendor: int, product: int, bus: Optional[int] = None,
              address: Optional[int] = None, index: int = 0,
              serial: Optional[str] = None,
-             interface: int = 1)  -> None:
+             interface: int = 1) -> None:
         """Open a new interface to the specified FTDI device.
 
            If several FTDI devices of the same kind (vid, pid) are connected
@@ -736,7 +736,7 @@ class Ftdi:
             self.close()
             raise FtdiMpsseError('This interface does not support MPSSE')
         if to_bool(tracer):  # accept strings as boolean
-            #pylint: disable-msg=import-outside-toplevel
+            # pylint: disable-msg=import-outside-toplevel
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer(self.device_version)
             self.log.debug('Using MPSSE tracer')
@@ -1014,7 +1014,6 @@ class Ftdi:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0700, 0x0800, 0x0900)
 
-
     @property
     def is_mpsse(self) -> bool:
         """Tell whether the device is configured in MPSSE mode
@@ -1289,7 +1288,7 @@ class Ftdi:
         try:
             self.set_bitmode(outv, Ftdi.BitMode.CBUS)
             inv = self.read_pins()
-            #print(f'BM {outv:04b} {inv:04b}')
+            # print(f'BM {outv:04b} {inv:04b}')
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
@@ -2044,7 +2043,7 @@ class Ftdi:
         except (NotImplementedError, USBError):
             pass
 
-#pylint: disable-msg=protected-access
+# pylint: disable-msg=protected-access
 # need to access private member _ctx of PyUSB device (resource manager)
 # until PyUSB #302 is addressed
 
@@ -2057,7 +2056,7 @@ class Ftdi:
         # and there is no public API for this.
         return bool(self._usb_dev._ctx.handle)
 
-#pylint: enable-msg=protected-access
+# pylint: enable-msg=protected-access
 
     def _reset_device(self):
         """Reset the FTDI device (FTDI vendor command)"""
