@@ -922,7 +922,7 @@ class I2cController:
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
             data &= ~self._gpio_mask  # removes gpio data, leaves I2C data
-            data |= value  # combine I2C data with new value
+            data |= value  # combine I2C data with new gpio value
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._i2c_mask
 
