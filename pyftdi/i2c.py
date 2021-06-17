@@ -517,7 +517,7 @@ class I2cController:
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
                 gpio_mask = (1 << 8) - 1  # set mask for narrow port (8-bit)
-                gpio_mask &= ~self._i2c_mask
+                gpio_mask &= ~(self._i2c_mask & 0xFF)
                 self._gpio_mask = gpio_mask
                 self._set_gpio_direction(io_out & 0xFF, io_dir & 0xFF)
 
