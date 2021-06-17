@@ -489,14 +489,14 @@ class Ftdi:
         """
         return bool(self._usb_dev)
 
-    def open_from_url(self, url: str) -> None:
+    def open_from_url(self, url: str, reset: bool = True) -> None:
         """Open a new interface to the specified FTDI device.
 
            :param str url: a FTDI URL selector
         """
         devdesc, interface = self.get_identifiers(url)
         device = UsbTools.get_device(devdesc)
-        self.open_from_device(device, interface)
+        self.open_from_device(device, interface, reset=reset)
 
     def open(self, vendor: int, product: int, bus: Optional[int] = None,
              address: Optional[int] = None, index: int = 0,
