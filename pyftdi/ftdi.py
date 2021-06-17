@@ -21,17 +21,17 @@ from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-arguments
-#pylint: disable=too-many-arguments
-#pylint: disable=too-many-branches
-#pylint: disable=too-many-statements
-#pylint: disable=too-many-nested-blocks
-#pylint: disable=too-many-instance-attributes
-#pylint: disable=too-many-nested-blocks
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-locals
-#pylint: disable=too-many-lines
+# pylint: disable-msg=invalid-name
+# pylint: disable-msg=too-many-arguments
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
+# pylint: disable=too-many-nested-blocks
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-nested-blocks
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-lines
 
 
 class FtdiError(IOError):
