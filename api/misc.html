@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -64,7 +67,7 @@
             
             
               <div class="version">
-                0.53.0
+                0.53.1
               </div>
             
           
@@ -194,17 +197,17 @@
 <span id="functions"></span><h2>Functions<a class="headerlink" href="#module-pyftdi.misc" title="Permalink to this headline">¶</a></h2>
 <p>Miscellaneous helpers</p>
 <dl class="py class">
-<dt id="pyftdi.misc.EasyDict">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">EasyDict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.EasyDict">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">EasyDict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dictionary whose members can be accessed as instance members</p>
 <dl class="py method">
-<dt id="pyftdi.misc.EasyDict.copy">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">copy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">a</span> <span class="pre">shallow</span> <span class="pre">copy</span> <span class="pre">of</span> <span class="pre">D</span><a class="headerlink" href="#pyftdi.misc.EasyDict.copy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.EasyDict.copy">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">a</span> <span class="pre">shallow</span> <span class="pre">copy</span> <span class="pre">of</span> <span class="pre">D</span><a class="headerlink" href="#pyftdi.misc.EasyDict.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="pyftdi.misc.EasyDict.mirror">
-<code class="sig-name descname"><span class="pre">mirror</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict.mirror" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.EasyDict.mirror">
+<span class="sig-name descname"><span class="pre">mirror</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.EasyDict.mirror" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instanciate a mirror EasyDict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -216,8 +219,8 @@
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.add_custom_devices">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">add_custom_devices</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftdicls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vpstr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_hex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.add_custom_devices" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.add_custom_devices">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">add_custom_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ftdicls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vpstr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_hex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.add_custom_devices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper function to add custom VID/PID to FTDI device identifer map.</p>
 <p>The string to parse should match the following format:</p>
 <p>[vendor_name=]&lt;vendor_id&gt;:[product_name=]&lt;product_id&gt;</p>
@@ -257,8 +260,8 @@ hexadecimal encoded values.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.hexdump">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">hexdump</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexdump" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.hexdump">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">hexdump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexdump" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a binary buffer into a hexadecimal representation.</p>
 <p>Return a multi-line strings with hexadecimal values and ASCII
 representation of the buffer data.</p>
@@ -280,8 +283,8 @@ representation of the buffer data.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.hexline">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">hexline</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexline" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.hexline">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">hexline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.hexline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a binary buffer into a hexadecimal representation.</p>
 <p>Return a string with hexadecimal values and ASCII representation
 of the buffer data.</p>
@@ -302,8 +305,8 @@ of the buffer data.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.is_iterable">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">is_iterable</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.is_iterable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.is_iterable">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">is_iterable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.is_iterable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tells whether an instance is iterable or not.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -319,8 +322,8 @@ of the buffer data.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.pretty_size">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">pretty_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lim_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lim_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10485760</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plural</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.pretty_size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.pretty_size">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">pretty_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'</span> <span class="pre">'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lim_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lim_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10485760</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plural</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.pretty_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a size into a more readable unit-indexed size (KiB, MiB)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -348,14 +351,14 @@ unit that allows the exact representation of the input value</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.show_call_stack">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">show_call_stack</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.show_call_stack" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.show_call_stack">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">show_call_stack</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.show_call_stack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print the current call stack, only useful for debugging purpose.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.to_bool">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">to_bool</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permissive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bool" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.to_bool">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">to_bool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permissive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_int</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bool" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a string and convert it into a boolean value if possible.</p>
 <p>Input value may be:
 - a string with an integer value, if <cite>allow_int</cite> is enabled
@@ -379,8 +382,8 @@ unit that allows the exact representation of the input value</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.to_bps">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">to_bps</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bps" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.to_bps">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">to_bps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_bps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a string and convert it into a baudrate value.</p>
 <p>The function accepts common multipliers as K, M and G</p>
 <dl class="field-list simple">
@@ -397,8 +400,8 @@ unit that allows the exact representation of the input value</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.to_int">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">to_int</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_int" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.to_int">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">to_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.to_int" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse a value and convert it into an integer value if possible.</p>
 <p>Input value may be:
 - a string with an integer coded as a decimal value
@@ -422,8 +425,8 @@ unit that allows the exact representation of the input value</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt id="pyftdi.misc.xor">
-<code class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></code><code class="sig-name descname"><span class="pre">xor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_a_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_b_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.xor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="pyftdi.misc.xor">
+<span class="sig-prename descclassname"><span class="pre">pyftdi.misc.</span></span><span class="sig-name descname"><span class="pre">xor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_a_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_b_</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.misc.xor" title="Permalink to this definition">¶</a></dt>
 <dd><p>XOR logical operation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
