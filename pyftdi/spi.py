@@ -836,8 +836,9 @@ class SpiController:
                 for i in range(n):
                     read_cmd = spack('<BH', rcmd, SpiController.PAYLOAD_MAX_LENGTH-1)
                     cmd.extend(read_cmd)
-                read_cmd = spack('<BH', rcmd, r-1)
-                cmd.extend(read_cmd)
+                if r:
+                    read_cmd = spack('<BH', rcmd, r-1)
+                    cmd.extend(read_cmd)
             else:
                 bytelen = readlen-1
                 if bytelen:
@@ -849,8 +850,9 @@ class SpiController:
                     for i in range(n):
                         read_cmd = spack('<BH', rcmd, SpiController.PAYLOAD_MAX_LENGTH-1)
                         cmd.extend(read_cmd)
-                    read_cmd = spack('<BH', rcmd, r-1)
-                    cmd.extend(read_cmd)
+                    if r:
+                        read_cmd = spack('<BH', rcmd, r-1)
+                        cmd.extend(read_cmd)
                 rcmd = (Ftdi.READ_BITS_NVE_MSB if not cpol else
                         Ftdi.READ_BITS_PVE_MSB)
                 read_cmd = spack('<BB', rcmd, 7-droptail)
