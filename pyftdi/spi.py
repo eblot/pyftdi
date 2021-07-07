@@ -160,7 +160,12 @@ class SpiPort:
         self._cpha = bool(mode & 0x1)
         cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
                             SpiController.DO_BIT)
-        cs_select = 0xFF & ~((SpiController.CS_BIT << self._cs) |
+
+        cs_bits = self._controller._cs_bits
+
+        cs_bit_sel = ((SpiController.CS_BIT << self._cs) ^
+                      (cs_bits & ~self._controller._cs_idle))
+        cs_select = 0xFF & ~(cs_bit_sel |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
         self._cs_prolog = bytes([cs_clock, cs_select])
@@ -354,10 +359,11 @@ class SpiController:
         self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
-        self._cs_bits = 0
+        self._cs_idle = 0
         self._spi_ports = []
         self._spi_dir = 0
         self._spi_mask = self.SPI_BITS
+        self._cs_act_hi = 0
 
     def configure(self, url: Union[str, UsbDevice],
                   **kwargs: Mapping[str, Any]) -> None:
@@ -384,6 +390,9 @@ class SpiController:
              frequency.
            * ``cs_count`` count of chip select signals dedicated to select
              SPI slave devices, starting from A*BUS3 pin
+           * ``cs_act_hi`` a bitfield specifying which SPI CS lines are active
+             high. Bit 4 is the first CS, bit 5 the second and so on. Bits
+             corresponding to pins not used/configured as CS are ignored.
            * ``turbo`` whether to enable or disable turbo mode
            * ``debug`` to increase log verbosity, using MPSSE tracer
         """
@@ -396,6 +405,9 @@ class SpiController:
         if not 1 <= self._cs_count <= 5:
             raise ValueError('Unsupported CS line count: %d' %
                              self._cs_count)
+        if 'cs_act_hi' in kwargs:
+            self._cs_act_hi = int(kwargs['cs_act_hi']) & self._cs_bits
+            del kwargs['cs_act_hi']
         if 'turbo' in kwargs:
             self._turbo = bool(kwargs['turbo'])
             del kwargs['turbo']
@@ -419,19 +431,21 @@ class SpiController:
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
-            self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
-                             ~(SpiController.CS_BIT - 1))
+
+            cs_bits = self._cs_bits
+            self._cs_idle = (~self._cs_act_hi) & cs_bits
+
             self._spi_ports = [None] * self._cs_count
-            self._spi_dir = (self._cs_bits |
+            self._spi_dir = (cs_bits |
                              SpiController.DO_BIT |
                              SpiController.SCK_BIT)
-            self._spi_mask = self._cs_bits | self.SPI_BITS
+            self._spi_mask = cs_bits | self.SPI_BITS
             # until the device is open, there is no way to tell if it has a
             # wide (16) or narrow port (8). Lower API can deal with any, so
             # delay any truncation till the device is actually open
             self._set_gpio_direction(16, (~self._spi_mask) & 0xFFFF, io_dir)
             kwargs['direction'] = self._spi_dir | self._gpio_dir
-            kwargs['initial'] = self._cs_bits | (io_out & self._gpio_mask)
+            kwargs['initial'] = self._cs_idle | (io_out & self._gpio_mask)
             if not isinstance(url, str):
                 self._frequency = self._ftdi.open_mpsse_from_device(
                     url, interface=interface, **kwargs)
@@ -582,6 +596,17 @@ class SpiController:
         mask = (1 << self.width) - 1
         with self._lock:
             return mask & ~self._spi_mask
+
+    @property
+    def _cs_bits(self):
+        """Report the configured CS pins as a bitfield.
+
+           A true bit represents a pin configured as a SPI CS.
+
+           :return: the bitfield of configured CS pins.
+        """
+        return (((SpiController.CS_BIT << self._cs_count) - 1) &
+                ~(SpiController.CS_BIT - 1))
 
     @property
     def width(self):
@@ -800,7 +825,7 @@ class SpiController:
                 ctrl |= self._gpio_low
                 epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
             # Restore idle state
-            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_idle | self._gpio_low,
                        direction]
             if not self._turbo:
                 cs_high.append(Ftdi.SEND_IMMEDIATE)
@@ -907,7 +932,7 @@ class SpiController:
                 ctrl |= self._gpio_low
                 epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
             # Restore idle state
-            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_idle | self._gpio_low,
                        direction]
             if not self._turbo:
                 cs_high.append(Ftdi.SEND_IMMEDIATE)
