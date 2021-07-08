@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.53.1
+                0.53.2
               </div>
             
           
@@ -305,12 +305,14 @@ device. Always select the former.</p></li>
 <p>Dependencies should be automatically installed with PIP.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>pyusb &gt;= 1.0.0</p></li>
+<li><p>pyusb &gt;= 1.0.0, &lt; 1.2.0</p></li>
 <li><p>pyserial &gt;= 3.0</p></li>
 </ul>
 </div></blockquote>
 <p>Do <em>not</em> install <a class="reference external" href="http://pyusb.github.io/pyusb/">PyUSB</a> from GitHub development branch (<code class="docutils literal notranslate"><span class="pre">master</span></code>, …).
 Always prefer a stable, tagged release.</p>
+<p>PyUSB 1.2.0 also broke the backward compatibility of the Device API, so it will
+not work with PyFtdi for the time being.</p>
 </div>
 <div class="section" id="installing-with-pip">
 <h3>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this headline">¶</a></h3>
