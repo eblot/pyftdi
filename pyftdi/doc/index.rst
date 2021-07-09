@@ -32,7 +32,7 @@ Overview
 PyFtdi aims at providing a user-space driver for popular FTDI devices,
 implemented in pure Python language.
 
-Suported FTDI devices include:
+Supported FTDI devices include:
 
 * UART and GPIO bridges
 

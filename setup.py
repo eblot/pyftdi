@@ -46,7 +46,7 @@ CLASSIFIERS = [
     'Topic :: System :: Hardware :: Hardware Drivers',
 ]
 INSTALL_REQUIRES = [
-    'pyusb >= 1.0.0',
+    'pyusb >= 1.0.0, < 1.2.0',
     'pyserial >= 3.0',
 ]
 TEST_REQUIRES = [
