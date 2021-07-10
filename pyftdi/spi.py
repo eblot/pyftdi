@@ -359,11 +359,12 @@ class SpiController:
         self._immediate = bytes((Ftdi.SEND_IMMEDIATE,))
         self._frequency = 0.0
         self._clock_phase = False
+        self._cs_bits = 0
         self._cs_idle = 0
+        self._cs_act_hi = 0
         self._spi_ports = []
         self._spi_dir = 0
         self._spi_mask = self.SPI_BITS
-        self._cs_act_hi = 0
 
     def configure(self, url: Union[str, UsbDevice],
                   **kwargs: Mapping[str, Any]) -> None:
@@ -406,7 +407,7 @@ class SpiController:
             raise ValueError('Unsupported CS line count: %d' %
                              self._cs_count)
         if 'cs_act_hi' in kwargs:
-            self._cs_act_hi = int(kwargs['cs_act_hi']) & self._cs_bits
+            self._cs_act_hi = int(kwargs['cs_act_hi'])
             del kwargs['cs_act_hi']
         if 'turbo' in kwargs:
             self._turbo = bool(kwargs['turbo'])
@@ -431,15 +432,15 @@ class SpiController:
         with self._lock:
             if self._frequency > 0.0:
                 raise SpiIOError('Already configured')
-
-            cs_bits = self._cs_bits
-            self._cs_idle = (~self._cs_act_hi) & cs_bits
-
+            self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
+                             ~(SpiController.CS_BIT - 1))
+            self._cs_act_hi &= self._cs_bits
+            self._cs_idle = (~self._cs_act_hi) & self._cs_bits
             self._spi_ports = [None] * self._cs_count
-            self._spi_dir = (cs_bits |
+            self._spi_dir = (self._cs_bits |
                              SpiController.DO_BIT |
                              SpiController.SCK_BIT)
-            self._spi_mask = cs_bits | self.SPI_BITS
+            self._spi_mask = self._cs_bits | self.SPI_BITS
             # until the device is open, there is no way to tell if it has a
             # wide (16) or narrow port (8). Lower API can deal with any, so
             # delay any truncation till the device is actually open
@@ -596,17 +597,6 @@ class SpiController:
         mask = (1 << self.width) - 1
         with self._lock:
             return mask & ~self._spi_mask
-
-    @property
-    def _cs_bits(self):
-        """Report the configured CS pins as a bitfield.
-
-           A true bit represents a pin configured as a SPI CS.
-
-           :return: the bitfield of configured CS pins.
-        """
-        return (((SpiController.CS_BIT << self._cs_count) - 1) &
-                ~(SpiController.CS_BIT - 1))
 
     @property
     def width(self):
