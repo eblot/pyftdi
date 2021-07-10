@@ -160,11 +160,9 @@ class SpiPort:
         self._cpha = bool(mode & 0x1)
         cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
                             SpiController.DO_BIT)
-
-        cs_bits = self._controller._cs_bits
-
-        cs_bit_sel = ((SpiController.CS_BIT << self._cs) ^
-                      (cs_bits & ~self._controller._cs_idle))
+        cs_bit_sel = ~((self._controller._cs_idle
+                       ^ (SpiController.CS_BIT << self._cs))
+                       & self._controller._cs_bits)
         cs_select = 0xFF & ~(cs_bit_sel |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
