@@ -310,11 +310,14 @@ class I2cGpioPort:
         """
         return self._controller.read_gpio(with_output)
 
-    def write(self, value: int) -> None:
+    def write(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port.
 
            :param value: the GPIO port pins as a bitfield
+           :with_input: do not error when writing to inputs
         """
+        if with_input:
+            value &= self._gpio_mask
         return self._controller.write_gpio(value)
 
     def set_direction(self, pins: int, direction: int,
