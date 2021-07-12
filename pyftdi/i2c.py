@@ -316,12 +316,10 @@ class I2cGpioPort:
            :param value: the GPIO port pins as a bitfield
            :with_input: do not error when writing to inputs
         """
-        if with_input:
-            value &= self._gpio_mask
-        return self._controller.write_gpio(value)
+        return self._controller.write_gpio(value, with_input)
 
     def set_direction(self, pins: int, direction: int,
-                      immediate: bool = False) -> None:
+                      immediate: bool = True) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
@@ -912,13 +910,13 @@ class I2cController:
             value &= ~self._gpio_dir
         return value
 
-    def write_gpio(self, value: int) -> None:
+    def write_gpio(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port.
 
            :param value: the GPIO port pins as a bitfield
         """
         with self._lock:
-            if (value & self._gpio_dir) != value:
+            if (value & self._gpio_dir) != value and not with_input:
                 raise I2cIOError('No such GPO pins: %04x/%04x' %
                                  (self._gpio_dir, value))
             # perform read-modify-write
@@ -928,9 +926,10 @@ class I2cController:
             data |= value  # combine I2C data with new gpio value
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._i2c_mask
+            self._gpio_last = data & self._gpio_mask  # last user gpio
 
     def set_gpio_direction(self, pins: int, direction: int,
-                           immediate: bool = False) -> None:
+                           immediate: bool = True) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
@@ -944,6 +943,8 @@ class I2cController:
                 # perform read-without_modify-write to force new pins
                 use_high = self._wide_port and (self.direction & 0xff00)
                 data = self._read_raw(use_high)
+                data &= ~self._gpio_mask  # removes gpio data, leaves I2C data
+                data |= self._gpio_last  # combine I2C data with last user gpio
                 self._write_raw(data, use_high)
                 self._gpio_low = data & 0xFF & ~self._i2c_mask
 
