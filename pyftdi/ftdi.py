@@ -352,7 +352,7 @@ class Ftdi:
     # --- Public API -------------------------------------------------------
 
     @classmethod
-    def create_from_url(cls, url: str) -> 'Ftdi':
+    def create_from_url(cls, url: str, **kwargs) -> 'Ftdi':
         """Create an Ftdi instance from an URL
 
            URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface
@@ -361,7 +361,7 @@ class Ftdi:
            :return: a fresh, open Ftdi instance
         """
         device = Ftdi()
-        device.open_from_url(url)
+        device.open_from_url(url, **kwargs)
         return device
 
     @classmethod
@@ -489,7 +489,7 @@ class Ftdi:
         """
         return bool(self._usb_dev)
 
-    def open_from_url(self, url: str, reset: bool = True) -> None:
+    def open_from_url(self, url: str, reset: bool = True, **kwargs) -> None:
         """Open a new interface to the specified FTDI device.
 
            :param str url: a FTDI URL selector
@@ -535,7 +535,7 @@ class Ftdi:
 
     def open_from_device(self, device: UsbDevice,
                          interface: int = 1,
-                         reset: bool = True) -> None:
+                         reset: bool = True, **kwargs) -> None:
         """Open a new interface from an existing USB device.
 
            :param device: FTDI USB device (PyUSB instance)
@@ -570,7 +570,7 @@ class Ftdi:
         self.set_latency_timer(self.LATENCY_MIN)
         self._debug_log = self.log.getEffectiveLevel() == DEBUG
 
-    def close(self, freeze: bool = False) -> None:
+    def close(self, freeze: bool = False, **kwargs) -> None:
         """Close the FTDI interface/port.
 
            :param freeze: if set, FTDI port is not reset to its default
@@ -618,7 +618,7 @@ class Ftdi:
     def open_mpsse_from_url(self, url: str, direction: int = 0x0,
                             initial: int = 0x0, frequency: float = 6.0E6,
                             latency: int = 16, debug: bool = False,
-                            reset: bool = True) -> float:
+                            reset: bool = True, **kwargs) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -652,7 +652,7 @@ class Ftdi:
                    direction: int = 0x0, initial: int = 0x0,
                    frequency: float = 6.0E6, latency: int = 16,
                    debug: bool = False,
-                   reset: bool = True) -> float:
+                   reset: bool = True, **kwargs) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -707,7 +707,7 @@ class Ftdi:
                                initial: int = 0x0, frequency: float = 6.0E6,
                                latency: int = 16, tracer: bool = False,
                                debug: bool = False,
-                               reset: bool = True) -> float:
+                               reset: bool = True, **kwargs) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -782,7 +782,7 @@ class Ftdi:
     def open_bitbang_from_url(self, url: str, direction: int = 0x0,
                               latency: int = 16, baudrate: int = 1000000,
                               sync: bool = False,
-                              reset: bool = True) -> float:
+                              reset: bool = True, **kwargs) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -812,7 +812,7 @@ class Ftdi:
                      interface: int = 1, direction: int = 0x0,
                      latency: int = 16, baudrate: int = 1000000,
                      sync: bool = False,
-                     reset: bool = True) -> float:
+                     reset: bool = True, **kwargs) -> float:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
@@ -847,7 +847,7 @@ class Ftdi:
                                  interface: int = 1, direction: int = 0x0,
                                  latency: int = 16, baudrate: int = 1000000,
                                  sync: bool = False,
-                                 reset: bool = True) -> int:
+                                 reset: bool = True, **kwargs) -> int:
         """Open a new interface to the specified FTDI device in bitbang mode.
 
            Bitbang enables direct read or write to FTDI GPIOs.
