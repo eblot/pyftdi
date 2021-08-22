@@ -16,7 +16,7 @@ libraries:
 PyFtdi_ does not depend on any other native library, and only uses standard
 Python modules along with PyUSB_ and pyserial_.
 
-PyFtdi_ is beeing tested with PyUSB_ 1.0.2.
+PyFtdi_ is beeing tested with PyUSB_ 1.1.0.
 
 Development
 ~~~~~~~~~~~
