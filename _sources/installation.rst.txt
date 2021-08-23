@@ -131,14 +131,14 @@ Python dependencies
 
 Dependencies should be automatically installed with PIP.
 
-  * pyusb >= 1.0.0, < 1.2.0
+  * pyusb >= 1.0.0, != 1.2.0
   * pyserial >= 3.0
 
 Do *not* install PyUSB_ from GitHub development branch (``master``, ...).
 Always prefer a stable, tagged release.
 
 PyUSB 1.2.0 also broke the backward compatibility of the Device API, so it will
-not work with PyFtdi for the time being.
+not work with PyFtdi.
 
 Installing with PIP
 ```````````````````
