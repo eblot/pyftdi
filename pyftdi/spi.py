@@ -17,7 +17,7 @@
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
-from typing import Any, Iterable, Mapping, Optional, Set, Union
+from typing import Any, Iterable, List, Mapping, Optional, Set, Union
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
 
@@ -221,6 +221,14 @@ class SpiPort:
         return self._cs
 
     @property
+    def cs_act_hi(self) -> bool:
+        """Is the CS line active high?
+
+           :return: the CS polarity configuration
+        """
+        return self._cs in self._controller.cs_act_hi
+
+    @property
     def mode(self) -> int:
         """Return the current SPI mode.
 
@@ -389,9 +397,8 @@ class SpiController:
              frequency.
            * ``cs_count`` count of chip select signals dedicated to select
              SPI slave devices, starting from A*BUS3 pin
-           * ``cs_act_hi`` a bitfield specifying which SPI CS lines are active
-             high. Bit 4 is the first CS, bit 5 the second and so on. Bits
-             corresponding to pins not used/configured as CS are ignored.
+           * ``cs_act_hi`` an iterable specifying which SPI CS lines are active
+             high. Example: ``cs_act_hi=(0, 3)``.
            * ``turbo`` whether to enable or disable turbo mode
            * ``debug`` to increase log verbosity, using MPSSE tracer
         """
@@ -405,7 +412,7 @@ class SpiController:
             raise ValueError('Unsupported CS line count: %d' %
                              self._cs_count)
         if 'cs_act_hi' in kwargs:
-            self._cs_act_hi = int(kwargs['cs_act_hi'])
+            self._parse_cs_active_high_arg(kwargs['cs_act_hi'])
             del kwargs['cs_act_hi']
         if 'turbo' in kwargs:
             self._turbo = bool(kwargs['turbo'])
@@ -572,6 +579,20 @@ class SpiController:
         return {port[0] for port in enumerate(self._spi_ports) if port[1]}
 
     @property
+    def cs_act_hi(self) -> List[int]:
+        """Provide the active high CS lines.
+
+           :return: List of channel numbers that are active high
+        """
+        result = []
+        mask = 0x08
+        for i in range(self._cs_count):
+            if self._cs_act_hi & mask:
+                result.append(i)
+            mask <<= 1
+        return result
+
+    @property
     def gpio_pins(self):
         """Report the configured GPIOs as a bitfield.
 
@@ -723,6 +744,18 @@ class SpiController:
         self._gpio_dir &= ~pins
         self._gpio_dir |= (pins & direction)
         self._gpio_mask = gpio_mask & pins
+
+    def _parse_cs_active_high_arg(self,
+                                  cs_lines_hi: Iterable[int]) -> None:
+        bad_args = []
+        for cs_line in cs_lines_hi:
+            if not 0 <= cs_line < self._cs_count:
+                bad_args.append(cs_line)
+            mask = 1 << (cs_line + 3)
+            self._cs_act_hi |= mask
+        if bad_args:
+            raise SpiIOError('Invalid active high CS lines: '
+                             + ', '.join([str(i) for i in bad_args]))
 
     def _read_raw(self, read_high: bool) -> int:
         if not self._ftdi.is_connected:
