@@ -385,9 +385,9 @@ class SpiCsActiveHighTestCase(unittest.TestCase):
         self._spi.terminate()
 
     def test_cs_config(self):
-        assert self._spi.cs_act_hi == [1]
-        assert not self._port0.cs_act_hi
-        assert self._port1.cs_act_hi
+        self.assertEqual(self._spi.cs_act_hi, [1])
+        self.assertFalse(self._port0.cs_act_hi)
+        self.assertTrue(self._port1.cs_act_hi)
 
 
 def suite():
