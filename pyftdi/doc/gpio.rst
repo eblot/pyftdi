@@ -198,7 +198,7 @@ enabled:
 * b\ :sub:`0`\  (``0x01``) represents the first pin of a port, *i.e.* AD0/BD0
 * b\ :sub:`1`\  (``0x02``) represents the second pin of a port, *i.e.* AD1/BD1
 * ...
-* b\ :sub:`7`\  (``0x80``) represents the seventh pin of a port, *i.e.* AD7/BD7
+* b\ :sub:`7`\  (``0x80``) represents the eighth pin of a port, *i.e.* AD7/BD7
 * b\ :sub:`N`\  represents the highest pin of a port, *i.e.* AD7/BD7 for an
   8-bit port, AD15/BD15 for a 16-bit port, etc.
 
