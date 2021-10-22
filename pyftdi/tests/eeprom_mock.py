@@ -146,23 +146,26 @@ class EepromMirrorTestCase(FtdiTestCase):
         eeprom.set_serial_number(self.TEST_SN)
         self._check_for_mirrored_eeprom_contents(eeprom)
 
-    def test_is_mirrored_eeprom_detected(self):
-        """Verify the eeproms internal _is_mirrored_eeprom_detected method
-            works as expected
+    def test_compute_size_detects_mirror(self):
+        """Verify the eeproms internal _compute_size method
+            returns the correct bool value when it detects an eeprom mirror
         """
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
-        self.assertFalse(eeprom._is_mirrored_eeprom_detected(None))
+        _, mirrored = eeprom._compute_size([])
+        self.assertFalse(mirrored)
         test_buf = bytearray(eeprom.size)
         sector_mid = eeprom.size // 2
         for ii in range(sector_mid):
             test_buf[ii] = ii % 255
             test_buf[sector_mid+ii] = test_buf[ii]
-        self.assertTrue(eeprom._is_mirrored_eeprom_detected(bytes(test_buf)))
+        _, mirrored = eeprom._compute_size(bytes(test_buf))
+        self.assertTrue(mirrored)
 
         # change one byte and confirm failure
         test_buf[eeprom.size - 2] = test_buf[eeprom.size - 2] - 1
-        self.assertFalse(eeprom._is_mirrored_eeprom_detected(bytes(test_buf)))
+        _, mirrored = eeprom._compute_size(bytes(test_buf))
+        self.assertFalse(mirrored)
 
     def _check_for_mirrored_eeprom_contents(self, eeprom: FtdiEeprom):
         """Check that contents of the eeprom is identical over the two

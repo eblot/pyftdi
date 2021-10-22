@@ -24,7 +24,7 @@ from logging import getLogger
 from random import randint
 from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from typing import BinaryIO, List, Optional, Set, TextIO, Union
+from typing import BinaryIO, List, Optional, Set, TextIO, Union, Tuple
 if sys.version_info[:2] == (3, 5):
     from aenum import IntFlag
 from usb.core import Device as UsbDevice
@@ -719,38 +719,28 @@ class FtdiEeprom:
             crc_s1_start = self.mirror_sector - crc_size
             self._eeprom[crc_s1_start:crc_s1_start+crc_size] = spack('<H', crc)
 
-    def _is_mirrored_eeprom_detected(self, data : bytes) -> bool:
-        """Use to check if an eeprom has data mirrored across
-            2 equal sectors or not
-
-            :param data: The read eeprom data as a bytearray
-
-           :return: True if the eeprom data is mirrored, otherwise False
+    def _compute_size(self, 
+            eeprom: Union[bytes, bytearray]) -> Tuple[int, bool]:
         """
-        if data is None or not self.can_mirror:
-            return False
-        mirror_size = self.mirror_sector
-        for ii in range(mirror_size):
-            if data[ii] != data[mirror_size+ii]:
-                return False
-        return True
-
-    def _compute_size(self, eeprom: Union[bytes, bytearray]) -> int:
+            :return: Tuple of:
+                - int of usable size of the eeprom
+                - bool of whether eeprom mirroring was detected or not
+        """
         if self._ftdi.is_eeprom_internal:
-            return self._ftdi.max_eeprom_size
+            return self._ftdi.max_eeprom_size, False
         if all([x == 0xFF for x in eeprom]):
             # erased EEPROM, size is unknown
-            return self._ftdi.max_eeprom_size
+            return self._ftdi.max_eeprom_size, False
         if eeprom[0:0x80] == eeprom[0x80:0x100]:
-            return 0x80
+            return 0x80, True
         if eeprom[0:0x40] == eeprom[0x40:0x80]:
-            return 0x40
-        return 0x100
+            return 0x40, True
+        return 0x100, False
 
     def _read_eeprom(self) -> bytes:
         buf = self._ftdi.read_eeprom(0)
         eeprom = bytearray(buf)
-        size = self._compute_size(eeprom)
+        size, mirror_detected = self._compute_size(eeprom)
         if size < len(eeprom):
             eeprom = eeprom[:size]
         crc = self._compute_crc(eeprom, True)[0]
@@ -759,8 +749,9 @@ class FtdiEeprom:
                 self.log.info('No EEPROM or EEPROM erased')
             else:
                 self.log.error('Invalid CRC or EEPROM content')
-        if not self.is_empty and self._is_mirrored_eeprom_detected(eeprom):
-            self.log.info("Detected a mirrored eeprom. Enabling mirroring")
+        if not self.is_empty and mirror_detected:
+            self.log.info("Detected a mirrored eeprom. " +
+                "Enabling mirrored writing")
             self._mirror = True
         return eeprom
 
