@@ -495,7 +495,8 @@ class I2cController:
             # as 3-phase clock frequency mode is required for I2C mode, the
             # FTDI clock should be adapted to match the required frequency.
             kwargs['direction'] = self.I2C_DIR | self._gpio_dir
-            kwargs['initial'] = self.IDLE | (io_out & self._gpio_mask)
+            self._gpio_last = self.IDLE | (io_out & self._gpio_mask)
+            kwargs['initial'] = self._gpio_last
             kwargs['frequency'] = (3.0*frequency)/2.0
             if not isinstance(url, str):
                 frequency = self._ftdi.open_mpsse_from_device(
