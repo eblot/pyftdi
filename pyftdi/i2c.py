@@ -381,6 +381,7 @@ class I2cController:
         self._gpio_dir = 0
         self._gpio_low = 0
         self._gpio_mask = 0
+        self._gpio_last = 0
         self._i2c_mask = 0
         self._wide_port = False
         self._slaves = {}
