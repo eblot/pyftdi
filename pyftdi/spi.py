@@ -308,20 +308,22 @@ class SpiGpioPort:
         """
         return self._controller.read_gpio(with_output)
 
-    def write(self, value: int) -> None:
+    def write(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port.
 
            :param value: the GPIO port pins as a bitfield
+           :with_input: do not error when writing to inputs
         """
-        return self._controller.write_gpio(value)
+        return self._controller.write_gpio(value, with_input)
 
-    def set_direction(self, pins: int, direction: int) -> None:
+    def set_direction(self, pins: int, direction: int,
+                      immediate: bool = True) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (high level for output)
         """
-        self._controller.set_gpio_direction(pins, direction)
+        self._controller.set_gpio_direction(pins, direction, immediate)
 
 
 class SpiController:
@@ -347,6 +349,7 @@ class SpiController:
         self._gpio_port = None
         self._gpio_dir = 0
         self._gpio_mask = 0
+        self._gpio_last = 0
         self._gpio_low = 0
         self._wide_port = False
         self._cs_count = cs_count
@@ -429,9 +432,13 @@ class SpiController:
             # until the device is open, there is no way to tell if it has a
             # wide (16) or narrow port (8). Lower API can deal with any, so
             # delay any truncation till the device is actually open
-            self._set_gpio_direction(16, (~self._spi_mask) & 0xFFFF, io_dir)
+            gpio_mask = (1 << 16) - 1  # set mask for wide port (16-bit)
+            gpio_mask &= ~self._spi_mask
+            self._gpio_mask = gpio_mask
+            self._set_gpio_direction(io_out, io_dir)
             kwargs['direction'] = self._spi_dir | self._gpio_dir
-            kwargs['initial'] = self._cs_bits | (io_out & self._gpio_mask)
+            self._gpio_last = self._cs_bits | (io_out & self._gpio_mask)
+            kwargs['initial'] = self._gpio_last
             if not isinstance(url, str):
                 self._frequency = self._ftdi.open_mpsse_from_device(
                     url, interface=interface, **kwargs)
@@ -440,7 +447,10 @@ class SpiController:
             self._ftdi.enable_adaptive_clock(False)
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
-                self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
+                gpio_mask = (1 << 8) - 1  # set mask for narrow port (8-bit)
+                gpio_mask &= ~(self._spi_mask & 0xFF)
+                self._gpio_mask = gpio_mask
+                self._set_gpio_direction(io_out & 0xFF, io_dir & 0xFF)
 
     def close(self, freeze: bool = False) -> None:
         """Close the FTDI interface.
@@ -453,12 +463,12 @@ class SpiController:
                 self._ftdi.close(freeze)
         self._frequency = 0.0
 
-    def terminate(self) -> None:
+    def terminate(self, freeze: bool = False) -> None:
         """Close the FTDI interface.
 
            :note: deprecated API, use close()
         """
-        self.close()
+        self.close(freeze)
 
     def get_port(self, cs: int, freq: Optional[float] = None,
                  mode: int = 0) -> SpiPort:
@@ -560,7 +570,7 @@ class SpiController:
 
     @property
     def gpio_pins(self):
-        """Report the configured GPIOs as a bitfield.
+        """Report the available GPIOs as a bitfield.
 
            A true bit represents a GPIO, a false bit a reserved or not
            configured pin.
@@ -672,44 +682,54 @@ class SpiController:
             value &= ~self._gpio_dir
         return value
 
-    def write_gpio(self, value: int) -> None:
+    def write_gpio(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port
 
            :param value: the GPIO port pins as a bitfield
         """
         with self._lock:
-            if (value & self._gpio_dir) != value:
+            if (value & self._gpio_dir) != value and not with_input:
                 raise SpiIOError('No such GPO pins: %04x/%04x' %
                                  (self._gpio_dir, value))
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
-            data &= ~self._gpio_mask
-            data |= value
+            data &= ~self._gpio_mask  # removes gpio data, leaves SPI data
+            data |= value  # combine SPI data with new gpio value
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._spi_mask
 
-    def set_gpio_direction(self, pins: int, direction: int) -> None:
+    def set_gpio_direction(self, pins: int, direction: int,
+                           immediate: bool = True) -> None:
         """Change the direction of the GPIO pins
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (on for output)
+           :param immediate: force update the pin states NOW, otherwise
+                             waits for next write_gpio command
         """
         with self._lock:
-            self._set_gpio_direction(16 if self._wide_port else 8,
-                                     pins, direction)
+            self._set_gpio_direction(pins, direction)
+            if immediate:
+                # perform read-without_modify-write to force new pins
+                use_high = self._wide_port and (self.direction & 0xff00)
+                data = self._read_raw(use_high)
+                data &= ~self._gpio_mask  # removes gpio data, leaves I2C data
+                data |= self._gpio_last  # combine I2C data with last user gpio
+                self._write_raw(data, use_high)
+                self._gpio_low = data & 0xFF & ~self._spi_mask
 
-    def _set_gpio_direction(self, width: int, pins: int,
+    def _set_gpio_direction(self, pins: int,
                             direction: int) -> None:
         if pins & self._spi_mask:
             raise SpiIOError('Cannot access SPI pins as GPIO')
-        gpio_mask = (1 << width) - 1
-        gpio_mask &= ~self._spi_mask
-        if (pins & gpio_mask) != pins:
+        # gpio_mask = (1 << width) - 1
+        # gpio_mask &= ~self._spi_mask
+        if (pins & self._gpio_mask) != pins:
             raise SpiIOError('No such GPIO pin(s)')
         self._gpio_dir &= ~pins
         self._gpio_dir |= (pins & direction)
-        self._gpio_mask = gpio_mask & pins
+        # self._gpio_mask = gpio_mask & pins
 
     def _read_raw(self, read_high: bool) -> int:
         if not self._ftdi.is_connected:
