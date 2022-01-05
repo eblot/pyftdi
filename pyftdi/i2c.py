@@ -1140,7 +1140,7 @@ class I2cController:
                                len(buf), hexlify(buf).decode())
                 chunks.append(buf)
                 rem -= size
-        return bytearray(b''.join(chunks))
+        return (chunks)
 
     def _do_write(self, out: Union[bytes, bytearray, Iterable[int]]):
         if not isinstance(out, bytearray):
