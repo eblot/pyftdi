@@ -691,7 +691,7 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress)
+                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=False)
                     data = self._do_read(readlen)
                     do_epilog = relax
                     return data
@@ -731,7 +731,7 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress)
+                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
                     self._do_write(out)
                     do_epilog = relax
                     return
@@ -779,9 +779,9 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress)
+                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
                     self._do_write(out)
-                    self._do_prolog(i2caddress | self.BIT0)
+                    self._do_prolog(i2caddress | self.BIT0, fake_tristate_ack_end_as_output=False)
                     if readlen:
                         data = self._do_read(readlen)
                     do_epilog = relax
@@ -816,7 +816,7 @@ class I2cController:
         do_epilog = True
         with self._lock:
             try:
-                self._do_prolog(i2caddress)
+                self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
                 do_epilog = relax
                 return True
             except I2cNackError:
@@ -859,7 +859,7 @@ class I2cController:
                 while retry < count:
                     retry += 1
                     size = scalc(fmt)
-                    self._do_prolog(i2caddress)
+                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=False)
                     data = self._do_read(size)
                     self.log.debug("Poll data: %s", hexlify(data).decode())
                     cond, = sunpack(fmt, data)
@@ -1020,7 +1020,7 @@ class I2cController:
             cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
-    def _do_prolog(self, i2caddress: int) -> None:
+    def _do_prolog(self, i2caddress: int, fake_tristate_ack_end_as_output: bool) -> None:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
@@ -1029,7 +1029,7 @@ class I2cController:
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
         try:
-            self._send_check_ack(cmd)
+            self._send_check_ack(cmd, fake_tristate_ack_end_as_output)
         except I2cNackError:
             self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
             raise
@@ -1041,15 +1041,18 @@ class I2cController:
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _send_check_ack(self, cmd: bytearray):
+    def _send_check_ack(self, cmd: bytearray, fake_tristate_ack_end_as_output: bool):
         # note: cmd is modified
         if self._fake_tristate:
             # SCL low, SDA high-Z (input)
             cmd.extend(self._clk_lo_data_input)
             # read SDA (ack from slave)
             cmd.extend(self._read_bit)
-            # leave SCL low, restore SDA as output
-            cmd.extend(self._clk_lo_data_hi)
+            # after ACK, if writing next, end as output. if reading next, end
+            #  as an input to prevent a short as the slave may pull SDA low after ACK
+            if fake_tristate_ack_end_as_output:
+                # leave SCL low, restore SDA as output
+                cmd.extend(self._clk_lo_data_hi)
         else:
             # SCL low, SDA high-Z
             cmd.extend(self._clk_lo_data_hi)
@@ -1152,4 +1155,4 @@ class I2cController:
         for byte in out:
             cmd = bytearray(self._write_byte)
             cmd.append(byte)
-            self._send_check_ack(cmd)
+            self._send_check_ack(cmd, fake_tristate_ack_end_as_output=True)
