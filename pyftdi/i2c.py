@@ -353,10 +353,10 @@ class I2cController:
     HIGH = 0xff
     BIT0 = 0x01
     IDLE = HIGH
-    SCL_BIT = 0x01  #AD0
-    SDA_O_BIT = 0x02  #AD1
-    SDA_I_BIT = 0x04  #AD2
-    SCL_FB_BIT = 0x80  #AD7
+    SCL_BIT = 0x01  # AD0
+    SDA_O_BIT = 0x02  # AD1
+    SDA_I_BIT = 0x04  # AD2
+    SCL_FB_BIT = 0x80  # AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
     HIGHEST_I2C_ADDRESS = 0x7F
     DEFAULT_BUS_FREQUENCY = 100000.0
@@ -691,7 +691,7 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=False)
+                    self._do_prolog(i2caddress)
                     data = self._do_read(readlen)
                     do_epilog = relax
                     return data
@@ -731,7 +731,7 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
+                    self._do_prolog(i2caddress)
                     self._do_write(out)
                     do_epilog = relax
                     return
@@ -779,9 +779,9 @@ class I2cController:
         with self._lock:
             while True:
                 try:
-                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
+                    self._do_prolog(i2caddress)
                     self._do_write(out)
-                    self._do_prolog(i2caddress | self.BIT0, fake_tristate_ack_end_as_output=False)
+                    self._do_prolog(i2caddress | self.BIT0)
                     if readlen:
                         data = self._do_read(readlen)
                     do_epilog = relax
@@ -816,7 +816,7 @@ class I2cController:
         do_epilog = True
         with self._lock:
             try:
-                self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=True)
+                self._do_prolog(i2caddress)
                 do_epilog = relax
                 return True
             except I2cNackError:
@@ -859,7 +859,7 @@ class I2cController:
                 while retry < count:
                     retry += 1
                     size = scalc(fmt)
-                    self._do_prolog(i2caddress, fake_tristate_ack_end_as_output=False)
+                    self._do_prolog(i2caddress)
                     data = self._do_read(size)
                     self.log.debug("Poll data: %s", hexlify(data).decode())
                     cond, = sunpack(fmt, data)
@@ -1020,7 +1020,7 @@ class I2cController:
             cmd = bytes([Ftdi.SET_BITS_LOW, low_data, low_dir])
         self._ftdi.write_data(cmd)
 
-    def _do_prolog(self, i2caddress: int, fake_tristate_ack_end_as_output: bool) -> None:
+    def _do_prolog(self, i2caddress: int) -> None:
         if i2caddress is None:
             return
         self.log.debug('   prolog 0x%x', i2caddress >> 1)
@@ -1029,9 +1029,9 @@ class I2cController:
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
         try:
-            self._send_check_ack(cmd, fake_tristate_ack_end_as_output)
+            self._send_check_ack(cmd, is_do_prolog_cmd=True)
         except I2cNackError:
-            self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
+            self.log.warning('NACK @ 0x%02x', (i2caddress >> 1))
             raise
 
     def _do_epilog(self) -> None:
@@ -1041,16 +1041,25 @@ class I2cController:
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _send_check_ack(self, cmd: bytearray, fake_tristate_ack_end_as_output: bool):
+    def _send_check_ack(self, cmd: bytearray, is_do_prolog_cmd: bool):
         # note: cmd is modified
         if self._fake_tristate:
+            # if it is a _do_prolog command, then check to see if the next
+            # action after ACK is a read by looking at the last bit of cmd
+            # which is the read/write bit. Write=0, Read=1
+            end_as_input = False
+            if is_do_prolog_cmd:
+                if cmd[-1:][0] & 0x1:
+                    # if reading after ACK, we want to end as an input later
+                    end_as_input = True
             # SCL low, SDA high-Z (input)
             cmd.extend(self._clk_lo_data_input)
             # read SDA (ack from slave)
             cmd.extend(self._read_bit)
-            # after ACK, if writing next, end as output. if reading next, end
-            #  as an input to prevent a short as the slave may pull SDA low after ACK
-            if fake_tristate_ack_end_as_output:
+            # if writing after ACK, end as an output. if reading after, end
+            # as an input to prevent a short as some slaves may pull SDA low
+            # after ACK
+            if not end_as_input:
                 # leave SCL low, restore SDA as output
                 cmd.extend(self._clk_lo_data_hi)
         else:
@@ -1155,4 +1164,4 @@ class I2cController:
         for byte in out:
             cmd = bytearray(self._write_byte)
             cmd.append(byte)
-            self._send_check_ack(cmd, fake_tristate_ack_end_as_output=True)
+            self._send_check_ack(cmd, is_do_prolog_cmd=False)
