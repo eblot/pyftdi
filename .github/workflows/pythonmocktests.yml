@@ -40,3 +40,10 @@ jobs:
         FTDI_VIRTUAL: on
       run: |
         python pyftdi/tests/gpio.py
+    - name: Run Eeprom tests
+        env:
+          FTDI_LOGLEVEL: WARNING
+          FTDI_DEBUG: on
+          FTDI_VIRTUAL: on
+        run: |
+          python pyftdi/tests/eeprom_mock.py
