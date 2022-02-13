@@ -82,7 +82,7 @@ Usage
 
 No hardware is required to run these tests, to even a single FTDI device.
 
-This new test framework require Python 3.6+, as it uses the fstring_ syntax.
+This new test framework require Python 3.7+, as it uses the fstring_ syntax.
 
 .. code-block:: python
 
