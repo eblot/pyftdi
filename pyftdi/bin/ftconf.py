@@ -40,7 +40,7 @@ def main():
         argparser.add_argument('-l', '--load', default='all',
                                choices=('all', 'raw', 'values'),
                                help='section(s) to load from input file')
-        argparser.add_argument('-o', '--output', type=FileType('wt'),
+        argparser.add_argument('-o', '--output',
                                help='output ini file to save EEPROM content')
         argparser.add_argument('-s', '--serial-number',
                                help='set serial number')
@@ -145,7 +145,8 @@ def main():
         if args.verbose > 0:
             eeprom.dump_config()
         if args.output:
-            eeprom.save_config(args.output)
+            with open(args.output, 'wt') as ofp:
+                eeprom.save_config(ofp)
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
