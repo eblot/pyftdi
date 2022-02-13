@@ -3,7 +3,7 @@
 """Simple Python serial terminal
 """
 
-# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2022, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -348,7 +348,7 @@ def main():
             loader.load(args.virtual)
 
         try:
-            add_custom_devices(Ftdi, args.vidpid)
+            add_custom_devices(Ftdi, args.vidpid, force_hex=True)
         except ValueError as exc:
             argparser.error(str(exc))
 
