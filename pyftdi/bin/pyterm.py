@@ -76,14 +76,12 @@ class MiniTerm:
             # out from the HW as soon as it is made available, and use a deque
             # to serve the actual reader thread
             args.append(self._get_from_source)
-            sourcer = Thread(target=self._sourcer)
-            sourcer.setDaemon(1)
+            sourcer = Thread(target=self._sourcer, daemon=True)
             sourcer.start()
         else:
             # regular kernel buffered device
             args.append(self._get_from_port)
-        reader = Thread(target=self._reader, args=tuple(args))
-        reader.setDaemon(1)
+        reader = Thread(target=self._reader, args=tuple(args), daemon=True)
         reader.start()
         # start the writer (host to target direction)
         self._writer(fullmode, silent, localecho, autocr)
