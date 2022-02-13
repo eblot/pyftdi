@@ -109,7 +109,7 @@ def main():
         if args.product:
             eeprom.set_product_name(args.product)
         for conf in args.config or []:
-            if conf == '?':
+            if conf in ('?', 'help'):
                 helpstr = ', '.join(sorted(eeprom.properties))
                 print(fill(helpstr, initial_indent='  ',
                            subsequent_indent='  '))
@@ -120,6 +120,8 @@ def main():
                     if not value:
                         argparser.error('Configuration %s without value' %
                                         conf)
+                    if value == 'help':
+                        value = '?'
                     helpio = StringIO()
                     eeprom.set_property(name, value, helpio)
                     helpstr = helpio.getvalue()

@@ -116,9 +116,11 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   The name should be separated from the value with an equal ``=`` sign or
   alternatively a full column ``:`` character.
 
-  * To obtain the list of supported name, use the `?` wildcard: ``-c ?``.
-  * To obtain the list of supported values for a namw, use the `?` wildcard:
-    ``-c name=?``, where *name* is a supported name.
+  * To obtain the list of supported name, use the `?` wildcard: ``-c ?``, or
+    `-c help` to avoid conflicts with some shells
+  * To obtain the list of supported values for a name, use the `?` or the `help`
+    wildcard:
+    ``-c name=help``, where *name* is a supported name.
 
   See :ref:`cbus_func` table for the alternate function associated with each
   name.

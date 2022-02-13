@@ -65,7 +65,8 @@ match. Therefore, if you have a single FTDI device connected to your system,
 
 You can also ask PyFtdi to enumerate all the compatible devices with the
 special ``ftdi:///?`` syntax. This syntax is useful to retrieve the available
-FTDI URLs with serial number and/or bus:address selectors.
+FTDI URLs with serial number and/or bus:address selectors. To avoid conflicts
+with some shells such as `zsh`, escape the `?` char as ``ftdi:///\?``.
 
 There are several APIs available to enumerate/filter available FTDI device.
 See :doc:`api/ftdi`.
