@@ -689,13 +689,14 @@ class FtdiEeprom:
     def _compute_crc(self, eeprom: Union[bytes, bytearray], check=False):
         mtp = self._ftdi.device_version == 0x1000
         crc_pos = 0x100 if mtp else len(eeprom)
-        mirror_s1_crc_pos = self.mirror_sector
         crc_size = scalc('<H')
         if not check:
             # check mode: add CRC itself, so that result should be zero
             crc_pos -= crc_size
-            mirror_s1_crc_pos -= crc_size
         if self.mirroring_enabled:
+            mirror_s1_crc_pos = self.mirror_sector
+            if not check:
+                mirror_s1_crc_pos -= crc_size
             # if mirroring, only calculate the crc for the first sector/half
             #   of the eeprom. Data (including this crc) are duplicated in
             #   the second sector/half
