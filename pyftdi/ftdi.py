@@ -2254,7 +2254,7 @@ class Ftdi:
             div |= 0x00020000
         value = div & 0xFFFF
         index = (div >> 16) & 0xFFFF
-        if self.has_mpsse:
+        if self.device_version >= 0x0700 or self.device_version == 0x0500:
             index <<= 8
             index |= self._index
         estimate = int(((8 * clock) + (div8//2))//div8)
