@@ -583,7 +583,7 @@ class VirtFtdiPort:
         FRAC_INV_DIV = (0, 4, 2, 1, 3, 5, 6, 7)
         BAUDRATE_REF_BASE = 3.0E6  # 3 MHz
         BAUDRATE_REF_HIGH = 12.0E6  # 12 MHz
-        if self._parent.is_hispeed_device:
+        if self._parent.is_hispeed_device or self._parent.is_x_series:
             wIndex >>= 8
         divisor = wValue | (wIndex << 16)
         div = divisor & 0x3FFF
@@ -1027,6 +1027,14 @@ class VirtFtdi:
            :return: True if the FTDI device is HS
         """
         return self._version in (0x0700, 0x0800, 0x0900)
+
+    @property
+    def is_x_series(self) -> bool:
+        """Tell whether the device is a FT-X device
+
+           :return: True for FT-X device
+        """
+        return self._version == 0x1000
 
     def apply_eeprom_config(self, devdesc: dict,
                             cfgdescs: Sequence[dict]) -> None:
