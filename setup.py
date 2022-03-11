@@ -38,10 +38,10 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: System :: Hardware :: Hardware Drivers',
 ]
@@ -188,7 +188,7 @@ def main():
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
         test_requires=TEST_REQUIRES,
-        python_requires='>=3.6',
+        python_requires='>=3.7',
     )
 
 

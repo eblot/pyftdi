@@ -145,7 +145,8 @@ archive directory, ``PYTHONPATH`` should be defined to the current directory::
 
     PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi:///?
 
-The above command lists all the available FTDI device ports.
+The above command lists all the available FTDI device ports. To avoid conflicts
+with some shells such as `zsh`, escape the `?` char as ``ftdi:///\?``.
 
 To start up a serial terminal session, specify the FTDI port to use, for
 example:

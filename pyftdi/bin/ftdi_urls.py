@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2022, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -55,7 +55,7 @@ def main():
             loader.load(args.virtual)
 
         try:
-            add_custom_devices(Ftdi, args.vidpid)
+            add_custom_devices(Ftdi, args.vidpid, force_hex=True)
         except ValueError as exc:
             argparser.error(str(exc))
 

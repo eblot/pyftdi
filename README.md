@@ -61,7 +61,7 @@ PyFtdi currently supports the following features:
 
 ### Python support
 
-PyFtdi requires Python 3.6+.
+PyFtdi requires Python 3.7+.
 
 ### API break
 
