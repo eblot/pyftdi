@@ -3,7 +3,7 @@
 """Simple FTDI EEPROM configurator.
 """
 
-# Copyright (c) 2019-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2022, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -11,7 +11,7 @@
 from argparse import ArgumentParser, FileType
 from io import StringIO
 from logging import Formatter, StreamHandler, DEBUG, ERROR
-from sys import modules, stderr
+from sys import modules, stderr, stdout
 from textwrap import fill
 from traceback import format_exc
 from pyftdi import FtdiLogger
@@ -174,8 +174,11 @@ def main():
         if args.verbose > 0:
             eeprom.dump_config()
         if args.output:
-            with open(args.output, 'wt') as ofp:
-                eeprom.save_config(ofp)
+            if args.output == '-':
+                eeprom.save_config(stdout)
+            else:
+                with open(args.output, 'wt') as ofp:
+                    eeprom.save_config(ofp)
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)

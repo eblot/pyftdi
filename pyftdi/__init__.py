@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2022 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016, Neotion
 # All rights reserved.
 #
@@ -6,7 +6,7 @@
 
 #pylint: disable-msg=missing-docstring
 
-__version__ = '0.53.3'
+__version__ = '0.54.0'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'

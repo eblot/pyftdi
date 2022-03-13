@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2022, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -498,6 +498,7 @@ class FtdiEeprom:
         mobj = match(r'group_(\d)_(drive|schmitt|slow_slew)', name)
         if mobj:
             self._set_group(int(mobj.group(1)), mobj.group(2), value, out)
+            self._dirty.add(name)
             return
         confs = {
             'remote_wakeup': (0, 5),
@@ -527,6 +528,7 @@ class FtdiEeprom:
                 # duplicate in 'sector 2'
                 offset2 = self.mirror_sector + offset
                 self._eeprom[offset2:offset2+2] = spack('<H', val)
+            self._dirty.add(name)
             return
         if name in confs:
             val = to_bool(value, permissive=False, allow_int=True)
@@ -546,6 +548,7 @@ class FtdiEeprom:
                     # duplicate in 'sector 2'
                     idx2 = self.mirror_sector + idx
                     self._eeprom[idx2] &= ~mask
+            self._dirty.add(name)
             return
         if name == 'power_max':
             val = to_int(value) >> 1
@@ -555,6 +558,7 @@ class FtdiEeprom:
                 # duplicate in 'sector 2'
                 idx2 = self.mirror_sector + idx
                 self._eeprom[idx2] = val
+            self._dirty.add(name)
             return
         if name.startswith('invert_'):
             if not self.device_version in (0x600, 0x1000):
