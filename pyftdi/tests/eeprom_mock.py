@@ -13,6 +13,7 @@ from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.misc import to_bool, hexdump
+from pyftdi.ftdi import FtdiError
 
 VirtLoader = None
 
@@ -182,10 +183,71 @@ class EepromMirrorFt232hTestCase(EepromMirrorTestCase):
 class EepromMirrorFt2232hTestCase(EepromMirrorTestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
 
+class EepromMirrorFt230xTestCase(FtdiTestCase):
+    """
+    Test FTDI eeprom with non-mirroring capabilities to
+    ensure it works as expected
+    """
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft230x.yaml'
+
+    @classmethod
+    def setUpClass(cls):
+        FtdiTestCase.setUpClass()
+        if VirtLoader:
+            cls.loader = VirtLoader()
+            with open(cls.TEST_CONFIG_FILENAME, 'rb') as yfp:
+                cls.loader.load(yfp)
+        if cls.url == 'ftdi:///1':
+            ftdi = Ftdi()
+            ftdi.open_from_url(cls.url)
+            count = ftdi.device_port_count
+            ftdi.close()
+    
+    def test_mirror_properties(self):
+        """
+        Check FtdiEeprom properties are accurate for a device that can not
+        mirror
+        """
+        # properties should work regardless of if the mirror option is set
+        # or not
+        eeprom = FtdiEeprom()
+        eeprom.open(self.url, ignore=True)
+        self.assertFalse(eeprom.can_mirror)
+        with self.assertRaises(FtdiError):
+            eeprom.mirror_sector
+        eeprom.close()
+
+        # even if mirroring is enabled, should still stay false
+        mirrored_eeprom = FtdiEeprom()
+        mirrored_eeprom.enable_mirroring(True)
+        mirrored_eeprom.open(self.url, ignore=True)
+        self.assertFalse(mirrored_eeprom.can_mirror)
+        with self.assertRaises(FtdiError):
+            eeprom.mirror_sector
+        mirrored_eeprom.close()
+
+    def test_compute_size_does_not_mirror(self):
+        """
+        Verify the eeproms internal _compute_size method returns the correct
+        bool value when it detects no mirroring
+        """
+        eeprom = FtdiEeprom()
+        eeprom.open(self.url, ignore=True)
+        _, mirrored = eeprom._compute_size([])
+        self.assertFalse(mirrored)
+        eeprom.close()
+
+        eeprom = FtdiEeprom()
+        eeprom.open(self.url, ignore=False)
+        _, mirrored = eeprom._compute_size([])
+        self.assertFalse(mirrored)
+        eeprom.close()
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(EepromMirrorFt232hTestCase, 'test'))
     suite_.addTest(makeSuite(EepromMirrorFt2232hTestCase, 'test'))
+    suite_.addTest(makeSuite(EepromMirrorFt230xTestCase, 'test'))
     return suite_
 
 def virtualize():
