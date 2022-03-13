@@ -212,7 +212,7 @@ class FtdiEeprom:
         """
         try:
             eeprom_storage_size = self.size
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 eeprom_storage_size = self.mirror_sector
         except FtdiError as fe:
             raise fe
@@ -280,45 +280,48 @@ class FtdiEeprom:
         return mask
 
     @property
-    def can_mirror(self) -> bool:
-        """Return True if the device supports EEPROM content duplication
-        across its two sectors
+    def has_mirroring(self) -> bool:
+        """Report whether the device supports EEPROM content duplication
+           across its two sectors.
+
+           :return: True if the device support mirorring
         """
-        return (self._PROPERTIES[self.device_version].user
-            and self._ftdi.device_version != 0x1000)
+        return (self._PROPERTIES[self.device_version].user and
+                self._ftdi.device_version != 0x1000)
 
     @property
     def mirror_sector(self) -> int:
-        """Return start address of the mirror sector in the eeprom.
-        This is only valid if the FTDI is capable of mirroring eeprom data
+        """Report start address of the mirror sector in the EEPROM.
+           This is only valid if the FTDI is capable of mirroring EEPROM data.
+
+           :return: the start address
         """
-        if self.can_mirror:
+        if self.has_mirroring:
             return self.size // 2
-        else:
-            raise FtdiError('EEPROM does not support mirroring')
+        raise FtdiError('EEPROM does not support mirroring')
 
     @property
-    def mirroring_enabled(self) -> bool:
-        """Check if eeprom mirroring is currently enabled for this eeprom.
-            See enable_mirroring for more details on eeprom mirroring
+    def is_mirroring_enabled(self) -> bool:
+        """Check if EEPROM mirroring is currently enabled for this EEPROM.
+            See enable_mirroring for more details on EEPROM mirroring
             functionality
         """
-        return self.can_mirror and self._mirror
+        return self.has_mirroring and self._mirror
 
-    def enable_mirroring(self, enable : bool) -> bool:
-        """Enable eeprom write mirroring. When enabled, this divides the eeprom
-            into 2 sectors and mirrors configuration data between them.
+    def enable_mirroring(self, enable : bool) -> None:
+        """Enable EEPROM write mirroring. When enabled, this divides the EEPROM
+           into 2 sectors and mirrors configuration data between them.
 
-            For example on a 256 byte eeprom, two 128 byte 'sectors' will be
-            used to store identical data. Configuration properties/strings
-            will be writen to both of these sectors. For some devices
-            (like the 4232H), this makes the pyftdi eeprom functionally
-            similar to FT_PROG.
+           For example on a 256 byte EEPROM, two 128 byte 'sectors' will be
+           used to store identical data. Configuration properties/strings will
+           be writen to both of these sectors. For some devices (like the
+           4232H), this makes the PyFtdi EEPROM functionally similar to
+           FT_PROG.
 
-            :param enable: enable or disable eeprom mirroring
+           Note: Data will only be mirrored if the has_mirroring property
+           returns true (after establishing a connection to the ftdi)
 
-            NOTE: Data will only be mirrored if the can_mirror property
-                returns true (after establishing a connection to the ftdi)
+           :param enable: enable or disable EEPROM mirroring
         """
         self._mirror = enable
 
@@ -480,7 +483,7 @@ class FtdiEeprom:
                 raise ValueError('Invalid value for %s' % name)
             offset = hwords[name]
             self._eeprom[offset:offset+2] = spack('<H', val)
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 # duplicate in 'sector 2'
                 offset2 = self.mirror_sector + offset
                 self._eeprom[offset2:offset2+2] = spack('<H', val)
@@ -492,14 +495,14 @@ class FtdiEeprom:
             if val:
                 idx = 0x08 + offset
                 self._eeprom[idx] |= mask
-                if self.mirroring_enabled:
+                if self.is_mirroring_enabled:
                     # duplicate in 'sector 2'
                     idx2 = self.mirror_sector + idx
                     self._eeprom[idx2] |= mask
             else:
                 idx = 0x0a + offset
                 self._eeprom[idx] &= ~mask
-                if self.mirroring_enabled:
+                if self.is_mirroring_enabled:
                     # duplicate in 'sector 2'
                     idx2 = self.mirror_sector + idx
                     self._eeprom[idx2] &= ~mask
@@ -508,7 +511,7 @@ class FtdiEeprom:
             val = to_int(value) >> 1
             idx = 0x09
             self._eeprom[idx] = val
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 # duplicate in 'sector 2'
                 idx2 = self.mirror_sector + idx
                 self._eeprom[idx2] = val
@@ -650,17 +653,17 @@ class FtdiEeprom:
             stream.append(0x03)  # string descriptor
             stream.extend(ustr)
             self._eeprom[tbl_pos] = data_pos
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 self._eeprom[tbl_sector2_pos] = data_pos
             tbl_pos += 1
             tbl_sector2_pos += 1
             self._eeprom[tbl_pos] = length
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 self._eeprom[tbl_sector2_pos] = length
             tbl_pos += 1
             tbl_sector2_pos += 1
             data_pos += length
-        if self.mirroring_enabled:
+        if self.is_mirroring_enabled:
             self._eeprom[s1_vstr_start:s1_vstr_start+len(stream)] = stream
         self._eeprom[dynpos:dynpos+len(stream)] = stream
         if fill:
@@ -668,7 +671,7 @@ class FtdiEeprom:
             crc_pos = 0x100 if mtp else len(self._eeprom)
             rem = crc_pos - (dynpos + len(stream))
             self._eeprom[dynpos+len(stream):crc_pos] = bytes(rem)
-            if self.mirroring_enabled:
+            if self.is_mirroring_enabled:
                 crc_s1_pos = self.mirror_sector
                 self._eeprom[s1_vstr_start+len(stream):crc_s1_pos] = bytes(rem)
 
@@ -693,7 +696,7 @@ class FtdiEeprom:
         if not check:
             # check mode: add CRC itself, so that result should be zero
             crc_pos -= crc_size
-        if self.mirroring_enabled:
+        if self.is_mirroring_enabled:
             mirror_s1_crc_pos = self.mirror_sector
             if not check:
                 mirror_s1_crc_pos -= crc_size
@@ -715,7 +718,7 @@ class FtdiEeprom:
         crc, crc_pos, crc_size = self._compute_crc(
             self._eeprom, False)
         self._eeprom[crc_pos:crc_pos+crc_size] = spack('<H', crc)
-        if self.mirroring_enabled:
+        if self.is_mirroring_enabled:
             # if mirroring calculate where the CRC will start in first sector
             crc_s1_start = self.mirror_sector - crc_size
             self._eeprom[crc_s1_start:crc_s1_start+crc_size] = spack('<H', crc)

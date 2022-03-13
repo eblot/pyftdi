@@ -17,6 +17,7 @@ from pyftdi.ftdi import FtdiError
 
 VirtLoader = None
 
+
 class FtdiTestCase(TestCase):
     """Common features for all tests.
     """
@@ -34,6 +35,7 @@ class FtdiTestCase(TestCase):
 
     def setUp(self):
         pass
+
 
 class EepromMirrorTestCase(FtdiTestCase):
     """Test FTDI EEPROM mirror feature (duplicate eeprom data over 2 eeprom
@@ -69,14 +71,14 @@ class EepromMirrorTestCase(FtdiTestCase):
         # or not
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
-        self.assertTrue(eeprom.can_mirror)
+        self.assertTrue(eeprom.has_mirroring)
         self.assertEqual(eeprom.size // 2, eeprom.mirror_sector)
         eeprom.close()
 
         mirrored_eeprom = FtdiEeprom()
         mirrored_eeprom.enable_mirroring(True)
         mirrored_eeprom.open(self.url, ignore=True)
-        self.assertTrue(mirrored_eeprom.can_mirror)
+        self.assertTrue(mirrored_eeprom.has_mirroring)
         self.assertEqual(mirrored_eeprom.size // 2,
             mirrored_eeprom.mirror_sector)
         mirrored_eeprom.close()
@@ -177,16 +179,18 @@ class EepromMirrorTestCase(FtdiTestCase):
             self.assertEqual(eeprom.data[ii], 
                 eeprom.data[ii + eeprom.mirror_sector])
 
+
 class EepromMirrorFt232hTestCase(EepromMirrorTestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
+
 
 class EepromMirrorFt2232hTestCase(EepromMirrorTestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
 
+
 class EepromMirrorFt230xTestCase(FtdiTestCase):
-    """
-    Test FTDI eeprom with non-mirroring capabilities to
-    ensure it works as expected
+    """Test FTDI eeprom with non-mirroring capabilities to ensure it works as
+       expected.
     """
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft230x.yaml'
 
@@ -204,32 +208,29 @@ class EepromMirrorFt230xTestCase(FtdiTestCase):
             ftdi.close()
     
     def test_mirror_properties(self):
-        """
-        Check FtdiEeprom properties are accurate for a device that can not
-        mirror
+        """Check FtdiEeprom properties are accurate for a device that can not
+           mirror.
         """
         # properties should work regardless of if the mirror option is set
         # or not
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
-        self.assertFalse(eeprom.can_mirror)
+        self.assertFalse(eeprom.has_mirroring)
         with self.assertRaises(FtdiError):
             eeprom.mirror_sector
         eeprom.close()
-
         # even if mirroring is enabled, should still stay false
         mirrored_eeprom = FtdiEeprom()
         mirrored_eeprom.enable_mirroring(True)
         mirrored_eeprom.open(self.url, ignore=True)
-        self.assertFalse(mirrored_eeprom.can_mirror)
+        self.assertFalse(mirrored_eeprom.has_mirroring)
         with self.assertRaises(FtdiError):
             eeprom.mirror_sector
         mirrored_eeprom.close()
 
     def test_compute_size_does_not_mirror(self):
-        """
-        Verify the eeproms internal _compute_size method returns the correct
-        bool value when it detects no mirroring
+        """Verify the eeproms internal _compute_size method returns the correct
+           bool value when it detects no mirroring.
         """
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
@@ -243,12 +244,14 @@ class EepromMirrorFt230xTestCase(FtdiTestCase):
         self.assertFalse(mirrored)
         eeprom.close()
 
+
 def suite():
     suite_ = TestSuite()
     suite_.addTest(makeSuite(EepromMirrorFt232hTestCase, 'test'))
     suite_.addTest(makeSuite(EepromMirrorFt2232hTestCase, 'test'))
     suite_.addTest(makeSuite(EepromMirrorFt230xTestCase, 'test'))
     return suite_
+
 
 def virtualize():
     if not to_bool(environ.get('FTDI_VIRTUAL', 'off')):
@@ -264,6 +267,7 @@ def virtualize():
         VirtLoader = backend.create_loader()
     except AttributeError:
         raise AssertionError('Cannot load virtual USB backend')
+
 
 def main():
     import doctest
@@ -288,6 +292,7 @@ def main():
         ut_main(defaultTest='suite')
     except KeyboardInterrupt:
         pass
+
 
 if __name__ == '__main__':
     # Useful environment variables:
