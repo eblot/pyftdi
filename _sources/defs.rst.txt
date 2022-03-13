@@ -27,6 +27,7 @@
 .. _DCE: https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment
 .. _PEP_498: https://www.python.org/dev/peps/pep-0498
 .. _PEP_526: https://www.python.org/dev/peps/pep-0526
+.. _ruamel.yaml: https://pypi.org/project/ruamel.yaml
 
 
 .. Restructured Text levels

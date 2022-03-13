@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.53.3
+                0.54.0
               </div>
             
           
@@ -254,8 +254,9 @@ the USB identifiers of their products.</p>
 omitted as they only serve as human-readable aliases for the vendor and
 product names. See example below.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vendor_id</span></code> and <code class="docutils literal notranslate"><span class="pre">product_id</span></code> are mandatory strings that should resolve
-into 16-bit integers (USB VID and PID values). They may either be expressed
-as decimal or hexadecimal syntax.</p></li>
+into 16-bit integers (USB VID and PID values). Integer values are always
+interpreted as hexadecimal values, <em>e.g.</em> <cite>-P 1234:6789</cite> is parsed as
+<cite>-P 0x1234:0x6789</cite>.</p></li>
 </ul>
 <p>This option may be repeated as many times as required to add support for
 several custom devices.</p>

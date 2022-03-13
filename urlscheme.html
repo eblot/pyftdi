@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.53.3
+                0.54.0
               </div>
             
           
@@ -249,7 +249,8 @@ match. Therefore, if you have a single FTDI device connected to your system,
 <code class="docutils literal notranslate"><span class="pre">ftdi:///1</span></code> should be enough.</p>
 <p>You can also ask PyFtdi to enumerate all the compatible devices with the
 special <code class="docutils literal notranslate"><span class="pre">ftdi:///?</span></code> syntax. This syntax is useful to retrieve the available
-FTDI URLs with serial number and/or bus:address selectors.</p>
+FTDI URLs with serial number and/or bus:address selectors. To avoid conflicts
+with some shells such as <cite>zsh</cite>, escape the <cite>?</cite> char as <code class="docutils literal notranslate"><span class="pre">ftdi:///\?</span></code>.</p>
 <p>There are several APIs available to enumerate/filter available FTDI device.
 See <a class="reference internal" href="api/ftdi.html"><span class="doc">ftdi - FTDI low-level driver</span></a>.</p>
 <p>Note that opening an FTDI connection with a URL ending with <cite>?</cite> is interpreted

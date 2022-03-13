@@ -82,10 +82,12 @@ Usage
 
 No hardware is required to run these tests, to even a single FTDI device.
 
-This new test framework require Python 3.6+, as it uses the fstring_ syntax.
+The test configuration files are described in YaML file format, therefore the
+ruamel.yaml_ package is required.
 
 .. code-block:: python
 
+    pip3 install ruamel.yaml
     PYTHONPATH=. FTDI_LOGLEVEL=info pyftdi/tests/mockusb.py
 
 Configuration

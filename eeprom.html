@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.53.3
+                0.54.0
               </div>
             
           
@@ -209,9 +209,10 @@ EEPROM content.</p>
 <span id="ftconf"></span><h2>EEPROM configuration tool<a class="headerlink" href="#eeprom-configuration-tool" title="Permalink to this headline">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> is a companion script to help managing the content of the FTDI
 EEPROM from the command line. See the <a class="reference internal" href="tools.html#tools"><span class="std std-ref">Tools</span></a> chapter to locate this tool.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}]</span>
-                 <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">]</span>
-                 <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">M</span> <span class="n">EEPROM</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">S</span> <span class="p">{</span><span class="mi">128</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="mi">1024</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">p</span> <span class="n">PRODUCT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">--</span><span class="n">vid</span> <span class="n">VID</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">pid</span> <span class="n">PID</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">E</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
                  <span class="p">[</span><span class="n">device</span><span class="p">]</span>
 
 <span class="n">Simple</span> <span class="n">FTDI</span> <span class="n">EEPROM</span> <span class="n">configurator</span><span class="o">.</span>
@@ -221,15 +222,31 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
 
 <span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
   <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
-  <span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="o">--</span><span class="n">hexdump</span>         <span class="n">dump</span> <span class="n">EEPROM</span> <span class="n">content</span> <span class="k">as</span> <span class="n">ASCII</span>
-  <span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">,</span> <span class="o">--</span><span class="n">hexblock</span> <span class="n">HEXBLOCK</span>
-                        <span class="n">dump</span> <span class="n">EEPROM</span> <span class="k">as</span> <span class="n">indented</span> <span class="n">hexa</span> <span class="n">blocks</span>
+
+<span class="n">Files</span><span class="p">:</span>
   <span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">,</span> <span class="o">--</span><span class="nb">input</span> <span class="n">INPUT</span>
                         <span class="nb">input</span> <span class="n">ini</span> <span class="n">file</span> <span class="n">to</span> <span class="n">load</span> <span class="n">EEPROM</span> <span class="n">content</span>
   <span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">},</span> <span class="o">--</span><span class="n">load</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}</span>
                         <span class="n">section</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">to</span> <span class="n">load</span> <span class="kn">from</span> <span class="nn">input</span> <span class="n">file</span>
   <span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">,</span> <span class="o">--</span><span class="n">output</span> <span class="n">OUTPUT</span>
                         <span class="n">output</span> <span class="n">ini</span> <span class="n">file</span> <span class="n">to</span> <span class="n">save</span> <span class="n">EEPROM</span> <span class="n">content</span>
+  <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
+                        <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
+
+<span class="n">Device</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
+                        <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span> <span class="p">(</span><span class="n">search</span> <span class="k">for</span> <span class="n">FTDI</span> <span class="n">devices</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">M</span> <span class="n">EEPROM</span><span class="p">,</span> <span class="o">--</span><span class="n">eeprom</span> <span class="n">EEPROM</span>
+                        <span class="n">force</span> <span class="n">an</span> <span class="n">EEPROM</span> <span class="n">model</span>
+  <span class="o">-</span><span class="n">S</span> <span class="p">{</span><span class="mi">128</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="mi">1024</span><span class="p">},</span> <span class="o">--</span><span class="n">size</span> <span class="p">{</span><span class="mi">128</span><span class="p">,</span><span class="mi">256</span><span class="p">,</span><span class="mi">1024</span><span class="p">}</span>
+                        <span class="n">force</span> <span class="n">an</span> <span class="n">EEPROM</span> <span class="n">size</span>
+
+<span class="n">Format</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="o">--</span><span class="n">hexdump</span>         <span class="n">dump</span> <span class="n">EEPROM</span> <span class="n">content</span> <span class="k">as</span> <span class="n">ASCII</span>
+  <span class="o">-</span><span class="n">X</span> <span class="n">HEXBLOCK</span><span class="p">,</span> <span class="o">--</span><span class="n">hexblock</span> <span class="n">HEXBLOCK</span>
+                        <span class="n">dump</span> <span class="n">EEPROM</span> <span class="k">as</span> <span class="n">indented</span> <span class="n">hexa</span> <span class="n">blocks</span>
+
+<span class="n">Configuration</span><span class="p">:</span>
   <span class="o">-</span><span class="n">s</span> <span class="n">SERIAL_NUMBER</span><span class="p">,</span> <span class="o">--</span><span class="n">serial</span><span class="o">-</span><span class="n">number</span> <span class="n">SERIAL_NUMBER</span>
                         <span class="nb">set</span> <span class="n">serial</span> <span class="n">number</span>
   <span class="o">-</span><span class="n">m</span> <span class="n">MANUFACTURER</span><span class="p">,</span> <span class="o">--</span><span class="n">manufacturer</span> <span class="n">MANUFACTURER</span>
@@ -238,12 +255,15 @@ EEPROM from the command line. See the <a class="reference internal" href="tools.
                         <span class="nb">set</span> <span class="n">product</span> <span class="n">name</span>
   <span class="o">-</span><span class="n">c</span> <span class="n">CONFIG</span><span class="p">,</span> <span class="o">--</span><span class="n">config</span> <span class="n">CONFIG</span>
                         <span class="n">change</span><span class="o">/</span><span class="n">configure</span> <span class="n">a</span> <span class="nb">property</span> <span class="k">as</span> <span class="n">key</span><span class="o">=</span><span class="n">value</span> <span class="n">pair</span>
+  <span class="o">--</span><span class="n">vid</span> <span class="n">VID</span>             <span class="n">shortcut</span> <span class="n">to</span> <span class="n">configure</span> <span class="n">the</span> <span class="n">USB</span> <span class="n">vendor</span> <span class="n">ID</span>
+  <span class="o">--</span><span class="n">pid</span> <span class="n">PID</span>             <span class="n">shortcut</span> <span class="n">to</span> <span class="n">configure</span> <span class="n">the</span> <span class="n">USB</span> <span class="n">product</span> <span class="n">ID</span>
+
+<span class="n">Action</span><span class="p">:</span>
   <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">erase</span>           <span class="n">erase</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">EEPROM</span> <span class="n">content</span>
+  <span class="o">-</span><span class="n">E</span><span class="p">,</span> <span class="o">--</span><span class="n">full</span><span class="o">-</span><span class="n">erase</span>      <span class="n">erase</span> <span class="n">the</span> <span class="n">whole</span> <span class="n">EEPROM</span> <span class="n">content</span><span class="p">,</span> <span class="n">including</span> <span class="n">the</span> <span class="n">CRC</span>
   <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="o">--</span><span class="n">update</span>          <span class="n">perform</span> <span class="n">actual</span> <span class="n">update</span><span class="p">,</span> <span class="n">use</span> <span class="n">w</span><span class="o">/</span> <span class="n">care</span>
-  <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
-                        <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
-  <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
-                        <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
+
+<span class="n">Extras</span><span class="p">:</span>
   <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
   <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
 </pre></div>
@@ -276,19 +296,37 @@ script runs in dry-run mode.</p>
 <p>The name should be separated from the value with an equal <code class="docutils literal notranslate"><span class="pre">=</span></code> sign or
 alternatively a full column <code class="docutils literal notranslate"><span class="pre">:</span></code> character.</p>
 <ul class="simple">
-<li><p>To obtain the list of supported name, use the <cite>?</cite> wildcard: <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">?</span></code>.</p></li>
-<li><p>To obtain the list of supported values for a namw, use the <cite>?</cite> wildcard:
-<code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=?</span></code>, where <em>name</em> is a supported name.</p></li>
+<li><p>To obtain the list of supported name, use the <cite>?</cite> wildcard: <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">?</span></code>, or
+<cite>-c help</cite> to avoid conflicts with some shells</p></li>
+<li><p>To obtain the list of supported values for a name, use the <cite>?</cite> or the <cite>help</cite>
+wildcard:
+<code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">name=help</span></code>, where <em>name</em> is a supported name.</p></li>
 </ul>
 <p>See <a class="reference internal" href="#cbus-func"><span class="std std-ref">CBUS function</span></a> table for the alternate function associated with each
 name.</p>
 </dd>
 </dl>
-<dl class="simple" id="option-e">
-<dt><code class="docutils literal notranslate"><span class="pre">-e</span></code></dt><dd><p>Erase the whole EEPROM. This may be useful to recover from a corrupted
-EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
-to a default configuration. Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>,
-the EEPROM content is not actually modified, the script runs in dry-run mode.</p>
+<dl id="option-e">
+<dt><code class="docutils literal notranslate"><span class="pre">-E</span></code></dt><dd><p>Erase the full EEPROM content including the CRC. As the CRC no longer
+validates the EEPROM content, the EEPROM configuration is ignored on the next
+power cycle of the device, so the default FTDI configuration is used.</p>
+<p>This may be useful to recover from a corrupted EEPROM, as when no EEPROM or a
+blank EEPROM is detected, the FTDI falls back to a default configuration.</p>
+<p>Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not
+actually modified, the script runs in dry-run mode.</p>
+</dd>
+</dl>
+<dl id="id1">
+<dt><code class="docutils literal notranslate"><span class="pre">-e</span></code></dt><dd><p>Erase the whole EEPROM and regenerates a valid CRC.</p>
+<p>Beware that as <cite>-e</cite> option generates a valid CRC for the erased EEPROM
+content, the FTDI device may identified itself as VID:PID FFFF:FFFF on next
+reboot. You should likely use the <cite>–vid</cite> and <cite>–pid</cite> option to define a
+valid FDTI device USB identifier with this option to ensure the device
+identifies itself as a FTDI device on next power cycle.</p>
+<p>Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not
+actually modified, the script runs in dry-run mode.</p>
+<p>Alternatively, use <cite>-E</cite> option that erase the full EEPROM content including
+the CRC.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-i">
@@ -309,6 +347,12 @@ ignored, and a warning is emitted for each unsupported feature.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-m">
+<dt><code class="docutils literal notranslate"><span class="pre">-M</span> <span class="pre">&lt;model&gt;</span></code></dt><dd><p>Specify the EEPROM model (93c46, 93c56, 93c66) that is connected to the FTDI
+device. There is no reason to use this option except for recovery purposes,
+see option <cite>-E</cite>. It is mutually exclusive with the <cite>-S</cite> option.</p>
+</dd>
+</dl>
+<dl class="simple" id="id2">
 <dt><code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">&lt;manufacturer&gt;</span></code></dt><dd><p>Assign a new manufacturer name to the device. Note that without option
 <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script
 runs in dry-run mode. Manufacturer names with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are
@@ -334,7 +378,18 @@ dry-run mode. Product names with <code class="docutils literal notranslate"><spa
 avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
 </dd>
 </dl>
+<dl class="simple" id="option-pid">
+<dt><code class="docutils literal notranslate"><span class="pre">--pid</span></code></dt><dd><p>Define the USB product identifier - as an hexadecimal number. This is a
+shortcut for <cite>-c product_id</cite></p>
+</dd>
+</dl>
 <dl class="simple" id="option-s">
+<dt><code class="docutils literal notranslate"><span class="pre">-S</span> <span class="pre">&lt;size&gt;</span></code></dt><dd><p>Specify the EEPROM size -in bytes- that is connected to the FTDI device.
+There is no reason to use this option except for recovery purposes,
+see option <cite>-E</cite>. It is mutually exclusive with the <cite>-M</cite> option.</p>
+</dd>
+</dl>
+<dl class="simple" id="id3">
 <dt><code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">&lt;serial&gt;</span></code></dt><dd><p>Assign a new serial number to the device. Note that without option <a class="reference internal" href="#option-u"><span class="std std-ref">-u</span></a>, the EEPROM content is not actually modified, the script runs in
 dry-run mode. Serial number with <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">:</span></code> characters are rejected, to
 avoid parsing issues with FTDI <a class="reference internal" href="urlscheme.html#url-scheme"><span class="std std-ref">URLs</span></a>.</p>
@@ -347,6 +402,11 @@ used, the EEPROM is actually updated and its checksum regenerated. If
 something goes wrong at this point, you may brick you board, you’ve been
 warned. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> offers neither guarantee whatsoever than altering the EEPROM
 content is safe, nor that it is possible to recover from a bricked device.</p>
+</dd>
+</dl>
+<dl class="simple" id="option-vid">
+<dt><code class="docutils literal notranslate"><span class="pre">--vid</span></code></dt><dd><p>Define the USB vendor identifier - as an hexadecimal number. This is a
+shortcut for <cite>-c vendor_id</cite>.</p>
 </dd>
 </dl>
 <dl class="simple" id="option-x">
@@ -505,6 +565,23 @@ depending on the actual device, some alternate function may not be available.</p
   AWAKE, BAT_DETECT, BAT_NDETECT, BB_RD, BB_WR, CLK12, CLK24, CLK6,
   DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, GPIO, PWREN, RXLED, SLEEP,
   TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
+</pre></div>
+</div>
+</li>
+<li><p>Erase the whole EEPROM including its CRC.</p>
+<p>Once power cycle, the device should run as if no EEPROM was connected.
+Do not use this with internal, embedded EEPROMs such as FT230X.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">P</span> <span class="n">ffff</span><span class="p">:</span><span class="n">ffff</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="n">ffff</span><span class="p">:</span><span class="n">ffff</span><span class="o">/</span><span class="mi">1</span> <span class="o">-</span><span class="n">E</span> <span class="o">-</span><span class="n">u</span>
+</pre></div>
+</div>
+</li>
+<li><p>Recover from an erased EEPROM with a valid CRC</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># for a FT4232 device</span>
+<span class="c1"># note that ffff matches an erased EEPROM, other corrupted values may</span>
+<span class="c1"># exist, such device can be identified with system tools such as lsusb</span>
+
+<span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">P</span> <span class="n">ffff</span><span class="p">:</span><span class="n">ffff</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">//</span><span class="n">ffff</span><span class="p">:</span><span class="n">ffff</span><span class="o">/</span><span class="mi">1</span> <span class="o">-</span><span class="n">e</span> <span class="o">-</span><span class="n">u</span> \
+    <span class="o">--</span><span class="n">vid</span> <span class="mi">0403</span> <span class="o">--</span><span class="n">pid</span> <span class="mi">6011</span>
 </pre></div>
 </div>
 </li>

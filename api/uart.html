@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.53.3
+                0.54.0
               </div>
             
           
@@ -355,7 +355,8 @@ archive directory, <code class="docutils literal notranslate"><span class="pre">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi:///?
 </pre></div>
 </div>
-<p>The above command lists all the available FTDI device ports.</p>
+<p>The above command lists all the available FTDI device ports. To avoid conflicts
+with some shells such as <cite>zsh</cite>, escape the <cite>?</cite> char as <code class="docutils literal notranslate"><span class="pre">ftdi:///\?</span></code>.</p>
 <p>To start up a serial terminal session, specify the FTDI port to use, for
 example:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># detect all FTDI connected devices</span>

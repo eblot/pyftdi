@@ -3,9 +3,11 @@
 Requirements
 ------------
 
-Python_ 3.6 or above is required.
+Python_ 3.7 or above is required.
 
-Python 3.5 has reached end-of-life on September 5th, 2020.
+Python 3.6 has reached end-of-life on December 23rd, 2021.
+
+PyFtdi *v0.53* is the last PyFtdi version to support Python 3.6.
 PyFtdi *v0.52* is the last PyFtdi version to support Python 3.5.
 
 PyFtdi_ relies on PyUSB_, which itself depends on one of the following native

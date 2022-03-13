@@ -102,8 +102,9 @@ PyFtdi_ tools share many common option switches:
     omitted as they only serve as human-readable aliases for the vendor and
     product names. See example below.
   * ``vendor_id`` and ``product_id`` are mandatory strings that should resolve
-    into 16-bit integers (USB VID and PID values). They may either be expressed
-    as decimal or hexadecimal syntax.
+    into 16-bit integers (USB VID and PID values). Integer values are always
+    interpreted as hexadecimal values, *e.g.* `-P 1234:6789` is parsed as
+    `-P 0x1234:0x6789`.
 
   This option may be repeated as many times as required to add support for
   several custom devices.
