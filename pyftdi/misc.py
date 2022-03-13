@@ -309,6 +309,13 @@ def show_call_stack():
     print_stack(_current_frames()[current_thread().ident])
 
 
+class classproperty(property):
+    """Getter property decorator for a class"""
+    #pylint: disable=invalid-name
+    def __get__(self, obj: Any, objtype=None) -> Any:
+        return super().__get__(objtype)
+
+
 class EasyDict(dict):
     """Dictionary whose members can be accessed as instance members
     """
