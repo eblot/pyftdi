@@ -934,10 +934,11 @@ class FtdiEeprom:
         # for now, only support FT-X devices
         raise ValueError('Bus control not implemented for this device')
 
-    def _set_group(self, group: int, value: Union[str, int, bool],
-                   out: Optional[TextIO]) -> None:
+    def _set_group(self, group: int, control: str,
+                   value: Union[str, int, bool], out: Optional[TextIO]) \
+            -> None:
         if self.device_version in (0x0700, 0x0800, 0x0900):
-            self._set_group_x232h(group, value, out)
+            self._set_group_x232h(group, control, value, out)
             return
         raise ValueError('Group not implemented for this device')
 
