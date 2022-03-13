@@ -1285,7 +1285,6 @@ class Ftdi:
         try:
             self.set_bitmode(outv, Ftdi.BitMode.CBUS)
             inv = self.read_pins()
-            #print(f'BM {outv:04b} {inv:04b}')
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
@@ -1781,7 +1780,6 @@ class Ftdi:
                 if offset + write_size > size:
                     write_size = size - offset
                 length = self._write(data[offset:offset+write_size])
-                # print('WRITE', offset, size, length)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
                 offset += length
