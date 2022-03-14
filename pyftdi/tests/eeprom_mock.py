@@ -22,6 +22,11 @@ class FtdiTestCase(TestCase):
     """Common features for all tests.
     """
 
+    # manufacturer/product/serial number strings to use in tests
+    TEST_MANU_NAME = "MNAME"
+    TEST_PROD_NAME = "PNAME"
+    TEST_SN = "SN123"
+
     @classmethod
     def setUpClass(cls):
         cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'), permissive=False)
@@ -45,11 +50,6 @@ class EepromMirrorTestCase(FtdiTestCase):
     commit any of their eeprom changes
     """
 
-    # manufacturer name string to use in tests
-    TEST_MANU_NAME = "MNAME"
-    TEST_PROD_NAME = "PNAME"
-    TEST_SN = "SN123"
-
     @classmethod
     def setUpClass(cls):
         FtdiTestCase.setUpClass()
@@ -72,6 +72,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
         self.assertTrue(eeprom.has_mirroring)
+        self.assertFalse(eeprom.is_mirroring_enabled)
         self.assertEqual(eeprom.size // 2, eeprom.mirror_sector)
         eeprom.close()
 
@@ -79,6 +80,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         mirrored_eeprom.enable_mirroring(True)
         mirrored_eeprom.open(self.url, ignore=True)
         self.assertTrue(mirrored_eeprom.has_mirroring)
+        self.assertTrue(mirrored_eeprom.is_mirroring_enabled)
         self.assertEqual(mirrored_eeprom.size // 2,
             mirrored_eeprom.mirror_sector)
         mirrored_eeprom.close()
@@ -179,20 +181,13 @@ class EepromMirrorTestCase(FtdiTestCase):
             self.assertEqual(eeprom.data[ii], 
                 eeprom.data[ii + eeprom.mirror_sector])
 
-
-class EepromMirrorFt232hTestCase(EepromMirrorTestCase):
-    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
-
-
-class EepromMirrorFt2232hTestCase(EepromMirrorTestCase):
-    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
-
-
-class EepromMirrorFt230xTestCase(FtdiTestCase):
-    """Test FTDI eeprom with non-mirroring capabilities to ensure it works as
-       expected.
+class NonMirroredEepromTestCase(FtdiTestCase):
+    """Test FTDI EEPROM mirror features do not break FTDI devices that do
+    not use mirroring
     """
-    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft230x.yaml'
+    TEST_MANU_NAME = "MNAME"
+    TEST_PROD_NAME = "PNAME"
+    TEST_SN = "SN123"
 
     @classmethod
     def setUpClass(cls):
@@ -206,16 +201,22 @@ class EepromMirrorFt230xTestCase(FtdiTestCase):
             ftdi.open_from_url(cls.url)
             count = ftdi.device_port_count
             ftdi.close()
-    
+
     def test_mirror_properties(self):
         """Check FtdiEeprom properties are accurate for a device that can not
            mirror.
+           Only run this test if the device under test is incapable of
+           mirroring
         """
+        if self.DEVICE_CAN_MIRROR:
+            self.skipTest("Mirror properties for devices capable of mirroring"
+                + " are tested in EepromMirrorTestCase")
         # properties should work regardless of if the mirror option is set
         # or not
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
         self.assertFalse(eeprom.has_mirroring)
+        self.assertFalse(eeprom.is_mirroring_enabled)
         with self.assertRaises(FtdiError):
             eeprom.mirror_sector
         eeprom.close()
@@ -224,14 +225,81 @@ class EepromMirrorFt230xTestCase(FtdiTestCase):
         mirrored_eeprom.enable_mirroring(True)
         mirrored_eeprom.open(self.url, ignore=True)
         self.assertFalse(mirrored_eeprom.has_mirroring)
+        self.assertFalse(mirrored_eeprom.is_mirroring_enabled)
         with self.assertRaises(FtdiError):
-            eeprom.mirror_sector
+            mirrored_eeprom.mirror_sector
         mirrored_eeprom.close()
+
+    def test_no_mirror_manufacturer(self):
+        """Verify manufacturer string is NOT duplicated/mirrored
+        """
+        eeprom = FtdiEeprom()
+        eeprom.enable_mirroring(False)
+        eeprom.open(self.url, ignore=True)
+        eeprom.erase()
+        eeprom.set_manufacturer_name(self.TEST_MANU_NAME)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+    def test_no_mirror_product(self):
+        """Verify product string is NOT duplicated/mirrored
+        """
+        eeprom = FtdiEeprom()
+        eeprom.enable_mirroring(False)
+        eeprom.open(self.url, ignore=True)
+        eeprom.erase()
+        eeprom.set_product_name(self.TEST_PROD_NAME)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+    def test_mirror_serial(self):
+        """Verify serial string is NOT duplicated/mirrored
+        """
+        eeprom = FtdiEeprom()
+        eeprom.enable_mirroring(False)
+        eeprom.open(self.url, ignore=True)
+        eeprom.erase()
+        eeprom.set_serial_number(self.TEST_SN)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+    def test_varstr_combinations(self):
+        """Verify various combinations of var strings are NOT
+        duplicated/mirrored
+        """
+        eeprom = FtdiEeprom()
+        eeprom.enable_mirroring(False)
+        eeprom.open(self.url, ignore=True)
+
+        # manu + prod str
+        eeprom.erase()
+        eeprom.set_manufacturer_name(self.TEST_MANU_NAME)
+        eeprom.set_product_name(self.TEST_PROD_NAME)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+        # manu + sn str
+        eeprom.erase()
+        eeprom.set_manufacturer_name(self.TEST_MANU_NAME)
+        eeprom.set_serial_number(self.TEST_SN)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+        # prod + sn str
+        eeprom.erase()
+        eeprom.set_manufacturer_name(self.TEST_PROD_NAME)
+        eeprom.set_serial_number(self.TEST_SN)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
+
+        # manu + prod + sn str
+        eeprom.erase()
+        eeprom.set_manufacturer_name(self.TEST_MANU_NAME)
+        eeprom.set_manufacturer_name(self.TEST_PROD_NAME)
+        eeprom.set_serial_number(self.TEST_SN)
+        self._check_for_non_mirrored_eeprom_contents(eeprom)
 
     def test_compute_size_does_not_mirror(self):
         """Verify the eeproms internal _compute_size method returns the correct
            bool value when it detects no mirroring.
         """
+        if self.DEVICE_CAN_MIRROR:
+            self.skipTest("Mirror properties for devices capable of mirroring"
+                + " are tested in EepromMirrorTestCase")
         eeprom = FtdiEeprom()
         eeprom.open(self.url, ignore=True)
         _, mirrored = eeprom._compute_size([])
@@ -244,12 +312,58 @@ class EepromMirrorFt230xTestCase(FtdiTestCase):
         self.assertFalse(mirrored)
         eeprom.close()
 
+    def _check_for_non_mirrored_eeprom_contents(self, eeprom: FtdiEeprom):
+        """Check that contents of the eeprom is not mirrored
+        """
+        mirror_sector_start = eeprom.size // 2
+        # split eeprom into 2 sectors as would be done if mirroring was enabled
+        # and verify the device is not mirrored
+        normal_mirror_s1 = eeprom.data[:mirror_sector_start]
+        normal_mirror_s2 = eeprom.data[mirror_sector_start:]
+        self.assertNotEqual(normal_mirror_s1, normal_mirror_s2)
+
+class EepromMirrorFt232hTestCase(EepromMirrorTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
+
+class EepromMirrorFt2232hTestCase(EepromMirrorTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
+
+class EepromMirrorFt4232hTestCase(EepromMirrorTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h.yaml'
+
+class EepromMirrorFt232rTestCase(NonMirroredEepromTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232r.yaml'
+    DEVICE_CAN_MIRROR = False
+
+class EepromMirrorFt230xTestCase(NonMirroredEepromTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft230x.yaml'
+    DEVICE_CAN_MIRROR = False
+
+class EepromNonMirroredFt232hTestCase(NonMirroredEepromTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
+    DEVICE_CAN_MIRROR = True
+
+class EepromNonMirroredFt2232hTestCase(NonMirroredEepromTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
+    DEVICE_CAN_MIRROR = True
+
+class EepromNonMirroredFt4232hTestCase(NonMirroredEepromTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h.yaml'
+    DEVICE_CAN_MIRROR = True
 
 def suite():
     suite_ = TestSuite()
+    # Test devices that support the mirroring capability
     suite_.addTest(makeSuite(EepromMirrorFt232hTestCase, 'test'))
     suite_.addTest(makeSuite(EepromMirrorFt2232hTestCase, 'test'))
+    suite_.addTest(makeSuite(EepromMirrorFt4232hTestCase, 'test'))
+    # Test devices that do not support the mirror capability
+    suite_.addTest(makeSuite(EepromMirrorFt232rTestCase, 'test'))
     suite_.addTest(makeSuite(EepromMirrorFt230xTestCase, 'test'))
+    # test devices that support the mirroring capability, but have it disabled
+    suite_.addTest(makeSuite(EepromNonMirroredFt232hTestCase, 'test'))
+    suite_.addTest(makeSuite(EepromNonMirroredFt2232hTestCase, 'test'))
+    suite_.addTest(makeSuite(EepromNonMirroredFt4232hTestCase, 'test'))
     return suite_
 
 
