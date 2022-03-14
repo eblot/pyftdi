@@ -685,7 +685,7 @@ class FtdiEeprom:
         stream = bytearray()
         dynpos = self._PROPERTIES[self.device_version].dynoff
         if dynpos > self._size:
-            # if a custom,small EEPROM device is used
+            # if a custom, small EEPROM device is used
             dynpos = 0x40
         data_pos = dynpos
         tbl_pos = 0x0e
@@ -702,7 +702,7 @@ class FtdiEeprom:
             stream.append(length)
             stream.append(0x03)  # string descriptor
             stream.extend(ustr)
-            self._eeprom[tbl_pos] = data_pos
+            self._eeprom[tbl_pos] = data_pos | 0x80
             tbl_pos += 1
             if self.is_mirroring_enabled:
                 self._eeprom[tbl_sector2_pos] = data_pos
