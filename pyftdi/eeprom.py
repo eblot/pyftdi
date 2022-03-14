@@ -689,10 +689,11 @@ class FtdiEeprom:
             # if a custom,small EEPROM device is used
             dynpos = 0x40
         data_pos = dynpos
-        # start of var-strings in sector 1 (used for mirrored config)
-        s1_vstr_start = data_pos - self.mirror_sector
         tbl_pos = 0x0e
-        tbl_sector2_pos = self.mirror_sector + tbl_pos
+        if self.is_mirroring_enabled:
+            # start of var-strings in sector 1 (used for mirrored config)
+            s1_vstr_start = data_pos - self.mirror_sector
+            tbl_sector2_pos = self.mirror_sector + tbl_pos
         for name in self.VAR_STRINGS:
             try:
                 ustr = self._config[name].encode('utf-16le')
@@ -703,15 +704,15 @@ class FtdiEeprom:
             stream.append(0x03)  # string descriptor
             stream.extend(ustr)
             self._eeprom[tbl_pos] = data_pos
+            tbl_pos += 1
             if self.is_mirroring_enabled:
                 self._eeprom[tbl_sector2_pos] = data_pos
-            tbl_pos += 1
-            tbl_sector2_pos += 1
+                tbl_sector2_pos += 1
             self._eeprom[tbl_pos] = length
+            tbl_pos += 1
             if self.is_mirroring_enabled:
                 self._eeprom[tbl_sector2_pos] = length
-            tbl_pos += 1
-            tbl_sector2_pos += 1
+                tbl_sector2_pos += 1
             data_pos += length
         if self.is_mirroring_enabled:
             self._eeprom[s1_vstr_start:s1_vstr_start+len(stream)] = stream
