@@ -1029,7 +1029,7 @@ class I2cController:
         cmd.extend(self._write_byte)
         cmd.append(i2caddress)
         try:
-            self._send_check_ack(cmd, is_do_prolog_cmd=True)
+            self._send_check_ack(cmd)
         except I2cNackError:
             self.log.warning('NACK @ 0x%02x', (i2caddress >> 1))
             raise
@@ -1041,27 +1041,13 @@ class I2cController:
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
 
-    def _send_check_ack(self, cmd: bytearray, is_do_prolog_cmd: bool):
+    def _send_check_ack(self, cmd: bytearray):
         # note: cmd is modified
         if self._fake_tristate:
-            # if it is a _do_prolog command, then check to see if the next
-            # action after ACK is a read by looking at the last bit of cmd
-            # which is the read/write bit. Write=0, Read=1
-            end_as_input = False
-            if is_do_prolog_cmd:
-                if cmd[-1:][0] & 0x1:
-                    # if reading after ACK, we want to end as an input later
-                    end_as_input = True
             # SCL low, SDA high-Z (input)
             cmd.extend(self._clk_lo_data_input)
             # read SDA (ack from slave)
             cmd.extend(self._read_bit)
-            # if writing after ACK, end as an output. if reading after, end
-            # as an input to prevent a short as some slaves may pull SDA low
-            # after ACK
-            if not end_as_input:
-                # leave SCL low, restore SDA as output
-                cmd.extend(self._clk_lo_data_hi)
         else:
             # SCL low, SDA high-Z
             cmd.extend(self._clk_lo_data_hi)
@@ -1162,6 +1148,11 @@ class I2cController:
         self.log.debug('- write %d byte(s): %s',
                        len(out), hexlify(out).decode())
         for byte in out:
-            cmd = bytearray(self._write_byte)
+            if self._fake_tristate:
+                # leave SCL low, restore SDA as output
+                cmd = bytearray(self._clk_lo_data_hi)
+                cmd.extend(self._write_byte)
+            else:
+                cmd = bytearray(self._write_byte)
             cmd.append(byte)
-            self._send_check_ack(cmd, is_do_prolog_cmd=False)
+            self._send_check_ack(cmd)
