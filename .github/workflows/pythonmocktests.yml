@@ -11,28 +11,33 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install setuptools wheel ruamel.yaml
+
     - name: Install package
       run: |
         python setup.py install
+
     - name: Run Mock tests
       env:
         FTDI_LOGLEVEL: WARNING
         FTDI_DEBUG: on
       run: |
         python pyftdi/tests/mockusb.py
+
     - name: Run GPIO tests
       env:
         FTDI_LOGLEVEL: WARNING
@@ -40,3 +45,11 @@ jobs:
         FTDI_VIRTUAL: on
       run: |
         python pyftdi/tests/gpio.py
+
+    - name: Run EEPROM tests
+      env:
+        FTDI_LOGLEVEL: WARNING
+        FTDI_DEBUG: on
+        FTDI_VIRTUAL: on
+      run: |
+        python pyftdi/tests/eeprom_mock.py

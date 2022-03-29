@@ -164,16 +164,12 @@ class Ftdi:
     READ_BITS_NVE_LSB = 0x2e
     RW_BYTES_PVE_NVE_MSB = 0x31
     RW_BYTES_NVE_PVE_MSB = 0x34
-    RW_BITS_PVE_PVE_MSB = 0x32
     RW_BITS_PVE_NVE_MSB = 0x33
     RW_BITS_NVE_PVE_MSB = 0x36
-    RW_BITS_NVE_NVE_MSB = 0x37
     RW_BYTES_PVE_NVE_LSB = 0x39
     RW_BYTES_NVE_PVE_LSB = 0x3c
-    RW_BITS_PVE_PVE_LSB = 0x3a
     RW_BITS_PVE_NVE_LSB = 0x3b
     RW_BITS_NVE_PVE_LSB = 0x3e
-    RW_BITS_NVE_NVE_LSB = 0x3f
     WRITE_BITS_TMS_PVE = 0x4a
     WRITE_BITS_TMS_NVE = 0x4b
     RW_BITS_TMS_PVE_PVE = 0x6a
@@ -1289,7 +1285,6 @@ class Ftdi:
         try:
             self.set_bitmode(outv, Ftdi.BitMode.CBUS)
             inv = self.read_pins()
-            #print(f'BM {outv:04b} {inv:04b}')
         finally:
             if oldmode != self._bitmode:
                 self.set_bitmode(0, oldmode)
@@ -1785,7 +1780,6 @@ class Ftdi:
                 if offset + write_size > size:
                     write_size = size - offset
                 length = self._write(data[offset:offset+write_size])
-                # print('WRITE', offset, size, length)
                 if length <= 0:
                     raise FtdiError("Usb bulk write error")
                 offset += length
@@ -2254,7 +2248,7 @@ class Ftdi:
             div |= 0x00020000
         value = div & 0xFFFF
         index = (div >> 16) & 0xFFFF
-        if self.has_mpsse:
+        if self.device_version >= 0x0700 or self.device_version == 0x0500:
             index <<= 8
             index |= self._index
         estimate = int(((8 * clock) + (div8//2))//div8)

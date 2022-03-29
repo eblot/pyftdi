@@ -39,27 +39,44 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
 
 ::
 
-  ftconf.py [-h] [-x] [-X HEXBLOCK] [-i INPUT] [-l {all,raw,values}]
-                   [-o OUTPUT] [-s SERIAL_NUMBER] [-m MANUFACTURER] [-p PRODUCT]
-                   [-c CONFIG] [-e] [-u] [-P VIDPID] [-V VIRTUAL] [-v] [-d]
+  usage: ftconf.py [-h] [-i INPUT] [-l {all,raw,values}] [-o OUTPUT] [-V VIRTUAL]
+                   [-P VIDPID] [-M EEPROM] [-S {128,256,1024}] [-x] [-X HEXBLOCK]
+                   [-s SERIAL_NUMBER] [-m MANUFACTURER] [-p PRODUCT] [-c CONFIG]
+                   [--vid VID] [--pid PID] [-e] [-E] [-u] [-v] [-d]
                    [device]
-
+  
   Simple FTDI EEPROM configurator.
-
+  
   positional arguments:
     device                serial port device name
-
+  
   optional arguments:
     -h, --help            show this help message and exit
-    -x, --hexdump         dump EEPROM content as ASCII
-    -X HEXBLOCK, --hexblock HEXBLOCK
-                          dump EEPROM as indented hexa blocks
+  
+  Files:
     -i INPUT, --input INPUT
                           input ini file to load EEPROM content
     -l {all,raw,values}, --load {all,raw,values}
                           section(s) to load from input file
     -o OUTPUT, --output OUTPUT
                           output ini file to save EEPROM content
+    -V VIRTUAL, --virtual VIRTUAL
+                          use a virtual device, specified as YaML
+  
+  Device:
+    -P VIDPID, --vidpid VIDPID
+                          specify a custom VID:PID device ID (search for FTDI devices)
+    -M EEPROM, --eeprom EEPROM
+                          force an EEPROM model
+    -S {128,256,1024}, --size {128,256,1024}
+                          force an EEPROM size
+  
+  Format:
+    -x, --hexdump         dump EEPROM content as ASCII
+    -X HEXBLOCK, --hexblock HEXBLOCK
+                          dump EEPROM as indented hexa blocks
+  
+  Configuration:
     -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
                           set serial number
     -m MANUFACTURER, --manufacturer MANUFACTURER
@@ -68,15 +85,17 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                           set product name
     -c CONFIG, --config CONFIG
                           change/configure a property as key=value pair
+    --vid VID             shortcut to configure the USB vendor ID
+    --pid PID             shortcut to configure the USB product ID
+  
+  Action:
     -e, --erase           erase the whole EEPROM content
+    -E, --full-erase      erase the whole EEPROM content, including the CRC
     -u, --update          perform actual update, use w/ care
-    -P VIDPID, --vidpid VIDPID
-                          specify a custom VID:PID device ID, may be repeated
-    -V VIRTUAL, --virtual VIRTUAL
-                          use a virtual device, specified as YaML
+  
+  Extras:
     -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
-
 
 **Again, please read the** :doc:`license` **terms before using the EEPROM API
 or this script. You may brick your device if something goes wrong, and there
@@ -116,20 +135,44 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   The name should be separated from the value with an equal ``=`` sign or
   alternatively a full column ``:`` character.
 
-  * To obtain the list of supported name, use the `?` wildcard: ``-c ?``.
-  * To obtain the list of supported values for a namw, use the `?` wildcard:
-    ``-c name=?``, where *name* is a supported name.
+  * To obtain the list of supported name, use the `?` wildcard: ``-c ?``, or
+    `-c help` to avoid conflicts with some shells
+  * To obtain the list of supported values for a name, use the `?` or the `help`
+    wildcard:
+    ``-c name=help``, where *name* is a supported name.
 
   See :ref:`cbus_func` table for the alternate function associated with each
   name.
 
+.. _option_E_:
+
+``-E``
+  Erase the full EEPROM content including the CRC. As the CRC no longer
+  validates the EEPROM content, the EEPROM configuration is ignored on the next
+  power cycle of the device, so the default FTDI configuration is used.
+
+  This may be useful to recover from a corrupted EEPROM, as when no EEPROM or a
+  blank EEPROM is detected, the FTDI falls back to a default configuration.
+
+  Note that without option :ref:`-u <option_u>`, the EEPROM content is not
+  actually modified, the script runs in dry-run mode.
+
 .. _option_e:
 
 ``-e``
-  Erase the whole EEPROM. This may be useful to recover from a corrupted
-  EEPROM, as when no EEPROM or a blank EEPROM is detected, the FTDI falls back
-  to a default configuration. Note that without option :ref:`-u <option_u>`,
-  the EEPROM content is not actually modified, the script runs in dry-run mode.
+  Erase the whole EEPROM and regenerates a valid CRC.
+
+  Beware that as `-e` option generates a valid CRC for the erased EEPROM
+  content, the FTDI device may identified itself as VID:PID FFFF:FFFF on next
+  reboot. You should likely use the `--vid` and `--pid` option to define a
+  valid FDTI device USB identifier with this option to ensure the device
+  identifies itself as a FTDI device on next power cycle.
+
+  Note that without option :ref:`-u <option_u>`, the EEPROM content is not
+  actually modified, the script runs in dry-run mode.
+
+  Alternatively, use `-E` option that erase the full EEPROM content including
+  the CRC.
 
 .. _option_i:
 
@@ -151,6 +194,13 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   through the :ref:`-c <option_c>` option switch. Unsupported feature are
   ignored, and a warning is emitted for each unsupported feature.
 
+.. _option_M_:
+
+``-M <model>``
+  Specify the EEPROM model (93c46, 93c56, 93c66) that is connected to the FTDI
+  device. There is no reason to use this option except for recovery purposes,
+  see option `-E`. It is mutually exclusive with the `-S` option.
+
 .. _option_m:
 
 ``-m <manufacturer>``
@@ -158,7 +208,6 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   :ref:`-u <option_u>`, the EEPROM content is not actually modified, the script
   runs in dry-run mode. Manufacturer names with ``/`` or ``:`` characters are
   rejected, to avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
-
 
 .. _option_o:
 
@@ -181,6 +230,19 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   dry-run mode. Product names with ``/`` or ``:`` characters are rejected, to
   avoid parsing issues with FTDI :ref:`URLs <url_scheme>`.
 
+.. _option_pid:
+
+``--pid``
+  Define the USB product identifier - as an hexadecimal number. This is a
+  shortcut for `-c product_id`
+
+.. _option_S_:
+
+``-S <size>``
+  Specify the EEPROM size -in bytes- that is connected to the FTDI device.
+  There is no reason to use this option except for recovery purposes,
+  see option `-E`. It is mutually exclusive with the `-M` option.
+
 .. _option_s:
 
 ``-s <serial>``
@@ -198,6 +260,12 @@ In addition to the :ref:`common_option_switches` for  PyFtdi_ tools,
   something goes wrong at this point, you may brick you board, you've been
   warned. PyFtdi_ offers neither guarantee whatsoever than altering the EEPROM
   content is safe, nor that it is possible to recover from a bricked device.
+
+.. _option_vid:
+
+``--vid``
+  Define the USB vendor identifier - as an hexadecimal number. This is a
+  shortcut for `-c vendor_id`.
 
 .. _option_x:
 
@@ -302,6 +370,26 @@ Examples
       AWAKE, BAT_DETECT, BAT_NDETECT, BB_RD, BB_WR, CLK12, CLK24, CLK6,
       DRIVE0, DRIVE1, I2C_RXF, I2C_TXE, GPIO, PWREN, RXLED, SLEEP,
       TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
+
+* Erase the whole EEPROM including its CRC.
+  
+  Once power cycle, the device should run as if no EEPROM was connected.
+  Do not use this with internal, embedded EEPROMs such as FT230X.
+
+  ::
+
+    pyftdi/bin/ftconf.py -P ffff:ffff ftdi://ffff:ffff/1 -E -u
+
+* Recover from an erased EEPROM with a valid CRC
+
+  ::
+
+    # for a FT4232 device
+    # note that ffff matches an erased EEPROM, other corrupted values may
+    # exist, such device can be identified with system tools such as lsusb
+
+    pyftdi/bin/ftconf.py -P ffff:ffff ftdi://ffff:ffff/1 -e -u \
+        --vid 0403 --pid 6011
 
 .. _eeprom_cbus:
 
