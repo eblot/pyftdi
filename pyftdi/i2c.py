@@ -966,6 +966,12 @@ class I2cController:
                 self.I2C_DIR | (self._gpio_dir & 0xFF))
 
     @property
+    def _clk_input_data_input(self) -> Tuple[int]:
+        return (Ftdi.SET_BITS_LOW,
+                self._gpio_low,
+                (self._gpio_dir & 0xFF))
+
+    @property
     def _idle(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
                 self.I2C_DIR | self._gpio_low,
@@ -1037,6 +1043,9 @@ class I2cController:
     def _do_epilog(self) -> None:
         self.log.debug('   epilog')
         cmd = bytearray(self._stop)
+        if self._fake_tristate:
+            # SCL high-Z, SDA high-Z
+            cmd.extend(self._clk_input_data_input)
         self._ftdi.write_data(cmd)
         # be sure to purge the MPSSE reply
         self._ftdi.read_data_bytes(1, 1)
