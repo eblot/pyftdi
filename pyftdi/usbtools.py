@@ -384,6 +384,15 @@ class UsbTools:
         except (IndexError, ValueError) as exc:
             raise UsbToolsError('Invalid device URL: %s' %
                                 urlunsplit(urlparts)) from exc
+
+        vendors = [vendor] if vendor else set(vdict.values())
+        vps = set()
+        for vid in vendors:
+            products = pdict.get(vid, [])
+            for pid in products:
+                vps.add((vid, products[pid]))
+        devices = cls.find_all(vps)
+
         sernum = None
         idx = None
         bus = None
@@ -398,23 +407,19 @@ class UsbTools:
                                     ':'.join(locators)) from exc
         else:
             if locators and locators[0]:
-                try:
-                    devidx = to_int(locators[0])
-                    if devidx > 255:
-                        raise ValueError()
-                    idx = devidx
-                    if idx:
-                        idx = devidx-1
-                except ValueError:
+                if locators[0] in [dev.sn for dev, _ in devices]:
                     sernum = locators[0]
+                else:
+                    try:
+                        devidx = to_int(locators[0])
+                        if devidx > 255:
+                            raise ValueError()
+                        idx = devidx
+                        if idx:
+                            idx = devidx-1
+                    except ValueError:
+                        raise UsbToolsError('Invalid index: %s' % ':'.join(locators))
         candidates = []
-        vendors = [vendor] if vendor else set(vdict.values())
-        vps = set()
-        for vid in vendors:
-            products = pdict.get(vid, [])
-            for pid in products:
-                vps.add((vid, products[pid]))
-        devices = cls.find_all(vps)
         if sernum:
             if sernum not in [dev.sn for dev, _ in devices]:
                 raise UsbToolsError("No USB device with S/N %s" % sernum)
