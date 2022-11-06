@@ -33,7 +33,7 @@ class I2cBusScanner:
     HIGHEST_I2C_SLAVE_ADDRESS = 0x78
 
     @classmethod
-    def scan(cls, url: str, smb_mode: bool = True) -> None:
+    def scan(cls, url: str, smb_mode: bool = True, force: bool = False) -> None:
         """Scan an I2C bus to detect slave device.
 
            :param url: FTDI URL
@@ -45,6 +45,7 @@ class I2cBusScanner:
         getLogger('pyftdi.i2c').setLevel(ERROR)
         try:
             i2c.set_retry_count(1)
+            i2c.force_clock_mode(force)
             i2c.configure(url)
             for addr in range(cls.HIGHEST_I2C_SLAVE_ADDRESS+1):
                 port = i2c.get_port(addr)
@@ -102,6 +103,8 @@ def main():
                                help='increase verbosity')
         argparser.add_argument('-d', '--debug', action='store_true',
                                help='enable debug mode')
+        argparser.add_argument('-F', '--force', action='store_true',
+                               help='force clock mode (for FT2232D)')
         args = argparser.parse_args()
         debug = args.debug
 
@@ -134,7 +137,7 @@ def main():
         except ValueError as exc:
             argparser.error(str(exc))
 
-        I2cBusScanner.scan(args.device, not args.no_smb)
+        I2cBusScanner.scan(args.device, not args.no_smb, args.force)
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
         print('\nError: %s' % exc, file=stderr)
