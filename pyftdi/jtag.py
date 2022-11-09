@@ -262,7 +262,8 @@ class JtagController:
         else:
             cmd = bytearray((Ftdi.WRITE_BITS_TMS_NVE, length-1, out.tobyte()))
         self._stack_cmd(cmd)
-        self.sync()
+        if should_read:
+            self.sync()
 
     def read(self, length: int) -> BitSequence:
         """Read out a sequence of bits from TDO."""
