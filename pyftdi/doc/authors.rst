@@ -43,3 +43,4 @@ Contributors
  * TedKus
  * Amanita-muscaria
  * len0rd
+ * Rod Whitby
