@@ -76,7 +76,7 @@ the actual hardware, *i.e.* the FTDI model:
   `BDBUS/BCBUS`,
 * FT2232H features two ports, which are 16-bit wide each: `ADBUS/ACBUS` and
   `BDBUS/BCBUS`,
-* FT4232H features four ports, which are 8-bit wide each: `ADBUS`, `BDBUS`,
+* FT4232H/FT4232HA features four ports, which are 8-bit wide each: `ADBUS`, `BDBUS`,
   `CDBUS` and `DDBUS`,
 * FT230X features a single port, which is 4-bit wide,
 * FT231X feature a single port, which is 8-bit wide

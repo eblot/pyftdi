@@ -38,6 +38,8 @@ configure `udev`, here is a typical setup:
     SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6014", GROUP="plugdev", MODE="0664"
     # FT230X/FT231X/FT234X
     SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0664"
+    # FT4232HA
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6048", GROUP="plugdev", MODE="0664"
 
 .. note:: **Accessing FTDI devices with custom VID/PID**
 

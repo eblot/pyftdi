@@ -354,7 +354,7 @@ class GpioSyncTestCase(FtdiTestCase):
 
 
 class GpioMultiportTestCase(FtdiTestCase):
-    """FTDI GPIO test for multi-port FTDI devices, i.e. FT2232H/FT4232H.
+    """FTDI GPIO test for multi-port FTDI devices, i.e. FT2232H/FT4232H/FT4232HA.
 
        Please ensure that the HW you connect to the FTDI port A does match
        the encoded configuration. Check your HW setup before running this test

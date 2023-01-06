@@ -241,7 +241,7 @@ class I2cClockStrechingGpioCheck(TestCase):
 
 class I2cDualMaster(TestCase):
     """Check the behaviour of 2 I2C masters. Requires a multi port FTDI device,
-       i.e. FT2232H or FT4232H. See issue #159.
+       i.e. FT2232H, FT4232H or FT4232HA. See issue #159.
     """
 
     def test(self):

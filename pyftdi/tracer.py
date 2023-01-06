@@ -29,7 +29,8 @@ class FtdiMpsseTracer:
         0x0700: 2,
         0x0800: 2,
         0x0900: 1,
-        0x1000: 0}
+        0x1000: 0,
+        0x3600: 2}
     """Count of MPSSE engines."""
 
     def __init__(self, version):

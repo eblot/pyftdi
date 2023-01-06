@@ -60,6 +60,17 @@ devices:
       manufacturer: FTDI
       product: FT2232R
       serialnumber: FT1OPQ
+  - bus: 3
+    address: 5
+    descriptor:
+      vid: 0x403
+      pid: 0x6048
+      version: 0x3600
+      manufacturer: FTDI
+      product: FT4232HA
+    configurations:
+      - interfaces:
+        - repeat: 4
 
 
 

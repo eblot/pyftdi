@@ -6,6 +6,7 @@
 .. _FT232H: http://www.ftdichip.com/Products/ICs/FT232H.htm
 .. _FT2232H: http://www.ftdichip.com/Products/ICs/FT2232H.html
 .. _FT4232H: http://www.ftdichip.com/Products/ICs/FT4232H.htm
+.. _FT4232HA: http://ftdichip.com/products/ft4232haq/
 .. _FTDI_Recovery: http://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _PyFtdiTools: https://github.com/eblot/pyftdi/tree/master/pyftdi/bin

@@ -81,6 +81,7 @@ class Ftdi:
             ('230x', 0x6015),
             ('231x', 0x6015),
             ('234x', 0x6015),
+            ('4232ha', 0x6048),
             ('ft232', 0x6001),
             ('ft232r', 0x6001),
             ('ft232h', 0x6014),
@@ -92,7 +93,8 @@ class Ftdi:
             ('ft4232h', 0x6011),
             ('ft230x', 0x6015),
             ('ft231x', 0x6015),
-            ('ft234x', 0x6015)))
+            ('ft234x', 0x6015),
+            ('ft4232ha', 0x6048)))
         }
     """Supported products, only FTDI officials ones.
        To add third parties and customized products, see
@@ -110,20 +112,22 @@ class Ftdi:
         0x0700: 'ft2232h',
         0x0800: 'ft4232h',
         0x0900: 'ft232h',
-        0x1000: 'ft-x'}
+        0x1000: 'ft-x',
+        0x3600: 'ft4232ha'}
     """Common names of FTDI supported devices."""
 
     # Note that the FTDI datasheets contradict themselves, so
     # the following values may not be the right ones...
     FIFO_SIZES = {
-        0x0200: (128, 128),    # FT232AM: TX: 128, RX: 128
-        0x0400: (128, 384),    # FT232BM: TX: 128, RX: 384
-        0x0500: (128, 384),    # FT2232C: TX: 128, RX: 384
-        0x0600: (256, 128),    # FT232R:  TX: 256, RX: 128
-        0x0700: (4096, 4096),  # FT2232H: TX: 4KiB, RX: 4KiB
-        0x0800: (2048, 2048),  # FT4232H: TX: 2KiB, RX: 2KiB
-        0x0900: (1024, 1024),  # FT232H:  TX: 1KiB, RX: 1KiB
-        0x1000: (512, 512),    # FT-X:    TX: 512, RX: 512
+        0x0200: (128, 128),    # FT232AM:   TX: 128, RX: 128
+        0x0400: (128, 384),    # FT232BM:   TX: 128, RX: 384
+        0x0500: (128, 384),    # FT2232C:   TX: 128, RX: 384
+        0x0600: (256, 128),    # FT232R:    TX: 256, RX: 128
+        0x0700: (4096, 4096),  # FT2232H:   TX: 4KiB, RX: 4KiB
+        0x0800: (2048, 2048),  # FT4232H:   TX: 2KiB, RX: 2KiB
+        0x0900: (1024, 1024),  # FT232H:    TX: 1KiB, RX: 1KiB
+        0x1000: (512, 512),    # FT-X:      TX: 512, RX: 512
+        0x3600: (2048, 2048),  # FT4232HA:  TX: 2KiB, RX: 2KiB
     }
     """FTDI chip internal FIFO sizes
 
@@ -508,8 +512,8 @@ class Ftdi:
            the USB device in random order. serial argument is more reliable
            selector and should always be prefered.
 
-           Some FTDI devices support several interfaces/ports (such as FT2232H
-           and FT4232H). The interface argument selects the FTDI port to use,
+           Some FTDI devices support several interfaces/ports (such as FT2232H,
+           FT4232H and FT4232HA). The interface argument selects the FTDI port to use,
            starting from 1 (not 0).
 
            :param int vendor: USB vendor id
@@ -654,8 +658,8 @@ class Ftdi:
            the USB device in random order. serial argument is more reliable
            selector and should always be prefered.
 
-           Some FTDI devices support several interfaces/ports (such as FT2232H
-           and FT4232H). The interface argument selects the FTDI port to use,
+           Some FTDI devices support several interfaces/ports (such as FT2232H,
+           FT4232H and FT4232HA). The interface argument selects the FTDI port to use,
            starting from 1 (not 0). Note that not all FTDI ports are MPSSE
            capable.
 
@@ -707,8 +711,8 @@ class Ftdi:
            the USB device in random order. serial argument is more reliable
            selector and should always be prefered.
 
-           Some FTDI devices support several interfaces/ports (such as FT2232H
-           and FT4232H). The interface argument selects the FTDI port to use,
+           Some FTDI devices support several interfaces/ports (such as FT2232H,
+           FT4232H and FT4232HA). The interface argument selects the FTDI port to use,
            starting from 1 (not 0). Note that not all FTDI ports are MPSSE
            capable.
 
@@ -945,7 +949,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900)
+        return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900, 0x3600)
 
     @property
     def has_wide_port(self) -> bool:
@@ -1008,7 +1012,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        return self.device_version in (0x0700, 0x0800, 0x0900)
+        return self.device_version in (0x0700, 0x0800, 0x0900, 0x3600)
 
 
     @property
@@ -1028,6 +1032,8 @@ class Ftdi:
         if not self.has_mpsse:
             return False
         if self.device_version == 0x0800 and interface > 2:
+            return False
+        if self.device_version == 0x3600 and interface > 2:
             return False
         return True
 

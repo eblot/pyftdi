@@ -39,7 +39,7 @@ Mode   CPol   CPha  Status
 =====  ===== ====== ====================================================
   0      0      0   Supported on all MPSSE devices
   1      0      1   Workaround available for on -H series
-  2      1      0   Supported on -H series (FT232H_/FT2232H_/FT4232H_)
+  2      1      0   Supported on -H series (FT232H_/FT2232H_/FT4232H_/FT4232HA_)
   3      1      1   Workaround available for on -H series
 =====  ===== ====== ====================================================
 
@@ -61,7 +61,7 @@ Note: FTDI*232* devices cannot be used as an SPI slave.
 |I2C| master
 ````````````
 
-Supported devices: FT232H_, FT2232H_, FT4232H_
+Supported devices: FT232H_, FT2232H_, FT4232H_, FT4232HA_
 
 For now, only 7-bit addresses are supported.
 
