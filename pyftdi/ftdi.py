@@ -608,7 +608,7 @@ class Ftdi:
 
     def open_mpsse_from_url(self, url: str, direction: int = 0x0,
                             initial: int = 0x0, frequency: float = 6.0E6,
-                            latency: int = 16, debug: bool = False) -> float:
+                            latency: int = LATENCY_MIN * 2, debug: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -639,7 +639,7 @@ class Ftdi:
                    address: Optional[int] = None, index: int = 0,
                    serial: Optional[str] = None, interface: int = 1,
                    direction: int = 0x0, initial: int = 0x0,
-                   frequency: float = 6.0E6, latency: int = 16,
+                   frequency: float = 6.0E6, latency: int = LATENCY_MIN * 2,
                    debug: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
@@ -692,7 +692,7 @@ class Ftdi:
     def open_mpsse_from_device(self, device: UsbDevice,
                                interface: int = 1, direction: int = 0x0,
                                initial: int = 0x0, frequency: float = 6.0E6,
-                               latency: int = 16, tracer: bool = False,
+                               latency: int = LATENCY_MIN * 2, tracer: bool = False,
                                debug: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
