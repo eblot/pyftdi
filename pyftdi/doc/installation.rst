@@ -197,7 +197,7 @@ Open a *shell*, or a *CMD* on Windows
 
 should list all the FTDI devices available on your host.
 
-Alternatively, you can invoke ``ftdu_urls.py`` script that lists all detected
+Alternatively, you can invoke ``ftdi_urls.py`` script that lists all detected
 FTDI devices. See the :doc:`tools` chapter for details.
 
   * Example with 1 FT232H device with a serial number and 1 FT2232 device
