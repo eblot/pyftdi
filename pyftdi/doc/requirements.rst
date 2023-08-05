@@ -3,7 +3,11 @@
 Requirements
 ------------
 
-Python_ 3.7 or above is required.
+Python_ 3.8 or above is required.
+
+* PyFtdi *v0.54* is the last PyFtdi version to support Python 3.7.
+
+  * Python 3.7 has reached end-of-life on June 27rd, 2023.
 
 * PyFtdi *v0.53* is the last PyFtdi version to support Python 3.6.
 
