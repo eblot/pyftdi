@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2023, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -241,7 +241,7 @@ class I2cClockStrechingGpioCheck(TestCase):
 
 class I2cDualMaster(TestCase):
     """Check the behaviour of 2 I2C masters. Requires a multi port FTDI device,
-       i.e. FT2232H or FT4232H. See issue #159.
+       i.e. FT2232H, FT4232H or FT4232HA. See issue #159.
     """
 
     def test(self):

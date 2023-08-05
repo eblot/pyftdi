@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2023, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -29,7 +29,8 @@ class FtdiMpsseTracer:
         0x0700: 2,
         0x0800: 2,
         0x0900: 1,
-        0x1000: 0}
+        0x1000: 0,
+        0x3600: 2}
     """Count of MPSSE engines."""
 
     def __init__(self, version):

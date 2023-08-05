@@ -6,7 +6,7 @@
 
 #pylint: disable-msg=missing-docstring
 
-__version__ = '0.54.1'
+__version__ = '0.55.0'
 __title__ = 'PyFtdi'
 __description__ = 'FTDI device driver (pure Python)'
 __uri__ = 'http://github.com/eblot/pyftdi'

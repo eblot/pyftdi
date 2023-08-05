@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2016-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2016-2023, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -354,7 +354,8 @@ class GpioSyncTestCase(FtdiTestCase):
 
 
 class GpioMultiportTestCase(FtdiTestCase):
-    """FTDI GPIO test for multi-port FTDI devices, i.e. FT2232H/FT4232H.
+    """FTDI GPIO test for multi-port FTDI devices,
+       i.e. FT2232H/FT4232H/FT4232HA.
 
        Please ensure that the HW you connect to the FTDI port A does match
        the encoded configuration. Check your HW setup before running this test

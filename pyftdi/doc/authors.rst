@@ -44,3 +44,5 @@ Contributors
  * Amanita-muscaria
  * len0rd
  * Rod Whitby
+ * Kornel Swierzy
+

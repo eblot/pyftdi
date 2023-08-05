@@ -27,7 +27,8 @@ where:
     ``0x6015``
   * Supported product aliases:
 
-    * ``232``, ``232r``, ``232h``, ``2232d``, ``2232h``, ``4232h``, ``230x``
+    * ``232``, ``232r``, ``232h``, ``2232d``, ``2232h``, ``4232h``, ``4232ha``,
+      ``230x``
     * ``ft`` prefix for all aliases is also accepted, as for example ``ft232h``
 
 * ``serial``: the serial number as a string. This is the preferred method to

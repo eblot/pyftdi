@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2023, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
 #pylint: disable-msg=empty-docstring
@@ -101,16 +101,18 @@ class MockUsbToolsTestCase(FtdiTestCase):
                 '232h': 0x6014,
                 '2232h': 0x6010,
                 '4232h': 0x6011,
+                '4232ha': 0x6048,
             }
         }
         devs = UsbTools.list_devices('ftdi:///?', vids, pids, vid)
-        self.assertEqual(len(devs), 6)
+        self.assertEqual(len(devs), 7)
         ifmap = {
             0x6001: 1,
             0x6010: 2,
             0x6011: 4,
             0x6014: 1,
-            0x6015: 1
+            0x6015: 1,
+            0x6048: 4
         }
         for dev, desc in devs:
             strings = UsbTools.build_dev_strings('ftdi', vids, pids,
@@ -143,12 +145,14 @@ class MockFtdiDiscoveryTestCase(FtdiTestCase):
     def test_list_devices(self):
         """List FTDI devices."""
         devs = Ftdi.list_devices('ftdi:///?')
-        self.assertEqual(len(devs), 6)
+        self.assertEqual(len(devs), 7)
         devs = Ftdi.list_devices('ftdi://:232h/?')
         self.assertEqual(len(devs), 2)
         devs = Ftdi.list_devices('ftdi://:2232h/?')
         self.assertEqual(len(devs), 1)
         devs = Ftdi.list_devices('ftdi://:4232h/?')
+        self.assertEqual(len(devs), 1)
+        devs = Ftdi.list_devices('ftdi://:4232ha/?')
         self.assertEqual(len(devs), 1)
         out = StringIO()
         Ftdi.show_devices('ftdi:///?', out)
@@ -156,9 +160,10 @@ class MockFtdiDiscoveryTestCase(FtdiTestCase):
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
-        self.assertEqual(len(lines), 10)
+        self.assertEqual(len(lines), 14)
         portmap = defaultdict(int)
-        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, 'ft-x': 1}
+        reference = {'232': 1, '2232': 2, '4232': 4, '232h': 2, 'ft-x': 1,
+                     '4232ha': 4}
         for line in lines:
             url = line.split(' ')[0].strip()
             parts = urlsplit(url)
@@ -250,7 +255,7 @@ class MockTwoPortDeviceTestCase(FtdiTestCase):
 
 
 class MockFourPortDeviceTestCase(FtdiTestCase):
-    """Test FTDI APIs with a quad-port FTDI device (FT4232H)
+    """Test FTDI APIs with a quad-port FTDI device (FT4232H, FT4232HA)
     """
 
     @classmethod
@@ -296,7 +301,7 @@ class MockManyDevicesTestCase(FtdiTestCase):
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
-        self.assertEqual(len(lines), 10)
+        self.assertEqual(len(lines), 14)
         for line in lines:
             self.assertTrue(line.startswith('ftdi://'))
             # skip description, i.e. consider URL only
@@ -304,7 +309,7 @@ class MockManyDevicesTestCase(FtdiTestCase):
             urlparts = urlsplit(url)
             self.assertEqual(urlparts.scheme, 'ftdi')
             parts = urlparts.netloc.split(':')
-            if parts[1] == '4232':
+            if (parts[1] == '4232') or (parts[1] == '4232ha'):
                 # def file contains no serial number, so expect bus:addr syntax
                 self.assertEqual(len(parts), 4)
                 self.assertRegex(parts[2], r'^\d$')

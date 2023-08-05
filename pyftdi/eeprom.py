@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2022, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2023, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -70,6 +70,7 @@ class FtdiEeprom:
         0x0800: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232H
         0x0900: _PROPS(256, 0x1A, 0xA0, 0x1e),   # FT232H
         0x1000: _PROPS(1024, 0x1A, 0xA0, None),  # FT230X/FT231X/FT234X
+        0x3600: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232HA
     }
     """EEPROM properties."""
 
@@ -634,7 +635,7 @@ class FtdiEeprom:
                   the EEPROM content
            :param no_crc: do not compute EEPROM CRC. This should only be used
             to perform a full erasure of the EEPROM, as an attempt to recover
-            from a corrupted config. 
+            from a corrupted config.
 
            :return: True if some changes have been committed to the EEPROM
         """
@@ -778,7 +779,7 @@ class FtdiEeprom:
             crc_s1_start = self.mirror_sector - crc_size
             self._eeprom[crc_s1_start:crc_s1_start+crc_size] = spack('<H', crc)
 
-    def _compute_size(self, 
+    def _compute_size(self,
             eeprom: Union[bytes, bytearray]) -> Tuple[int, bool]:
         """
             :return: Tuple of:
@@ -937,7 +938,7 @@ class FtdiEeprom:
     def _set_group(self, group: int, control: str,
                    value: Union[str, int, bool], out: Optional[TextIO]) \
             -> None:
-        if self.device_version in (0x0700, 0x0800, 0x0900):
+        if self.device_version in (0x0700, 0x0800, 0x0900, 0x3600):
             self._set_group_x232h(group, control, value, out)
             return
         raise ValueError('Group not implemented for this device')
@@ -951,7 +952,7 @@ class FtdiEeprom:
 
     def _set_group_x232h(self, group: int, control: str, value: str,
                          out: Optional[TextIO]) -> None:
-        if self.device_version in (0x0700, 0x800):  # 2232H/4232H
+        if self.device_version in (0x0700, 0x800, 0x3600):  # 2232H/4232H/4232HA
             offset = 0x0c + group//2
             nibble = group & 1
         else:  # 232H
@@ -1121,7 +1122,7 @@ class FtdiEeprom:
             cfg['channel_%x_rs485' % (0xa+chix)] = bool(conf & (rs485 << chix))
 
     def _decode_x232h(self, cfg):
-        # common code for 2232h and 4232h
+        # common code for 2232h, 4232h, 4232ha
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else 'D2XX'
         cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else 'D2XX'

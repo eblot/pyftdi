@@ -45,6 +45,7 @@ Supported FTDI devices include:
   * FT232H (single port, clock up to 30 MHz)
   * FT2232H (dual port, clock up to 30 MHz)
   * FT4232H (quad port, clock up to 30 MHz)
+  * FT4232HA (quad port, clock up to 30 MHz)
 
 Features
 --------

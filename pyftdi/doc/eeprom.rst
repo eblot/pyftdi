@@ -44,15 +44,15 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                    [-s SERIAL_NUMBER] [-m MANUFACTURER] [-p PRODUCT] [-c CONFIG]
                    [--vid VID] [--pid PID] [-e] [-E] [-u] [-v] [-d]
                    [device]
-  
+
   Simple FTDI EEPROM configurator.
-  
+
   positional arguments:
     device                serial port device name
-  
+
   optional arguments:
     -h, --help            show this help message and exit
-  
+
   Files:
     -i INPUT, --input INPUT
                           input ini file to load EEPROM content
@@ -62,7 +62,7 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                           output ini file to save EEPROM content
     -V VIRTUAL, --virtual VIRTUAL
                           use a virtual device, specified as YaML
-  
+
   Device:
     -P VIDPID, --vidpid VIDPID
                           specify a custom VID:PID device ID (search for FTDI devices)
@@ -70,12 +70,12 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                           force an EEPROM model
     -S {128,256,1024}, --size {128,256,1024}
                           force an EEPROM size
-  
+
   Format:
     -x, --hexdump         dump EEPROM content as ASCII
     -X HEXBLOCK, --hexblock HEXBLOCK
                           dump EEPROM as indented hexa blocks
-  
+
   Configuration:
     -s SERIAL_NUMBER, --serial-number SERIAL_NUMBER
                           set serial number
@@ -87,12 +87,12 @@ EEPROM from the command line. See the :ref:`tools` chapter to locate this tool.
                           change/configure a property as key=value pair
     --vid VID             shortcut to configure the USB vendor ID
     --pid PID             shortcut to configure the USB product ID
-  
+
   Action:
     -e, --erase           erase the whole EEPROM content
     -E, --full-erase      erase the whole EEPROM content, including the CRC
     -u, --update          perform actual update, use w/ care
-  
+
   Extras:
     -v, --verbose         increase verbosity
     -d, --debug           enable debug mode
@@ -372,7 +372,7 @@ Examples
       TIME_STAMP, TRISTATE, TXDEN, TXLED, TXRXLED, VBUS_SENSE
 
 * Erase the whole EEPROM including its CRC.
-  
+
   Once power cycle, the device should run as if no EEPROM was connected.
   Do not use this with internal, embedded EEPROMs such as FT230X.
 
