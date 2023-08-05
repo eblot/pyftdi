@@ -952,7 +952,8 @@ class FtdiEeprom:
 
     def _set_group_x232h(self, group: int, control: str, value: str,
                          out: Optional[TextIO]) -> None:
-        if self.device_version in (0x0700, 0x800, 0x3600):  # 2232H/4232H/4232HA
+        # 2232H/4232H/4232HA
+        if self.device_version in (0x0700, 0x800, 0x3600):
             offset = 0x0c + group//2
             nibble = group & 1
         else:  # 232H
