@@ -21,7 +21,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install setuptools wheel ruamel.yaml
+        pip install -r test-requirements.txt
     - name: Check style
       run: |
         python setup.py check_style

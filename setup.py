@@ -1,28 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2023 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=unused-variable
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=no-self-use
+#pylint: disable=unused-variable
+#pylint: disable=missing-docstring
+#pylint: disable=broad-except
 
 from codecs import open as codec_open
-from setuptools import find_packages, setup
-from setuptools.command.build_py import build_py
-from distutils.cmd import Command
-from distutils.log import DEBUG, INFO
 from os import close, getcwd, unlink, walk
 from os.path import abspath, dirname, join as joinpath, relpath
 from py_compile import compile as pycompile, PyCompileError
 from re import split as resplit, search as research
 from sys import stderr, exit as sysexit
 from tempfile import mkstemp
+from setuptools import Command, find_packages, setup
+from setuptools.command.build_py import build_py
 
 
 NAME = 'pyftdi'
@@ -38,19 +35,16 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
-    'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: System :: Hardware :: Hardware Drivers',
 ]
 INSTALL_REQUIRES = [
     'pyusb >= 1.0.0, != 1.2.0',
     'pyserial >= 3.0',
-]
-TEST_REQUIRES = [
-    'ruamel.yaml >= 0.16',
 ]
 
 HERE = abspath(dirname(__file__))
@@ -80,13 +74,10 @@ def find_meta(meta):
     """
     Extract __*meta*__ from META_FILE.
     """
-    meta_match = research(
-        r"(?m)^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta),
-        META_FILE
-    )
+    meta_match = research(rf"(?m)^__{meta}__ = ['\"]([^'\"]*)['\"]", META_FILE)
     if meta_match:
         return meta_match.group(1)
-    raise RuntimeError("Unable to find __{meta}__ string.".format(meta=meta))
+    raise RuntimeError(f'Unable to find __{meta}__ string.')
 
 
 class BuildPy(build_py):
@@ -118,7 +109,7 @@ class BuildPy(build_py):
             except PyCompileError as exc:
                 # avoid chaining exceptions
                 print(str(exc), file=stderr)
-                raise SyntaxError("Cannot byte-compile '%s'" % file)
+                raise SyntaxError(f"Cannot byte-compile '{file}'") from exc
             finally:
                 unlink(pyc)
         super().byte_compile(files)
@@ -137,7 +128,7 @@ class CheckStyle(Command):
         pass
 
     def run(self):
-        self.announce('checking coding style', level=INFO)
+        self.announce('checking coding style', level=2)
         filecount = 0
         topdir = dirname(__file__) or getcwd()
         for dpath, dnames, fnames in walk(topdir):
@@ -145,18 +136,17 @@ class CheckStyle(Command):
                          if not d.startswith('.') and d != 'doc']
             for filename in (joinpath(dpath, f)
                              for f in fnames if f.endswith('.py')):
-                self.announce('checking %s' % relpath(filename, topdir),
-                              level=INFO)
-                with open(filename, 'rt') as pfp:
+                self.announce(f'checking {relpath(filename, topdir)}', level=2)
+                with open(filename, 'rt', encoding='utf-8') as pfp:
                     for lpos, line in enumerate(pfp, start=1):
                         if len(line) > 80:
-                            print('\n  %d: %s' % (lpos, line.rstrip()))
-                            raise RuntimeError("Invalid line width '%s'" %
-                                               relpath(filename, topdir))
+                            print(f'\n  {lpos}: {line.rstrip()}')
+                            toppath = relpath(filename, topdir)
+                            raise RuntimeError(f"Invalid line width in "
+                                               f"{toppath}:{lpos}")
                 filecount += 1
         if not filecount:
-            raise RuntimeError('No Python file found from "%s"' %
-                               topdir)
+            raise RuntimeError(f'No Python file found from "{topdir}"')
 
 
 def main():
@@ -187,14 +177,13 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
-        test_requires=TEST_REQUIRES,
-        python_requires='>=3.7',
+        python_requires='>=3.8',
     )
 
 
 if __name__ == '__main__':
     try:
         main()
-    except Exception as exc:
-        print(exc, file=stderr)
+    except Exception as exc_:
+        print(exc_, file=stderr)
         sysexit(1)
