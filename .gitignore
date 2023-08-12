@@ -8,3 +8,4 @@ dist/
 build/
 sphinx/
 .vscode/
+.venv/
