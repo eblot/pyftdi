@@ -718,7 +718,7 @@ class FtdiEeprom:
             self._eeprom[s1_vstr_start:s1_vstr_start+len(stream)] = stream
         self._eeprom[dynpos:dynpos+len(stream)] = stream
         mtp = self._ftdi.device_version == 0x1000
-        crc_pos = 0x100 if mtp else self._size
+        crc_pos = ( 0x100 if mtp else self._size ) - 2
         rem = crc_pos - (dynpos + len(stream))
         if rem < 0:
             oversize = (-rem + 2) // 2
