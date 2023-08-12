@@ -45,4 +45,8 @@ Contributors
  * len0rd
  * Rod Whitby
  * Kornel Swierzy
+ * Taisuke Yamada
+ * Michael Niewöhner
+ * Kalofin
+ * Henry Au-Yeung
 
