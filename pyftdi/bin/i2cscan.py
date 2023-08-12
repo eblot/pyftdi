@@ -33,7 +33,8 @@ class I2cBusScanner:
     HIGHEST_I2C_SLAVE_ADDRESS = 0x78
 
     @classmethod
-    def scan(cls, url: str, smb_mode: bool = True, force: bool = False) -> None:
+    def scan(cls, url: str, smb_mode: bool = True, force: bool = False) \
+            -> None:
         """Scan an I2C bus to detect slave device.
 
            :param url: FTDI URL
