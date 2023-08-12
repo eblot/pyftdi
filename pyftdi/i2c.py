@@ -353,10 +353,10 @@ class I2cController:
     HIGH = 0xff
     BIT0 = 0x01
     IDLE = HIGH
-    SCL_BIT = 0x01  #AD0
-    SDA_O_BIT = 0x02  #AD1
-    SDA_I_BIT = 0x04  #AD2
-    SCL_FB_BIT = 0x80  #AD7
+    SCL_BIT = 0x01  # AD0
+    SDA_O_BIT = 0x02  # AD1
+    SDA_I_BIT = 0x04  # AD2
+    SCL_FB_BIT = 0x80  # AD7
     PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
     HIGHEST_I2C_ADDRESS = 0x7F
     DEFAULT_BUS_FREQUENCY = 100000.0
@@ -1037,7 +1037,7 @@ class I2cController:
         try:
             self._send_check_ack(cmd)
         except I2cNackError:
-            self.log.warning('NACK @ 0x%02x', (i2caddress>>1))
+            self.log.warning('NACK @ 0x%02x', (i2caddress >> 1))
             raise
 
     def _do_epilog(self) -> None:
@@ -1057,8 +1057,6 @@ class I2cController:
             cmd.extend(self._clk_lo_data_input)
             # read SDA (ack from slave)
             cmd.extend(self._read_bit)
-            # leave SCL low, restore SDA as output
-            cmd.extend(self._clk_lo_data_hi)
         else:
             # SCL low, SDA high-Z
             cmd.extend(self._clk_lo_data_hi)
@@ -1159,6 +1157,11 @@ class I2cController:
         self.log.debug('- write %d byte(s): %s',
                        len(out), hexlify(out).decode())
         for byte in out:
-            cmd = bytearray(self._write_byte)
+            if self._fake_tristate:
+                # leave SCL low, restore SDA as output
+                cmd = bytearray(self._clk_lo_data_hi)
+                cmd.extend(self._write_byte)
+            else:
+                cmd = bytearray(self._write_byte)
             cmd.append(byte)
             self._send_check_ack(cmd)

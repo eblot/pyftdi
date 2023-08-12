@@ -481,7 +481,7 @@ class GpioMpsseController(GpioBaseController):
         self._frequency = self._ftdi.set_frequency(float(frequency))
 
     def _update_direction(self) -> None:
-        # nothing to do in MPSSE mode, as direction is udpated with each
+        # nothing to do in MPSSE mode, as direction is updated with each
         # GPIO command
         pass
 
