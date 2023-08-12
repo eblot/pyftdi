@@ -121,6 +121,7 @@ class FtdiEeprom:
         self._modified = False
         self._chip: Optional[int] = None
         self._mirror = False
+        self._test_mode = False
 
     def __getattr__(self, name):
         if name in self._config:
@@ -659,6 +660,10 @@ class FtdiEeprom:
         """Execute a USB device reset."""
         self._ftdi.reset(usb_reset=True)
 
+    def set_test_mode(self, enable: bool):
+        """Enable test mode (silence some warnings)."""
+        self._test_mode = enable
+
     @classmethod
     def _validate_string(cls, string):
         for invchr in ':/':
@@ -841,6 +846,10 @@ class FtdiEeprom:
             if cfg['use_usb_version']:
                 cfg['usb_version'] = \
                     Hex4Int(sunpack('<H', self._eeprom[0x0c:0x0e])[0])
+        if cfg['type'] == 0xffff:
+            if not self._test_mode:
+                self.log.warning('EEPROM type is erased')
+            return
         name = None
         try:
             name = Ftdi.DEVICE_NAMES[cfg['type']].replace('-', '')

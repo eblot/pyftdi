@@ -26,6 +26,7 @@ class FtdiTestCase(TestCase):
     TEST_MANU_NAME = "MNAME"
     TEST_PROD_NAME = "PNAME"
     TEST_SN = "SN123"
+    TEST_CONFIG_FILENAME = ''
 
     @classmethod
     def setUpClass(cls):
@@ -70,6 +71,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         # properties should work regardless of if the mirror option is set
         # or not
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
         self.assertTrue(eeprom.has_mirroring)
         self.assertFalse(eeprom.is_mirroring_enabled)
@@ -90,6 +92,7 @@ class EepromMirrorTestCase(FtdiTestCase):
             eeprom sectors
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(True)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -101,6 +104,7 @@ class EepromMirrorTestCase(FtdiTestCase):
             sectors
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(True)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -112,6 +116,7 @@ class EepromMirrorTestCase(FtdiTestCase):
             sectors
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(True)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -123,6 +128,7 @@ class EepromMirrorTestCase(FtdiTestCase):
             across the 2 eeprom sectors
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(True)
         eeprom.open(self.url, ignore=True)
 
@@ -156,6 +162,7 @@ class EepromMirrorTestCase(FtdiTestCase):
             returns the correct bool value when it detects an eeprom mirror
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
         _, mirrored = eeprom._compute_size([])
         self.assertFalse(mirrored)
@@ -178,8 +185,10 @@ class EepromMirrorTestCase(FtdiTestCase):
         """
         sector_size = eeprom.size // 2
         for ii in range(0, sector_size):
-            self.assertEqual(eeprom.data[ii], 
-                eeprom.data[ii + eeprom.mirror_sector])
+            self.assertEqual(eeprom.data[ii],
+                eeprom.data[ii + eeprom.mirror_sector],
+                f'Mismatch mirror data @ 0x{ii:02x}: 0x{eeprom.data[ii]:02x} '
+                f'!= 0x{eeprom.data[ii + eeprom.mirror_sector]:02x}')
 
 class NonMirroredEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM mirror features do not break FTDI devices that do
@@ -208,12 +217,13 @@ class NonMirroredEepromTestCase(FtdiTestCase):
            Only run this test if the device under test is incapable of
            mirroring
         """
-        if self.DEVICE_CAN_MIRROR:
+        if bool(getattr(self, 'DEVICE_CAN_MIRROR', None)):
             self.skipTest("Mirror properties for devices capable of mirroring"
                 + " are tested in EepromMirrorTestCase")
         # properties should work regardless of if the mirror option is set
         # or not
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
         self.assertFalse(eeprom.has_mirroring)
         self.assertFalse(eeprom.is_mirroring_enabled)
@@ -234,6 +244,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         """Verify manufacturer string is NOT duplicated/mirrored
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(False)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -244,6 +255,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         """Verify product string is NOT duplicated/mirrored
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(False)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -254,6 +266,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         """Verify serial string is NOT duplicated/mirrored
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(False)
         eeprom.open(self.url, ignore=True)
         eeprom.erase()
@@ -265,6 +278,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         duplicated/mirrored
         """
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.enable_mirroring(False)
         eeprom.open(self.url, ignore=True)
 
@@ -301,6 +315,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
             self.skipTest("Mirror properties for devices capable of mirroring"
                 + " are tested in EepromMirrorTestCase")
         eeprom = FtdiEeprom()
+        eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
         _, mirrored = eeprom._compute_size([])
         self.assertFalse(mirrored)

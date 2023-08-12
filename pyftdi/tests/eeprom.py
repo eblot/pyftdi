@@ -28,7 +28,6 @@ class EepromTestCase(unittest.TestCase):
         cls.eeprom_size = int(environ.get('FTDI_EEPROM_SIZE', '256'))
         cls.url = environ.get('FTDI_DEVICE', 'ftdi://ftdi:2232h/1')
 
-
     def setUp(self):
         """Open a connection to the FTDI, defining which pins are configured as
            output and input"""
