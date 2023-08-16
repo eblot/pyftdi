@@ -633,7 +633,7 @@ def virtualize():
         raise AssertionError('Cannot load virtual USB backend') from exc
 
 
-def main():
+def setup_module():
     import doctest
     doctest.testmod(modules[__name__])
     debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
@@ -652,6 +652,10 @@ def main():
     FtdiLogger.set_level(loglevel)
     FtdiLogger.set_formatter(formatter)
     virtualize()
+
+
+def main():
+    setup_module()
     try:
         ut_main(defaultTest='suite')
     except KeyboardInterrupt:
