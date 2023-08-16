@@ -18,7 +18,7 @@ from pyftdi.ftdi import FtdiError
 VirtLoader = None
 
 
-class FtdiTestCase(TestCase):
+class FtdiTestCase:
     """Common features for all tests.
     """
 
@@ -338,39 +338,39 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         self.assertNotEqual(normal_mirror_s1, normal_mirror_s2)
 
 
-class EepromMirrorFt232hTestCase(EepromMirrorTestCase):
+class EepromMirrorFt232hTestCase(EepromMirrorTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
 
 
-class EepromMirrorFt2232hTestCase(EepromMirrorTestCase):
+class EepromMirrorFt2232hTestCase(EepromMirrorTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
 
 
-class EepromMirrorFt4232hTestCase(EepromMirrorTestCase):
+class EepromMirrorFt4232hTestCase(EepromMirrorTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h.yaml'
 
 
-class EepromMirrorFt232rTestCase(NonMirroredEepromTestCase):
+class EepromMirrorFt232rTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232r.yaml'
     DEVICE_CAN_MIRROR = False
 
 
-class EepromMirrorFt230xTestCase(NonMirroredEepromTestCase):
+class EepromMirrorFt230xTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft230x.yaml'
     DEVICE_CAN_MIRROR = False
 
 
-class EepromNonMirroredFt232hTestCase(NonMirroredEepromTestCase):
+class EepromNonMirroredFt232hTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232h.yaml'
     DEVICE_CAN_MIRROR = True
 
 
-class EepromNonMirroredFt2232hTestCase(NonMirroredEepromTestCase):
+class EepromNonMirroredFt2232hTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft2232h.yaml'
     DEVICE_CAN_MIRROR = True
 
 
-class EepromNonMirroredFt4232hTestCase(NonMirroredEepromTestCase):
+class EepromNonMirroredFt4232hTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h.yaml'
     DEVICE_CAN_MIRROR = True
 
