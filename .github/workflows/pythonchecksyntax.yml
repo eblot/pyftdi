@@ -1,7 +1,10 @@
 name: Python syntax tests
 # check that there is no import issues with tool suite
 
-on: [push]
+on:
+  push:
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
 
 jobs:
   build:
@@ -14,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
