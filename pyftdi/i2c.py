@@ -117,7 +117,7 @@ class I2cPort:
 
     def read_from(self, regaddr: int, readlen: int = 0,
                   relax: bool = True, start: bool = True) -> bytes:
-        """Read one or more bytes from a remote slave
+        """Read one or more bytes from a given register at remote slave
 
            :param regaddr: slave register address to read from
            :param readlen: count of bytes to read out.
@@ -134,7 +134,7 @@ class I2cPort:
     def write_to(self, regaddr: int,
                  out: Union[bytes, bytearray, Iterable[int]],
                  relax: bool = True, start: bool = True):
-        """Read one or more bytes from a remote slave
+        """Write one or more bytes to a given register at a remote slave
 
            :param regaddr: slave register address to write to
            :param out: the byte buffer to send
