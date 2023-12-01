@@ -486,7 +486,7 @@ class FtdiEeprom:
         """
         mobj = match(r'cbus_func_(\d)', name)
         if mobj:
-            if not isinstance(value, str):
+            if not isinstance(value, str) and not isinstance(value, IntEnum):
                 raise ValueError("'{name}' should be specified as a string")
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
@@ -871,7 +871,7 @@ class FtdiEeprom:
             return manufacturer.decode('utf16', errors='ignore')
         return ''
 
-    def _set_cbus_func(self, cpin: int, value: str,
+    def _set_cbus_func(self, cpin: int, value: str | IntEnum,
                        out: Optional[TextIO]) -> None:
         cmap = {0x600: (self.CBUS, 5, 0x14, 4),    # FT232R
                 0x900: (self.CBUSH, 10, 0x18, 4),  # FT232H
@@ -893,7 +893,11 @@ class FtdiEeprom:
         if not 0 <= cpin < count:
             raise ValueError(f"Unsupported CBUS pin '{cpin}'")
         try:
-            code = cbus[value.upper()].value
+            if isinstance(value, str):
+                value = value.upper()
+            elif isinstance(value, IntEnum):
+                value = value.name
+            code = cbus[value].value
         except KeyError as exc:
             raise ValueError(f"CBUS pin '{cpin}'' does not have function "
                               f"{value}'") from exc
