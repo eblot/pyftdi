@@ -839,7 +839,7 @@ def suite():
     return suite_
 
 
-def main():
+def setup_module():
     testmod(modules[__name__])
     debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
     if debug:
@@ -866,6 +866,10 @@ def main():
         MockLoader = backend.create_loader()
     except AttributeError as exc:
         raise AssertionError('Cannot load virtual USB backend') from exc
+
+
+def main():
+    setup_module()
     ut_main(defaultTest='suite')
 
 
