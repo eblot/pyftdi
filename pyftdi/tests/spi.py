@@ -361,6 +361,34 @@ class SpiCsForceTestCase(unittest.TestCase):
         for _ in range(5):
             self._port.force_select()
 
+class SpiCsActiveHighTestCase(unittest.TestCase):
+    """Basic test for checking CS active high function
+
+       It requires a scope or a digital analyzer to validate the signal
+       waveforms.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+
+    def setUp(self):
+        self._spi = SpiController(cs_count=1)
+        self._spi.configure(self.url, debug=self.debug, cs_count=2,
+                            cs_act_hi=[1])
+        self._port0 = self._spi.get_port(0, freq=1E6, mode=0)
+        self._port1 = self._spi.get_port(1, freq=1E6, mode=0)
+
+    def tearDown(self):
+        """Close the SPI connection"""
+        self._spi.terminate()
+
+    def test_cs_config(self):
+        self.assertEqual(self._spi.cs_act_hi, [1])
+        self.assertFalse(self._port0.cs_act_hi)
+        self.assertTrue(self._port1.cs_act_hi)
+
 
 def suite():
     suite_ = unittest.TestSuite()
@@ -368,6 +396,7 @@ def suite():
     # suite_.addTest(unittest.makeSuite(SpiGpioTestCase, 'test'))
     suite_.addTest(unittest.makeSuite(SpiUnalignedTestCase, 'test'))
     suite_.addTest(unittest.makeSuite(SpiCsForceTestCase, 'test'))
+    # suite_.addTest(unittest.makeSuite(SpiCsActiveHighTestCase, 'test'))
     return suite_
 
 
