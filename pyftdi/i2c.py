@@ -310,20 +310,22 @@ class I2cGpioPort:
         """
         return self._controller.read_gpio(with_output)
 
-    def write(self, value: int) -> None:
+    def write(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port.
 
            :param value: the GPIO port pins as a bitfield
+           :with_input: do not error when writing to inputs
         """
-        return self._controller.write_gpio(value)
+        return self._controller.write_gpio(value, with_input)
 
-    def set_direction(self, pins: int, direction: int) -> None:
+    def set_direction(self, pins: int, direction: int,
+                      immediate: bool = True) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (high level for output)
         """
-        self._controller.set_gpio_direction(pins, direction)
+        self._controller.set_gpio_direction(pins, direction, immediate)
 
 
 I2CTimings = namedtuple('I2CTimings', 't_hd_sta t_su_sta t_su_sto t_buf')
@@ -379,6 +381,7 @@ class I2cController:
         self._gpio_dir = 0
         self._gpio_low = 0
         self._gpio_mask = 0
+        self._gpio_last = 0
         self._i2c_mask = 0
         self._wide_port = False
         self._slaves = {}
@@ -485,11 +488,15 @@ class I2cController:
             # until the device is open, there is no way to tell if it has a
             # wide (16) or narrow port (8). Lower API can deal with any, so
             # delay any truncation till the device is actually open
-            self._set_gpio_direction(16, io_out, io_dir)
+            gpio_mask = (1 << 16) - 1  # set mask for wide port (16-bit)
+            gpio_mask &= ~self._i2c_mask
+            self._gpio_mask = gpio_mask
+            self._set_gpio_direction(io_out, io_dir)
             # as 3-phase clock frequency mode is required for I2C mode, the
             # FTDI clock should be adapted to match the required frequency.
             kwargs['direction'] = self.I2C_DIR | self._gpio_dir
-            kwargs['initial'] = self.IDLE | (io_out & self._gpio_mask)
+            self._gpio_last = self.IDLE | (io_out & self._gpio_mask)
+            kwargs['initial'] = self._gpio_last
             kwargs['frequency'] = (3.0*frequency)/2.0
             if not isinstance(url, str):
                 frequency = self._ftdi.open_mpsse_from_device(
@@ -512,7 +519,10 @@ class I2cController:
                 self._fake_tristate = True
             self._wide_port = self._ftdi.has_wide_port
             if not self._wide_port:
-                self._set_gpio_direction(8, io_out & 0xFF, io_dir & 0xFF)
+                gpio_mask = (1 << 8) - 1  # set mask for narrow port (8-bit)
+                gpio_mask &= ~(self._i2c_mask & 0xFF)
+                self._gpio_mask = gpio_mask
+                self._set_gpio_direction(io_out & 0xFF, io_dir & 0xFF)
 
     def force_clock_mode(self, enable: bool) -> None:
         """Force unsupported I2C clock signalling on devices that have no I2C
@@ -542,12 +552,12 @@ class I2cController:
             if self._ftdi.is_connected:
                 self._ftdi.close(freeze)
 
-    def terminate(self) -> None:
+    def terminate(self, freeze: bool = False) -> None:
         """Close the FTDI interface.
 
            :note: deprecated API, use close()
         """
-        self.close()
+        self.close(freeze)
 
     def get_port(self, address: int) -> I2cPort:
         """Obtain an I2cPort to drive an I2c slave.
@@ -631,7 +641,7 @@ class I2cController:
 
     @property
     def gpio_pins(self) -> int:
-        """Report the configured GPIOs as a bitfield.
+        """Report the available GPIOs as a bitfield.
 
            A true bit represents a GPIO, a false bit a reserved or not
            configured pin.
@@ -902,44 +912,55 @@ class I2cController:
             value &= ~self._gpio_dir
         return value
 
-    def write_gpio(self, value: int) -> None:
+    def write_gpio(self, value: int, with_input: bool = True) -> None:
         """Write GPIO port.
 
            :param value: the GPIO port pins as a bitfield
         """
         with self._lock:
-            if (value & self._gpio_dir) != value:
+            if (value & self._gpio_dir) != value and not with_input:
                 raise I2cIOError('No such GPO pins: %04x/%04x' %
                                  (self._gpio_dir, value))
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
-            data &= ~self._gpio_mask
-            data |= value
+            data &= ~self._gpio_mask  # removes gpio data, leaves I2C data
+            data |= value  # combine I2C data with new gpio value
             self._write_raw(data, use_high)
             self._gpio_low = data & 0xFF & ~self._i2c_mask
+            self._gpio_last = data & self._gpio_mask  # last user gpio
 
-    def set_gpio_direction(self, pins: int, direction: int) -> None:
+    def set_gpio_direction(self, pins: int, direction: int,
+                           immediate: bool = True) -> None:
         """Change the direction of the GPIO pins.
 
            :param pins: which GPIO pins should be reconfigured
            :param direction: direction bitfield (on for output)
+           :param immediate: force update the pin states NOW, otherwise
+                             waits for next write_gpio command
         """
         with self._lock:
-            self._set_gpio_direction(16 if self._wide_port else 8,
-                                     pins, direction)
+            self._set_gpio_direction(pins, direction)
+            if immediate:
+                # perform read-without_modify-write to force new pins
+                use_high = self._wide_port and (self.direction & 0xff00)
+                data = self._read_raw(use_high)
+                data &= ~self._gpio_mask  # removes gpio data, leaves I2C data
+                data |= self._gpio_last  # combine I2C data with last user gpio
+                self._write_raw(data, use_high)
+                self._gpio_low = data & 0xFF & ~self._i2c_mask
 
-    def _set_gpio_direction(self, width: int, pins: int,
+    def _set_gpio_direction(self, pins: int,
                             direction: int) -> None:
         if pins & self._i2c_mask:
             raise I2cIOError('Cannot access I2C pins as GPIO')
-        gpio_mask = (1 << width) - 1
-        gpio_mask &= ~self._i2c_mask
-        if (pins & gpio_mask) != pins:
+        # gpio_mask = (1 << width) - 1
+        # gpio_mask &= ~self._i2c_mask
+        if (pins & self._gpio_mask) != pins:
             raise I2cIOError('No such GPIO pin(s)')
         self._gpio_dir &= ~pins
         self._gpio_dir |= (pins & direction)
-        self._gpio_mask = gpio_mask & pins
+        # self._gpio_mask = gpio_mask & pins
 
     @property
     def _data_lo(self) -> Tuple[int]:
