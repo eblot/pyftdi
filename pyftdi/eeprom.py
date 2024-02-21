@@ -486,7 +486,7 @@ class FtdiEeprom:
         """
         mobj = match(r'cbus_func_(\d)', name)
         if mobj:
-            if not isinstance(value, str) and not isinstance(value, IntEnum):
+            if not isinstance(value, (str, IntEnum)):
                 raise ValueError("'{name}' should be specified as a string")
             self._set_cbus_func(int(mobj.group(1)), value, out)
             self._dirty.add(name)
