@@ -501,6 +501,66 @@ class FtdiEeprom:
             self._set_group(int(mobj.group(1)), mobj.group(2), value, out)
             self._dirty.add(name)
             return
+        mobj = match(r'channel_([abcd])_type', name)
+        if mobj:
+            chn = mobj.group(1)
+            if value == 'UART':
+                val = 0
+            else:
+                val = self.CHANNEL[value]
+            if self.device_version == 0x0700 and chn in 'ab':
+                # FT2232H
+                idx = 0x00 if chn == 'a' else 0x01
+                mask = 0x07
+            elif self.device_version == 0x0900 and chn == 'a':
+                # FT232H
+                idx = 0x00
+                mask = 0x0F
+            else:
+                raise ValueError(
+                    f"Option '{name}' not supported by the device")
+            if val & ~mask:
+                raise ValueError(
+                    f"Unsupported value for setting '{name}': {val}")
+            self._eeprom[idx] &= ~mask
+            self._eeprom[idx] |= val
+            if self.is_mirroring_enabled:
+                idx2 = self.mirror_sector + idx
+                self._eeprom[idx2] &= ~mask
+                self._eeprom[idx2] |= val
+            self._dirty.add(name)
+            return
+        mobj = match(r'channel_([abcd])_driver', name)
+        if mobj:
+            chn = mobj.group(1)
+            if value == 'VCP':
+                val = 1
+            elif value == 'D2XX':
+                val = 0
+            else:
+                raise ValueError(
+                    f"Invalid value '{value} for '{name}'")
+            if self.device_version == 0x0700 and chn in 'ab':
+                # FT2232H
+                idx = 0x00 if chn == 'a' else 0x01
+                mask = 1 << 3
+            elif self.device_version == 0x0900 and chn == 'a':
+                # FT232H
+                idx = 0x00
+                mask = 1 << 4
+            else:
+                raise ValueError(
+                    f"Option '{name}' not supported by the device")
+            self._eeprom[idx] &= ~mask
+            if val:
+                self._eeprom[idx] |= mask
+            if self.is_mirroring_enabled:
+                idx2 = self.mirror_sector + idx
+                self._eeprom[idx2] &= ~mask
+                if val:
+                    self._eeprom[idx2] |= mask
+            self._dirty.add(name)
+            return
         confs = {
             'remote_wakeup': (0, 5),
             'self_powered': (0, 6),
@@ -565,6 +625,37 @@ class FtdiEeprom:
                 raise ValueError('UART control line inversion not available '
                                  'with this device')
             self._set_invert(name[len('invert_'):], value, out)
+            self._dirty.add(name)
+            return
+        if name == 'chip':
+            val = to_int(value)
+            idx = self._PROPERTIES[self.device_version].chipoff
+            if idx is None:
+                raise ValueError(
+                    f"Setting '{name}' is not supported by the chip")
+            self._eeprom[idx] = val
+            if self.is_mirroring_enabled:
+                idx2 = self.mirror_sector + idx
+                self._eeprom[idx2] = val
+            self._dirty.add(name)
+            return
+        if name == 'suspend_dbus7':
+            val = to_bool(value, permissive=False, allow_int=True)
+            if self.device_version == 0x0700:
+                # FT2232H
+                idx = 0x01
+                mask = self.CFG1.SUSPEND_DBUS7.value
+                self._eeprom[idx] &= ~mask
+                if val:
+                    self._eeprom[idx] |= mask
+                if self.is_mirroring_enabled:
+                    idx2 = self.mirror_sector + idx
+                    self._eeprom[idx2] &= ~mask
+                    if val:
+                        self._eeprom[idx2] |= mask
+            else:
+                raise ValueError(
+                    f"Setting '{name}' is not supported by the chip")
             self._dirty.add(name)
             return
         if name in self.properties:
