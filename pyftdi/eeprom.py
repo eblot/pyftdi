@@ -535,15 +535,14 @@ class FtdiEeprom:
             val = to_bool(value, permissive=False, allow_int=True)
             offset, bit = confs[name]
             mask = 1 << bit
+            idx = 0x08 + offset
             if val:
-                idx = 0x08 + offset
                 self._eeprom[idx] |= mask
                 if self.is_mirroring_enabled:
                     # duplicate in 'sector 2'
                     idx2 = self.mirror_sector + idx
                     self._eeprom[idx2] |= mask
             else:
-                idx = 0x0a + offset
                 self._eeprom[idx] &= ~mask
                 if self.is_mirroring_enabled:
                     # duplicate in 'sector 2'
