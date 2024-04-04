@@ -512,6 +512,11 @@ class FtdiEeprom:
                 # FT2232H
                 idx = 0x00 if chn == 'a' else 0x01
                 mask = 0x07
+            elif self.device_version == 0x0800:
+                # FT4232H
+                idx = 0x0b
+                mask = 1 << {'a': 4, 'b': 5, 'c': 6, 'd': 7}.get(chn)
+                val = mask if val > 0 else 0
             elif self.device_version == 0x0900 and chn == 'a':
                 # FT232H
                 idx = 0x00
@@ -544,6 +549,10 @@ class FtdiEeprom:
                 # FT2232H
                 idx = 0x00 if chn == 'a' else 0x01
                 mask = 1 << 3
+            elif self.device_version == 0x0800:
+                # FT4232H
+                idx = {'a': 0, 'b': 1, 'c': 0, 'd': 1}.get(chn)
+                mask = 1 << {'a': 3, 'b': 3, 'c': 7, 'd': 7}.get(chn)
             elif self.device_version == 0x0900 and chn == 'a':
                 # FT232H
                 idx = 0x00
@@ -1218,7 +1227,8 @@ class FtdiEeprom:
         conf = self._eeprom[0x0B]
         rs485 = self.CHANNEL.RS485
         for chix in range(4):
-            cfg[f'channel_{0xa+chix:x}_rs485'] = bool(conf & (rs485 << chix))
+            cfg[f'channel_{0xa+chix:x}_type'] = (
+                'RS485' if conf & (rs485 << chix) else 'UART')
 
     def _decode_x232h(self, cfg):
         # common code for 2232h, 4232h, 4232ha
