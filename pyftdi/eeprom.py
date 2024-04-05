@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2023, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause

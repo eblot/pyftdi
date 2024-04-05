@@ -49,4 +49,5 @@ Contributors
  * Michael Niewöhner
  * Kalofin
  * Henry Au-Yeung
+ * Roman Dobrodii
 
