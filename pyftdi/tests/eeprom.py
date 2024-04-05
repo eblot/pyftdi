@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # Copyright (c) 2018, Stephen Goadhouse <sgoadhouse@virginia.edu>
-# Copyright (c) 2019, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause

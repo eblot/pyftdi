@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2020-2023, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
 #pylint: disable-msg=empty-docstring
