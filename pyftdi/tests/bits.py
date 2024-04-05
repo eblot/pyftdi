@@ -7,7 +7,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=broad-except
+# pylint: disable=broad-except
 
 import unittest
 from pyftdi.bits import BitSequence, BitZSequence, BitSequenceError

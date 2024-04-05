@@ -16,7 +16,7 @@ from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import hexdump, to_bool
 
-#pylint: disable-msg=missing-docstring
+# pylint: disable=missing-docstring
 
 
 class EepromTestCase(unittest.TestCase):

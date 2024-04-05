@@ -4,12 +4,12 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=no-member
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=super-with-arguments
-#pylint: disable-msg=missing-function-docstring
-#pylint: disable-msg=missing-module-docstring
+# pylint: disable=no-member
+# pylint: disable=broad-except
+# pylint: disable=invalid-name
+# pylint: disable=super-with-arguments
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-module-docstring
 
 from sys import stderr
 from time import time

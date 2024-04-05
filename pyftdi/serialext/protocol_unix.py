@@ -1,18 +1,17 @@
-# Copyright (c) 2008-2016, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 # this file has not been updated for a while, so coding style needs some love
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=attribute-defined-outside-init
-#pylint: disable-msg=redefined-outer-name
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-few-public-methods
-#pylint: disable-msg=missing-function-docstring
-#pylint: disable-msg=missing-class-docstring
-#pylint: disable-msg=missing-module-docstring
+# pylint: disable=broad-except
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=redefined-outer-name
+# pylint: disable=invalid-name
+# pylint: disable=missing-function-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-module-docstring
 
 import errno
 import os
@@ -70,7 +69,7 @@ class SocketSerial(SerialBase):
             self.close()
             msg = "Could not open port: %s" % (str(e),)
             if isinstance(e, socket.error):
-                # pylint: disable-msg=no-member
+                # pylint: disable=no-member
                 raise SerialExceptionWithErrno(msg, e.errno) from e
             raise SerialException(msg) from e
         self._set_open_state(True)
@@ -91,7 +90,7 @@ class SocketSerial(SerialBase):
 
     def in_waiting(self):
         """Return the number of characters currently in the input buffer."""
-        #pylint: disable-msg=no-self-use
+        # pylint: disable=no-self-use
         return 0
 
     def read(self, size=1):

@@ -4,11 +4,11 @@
 # Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=no-self-use
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=global-statement
+# pylint: disable=empty-docstring
+# pylint: disable=missing-docstring
+# pylint: disable=no-self-use
+# pylint: disable=invalid-name
+# pylint: disable=global-statement
 
 from doctest import testmod
 from importlib import import_module

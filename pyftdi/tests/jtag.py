@@ -11,7 +11,7 @@ from unittest import TestCase, main as ut_main, makeSuite
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
 
-#pylint: disable-msg=missing-docstring
+# pylint: disable=missing-docstring
 
 
 # Should match the tested device

@@ -6,8 +6,8 @@
 
 """JTAG support for PyFdti"""
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=missing-function-docstring
+# pylint: disable=invalid-name
+# pylint: disable=missing-function-docstring
 
 from time import sleep
 from typing import List, Tuple, Union

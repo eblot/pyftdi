@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2018-2022, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2018-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 """Tiny I2C bus scanner."""
 
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=too-few-public-methods
+# pylint: disable=broad-except
 
 from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
@@ -124,7 +123,7 @@ def main():
         FtdiLogger.set_level(loglevel)
 
         if args.virtual:
-            #pylint: disable-msg=import-outside-toplevel
+            # pylint: disable=import-outside-toplevel
             from pyftdi.usbtools import UsbTools
             # Force PyUSB to use PyFtdi test framework for USB backends
             UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )

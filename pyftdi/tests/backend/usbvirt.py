@@ -4,17 +4,14 @@
    hardware.
 """
 
-# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=attribute-defined-outside-init
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-instance-attributes
+# pylint: disable=missing-docstring
+# pylint: disable=invalid-name
+# pylint: disable=attribute-defined-outside-init
 
 from array import array
 from binascii import hexlify

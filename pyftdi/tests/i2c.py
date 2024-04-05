@@ -16,9 +16,9 @@ from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
 from pyftdi.misc import pretty_size
 
-#pylint: disable-msg=attribute-defined-outside-init
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=no-self-use
+# pylint: disable=attribute-defined-outside-init
+# pylint: disable=missing-docstring
+# pylint: disable=no-self-use
 
 
 class I2cTca9555TestCase(TestCase):

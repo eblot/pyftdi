@@ -3,20 +3,14 @@
 """Simple Python serial terminal
 """
 
-# Copyright (c) 2010-2022, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-nested-blocks
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-#pylint: disable-msg=too-few-public-methods
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=wrong-import-position
+# pylint: disable=broad-except
+# pylint: disable=wrong-import-position
 
 from argparse import ArgumentParser, FileType
 from atexit import register
@@ -30,8 +24,8 @@ from threading import Event, Thread
 from traceback import format_exc
 from _thread import interrupt_main
 
-#pylint: disable-msg=import-error
-#pylint: disable-msg=import-outside-toplevel
+# pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
 
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi

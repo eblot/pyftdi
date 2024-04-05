@@ -7,9 +7,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable=unused-variable
-#pylint: disable=missing-docstring
-#pylint: disable=broad-except
+# pylint: disable=unused-variable
+# pylint: disable=missing-docstring
+# pylint: disable=broad-except
 
 from codecs import open as codec_open
 from os import close, getcwd, unlink, walk

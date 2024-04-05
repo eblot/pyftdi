@@ -6,9 +6,9 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=no-self-use
+# pylint: disable=empty-docstring
+# pylint: disable=missing-docstring
+# pylint: disable=no-self-use
 
 import logging
 import unittest

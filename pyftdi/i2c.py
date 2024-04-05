@@ -1,18 +1,9 @@
-# Copyright (c) 2017-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 """I2C support for PyFdti"""
-
-#pylint: disable-msg=too-many-lines
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=too-many-public-methods
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-
 
 from binascii import hexlify
 from collections import namedtuple

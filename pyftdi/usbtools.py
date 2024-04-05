@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2023, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -18,9 +18,7 @@ from usb.core import Device as UsbDevice, USBError
 from usb.util import dispose_resources, get_string as usb_get_string
 from .misc import to_int
 
-#pylint: disable-msg=broad-except
-#pylint: disable-msg=too-many-locals,too-many-branches,too-many-statements
-#pylint: disable-msg=too-many-arguments, too-many-nested-blocks
+# pylint: disable=broad-except
 
 UsbDeviceDescriptor = NamedTuple('UsbDeviceDescriptor',
                                  (('vid', int),
@@ -543,7 +541,7 @@ class UsbTools:
            :return: the string read from the USB device
         """
         if cls.UsbApi is None:
-            #pylint: disable-msg=import-outside-toplevel
+            # pylint: disable=import-outside-toplevel
             import inspect
             args, _, _, _ = \
                 inspect.signature(UsbDevice.read).parameters
@@ -644,11 +642,11 @@ class UsbTools:
            :return: the implementation of any
         """
         try:
-            #pylint: disable-msg=protected-access
+            # pylint: disable=protected-access
             # need to access private member _ctx of PyUSB device
             # (resource manager) until PyUSB #302 is addressed
             return device._ctx.dev
-            #pylint: disable-msg=protected-access
+            # pylint: disable=protected-access
         except AttributeError:
             return None
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -6,13 +6,7 @@
 
 """SPI support for PyFdti"""
 
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=too-many-public-methods
-#pylint: disable-msg=invalid-name
+# pylint: disable=invalid-name
 
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack

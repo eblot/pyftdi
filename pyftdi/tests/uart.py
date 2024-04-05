@@ -22,8 +22,8 @@ from pyftdi.ftdi import Ftdi
 from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=protected-access
+# pylint: disable=missing-docstring
+# pylint: disable=protected-access
 
 # Specify the second port for multi port device
 # Unfortunately, auto detection triggers some issue in multiprocess test
@@ -174,9 +174,9 @@ class UartTestCase(FtdiTestCase):
         sleep(0.5)
         sink.join()
         if isinstance(results[1], Exception):
-            #pylint: disable-msg=raising-bad-type
+            # pylint: disable=raising-bad-type
             raise results[1]
-        #pylint: disable-msg=unpacking-non-sequence
+        # pylint: disable=unpacking-non-sequence
         tsize, tdelta = results[0]
         rsize, rdelta = results[1]
         self.assertGreater(rsize, 0, 'Not data received')
@@ -205,9 +205,9 @@ class UartTestCase(FtdiTestCase):
         sleep(0.5)
         sink.join()
         if isinstance(results[1], Exception):
-            #pylint: disable-msg=raising-bad-type
+            # pylint: disable=raising-bad-type
             raise results[1]
-        #pylint: disable-msg=unpacking-non-sequence
+        # pylint: disable=unpacking-non-sequence
         tsize, tdelta = results[0]
         rsize, rdelta = results[1]
         self.assertGreater(rsize, 0, 'Not data received')

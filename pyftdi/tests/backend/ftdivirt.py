@@ -1,21 +1,14 @@
 """PyUSB virtual FTDI device."""
 
-# Copyright (c) 2020-2023, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=unused-argument
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-#pylint: disable-msg=too-many-instance-attributes
-#pylint: disable-msg=too-many-public-methods
-#pylint: disable-msg=too-few-public-methods
-#pylint: disable-msg=no-self-use
+# pylint: disable=missing-docstring
+# pylint: disable=unused-argument
+# pylint: disable=invalid-name
+# pylint: disable=no-self-use
 
 import os
 from array import array

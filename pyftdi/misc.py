@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -6,10 +6,8 @@
 
 """Miscellaneous helpers"""
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=import-outside-toplevel
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-arguments
+# pylint: disable=invalid-name
+# pylint: disable=import-outside-toplevel
 
 from array import array
 from copy import deepcopy
@@ -198,7 +196,7 @@ def xor(_a_: bool, _b_: bool) -> bool:
        :param _b_: second argument
        :return: xor-ed value
     """
-    #pylint: disable-msg=superfluous-parens
+    # pylint: disable=superfluous-parens
     return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
 
 
@@ -311,7 +309,7 @@ def show_call_stack():
 
 class classproperty(property):
     """Getter property decorator for a class"""
-    #pylint: disable=invalid-name
+    # pylint: disable=invalid-name
     def __get__(self, obj: Any, objtype=None) -> Any:
         return super().__get__(objtype)
 

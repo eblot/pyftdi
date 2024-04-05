@@ -6,10 +6,10 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=global-statement
+# pylint: disable=empty-docstring
+# pylint: disable=missing-docstring
+# pylint: disable=invalid-name
+# pylint: disable=global-statement
 
 import logging
 from collections import deque

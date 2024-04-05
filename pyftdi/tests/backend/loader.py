@@ -6,12 +6,12 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=too-few-public-methods
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
-#pylint: disable-msg=too-many-nested-blocks
-#pylint: disable-msg=no-self-use
+# pylint: disable=missing-docstring
+# pylint: disable=too-few-public-methods
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
+# pylint: disable=too-many-nested-blocks
+# pylint: disable=no-self-use
 
 from binascii import unhexlify
 from logging import getLogger

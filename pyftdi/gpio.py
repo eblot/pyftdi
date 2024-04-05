@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -6,7 +6,6 @@
 
 """GPIO/BitBang support for PyFdti"""
 
-#pylint: disable-msg=too-few-public-methods
 
 from struct import calcsize as scalc, unpack as sunpack
 from typing import Iterable, Optional, Tuple, Union

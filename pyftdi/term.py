@@ -9,7 +9,7 @@
 from os import environ, read as os_read
 from sys import platform, stderr, stdin, stdout
 
-#pylint: disable-msg=import-error
+# pylint: disable=import-error
 if platform == 'win32':
     import msvcrt
     from subprocess import call  # ugly workaround for an ugly OS

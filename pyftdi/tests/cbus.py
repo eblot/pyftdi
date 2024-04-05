@@ -13,8 +13,8 @@ from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.eeprom import FtdiEeprom
 
-#pylint: disable-msg=empty-docstring
-#pylint: disable-msg=missing-docstring
+# pylint: disable=empty-docstring
+# pylint: disable=missing-docstring
 
 
 class CbusGpioTestCase(TestCase):

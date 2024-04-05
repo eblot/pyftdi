@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2023 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016 Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -21,17 +21,7 @@ from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-arguments
-#pylint: disable=too-many-arguments
-#pylint: disable=too-many-branches
-#pylint: disable=too-many-statements
-#pylint: disable=too-many-nested-blocks
-#pylint: disable=too-many-instance-attributes
-#pylint: disable=too-many-nested-blocks
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-locals
-#pylint: disable=too-many-lines
+# pylint: disable=invalid-name
 
 
 class FtdiError(IOError):
@@ -730,13 +720,13 @@ class Ftdi:
            :param bool debug: add more debug traces
            :return: actual bus frequency in Hz
         """
-        # pylint: disable-msg=unused-argument
+        # pylint: disable=unused-argument
         self.open_from_device(device, interface)
         if not self.is_mpsse_interface(interface):
             self.close()
             raise FtdiMpsseError('This interface does not support MPSSE')
         if to_bool(tracer):  # accept strings as boolean
-            #pylint: disable-msg=import-outside-toplevel
+            # pylint: disable=import-outside-toplevel
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer(self.device_version)
             self.log.debug('Using MPSSE tracer')
@@ -2044,7 +2034,7 @@ class Ftdi:
         except (NotImplementedError, USBError):
             pass
 
-#pylint: disable-msg=protected-access
+# pylint: disable=protected-access
 # need to access private member _ctx of PyUSB device (resource manager)
 # until PyUSB #302 is addressed
 
@@ -2057,7 +2047,7 @@ class Ftdi:
         # and there is no public API for this.
         return bool(self._usb_dev._ctx.handle)
 
-#pylint: enable-msg=protected-access
+# pylint: enable-msg=protected-access
 
     def _reset_device(self):
         """Reset the FTDI device (FTDI vendor command)"""

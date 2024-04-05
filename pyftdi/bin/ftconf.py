@@ -19,9 +19,9 @@ from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import add_custom_devices, hexdump
 
-#pylint: disable-msg=too-many-locals
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-statements
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-statements
 
 
 def main():
@@ -107,7 +107,7 @@ def main():
         FtdiLogger.log.addHandler(StreamHandler(stderr))
 
         if args.virtual:
-            #pylint: disable-msg=import-outside-toplevel
+            # pylint: disable=import-outside-toplevel
             from pyftdi.usbtools import UsbTools
             # Force PyUSB to use PyFtdi test framework for USB backends
             UsbTools.BACKENDS = ('pyftdi.tests.backend.usbvirt', )

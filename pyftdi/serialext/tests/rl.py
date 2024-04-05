@@ -8,7 +8,7 @@ from serial import serial_for_url
 
 path.append(dirname(dirname(dirname(dirname(__file__)))))
 
-#pylint: disable-msg=wrong-import-position
+# pylint: disable=wrong-import-position
 from pyftdi import serialext
 
 

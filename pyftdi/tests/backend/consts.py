@@ -1,13 +1,12 @@
 """Constant importer from existing modules."""
 
-# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=missing-docstring
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=too-many-instance-attributes
+# pylint: disable=missing-docstring
+# pylint: disable=invalid-name
 
 from enum import Enum
 from importlib import import_module

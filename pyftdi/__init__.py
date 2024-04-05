@@ -4,7 +4,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-#pylint: disable-msg=missing-docstring
+# pylint: disable=missing-docstring
 
 __version__ = '0.55.1'
 __title__ = 'PyFtdi'

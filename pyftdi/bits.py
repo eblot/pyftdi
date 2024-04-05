@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2019 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -9,11 +9,10 @@
 from typing import Iterable, List, Optional, Tuple, Union
 from .misc import is_iterable, xor
 
-#pylint: disable-msg=invalid-name
-#pylint: disable-msg=unneeded-not
-#pylint: disable-msg=too-many-branches
-#pylint: disable-msg=too-many-arguments
-#pylint: disable-msg=duplicate-key
+# pylint: disable=invalid-name
+# pylint: disable=unneeded-not
+# pylint: disable=duplicate-key
+
 
 class BitSequenceError(Exception):
     """Bit sequence error"""
