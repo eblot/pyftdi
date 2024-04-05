@@ -51,3 +51,4 @@ Contributors
  * Henry Au-Yeung
  * Roman Dobrodii
  * Mark Mentovai
+ * Alessandro Zini
