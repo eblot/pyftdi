@@ -8,7 +8,7 @@
 import logging
 from os import environ
 from sys import modules, stdout
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.eeprom import FtdiEeprom
@@ -50,10 +50,10 @@ class FtdiTestCase:
 
 class EepromMirrorTestCase(FtdiTestCase):
     """Test FTDI EEPROM mirror feature (duplicate eeprom data over 2 eeprom
-    sectors). Generally this is tested with a virtual eeprom (by setting
-    environment variable FTDI_VIRTUAL=on), however you may also test with an
-    actual device at your own risk. Note that none of the tests should
-    commit any of their eeprom changes
+       sectors). Generally this is tested with a virtual eeprom (by setting
+       environment variable FTDI_VIRTUAL=on), however you may also test with an
+       actual device at your own risk. Note that none of the tests should
+       commit any of their eeprom changes
     """
 
     @classmethod
@@ -200,7 +200,7 @@ class EepromMirrorTestCase(FtdiTestCase):
 
 class NonMirroredEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM mirror features do not break FTDI devices that do
-    not use mirroring
+       not use mirroring
     """
     TEST_MANU_NAME = "MNAME"
     TEST_PROD_NAME = "PNAME"
@@ -386,17 +386,23 @@ class EepromNonMirroredFt4232hTestCase(NonMirroredEepromTestCase, TestCase):
 
 def suite():
     suite_ = TestSuite()
+    loader = TestLoader()
+    mod = modules[__name__]
+    tests = []
     # Test devices that support the mirroring capability
-    suite_.addTest(makeSuite(EepromMirrorFt232hTestCase, 'test'))
-    suite_.addTest(makeSuite(EepromMirrorFt2232hTestCase, 'test'))
-    suite_.addTest(makeSuite(EepromMirrorFt4232hTestCase, 'test'))
+    tests.extend(('EepromMirrorFt232h',
+                  'EepromMirrorFt2232h',
+                  'EepromMirrorFt4232h'))
     # Test devices that do not support the mirror capability
-    suite_.addTest(makeSuite(EepromMirrorFt232rTestCase, 'test'))
-    suite_.addTest(makeSuite(EepromMirrorFt230xTestCase, 'test'))
+    tests.extend(('EepromMirrorFt232r',
+                  'EepromMirrorFt230x'))
     # test devices that support the mirroring capability, but have it disabled
-    suite_.addTest(makeSuite(EepromNonMirroredFt232hTestCase, 'test'))
-    suite_.addTest(makeSuite(EepromNonMirroredFt2232hTestCase, 'test'))
-    suite_.addTest(makeSuite(EepromNonMirroredFt4232hTestCase, 'test'))
+    tests.extend(('EepromNonMirroredFt232h',
+                  'EepromNonMirroredFt2232h',
+                  'EepromNonMirroredFt4232h'))
+    for testname in tests:
+        testcase = getattr(mod, f'{testname}TestCase')
+        suite_.addTest(loader.loadTestsFromTestCase(testcase))
     return suite_
 
 

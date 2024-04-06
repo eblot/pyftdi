@@ -16,7 +16,7 @@ from collections import deque
 from os import environ
 from sys import modules, stdout
 from time import sleep
-from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, SkipTest, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.gpio import (GpioAsyncController,
@@ -607,10 +607,7 @@ class GpioMpsseTestCase(FtdiTestCase):
 
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(GpioAsyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioSyncTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMpsseTestCase, 'test'))
-    suite_.addTest(makeSuite(GpioMultiportTestCase, 'test'))
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
     return suite_
 
 

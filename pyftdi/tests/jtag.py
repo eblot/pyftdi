@@ -9,7 +9,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from os import environ
-from unittest import TestCase, main as ut_main, makeSuite
+from sys import modules
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from pyftdi.jtag import JtagEngine, JtagTool
 from pyftdi.bits import BitSequence
 
@@ -85,7 +86,9 @@ class JtagTestCase(TestCase):
 
 
 def suite():
-    return makeSuite(JtagTestCase, 'test')
+    suite_ = TestSuite()
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
+    return suite_
 
 
 if __name__ == '__main__':

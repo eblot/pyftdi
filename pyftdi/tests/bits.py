@@ -14,11 +14,12 @@
 # pylint: disable=missing-class-docstring
 # pylint: disable=missing-function-docstring
 
-import unittest
+from sys import modules
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from pyftdi.bits import BitSequence, BitZSequence, BitSequenceError
 
 
-class BitSequenceTestCase(unittest.TestCase):
+class BitSequenceTestCase(TestCase):
 
     def setUp(self):
         self.bs1 = BitSequence(0x01, msb=True, length=8)
@@ -80,19 +81,19 @@ class BitSequenceTestCase(unittest.TestCase):
         self.assertTrue(bzs.matches(self.bs7))
 
     def test_representation(self):
-        self.assertEqual(f'{self.bs1} / {self.bs1!r}' % (self.bs1, self.bs1),
+        self.assertEqual(f'{self.bs1} / {self.bs1!r}',
                          '8: 10000000 / 10000000')
-        self.assertEqual(f'{self.bs2} / {self.bs2!r}' % (self.bs2, self.bs2),
+        self.assertEqual(f'{self.bs2} / {self.bs2!r}',
                          '8: 01000000 / 01000000')
-        self.assertEqual(f'{self.bs3} / {self.bs3!r}' % (self.bs3, self.bs3),
+        self.assertEqual(f'{self.bs3} / {self.bs3!r}',
                          '7: 0010000 / 0010000')
-        self.assertEqual(f'{self.bs4} / {self.bs4!r}' % (self.bs4, self.bs4),
+        self.assertEqual(f'{self.bs4} / {self.bs4!r}',
                          '11: 001 00000000 / 00100000000')
-        self.assertEqual(f'{self.bs5} / {self.bs5!r}' % (self.bs5, self.bs5),
+        self.assertEqual(f'{self.bs5} / {self.bs5!r}',
                          '49: 1 00010000 11011001 00110001 01101110 10111111 '
                          '11111110 / 100010000110110010011000101101110101111'
                          '1111111110')
-        self.assertEqual(f'{self.bs6} / {self.bs6!r}' % (self.bs6, self.bs6),
+        self.assertEqual(f'{self.bs6} / {self.bs6!r}',
                          '49: 1 00010000 11011001 00110001 01101110 10111111 '
                          '11111111 / 100010000110110010011000101101110101111'
                          '1111111111')
@@ -210,8 +211,10 @@ class BitSequenceTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(BitSequenceTestCase, 'test_')
+    suite_ = TestSuite()
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
+    return suite_
 
 
 if __name__ == '__main__':
-    unittest.main(defaultTest='suite')
+    ut_main(defaultTest='suite')

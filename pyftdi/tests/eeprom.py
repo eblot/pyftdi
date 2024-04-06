@@ -10,8 +10,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import logging
-import unittest
 from doctest import testmod
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from os import environ
 from sys import modules, stdout
 from pyftdi import FtdiLogger
@@ -20,7 +20,8 @@ from pyftdi.misc import hexdump, to_bool
 
 # pylint: disable=missing-docstring
 
-class EepromTestCase(unittest.TestCase):
+
+class EepromTestCase(TestCase):
     """FTDI EEPROM access method test case"""
 
     @classmethod
@@ -95,8 +96,8 @@ class EepromTestCase(unittest.TestCase):
 
 
 def suite():
-    suite_ = unittest.TestSuite()
-    suite_.addTest(unittest.makeSuite(EepromTestCase, 'test'))
+    suite_ = TestSuite()
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
     return suite_
 
 
@@ -110,7 +111,7 @@ def main():
         raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.set_level(loglevel)
     testmod(modules[__name__])
-    unittest.main(defaultTest='suite')
+    ut_main(defaultTest='suite')
 
 
 if __name__ == '__main__':

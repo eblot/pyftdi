@@ -15,7 +15,7 @@ from doctest import testmod
 from os import environ
 from sys import modules, stdout
 from time import sleep, time as now
-from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, SkipTest, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.usbtools import UsbTools, UsbToolsError
@@ -152,10 +152,13 @@ class DisconnectTestCase(TestCase):
 
 def suite():
     suite_ = TestSuite()
-    #suite_.addTest(makeSuite(FtdiTestCase, 'test'))
-    #suite_.addTest(makeSuite(HotplugTestCase, 'test'))
-    suite_.addTest(makeSuite(ResetTestCase, 'test'))
-    suite_.addTest(makeSuite(DisconnectTestCase, 'test'))
+    loader = TestLoader()
+    mod = modules[__name__]
+    #  tests = 'Ftdi Hotplug Reset Disconnect'
+    tests = 'Reset Disconnect'
+    for testname in tests.split():
+        testcase = getattr(mod, f'{testname}TestCase')
+        suite_.addTest(loader.loadTestsFromTestCase(testcase))
     return suite_
 
 

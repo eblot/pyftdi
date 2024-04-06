@@ -18,7 +18,7 @@ from io import StringIO
 from os import environ
 from string import ascii_letters
 from sys import modules, stdout
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
@@ -817,21 +817,7 @@ class MockCbusGpioTestCase(FtdiTestCase):
 
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(MockUsbToolsTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFtdiDiscoveryTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockDualDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockTwoPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockFourPortDeviceTestCase, 'test'))
-    suite_.addTest(makeSuite(MockManyDevicesTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleDirectTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleMpsseTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleGpioTestCase, 'test'))
-    suite_.addTest(makeSuite(MockSimpleUartTestCase, 'test'))
-    suite_.addTest(makeSuite(MockRawExtEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockRawIntEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockCBusEepromTestCase, 'test'))
-    suite_.addTest(makeSuite(MockCbusGpioTestCase, 'test'))
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
     return suite_
 
 

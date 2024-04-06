@@ -9,7 +9,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import logging
-from unittest import TestCase, TestSuite, main as ut_main, makeSuite
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from binascii import hexlify
 from doctest import testmod
 from os import environ
@@ -54,7 +54,7 @@ class I2cTca9555TestCase(TestCase):
         self._i2c.terminate()
 
 
-class I2cAccelTest(TestCase):
+class I2cAccelTestCase(TestCase):
     """Basic test for an ADXL345 device on I2C bus @ address 0x53
     """
 
@@ -81,7 +81,7 @@ class I2cAccelTest(TestCase):
         self._i2c.terminate()
 
 
-class I2cReadTest(TestCase):
+class I2cReadTestCase(TestCase):
     """Simple test to read a sequence of bytes I2C bus @ address 0x36
     """
 
@@ -108,7 +108,7 @@ class I2cReadTest(TestCase):
         self._i2c.terminate()
 
 
-class I2cEepromTest(TestCase):
+class I2cEepromTestCase(TestCase):
     """Simple test to read a sequence of bytes I2C bus @ address 0x50,
        from an I2C data flash
     """
@@ -151,7 +151,7 @@ class I2cEepromTest(TestCase):
         self.assertEqual(text[8:12], 'Worl')
 
 
-class I2cReadGpioTest(TestCase):
+class I2cReadGpioTestCase(TestCase):
     """Simple test to exercise I2C + GPIO mode.
 
        A slave device (such as EEPROM) should be connected to the I2C bus
@@ -225,7 +225,7 @@ class I2cReadGpioTest(TestCase):
         self._i2c.terminate()
 
 
-class I2cClockStrechingGpioCheck(TestCase):
+class I2cClockStrechingGpioTestCase(TestCase):
     """Simple test to check clock stretching cannot be overwritten with
        GPIOs.
     """
@@ -238,7 +238,7 @@ class I2cClockStrechingGpioCheck(TestCase):
         self.assertRaises(I2cIOError, gpio.set_direction, 1 << 7, 0)
 
 
-class I2cDualMaster(TestCase):
+class I2cDualMasterTestCase(TestCase):
     """Check the behaviour of 2 I2C masters. Requires a multi port FTDI device,
        i.e. FT2232H, FT4232H or FT4232HA. See issue #159.
     """
@@ -255,7 +255,7 @@ class I2cDualMaster(TestCase):
         print(port.read_from(0x00, 2))
 
 
-class I2cIssue143(TestCase):
+class I2cIssue143TestCase(TestCase):
     """#143.
     """
 
@@ -289,16 +289,17 @@ def suite():
        Do NOT run this test if you use FTDI port A as an UART or SPI
        bridge -or any unsupported setup!! You've been warned.
     """
-    ste = TestSuite()
-    # ste.addTest(I2cTca9555TestCase('test'))
-    # ste.addTest(I2cAccelTest('test'))
-    # ste.addTest(I2cReadTest('test'))
-    ste.addTest(makeSuite(I2cEepromTest, 'test'))
-    # ste.addTest(I2cReadGpioTest('test'))
-    ste.addTest(I2cClockStrechingGpioCheck('test'))
-    # ste.addTest(I2cDualMaster('test'))
-    ste.addTest(I2cIssue143('test'))
-    return ste
+    suite_ = TestSuite()
+    loader = TestLoader()
+    mod = modules[__name__]
+    tests = (  # 'I2cTca9555', 'I2cAccel', 'I2cRead',
+             'I2cEeprom',  # 'I2cReadGpio',
+             'I2cClockStrechingGpio',  # 'I2cDualMaster',
+             'I2cIssue143')
+    for testname in tests:
+        testcase = getattr(mod, f'{testname}TestCase')
+        suite_.addTest(loader.loadTestsFromTestCase(testcase))
+    return suite_
 
 
 def main():
