@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FTDI device pinout &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -87,7 +89,7 @@
            <div itemprop="articleBody">
              
   <section id="ftdi-device-pinout">
-<h1>FTDI device pinout<a class="headerlink" href="#ftdi-device-pinout" title="Permalink to this heading"></a></h1>
+<h1>FTDI device pinout<a class="headerlink" href="#ftdi-device-pinout" title="Link to this heading"></a></h1>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>IF/1 <a class="footnote-reference brackets" href="#ih" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></th>
@@ -248,12 +250,12 @@
 </tbody>
 </table>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="ih" role="note">
+<aside class="footnote brackets" id="ih" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>16-bit port (ACBUS, BCBUS) is not available with <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> series, and
 FTDI2232C/D only support 12-bit ports.</p>
 </aside>
-<aside class="footnote brackets" id="i2c" role="note">
+<aside class="footnote brackets" id="i2c" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
 <span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id4">2</a>)</span>
 <p>FTDI pins are either configured as input or output. As I<sup>2</sup>C SDA line
@@ -261,14 +263,14 @@ is bi-directional, two FTDI pins are required to provide the SDA
 feature, and they should be connected together and to the SDA I<sup>2</sup>C
 bus line. Pull-up resistors on SCK and SDA lines should be used.</p>
 </aside>
-<aside class="footnote brackets" id="if2" role="note">
+<aside class="footnote brackets" id="if2" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">3</a><span class="fn-bracket">]</span></span>
 <p><a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a> does not support a secondary MPSSE port, only <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>,
 <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a> and <a class="reference external" href="http://ftdichip.com/products/ft4232haq/">FT4232HA</a> do. Note that <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>/<a class="reference external" href="http://ftdichip.com/products/ft4232haq/">FT4232HA</a> has 4 serial
 ports, but only the first two interfaces are MPSSE-capable. C232HD
 cable only exposes IF/1 (ADBUS).</p>
 </aside>
-<aside class="footnote brackets" id="rck" role="note">
+<aside class="footnote brackets" id="rck" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">4</a><span class="fn-bracket">]</span></span>
 <p>In order to support I2C clock stretch mode, ADBUS7 should be
 connected to SCK. When clock stretching mode is not selected, ADBUS7

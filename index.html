@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PyFtdi &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,7 +37,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -86,9 +88,9 @@
            <div itemprop="articleBody">
              
   <section id="pyftdi">
-<h1>PyFtdi<a class="headerlink" href="#pyftdi" title="Permalink to this heading"></a></h1>
+<h1>PyFtdi<a class="headerlink" href="#pyftdi" title="Link to this heading"></a></h1>
 <section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading"></a></h2>
+<h2>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h2>
 <p>The latest PyFtdi online documentation is always available from
 <a class="reference external" href="https://eblot.github.io/pyftdi">here</a>.</p>
 <p>Beware the online version may be more recent than the PyPI hosted version, as
@@ -98,14 +100,14 @@ intermediate development versions are not published to
 instructions.</p>
 </section>
 <section id="source-code">
-<h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this heading"></a></h2>
+<h2>Source code<a class="headerlink" href="#source-code" title="Link to this heading"></a></h2>
 <p>PyFtdi releases are available from the Python Package Index from
 <a class="reference external" href="https://pypi.org/project/pyftdi">PyPi</a>.</p>
 <p>PyFtdi development code is available from
 <a class="reference external" href="https://github.com/eblot/pyftdi">GitHub</a>.</p>
 </section>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p>PyFtdi aims at providing a user-space driver for popular FTDI devices,
 implemented in pure Python language.</p>
 <p>Supported FTDI devices include:</p>
@@ -128,7 +130,7 @@ implemented in pure Python language.</p>
 </ul>
 </section>
 <section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h2>
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
 <p>PyFtdi currently supports the following features:</p>
 <ul class="simple">
 <li><p>UART/Serial USB converter, up to 12Mbps (depending on the FTDI device
@@ -144,7 +146,7 @@ with support for non-byte sized transfer</p></li>
 </ul>
 </section>
 <section id="supported-host-oses">
-<h2>Supported host OSes<a class="headerlink" href="#supported-host-oses" title="Permalink to this heading"></a></h2>
+<h2>Supported host OSes<a class="headerlink" href="#supported-host-oses" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>macOS</p></li>
 <li><p>Linux</p></li>
@@ -153,7 +155,7 @@ with support for non-byte sized transfer</p></li>
 </ul>
 </section>
 <section id="warning">
-<h2>Warning<a class="headerlink" href="#warning" title="Permalink to this heading"></a></h2>
+<h2>Warning<a class="headerlink" href="#warning" title="Link to this heading"></a></h2>
 <p>Starting with version <em>v0.40.0</em>, several API changes are being introduced.
 While PyFtdi tries to maintain backward compatibility with previous versions,
 some of these changes may require existing clients to update calls to PyFtdi.</p>
@@ -163,7 +165,7 @@ with <em>v0.22+</em> series.</p>
 <p>See the <em>Major Changes</em> section on the online documentation for details about
 potential API breaks.</p>
 <section id="major-changes">
-<h3>Major changes<a class="headerlink" href="#major-changes" title="Permalink to this heading"></a></h3>
+<h3>Major changes<a class="headerlink" href="#major-changes" title="Link to this heading"></a></h3>
 <blockquote>
 <div><ul class="simple">
 <li><p><em>read</em> methods now return <code class="docutils literal notranslate"><span class="pre">bytearray</span></code> instead of <cite>Array(‘B’)</cite> so that
@@ -182,7 +184,7 @@ slave lines.</p></li>
 </section>
 </section>
 <section id="pyftdi-in-details">
-<h2>PyFTDI in details<a class="headerlink" href="#pyftdi-in-details" title="Permalink to this heading"></a></h2>
+<h2>PyFTDI in details<a class="headerlink" href="#pyftdi-in-details" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>

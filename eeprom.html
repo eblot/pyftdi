@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EEPROM management &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -96,7 +98,7 @@
            <div itemprop="articleBody">
              
   <section id="eeprom-management">
-<h1>EEPROM management<a class="headerlink" href="#eeprom-management" title="Permalink to this heading"></a></h1>
+<h1>EEPROM management<a class="headerlink" href="#eeprom-management" title="Link to this heading"></a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Writing to the EEPROM can cause very <strong>undesired</strong> effects if the wrong
@@ -111,7 +113,7 @@ some conditions.</p>
 <a class="reference external" href="https://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf">FTDI_Recovery</a></p>
 </div>
 <section id="supported-features">
-<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this heading"></a></h2>
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Link to this heading"></a></h2>
 <p>EEPROM support is under active development.</p>
 <p>Some features may be wrongly decoded, as each FTDI model implements a different
 feature map, and more test/validation are required.</p>
@@ -119,7 +121,7 @@ feature map, and more test/validation are required.</p>
 EEPROM content.</p>
 </section>
 <section id="eeprom-configuration-tool">
-<span id="ftconf"></span><h2>EEPROM configuration tool<a class="headerlink" href="#eeprom-configuration-tool" title="Permalink to this heading"></a></h2>
+<span id="ftconf"></span><h2>EEPROM configuration tool<a class="headerlink" href="#eeprom-configuration-tool" title="Link to this heading"></a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> is a companion script to help managing the content of the FTDI
 EEPROM from the command line. See the <a class="reference internal" href="tools.html#tools"><span class="std std-ref">Tools</span></a> chapter to locate this tool.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="n">INPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span> <span class="p">{</span><span class="nb">all</span><span class="p">,</span><span class="n">raw</span><span class="p">,</span><span class="n">values</span><span class="p">}]</span> <span class="p">[</span><span class="o">-</span><span class="n">o</span> <span class="n">OUTPUT</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span>
@@ -198,7 +200,7 @@ during a subsequence update, thanks to the <a class="reference internal" href="#
 <p>Most FTDI device can run without an EEPROM. If something goes wrong, try to
 erase the EEPROM content, then restore the original content.</p>
 <section id="option-switches">
-<h3>Option switches<a class="headerlink" href="#option-switches" title="Permalink to this heading"></a></h3>
+<h3>Option switches<a class="headerlink" href="#option-switches" title="Link to this heading"></a></h3>
 <p>In addition to the <a class="reference internal" href="tools.html#common-option-switches"><span class="std std-ref">Common options switches</span></a> for  <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools,
 <code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> support the following arguments:</p>
 <dl id="option-c">
@@ -329,7 +331,7 @@ the output of the <cite>hexdump -Cv</cite> tool.</p>
 </dl>
 </section>
 <section id="cbus-function">
-<span id="cbus-func"></span><h3>CBUS function<a class="headerlink" href="#cbus-function" title="Permalink to this heading"></a></h3>
+<span id="cbus-func"></span><h3>CBUS function<a class="headerlink" href="#cbus-function" title="Link to this heading"></a></h3>
 <p>The following table describes the CBUS pin alternate functions. Note that
 depending on the actual device, some alternate function may not be available.</p>
 <table class="docutils align-default">
@@ -448,7 +450,7 @@ depending on the actual device, some alternate function may not be available.</p
 </table>
 </section>
 <section id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h3>
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h3>
 <ul>
 <li><p>Change product name and serial number</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">ftconf</span><span class="o">.</span><span class="n">py</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span> <span class="o">-</span><span class="n">p</span> <span class="n">UartBridge</span> <span class="o">-</span><span class="n">s</span> <span class="n">abcd1234</span> <span class="o">-</span><span class="n">u</span>

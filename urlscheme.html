@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>URL Scheme &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -95,7 +97,7 @@
            <div itemprop="articleBody">
              
   <section id="url-scheme">
-<span id="id1"></span><h1>URL Scheme<a class="headerlink" href="#url-scheme" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>URL Scheme<a class="headerlink" href="#url-scheme" title="Link to this heading"></a></h1>
 <p>There are two ways to open a connection to an <cite>Ftdi</cite> object.</p>
 <p>The recommended way to open a connection is to specify connection details
 using a URL. The URL scheme is defined as:</p>
@@ -176,9 +178,9 @@ execution is not interrupted, two helper methods are available as
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.list_devices" title="pyftdi.ftdi.Ftdi.list_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.list_devices()</span></code></a> and
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.show_devices" title="pyftdi.ftdi.Ftdi.show_devices"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.show_devices()</span></code></a> and accept the same URL syntax.</p>
 <section id="opening-a-connection">
-<h2>Opening a connection<a class="headerlink" href="#opening-a-connection" title="Permalink to this heading"></a></h2>
+<h2>Opening a connection<a class="headerlink" href="#opening-a-connection" title="Link to this heading"></a></h2>
 <section id="url-based-methods-to-open-a-connection">
-<h3>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Permalink to this heading"></a></h3>
+<h3>URL-based methods to open a connection<a class="headerlink" href="#url-based-methods-to-open-a-connection" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_url</span><span class="p">()</span>
 <span class="n">open_mpsse_from_url</span><span class="p">()</span>
 <span class="n">open_bitbang_from_url</span><span class="p">()</span>
@@ -186,7 +188,7 @@ execution is not interrupted, two helper methods are available as
 </div>
 </section>
 <section id="device-based-methods-to-open-a-connection">
-<h3>Device-based methods to open a connection<a class="headerlink" href="#device-based-methods-to-open-a-connection" title="Permalink to this heading"></a></h3>
+<h3>Device-based methods to open a connection<a class="headerlink" href="#device-based-methods-to-open-a-connection" title="Link to this heading"></a></h3>
 <p>You may also open an Ftdi device from an existing <a class="reference external" href="https://pyusb.github.io/pyusb/">PyUSB</a> device, with the help
 of the <code class="docutils literal notranslate"><span class="pre">open_from_device()</span></code> helper method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">open_from_device</span><span class="p">()</span>
@@ -196,7 +198,7 @@ of the <code class="docutils literal notranslate"><span class="pre">open_from_de
 </div>
 </section>
 <section id="legacy-methods-to-open-a-connection">
-<h3>Legacy methods to open a connection<a class="headerlink" href="#legacy-methods-to-open-a-connection" title="Permalink to this heading"></a></h3>
+<h3>Legacy methods to open a connection<a class="headerlink" href="#legacy-methods-to-open-a-connection" title="Link to this heading"></a></h3>
 <p>The old, deprecated method to open a connection is to use the <code class="docutils literal notranslate"><span class="pre">open()</span></code>
 methods without the <code class="docutils literal notranslate"><span class="pre">_from_url</span></code> suffix, which accept VID, PID, and serial
 parameters (among others).</p>

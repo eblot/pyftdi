@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tools &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -99,39 +101,39 @@
            <div itemprop="articleBody">
              
   <section id="tools">
-<span id="id1"></span><h1>Tools<a class="headerlink" href="#tools" title="Permalink to this heading"></a></h1>
+<span id="id1"></span><h1>Tools<a class="headerlink" href="#tools" title="Link to this heading"></a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> comes with a couple of scripts designed to help using <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> APIs,
 and can be useful to quick start working with <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>.</p>
 </section>
 <section id="scripts">
-<h2>Scripts<a class="headerlink" href="#scripts" title="Permalink to this heading"></a></h2>
+<h2>Scripts<a class="headerlink" href="#scripts" title="Link to this heading"></a></h2>
 <section id="ftdi-urls">
-<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ftdi_urls</span></code><a class="headerlink" href="#ftdi-urls" title="Permalink to this heading"></a></h3>
+<span id="id2"></span><h3><code class="docutils literal notranslate"><span class="pre">ftdi_urls</span></code><a class="headerlink" href="#ftdi-urls" title="Link to this heading"></a></h3>
 <p>This tiny script <code class="docutils literal notranslate"><span class="pre">ftdi_urls.py</span></code> to list the available, <em>i.e.</em> detected,
 FTDI devices connected to the host, and the URLs than can be used to open a
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi</span></code></a> instance with the
 <a class="reference internal" href="api/ftdi.html#pyftdi.ftdi.Ftdi.open_from_url" title="pyftdi.ftdi.Ftdi.open_from_url"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyftdi.ftdi.Ftdi.open_from_url</span></code></a> family and <code class="docutils literal notranslate"><span class="pre">configure</span></code> methods.</p>
 </section>
 <section id="ftconf">
-<h3><code class="docutils literal notranslate"><span class="pre">ftconf</span></code><a class="headerlink" href="#ftconf" title="Permalink to this heading"></a></h3>
+<h3><code class="docutils literal notranslate"><span class="pre">ftconf</span></code><a class="headerlink" href="#ftconf" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">ftconf.py</span></code> is a companion script to help managing the content of
 the FTDI EEPROM from the command line. See the <a class="reference internal" href="eeprom.html#ftconf"><span class="std std-ref">EEPROM configuration tool</span></a> documentation.</p>
 </section>
 <section id="i2cscan">
-<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">i2cscan</span></code><a class="headerlink" href="#i2cscan" title="Permalink to this heading"></a></h3>
+<span id="id3"></span><h3><code class="docutils literal notranslate"><span class="pre">i2cscan</span></code><a class="headerlink" href="#i2cscan" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">i2cscan.py</span></code> script helps to discover which I2C devices
 are connected to the FTDI I2C bus.</p>
 </section>
 <section id="pyterm">
-<span id="pyterm-py"></span><h3><code class="docutils literal notranslate"><span class="pre">pyterm</span></code><a class="headerlink" href="#pyterm" title="Permalink to this heading"></a></h3>
+<span id="pyterm-py"></span><h3><code class="docutils literal notranslate"><span class="pre">pyterm</span></code><a class="headerlink" href="#pyterm" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is a simple serial terminal that can be used to test the serial
 port feature, see the <a class="reference internal" href="api/uart.html#pyterm"><span class="std std-ref">Mini serial terminal</span></a> documentation.</p>
 </section>
 </section>
 <section id="where-to-find-these-tools">
-<h2>Where to find these tools?<a class="headerlink" href="#where-to-find-these-tools" title="Permalink to this heading"></a></h2>
+<h2>Where to find these tools?<a class="headerlink" href="#where-to-find-these-tools" title="Link to this heading"></a></h2>
 <p>These scripts can be downloaded from <a class="reference external" href="https://github.com/eblot/pyftdi/tree/master/pyftdi/bin">PyFtdiTools</a>, and are also installed along
 with the <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> module on the local host.</p>
 <p>The location of the scripts depends on how <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> has been installed and the
@@ -144,7 +146,7 @@ subdirectory of the directory where the Python interpreter is installed.</p></li
 </ul>
 </section>
 <section id="common-options-switches">
-<span id="common-option-switches"></span><h2>Common options switches<a class="headerlink" href="#common-options-switches" title="Permalink to this heading"></a></h2>
+<span id="common-option-switches"></span><h2>Common options switches<a class="headerlink" href="#common-options-switches" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> tools share many common option switches:</p>
 <dl class="simple" id="option-d">
 <dt><code class="docutils literal notranslate"><span class="pre">-d</span></code></dt><dd><p>Enable debug mode, which emits Python traceback on exceptions</p>

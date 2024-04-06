@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -111,14 +113,14 @@
            <div itemprop="articleBody">
              
   <section id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFTDI</a> relies on <a class="reference external" href="https://pyusb.github.io/pyusb/">PyUSB</a>, which requires a native dependency: libusb 1.x.</p>
 <p>The actual command to install depends on your OS and/or your distribution,
 see below</p>
 <section id="debian-ubuntu-linux">
-<span id="install-linux"></span><h3>Debian/Ubuntu Linux<a class="headerlink" href="#debian-ubuntu-linux" title="Permalink to this heading"></a></h3>
+<span id="install-linux"></span><h3>Debian/Ubuntu Linux<a class="headerlink" href="#debian-ubuntu-linux" title="Link to this heading"></a></h3>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>apt-get<span class="w"> </span>install<span class="w"> </span>libusb-1.0
 </pre></div>
 </div>
@@ -166,18 +168,18 @@ effective, or start a subshell to try testing <a class="reference external" href
 </div>
 </section>
 <section id="homebrew-macos">
-<span id="install-macos"></span><h3>Homebrew macOS<a class="headerlink" href="#homebrew-macos" title="Permalink to this heading"></a></h3>
+<span id="install-macos"></span><h3>Homebrew macOS<a class="headerlink" href="#homebrew-macos" title="Link to this heading"></a></h3>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>libusb
 </pre></div>
 </div>
 </section>
 <section id="windows">
-<span id="install-windows"></span><h3>Windows<a class="headerlink" href="#windows" title="Permalink to this heading"></a></h3>
+<span id="install-windows"></span><h3>Windows<a class="headerlink" href="#windows" title="Link to this heading"></a></h3>
 <p>Windows is not officially supported (<em>i.e.</em> not tested) but some users have
 reported successful installations. Windows requires a specific libusb backend
 installation.</p>
 <section id="id1">
-<h4>Zadig<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h4>
+<h4>Zadig<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
 <p>The probably easiest way to deal with libusb on Windows is to use <a class="reference external" href="https://zadig.akeo.ie/">Zadig</a></p>
 <ol class="arabic simple">
 <li><p>Start up the Zadig utility</p></li>
@@ -214,9 +216,9 @@ device. Always select the former.</p></li>
 </section>
 </section>
 <section id="install-python">
-<span id="id2"></span><h2>Python<a class="headerlink" href="#install-python" title="Permalink to this heading"></a></h2>
+<span id="id2"></span><h2>Python<a class="headerlink" href="#install-python" title="Link to this heading"></a></h2>
 <section id="python-dependencies">
-<h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this heading"></a></h3>
+<h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Link to this heading"></a></h3>
 <p>Dependencies should be automatically installed with PIP.</p>
 <blockquote>
 <div><ul class="simple">
@@ -230,14 +232,14 @@ Always prefer a stable, tagged release.</p>
 not work with PyFtdi.</p>
 </section>
 <section id="installing-with-pip">
-<h3>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Permalink to this heading"></a></h3>
+<h3>Installing with PIP<a class="headerlink" href="#installing-with-pip" title="Link to this heading"></a></h3>
 <p>PIP should automatically install the missing dependencies.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>pyftdi
 </pre></div>
 </div>
 </section>
 <section id="installing-from-source">
-<span id="install-from-source"></span><h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this heading"></a></h3>
+<span id="install-from-source"></span><h3>Installing from source<a class="headerlink" href="#installing-from-source" title="Link to this heading"></a></h3>
 <p>If you prefer to install from source, check out a fresh copy from <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>
 github repository.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/eblot/pyftdi.git
@@ -249,7 +251,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install
 </div>
 </section>
 <section id="generating-the-documentation">
-<span id="generate-doc"></span><h3>Generating the documentation<a class="headerlink" href="#generating-the-documentation" title="Permalink to this heading"></a></h3>
+<span id="generate-doc"></span><h3>Generating the documentation<a class="headerlink" href="#generating-the-documentation" title="Link to this heading"></a></h3>
 <p>Follow <a class="reference internal" href="#install-from-source"><span class="std std-ref">Installing from source</span></a> then:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>setuptools<span class="w"> </span>wheel<span class="w"> </span>sphinx<span class="w"> </span>sphinx_autodoc_typehints
 <span class="c1"># Shpinx Read the Doc theme seems to never get a release w/ fixed issues</span>
@@ -260,7 +262,7 @@ sphinx-build<span class="w"> </span>-b<span class="w"> </span>html<span class="w
 <p>The documentation may be accessed from the generated <code class="docutils literal notranslate"><span class="pre">index.html</span></code> entry file.</p>
 </section>
 <section id="post-installation-sanity-check">
-<h3>Post-installation sanity check<a class="headerlink" href="#post-installation-sanity-check" title="Permalink to this heading"></a></h3>
+<h3>Post-installation sanity check<a class="headerlink" href="#post-installation-sanity-check" title="Link to this heading"></a></h3>
 <p>Open a <em>shell</em>, or a <em>CMD</em> on Windows</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python3<span class="w">  </span><span class="c1"># or &#39;python&#39; on Windows</span>
 from<span class="w"> </span>pyftdi.ftdi<span class="w"> </span>import<span class="w"> </span>Ftdi
@@ -290,12 +292,12 @@ command, please refer to the <a class="reference external" href="https://www.git
 </section>
 </section>
 <section id="custom-usb-vendor-and-product-ids">
-<span id="custom-vid-pid"></span><h2>Custom USB vendor and product IDs<a class="headerlink" href="#custom-usb-vendor-and-product-ids" title="Permalink to this heading"></a></h2>
+<span id="custom-vid-pid"></span><h2>Custom USB vendor and product IDs<a class="headerlink" href="#custom-usb-vendor-and-product-ids" title="Link to this heading"></a></h2>
 <p>PyFtdi only recognizes FTDI official vendor and product IDs.</p>
 <p>If you have an FTDI device with an EEPROM with customized IDs, you need to tell
 PyFtdi to support those custom USB identifiers.</p>
 <section id="custom-pid">
-<h3>Custom PID<a class="headerlink" href="#custom-pid" title="Permalink to this heading"></a></h3>
+<h3>Custom PID<a class="headerlink" href="#custom-pid" title="Link to this heading"></a></h3>
 <p>To support a custom product ID (16-bit integer) with the official FTDI ID, add
 the following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
@@ -305,7 +307,7 @@ the following code <strong>before</strong> any call to an FTDI <code class="docu
 </div>
 </section>
 <section id="custom-vid">
-<h3>Custom VID<a class="headerlink" href="#custom-vid" title="Permalink to this heading"></a></h3>
+<h3>Custom VID<a class="headerlink" href="#custom-vid" title="Link to this heading"></a></h3>
 <p>To support a custom vendor ID and product ID (16-bit integers), add the
 following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>

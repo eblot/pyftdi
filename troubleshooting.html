@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Troubleshooting &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -100,24 +102,24 @@
            <div itemprop="articleBody">
              
   <section id="troubleshooting">
-<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this heading"></a></h1>
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
 <section id="reporting-a-bug">
-<h2>Reporting a bug<a class="headerlink" href="#reporting-a-bug" title="Permalink to this heading"></a></h2>
+<h2>Reporting a bug<a class="headerlink" href="#reporting-a-bug" title="Link to this heading"></a></h2>
 <p>Please do not contact the author by email. The preferered method to report bugs
 and/or enhancement requests is through
 <a class="reference external" href="https://github.com/eblot/pyftdi/issues">GitHub</a>.</p>
 <p>Please be sure to read the next sections before reporting a new issue.</p>
 </section>
 <section id="logging">
-<h2>Logging<a class="headerlink" href="#logging" title="Permalink to this heading"></a></h2>
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading"></a></h2>
 <p>FTDI uses the <cite>pyftdi</cite> logger.</p>
 <p>It emits log messages with raw payload bytes at DEBUG level, and data loss
 at ERROR level.</p>
 </section>
 <section id="common-error-messages">
-<h2>Common error messages<a class="headerlink" href="#common-error-messages" title="Permalink to this heading"></a></h2>
+<h2>Common error messages<a class="headerlink" href="#common-error-messages" title="Link to this heading"></a></h2>
 <section id="error-no-backend-available">
-<h3>“Error: No backend available”<a class="headerlink" href="#error-no-backend-available" title="Permalink to this heading"></a></h3>
+<h3>“Error: No backend available”<a class="headerlink" href="#error-no-backend-available" title="Link to this heading"></a></h3>
 <p>libusb native library cannot be loaded. Try helping the dynamic loader:</p>
 <ul>
 <li><p>On Linux: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">LD_LIBRARY_PATH=&lt;path&gt;</span></code></p>
@@ -140,7 +142,7 @@ like Zadig) as referenced in the installation guide for Windows.</p>
 </ul>
 </section>
 <section id="error-access-denied-insufficient-permissions">
-<h3>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Permalink to this heading"></a></h3>
+<h3>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Link to this heading"></a></h3>
 <p>The system may already be using the device.</p>
 <ul>
 <li><p>On macOS: starting with 10.9 “<em>Mavericks</em>”, macOS ships with a native FTDI
@@ -169,7 +171,7 @@ already in use.</p></li>
 </ul>
 </section>
 <section id="error-the-device-has-no-langid">
-<h3>“Error: The device has no langid”<a class="headerlink" href="#error-the-device-has-no-langid" title="Permalink to this heading"></a></h3>
+<h3>“Error: The device has no langid”<a class="headerlink" href="#error-the-device-has-no-langid" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>On Linux, it usually comes from the same installation issue as the
 <code class="docutils literal notranslate"><span class="pre">Access</span> <span class="pre">denied</span></code> error: the current user is not granted the permissions to
@@ -178,7 +180,7 @@ out the <a class="reference internal" href="installation.html"><span class="doc"
 </ul>
 </section>
 <section id="bus-error-access-violation">
-<h3>“Bus error / Access violation”<a class="headerlink" href="#bus-error-access-violation" title="Permalink to this heading"></a></h3>
+<h3>“Bus error / Access violation”<a class="headerlink" href="#bus-error-access-violation" title="Link to this heading"></a></h3>
 <p>PyFtdi does not use any native library, but relies on <a class="reference external" href="https://pyusb.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://www.libusb.info/">libusb</a>. The
 latter uses native code that may trigger OS error. Some early development
 versions of <a class="reference external" href="https://www.libusb.info/">libusb</a>, for example 1.0.22-b…, have been reported to trigger
@@ -186,12 +188,12 @@ such issues. Please ensure you use a stable/final versions of <a class="referenc
 experience this kind of fatal error.</p>
 </section>
 <section id="serial-serialutil-serialexception-unable-to-open-usb-port">
-<h3>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Permalink to this heading"></a></h3>
+<h3>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Link to this heading"></a></h3>
 <p>May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
 uninstalling the driver. On macOS, refer to this <a class="reference external" href="https://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf">FTDI macOS guide</a>.</p>
 </section>
 <section id="slow-initialisation-on-os-x-el-capitan">
-<h3>Slow initialisation on OS X El Capitan<a class="headerlink" href="#slow-initialisation-on-os-x-el-capitan" title="Permalink to this heading"></a></h3>
+<h3>Slow initialisation on OS X El Capitan<a class="headerlink" href="#slow-initialisation-on-os-x-el-capitan" title="Link to this heading"></a></h3>
 <p>It may take several seconds to open or enumerate FTDI devices.</p>
 <p>If you run libusb &lt;= v1.0.20, be sure to read the <a class="reference external" href="https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152">Libusb issue on macOS</a>
 with OS X 10.11+.</p>

@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GPIOs &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -131,9 +133,9 @@
            <div itemprop="articleBody">
              
   <section id="gpios">
-<h1>GPIOs<a class="headerlink" href="#gpios" title="Permalink to this heading"></a></h1>
+<h1>GPIOs<a class="headerlink" href="#gpios" title="Link to this heading"></a></h1>
 <section id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
 <p>Many PyFtdi APIs give direct access to the IO pins of the FTDI devices:</p>
 <blockquote>
 <div><ul class="simple">
@@ -147,7 +149,7 @@ FTDI interface, which are not reserved for the I2C feature</p></li>
 </ul>
 </div></blockquote>
 <section id="other-modes">
-<h3>Other modes<a class="headerlink" href="#other-modes" title="Permalink to this heading"></a></h3>
+<h3>Other modes<a class="headerlink" href="#other-modes" title="Link to this heading"></a></h3>
 <blockquote>
 <div><ul class="simple">
 <li><p>Gpio raw access is not yet supported with JTAG feature.</p></li>
@@ -161,9 +163,9 @@ drive those pins.</p>
 </section>
 </section>
 <section id="definitions">
-<h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this heading"></a></h2>
+<h2>Definitions<a class="headerlink" href="#definitions" title="Link to this heading"></a></h2>
 <section id="interfaces">
-<h3>Interfaces<a class="headerlink" href="#interfaces" title="Permalink to this heading"></a></h3>
+<h3>Interfaces<a class="headerlink" href="#interfaces" title="Link to this heading"></a></h3>
 <p>An FTDI <em>interface</em> follows the definition of a <em>USB interface</em>: it is an
 independent hardware communication port with an FTDI device. Each interface can
 be configured independently from the other interfaces on the same device, e.g.
@@ -180,7 +182,7 @@ an interface is initialiazed and configured from <a class="reference external" h
 </div>
 </section>
 <section id="ports">
-<span id="ftdi-ports"></span><h3>Ports<a class="headerlink" href="#ports" title="Permalink to this heading"></a></h3>
+<span id="ftdi-ports"></span><h3>Ports<a class="headerlink" href="#ports" title="Link to this heading"></a></h3>
 <p>An FTDI port is ofter used in PyFtdi as a synonym for an interface. This may
 differ from the FTDI datasheets that sometimes show an interface with several
 ports (A*BUS, B*BUS). From a software standpoint, ports and interfaces are
@@ -210,7 +212,7 @@ no longer used, but are kept to prevent API break. Please only use the port
 <code class="docutils literal notranslate"><span class="pre">width</span></code> rather than these legacy port types.</p>
 </section>
 <section id="gpio-value">
-<h3>GPIO value<a class="headerlink" href="#gpio-value" title="Permalink to this heading"></a></h3>
+<h3>GPIO value<a class="headerlink" href="#gpio-value" title="Link to this heading"></a></h3>
 <ul class="simple">
 <li><p>A logical <code class="docutils literal notranslate"><span class="pre">0</span></code> bit represents a low level value on a pin, that is <em>GND</em></p></li>
 <li><p>A logical <code class="docutils literal notranslate"><span class="pre">1</span></code> bit represents a high level value on a pin, that is <em>Vdd</em>
@@ -233,7 +235,7 @@ other pins of a port, <em>i.e.</em> for the pins used as GPIOs.</p>
 </div>
 </section>
 <section id="direction">
-<h3>Direction<a class="headerlink" href="#direction" title="Permalink to this heading"></a></h3>
+<h3>Direction<a class="headerlink" href="#direction" title="Link to this heading"></a></h3>
 <p>An FTDI pin should either be configured as an input or an ouput. It is
 mandatory to (re)configure the direction of a pin before changing the way it is
 used.</p>
@@ -246,7 +248,7 @@ set/written with the PyFTDI APIs</p></li>
 </section>
 </section>
 <section id="cbus-gpios">
-<span id="cbus-gpio"></span><h2>CBUS GPIOs<a class="headerlink" href="#cbus-gpios" title="Permalink to this heading"></a></h2>
+<span id="cbus-gpio"></span><h2>CBUS GPIOs<a class="headerlink" href="#cbus-gpios" title="Link to this heading"></a></h2>
 <p>FT232R, FT232H and FT230X/FT231X support an additional port denoted CBUS:</p>
 <ul class="simple">
 <li><p>FT232R provides an additional 5-bit wide port, where only 4 LSBs can be
@@ -257,7 +259,7 @@ used as programmable GPIOs: <code class="docutils literal notranslate"><span cla
 </ul>
 <p>Note that CBUS access is slower than regular asynchronous bitbang mode.</p>
 <section id="cbus-eeprom-configuration">
-<h3>CBUS EEPROM configuration<a class="headerlink" href="#cbus-eeprom-configuration" title="Permalink to this heading"></a></h3>
+<h3>CBUS EEPROM configuration<a class="headerlink" href="#cbus-eeprom-configuration" title="Link to this heading"></a></h3>
 <p>Accessing this extra port requires a specific EEPROM configuration.</p>
 <p>The EEPROM needs to be configured so that the CBUS pins that need to be used
 as GPIOs are defined as <code class="docutils literal notranslate"><span class="pre">GPIO</span></code>. Without this special configuration, CBUS
@@ -268,7 +270,7 @@ EEPROM configuration to force load the new configuration.</p>
 configuration. See the EEPROM configuration <a class="reference internal" href="eeprom.html#eeprom-cbus"><span class="std std-ref">example</span></a>.</p>
 </section>
 <section id="cbus-gpio-api">
-<h3>CBUS GPIO API<a class="headerlink" href="#cbus-gpio-api" title="Permalink to this heading"></a></h3>
+<h3>CBUS GPIO API<a class="headerlink" href="#cbus-gpio-api" title="Link to this heading"></a></h3>
 <p><a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> starting from v0.47 supports CBUS pins as special GPIO port. This port
 is <em>not</em> mapped as regular GPIO, a dedicated API is reserved to drive those
 pins:</p>
@@ -298,9 +300,9 @@ for now.</p>
 </section>
 </section>
 <section id="configuration">
-<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h2>
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h2>
 <section id="gpio-bitmap">
-<h3>GPIO bitmap<a class="headerlink" href="#gpio-bitmap" title="Permalink to this heading"></a></h3>
+<h3>GPIO bitmap<a class="headerlink" href="#gpio-bitmap" title="Link to this heading"></a></h3>
 <p>The GPIO pins of a port are always accessed as an integer, whose supported
 width depends on the width of the port. These integers should be considered as
 a bitmap of pins, and are always assigned the same mapping, whatever feature is
@@ -317,7 +319,7 @@ enabled:</p>
 a regular GPIO. They cannot be arbitrarily written and should be masked out
 when the GPIO output value is set. See <a class="reference internal" href="#reserved-pins"><span class="std std-ref">Reserved pins</span></a> for details.</p>
 <section id="ft232h-cbus-exception">
-<h4>FT232H CBUS exception<a class="headerlink" href="#ft232h-cbus-exception" title="Permalink to this heading"></a></h4>
+<h4>FT232H CBUS exception<a class="headerlink" href="#ft232h-cbus-exception" title="Link to this heading"></a></h4>
 <p>Note that there is an exception to this rule for FT232H CBUS port: FTDI has
 decided to map non-contiguous CBUS pins as GPIO-capable CBUS pins, that is
 <code class="docutils literal notranslate"><span class="pre">CBUS5</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS6</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS8</span></code>, <code class="docutils literal notranslate"><span class="pre">CBUS9</span></code>, where other CBUS-enabled devices
@@ -330,7 +332,7 @@ of handling the weird implementation of FT232H.</p>
 </section>
 </section>
 <section id="direction-bitmap">
-<h3>Direction bitmap<a class="headerlink" href="#direction-bitmap" title="Permalink to this heading"></a></h3>
+<h3>Direction bitmap<a class="headerlink" href="#direction-bitmap" title="Link to this heading"></a></h3>
 <p>Before using a port as GPIO, the port must be configured as GPIO. This is
 achieved by either instanciating one of the <em>GpioController</em> or by requesting
 the GPIO port from a specific serial bus controller:
@@ -343,7 +345,7 @@ read from a pin before the proper direction has been defined.</p>
 <p>To configure the direction, use the <cite>set_direction</cite> API with a bitmap integer
 value that defines the direction to use of each pin.</p>
 <section id="direction-example">
-<h4>Direction example<a class="headerlink" href="#direction-example" title="Permalink to this heading"></a></h4>
+<h4>Direction example<a class="headerlink" href="#direction-example" title="Link to this heading"></a></h4>
 <p>A 8-bit port, dedicated to GPIO, is configured as follows:</p>
 <blockquote>
 <div><ul class="simple">
@@ -371,7 +373,7 @@ matching bit reset are not reconfigured, whatever their direction bit.</p>
 </section>
 </section>
 <section id="using-gpio-apis">
-<h2>Using GPIO APIs<a class="headerlink" href="#using-gpio-apis" title="Permalink to this heading"></a></h2>
+<h2>Using GPIO APIs<a class="headerlink" href="#using-gpio-apis" title="Link to this heading"></a></h2>
 <p>There are 3 variant of <em>GpioController</em>, depending on which features are needed
 and how the GPIO port usage is intended. <a class="reference internal" href="api/gpio.html"><span class="doc">gpio - GPIO API</span></a> gives in depth details
 about those controllers. Those controllers are mapped onto FTDI HW features.</p>
@@ -408,7 +410,7 @@ controllers.</p>
 <p>It is recommened to read the <code class="docutils literal notranslate"><span class="pre">tests/gpio.py</span></code> files - available from GitHub -
 to get some examples on how to use these API variants.</p>
 <section id="setting-gpio-pin-state">
-<h3>Setting GPIO pin state<a class="headerlink" href="#setting-gpio-pin-state" title="Permalink to this heading"></a></h3>
+<h3>Setting GPIO pin state<a class="headerlink" href="#setting-gpio-pin-state" title="Link to this heading"></a></h3>
 <p>To write to a GPIO, use the <cite>write()</cite> method. The caller needs to mask out
 the bits configured as input, or an exception is triggered:</p>
 <ul class="simple">
@@ -430,7 +432,7 @@ the bits configured as input, or an exception is triggered:</p>
 </div>
 </section>
 <section id="retrieving-gpio-pin-state">
-<h3>Retrieving GPIO pin state<a class="headerlink" href="#retrieving-gpio-pin-state" title="Permalink to this heading"></a></h3>
+<h3>Retrieving GPIO pin state<a class="headerlink" href="#retrieving-gpio-pin-state" title="Link to this heading"></a></h3>
 <p>To read a GPIO, use the <cite>read()</cite> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
@@ -443,7 +445,7 @@ the bits configured as input, or an exception is triggered:</p>
 </div>
 </section>
 <section id="modifying-gpio-pin-state">
-<h3>Modifying GPIO pin state<a class="headerlink" href="#modifying-gpio-pin-state" title="Permalink to this heading"></a></h3>
+<h3>Modifying GPIO pin state<a class="headerlink" href="#modifying-gpio-pin-state" title="Link to this heading"></a></h3>
 <p>A read-modify-write sequence is required.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioAsyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x76</span><span class="p">)</span>
@@ -460,7 +462,7 @@ the bits configured as input, or an exception is triggered:</p>
 </div>
 </section>
 <section id="synchronous-gpio-access">
-<h3>Synchronous GPIO access<a class="headerlink" href="#synchronous-gpio-access" title="Permalink to this heading"></a></h3>
+<h3>Synchronous GPIO access<a class="headerlink" href="#synchronous-gpio-access" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gpio</span> <span class="o">=</span> <span class="n">GpioSyncController</span><span class="p">()</span>
 <span class="n">gpio</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="mh">0x0F</span><span class="p">,</span> <span class="n">frequency</span><span class="o">=</span><span class="mf">1e6</span><span class="p">)</span>
 <span class="n">outs</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
@@ -471,7 +473,7 @@ the bits configured as input, or an exception is triggered:</p>
 </div>
 </section>
 <section id="cbus-gpio-access">
-<h3>CBUS GPIO access<a class="headerlink" href="#cbus-gpio-access" title="Permalink to this heading"></a></h3>
+<h3>CBUS GPIO access<a class="headerlink" href="#cbus-gpio-access" title="Link to this heading"></a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ftdi</span> <span class="o">=</span> <span class="n">Ftdi</span><span class="p">()</span>
 <span class="n">ftdi</span><span class="o">.</span><span class="n">open_from_url</span><span class="p">(</span><span class="s1">&#39;ftdi:///1&#39;</span><span class="p">)</span>
 <span class="c1"># validate CBUS feature with the current device</span>
@@ -499,14 +501,14 @@ the bits configured as input, or an exception is triggered:</p>
 </section>
 </section>
 <section id="reserved-pins">
-<span id="id1"></span><h2>Reserved pins<a class="headerlink" href="#reserved-pins" title="Permalink to this heading"></a></h2>
+<span id="id1"></span><h2>Reserved pins<a class="headerlink" href="#reserved-pins" title="Link to this heading"></a></h2>
 <section id="gpio-pins-vs-feature-pins">
-<h3>GPIO pins vs. feature pins<a class="headerlink" href="#gpio-pins-vs-feature-pins" title="Permalink to this heading"></a></h3>
+<h3>GPIO pins vs. feature pins<a class="headerlink" href="#gpio-pins-vs-feature-pins" title="Link to this heading"></a></h3>
 <p>It is important to note that the reserved pins do not change the pin
 assignment, <em>i.e.</em> the lowest pins of a port may become unavailable as regular
 GPIO when the feature is enabled:</p>
 <section id="example">
-<h4>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h4>
+<h4>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h4>
 <p>I<sup>2</sup>C feature reserves
 the three first pins, as <em>SCL</em>, <em>SDA output</em>, <em>SDA input</em> (w/o clock stretching
 feature which also reserves another pin). This means that AD0, AD1 and AD2,

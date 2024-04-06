@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Features &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
-        <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.0
+                0.55.3
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -99,9 +101,9 @@
            <div itemprop="articleBody">
              
   <section id="features">
-<h1>Features<a class="headerlink" href="#features" title="Permalink to this heading"></a></h1>
+<h1>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h1>
 <section id="devices">
-<h2>Devices<a class="headerlink" href="#devices" title="Permalink to this heading"></a></h2>
+<h2>Devices<a class="headerlink" href="#devices" title="Link to this heading"></a></h2>
 <ul class="simple">
 <li><p>All FTDI device ports (UART, MPSSE) can be used simultaneously.</p>
 <ul>
@@ -114,9 +116,9 @@ runtime instance.</p></li>
 </ul>
 </section>
 <section id="supported-features">
-<h2>Supported features<a class="headerlink" href="#supported-features" title="Permalink to this heading"></a></h2>
+<h2>Supported features<a class="headerlink" href="#supported-features" title="Link to this heading"></a></h2>
 <section id="uart">
-<h3>UART<a class="headerlink" href="#uart" title="Permalink to this heading"></a></h3>
+<h3>UART<a class="headerlink" href="#uart" title="Link to this heading"></a></h3>
 <p>Serial port, up to 6 Mbps. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> includes a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> emulation layer that
 offers transparent access to the FTDI serial ports through a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a>-
 compliant API. The <code class="docutils literal notranslate"><span class="pre">serialext</span></code> directory contains a minimal serial terminal
@@ -126,7 +128,7 @@ name.</p>
 <p>See also <a class="reference internal" href="api/uart.html#uart-limitations"><span class="std std-ref">Limitations</span></a>.</p>
 </section>
 <section id="spi-master">
-<h3>SPI master<a class="headerlink" href="#spi-master" title="Permalink to this heading"></a></h3>
+<h3>SPI master<a class="headerlink" href="#spi-master" title="Link to this heading"></a></h3>
 <p>Supported devices:</p>
 <table class="docutils align-default">
 <thead>
@@ -171,7 +173,7 @@ transfer of non byte-sized can be performed.</p>
 <p>Note: FTDI*232* devices cannot be used as an SPI slave.</p>
 </section>
 <section id="i2c-master">
-<h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Permalink to this heading"></a></h3>
+<h3>I<sup>2</sup>C master<a class="headerlink" href="#i2c-master" title="Link to this heading"></a></h3>
 <p>Supported devices: <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT232H.htm">FT232H</a>, <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT2232H.html">FT2232H</a>, <a class="reference external" href="https://www.ftdichip.com/Products/ICs/FT4232H.htm">FT4232H</a>, <a class="reference external" href="http://ftdichip.com/products/ft4232haq/">FT4232HA</a></p>
 <p>For now, only 7-bit addresses are supported.</p>
 <p>GPIOs can be used while I<sup>2</sup>C mode is enabled.</p>
@@ -183,19 +185,19 @@ serial EEPROMS.</p>
 <p>Note: FTDI*232* devices cannot be used as an I<sup>2</sup>C slave.</p>
 </section>
 <section id="jtag">
-<h3>JTAG<a class="headerlink" href="#jtag" title="Permalink to this heading"></a></h3>
+<h3>JTAG<a class="headerlink" href="#jtag" title="Link to this heading"></a></h3>
 <p>JTAG API is limited to low-level access. It is not intented to be used for
 any flashing or debugging purpose, but may be used as a base to perform SoC
 tests and boundary scans.</p>
 </section>
 <section id="eeprom">
-<h3>EEPROM<a class="headerlink" href="#eeprom" title="Permalink to this heading"></a></h3>
+<h3>EEPROM<a class="headerlink" href="#eeprom" title="Link to this heading"></a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">pyftdi/bin/ftconf.py</span></code> script helps to manage the content of the FTDI
 companion EEPROM.</p>
 </section>
 </section>
 <section id="status">
-<h2>Status<a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
+<h2>Status<a class="headerlink" href="#status" title="Link to this heading"></a></h2>
 <p>This project is still in beta development stage. <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> is developed as an
 open-source solution.</p>
 </section>
