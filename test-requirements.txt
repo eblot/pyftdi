@@ -1,3 +1,4 @@
-ruamel.yaml >= 0.16
 setuptools
 wheel
+pylint
+ruamel.yaml >= 0.16

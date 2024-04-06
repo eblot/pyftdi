@@ -28,6 +28,11 @@ jobs:
     - name: Check style
       run: |
         python setup.py check_style
+    - name: Linter
+      run: |
+        pylint --disable=fixme --disable=duplicate-code \
+          pyftdi pyftdi/bin pyftdi/serialext \
+          pyftdi/tests pyftdi/serialext/tests pyftdi/tests/backend
     - name: Install package
       run: |
         python setup.py install
