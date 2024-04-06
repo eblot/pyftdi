@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -103,7 +103,7 @@ class JtagStateMachine:
 
     def find_path(self, target: Union[JtagState, str],
                   source: Union[JtagState, str, None] = None) \
-                  -> List[JtagState]:
+            -> List[JtagState]:
         """Find the shortest event sequence to move from source state to
            target state. If source state is not specified, used the current
            state.
@@ -136,8 +136,8 @@ class JtagStateMachine:
                 if npath:
                     paths.append(npath)
             # keep the shortest path
-            return min([(len(l), l) for l in paths],
-                       key=lambda x: x[0])[1] if paths else []
+            return min(((len(p), p) for p in paths), key=lambda x: x[0])[1] \
+                if paths else []
         return next_path(source, target, [])
 
     @classmethod
@@ -243,7 +243,7 @@ class JtagController:
             self._write_buff = bytearray()
 
     def write_tms(self, tms: BitSequence,
-                  should_read: bool=False) -> None:
+                  should_read: bool = False) -> None:
         """Change the TAP controller state"""
         if not isinstance(tms, BitSequence):
             raise JtagError('Expect a BitSequence')
@@ -416,7 +416,7 @@ class JtagController:
         olen = len(bytes_)-1
         # print("WRITE BYTES %s" % out)
         cmd = bytearray((Ftdi.WRITE_BYTES_NVE_LSB, olen & 0xff,
-                          (olen >> 8) & 0xff))
+                         (olen >> 8) & 0xff))
         cmd.extend(bytes_)
         self._stack_cmd(cmd)
 
@@ -529,7 +529,7 @@ class JtagEngine:
 
     def shift_register(self, out: BitSequence) -> BitSequence:
         if not self._sm.state_of('shift'):
-            raise JtagError("Invalid state: %s" % self._sm.state())
+            raise JtagError(f'Invalid state: {self._sm.state()}')
         if self._sm.state_of('capture'):
             bs = BitSequence(False)
             self._ctrl.write_tms(bs)
@@ -546,7 +546,7 @@ class JtagEngine:
         """Shift a BitSequence into the current register and retrieve the
            register output, advancing the state to update_*r"""
         if not self._sm.state_of('shift'):
-            raise JtagError("Invalid state: %s" % self._sm.state())
+            raise JtagError(f'Invalid state: {self._sm.state()}')
         if self._sm.state_of('capture'):
             bs = BitSequence(False)
             self._ctrl.write_tms(bs)
@@ -612,7 +612,7 @@ class JtagTool:
         # Freely inpired from UrJTAG
         stm = self._engine.state_machine
         if not stm.state_of('shift'):
-            raise JtagError("Invalid state: %s" % stm.state())
+            raise JtagError(f'Invalid state: {stm.state()}')
         if stm.state_of('capture'):
             bs = BitSequence(False)
             self._engine.controller.write_tms(bs)
@@ -621,9 +621,9 @@ class JtagTool:
         PATTERN_LEN = 8
         stuck = None
         for length in range(1, MAX_REG_LEN):
-            print("Testing for length %d" % length)
+            print(f'Testing for length {length}')
             if length > 5:
-                raise ValueError('Abort detection over reg length %d' % length)
+                raise ValueError(f'Abort detection over reg length {length}')
             zero = BitSequence(length=length)
             inj = BitSequence(length=length+PATTERN_LEN)
             inj.inc()
@@ -647,7 +647,7 @@ class JtagTool:
                     break
                 inj.inc()
             if ok:
-                print("Register detected length: %d" % length)
+                print(f'Register detected length: {length}')
                 return length
         if stuck is not None:
             raise JtagError('TDO seems to be stuck')

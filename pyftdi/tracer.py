@@ -9,12 +9,13 @@
 
 from binascii import hexlify
 from collections import deque
+from importlib import import_module
 from inspect import currentframe
 from logging import getLogger
 from string import ascii_uppercase
 from struct import unpack as sunpack
+from sys import modules
 from typing import Union
-from .ftdi import Ftdi
 
 
 class FtdiMpsseTracer:
@@ -47,8 +48,8 @@ class FtdiMpsseTracer:
         try:
             self._engines[iface]
         except IndexError as exc:
-            raise ValueError('No MPSSE engine available on interface %d' %
-                             iface) from exc
+            raise ValueError(f'No MPSSE engine available on interface '
+                             f'{iface}') from exc
         if not self._engines[iface]:
             self._engines[iface] = FtdiMpsseEngine(iface)
         return self._engines[iface]
@@ -63,22 +64,6 @@ class FtdiMpsseEngine:
     COMMAND_PREFIX = \
         'GET SET READ WRITE RW ENABLE DISABLE CLK LOOPBACK SEND DRIVE'
 
-    def build_commands(prefix: str):
-        commands = {}
-        for cmd in dir(Ftdi):
-            if cmd[0] not in ascii_uppercase:
-                continue
-            value = getattr(Ftdi, cmd)
-            if not isinstance(value, int):
-                continue
-            family = cmd.split('_')[0]
-            if family not in prefix.split():
-                continue
-            commands[value] = cmd
-        return commands
-
-    COMMANDS = build_commands(COMMAND_PREFIX)
-
     ST_IDLE = range(1)
 
     def __init__(self, iface: int):
@@ -92,17 +77,18 @@ class FtdiMpsseEngine:
         self._resp_decoded = True
         self._last_codes = deque()
         self._expect_resp = deque()  # positive: byte, negative: bit count
+        self._commands = self._build_commands()
 
     def send(self, buf: Union[bytes, bytearray]) -> None:
         self._trace_tx.extend(buf)
         while self._trace_tx:
             try:
                 code = self._trace_tx[0]
-                cmd = self.COMMANDS[code]
+                cmd = self._commands[code]
                 if self._cmd_decoded:
                     self.log.debug('[%d]:[Command: %02X: %s]',
                                    self._if, code, cmd)
-                cmd_decoder = getattr(self, '_cmd_%s' % cmd.lower())
+                cmd_decoder = getattr(self, f'_cmd_{cmd.lower()}')
                 rdepth = len(self._expect_resp)
                 try:
                     self._cmd_decoded = cmd_decoder()
@@ -120,7 +106,7 @@ class FtdiMpsseEngine:
             except KeyError:
                 self.log.warning('[%d]:Unknown command code: %02X',
                                  self._if, code)
-            except AttributeError as exc:
+            except AttributeError:
                 self.log.warning('[%d]:Decoder for command %s [%02X] is not '
                                  'implemented', self._if, cmd, code)
             except ValueError as exc:
@@ -139,8 +125,8 @@ class FtdiMpsseEngine:
             code = None
             try:
                 code = self._last_codes.popleft()
-                cmd = self.COMMANDS[code]
-                resp_decoder = getattr(self, '_resp_%s' % cmd.lower())
+                cmd = self._commands[code]
+                resp_decoder = getattr(self, f'_resp_{cmd.lower()}')
                 self._resp_decoded = resp_decoder()
                 if self._resp_decoded:
                     continue
@@ -158,6 +144,28 @@ class FtdiMpsseEngine:
             self.log.warning('[%d]:Flush RX buffer', self._if)
             self._trace_rx = bytearray()
             self._last_codes.clear()
+
+    @classmethod
+    def _build_commands(cls):
+        # pylint: disable=no-self-argument
+        commands = {}
+        fdti_mod_name = 'pyftdi.ftdi'
+        ftdi_mod = modules.get(fdti_mod_name)
+        if not ftdi_mod:
+            ftdi_mod = import_module(fdti_mod_name)
+        ftdi_type = getattr(ftdi_mod, 'Ftdi')
+        for cmd in dir(ftdi_type):
+            if cmd[0] not in ascii_uppercase:
+                continue
+            value = getattr(ftdi_type, cmd)
+            if not isinstance(value, int):
+                continue
+            family = cmd.split('_')[0]
+            # pylint: disable=no-member
+            if family not in cls.COMMAND_PREFIX.split():
+                continue
+            commands[value] = cmd
+        return commands
 
     def _cmd_enable_clk_div5(self):
         self.log.info(' [%d]:Enable clock divisor /5', self._if)
@@ -463,7 +471,7 @@ class FtdiMpsseEngine:
 
     @classmethod
     def bitfmt(cls, value, width):
-        return format(value, '0%db' % width)
+        return format(value, f'0{width}b')
 
     # rw_bytes_pve_pve_lsb
     # rw_bytes_pve_nve_lsb

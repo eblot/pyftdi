@@ -103,7 +103,7 @@ class SpiPort:
 
     def write(self, out: Union[bytes, bytearray, Iterable[int]],
               start: bool = True, stop: bool = True, droptail: int = 0) \
-        -> None:
+            -> None:
         """Write bytes to the slave
 
            :param out: data to send to the SPI slave, may be empty to read out
@@ -142,7 +142,7 @@ class SpiPort:
                            value)
         """
         if not 0 <= mode <= 3:
-            raise SpiIOError('Invalid SPI mode: %d' % mode)
+            raise SpiIOError(f'Invalid SPI mode: {mode}')
         if (mode & 0x2) and not self._controller.is_inverted_cpha_supported:
             raise SpiIOError('SPI with CPHA high is not supported by '
                              'this FTDI device')
@@ -388,8 +388,7 @@ class SpiController:
             self._cs_count = int(kwargs['cs_count'])
             del kwargs['cs_count']
         if not 1 <= self._cs_count <= 5:
-            raise ValueError('Unsupported CS line count: %d' %
-                             self._cs_count)
+            raise ValueError(f'Unsupported CS line count: {self._cs_count}')
         if 'turbo' in kwargs:
             self._turbo = bool(kwargs['turbo'])
             del kwargs['turbo']
@@ -470,8 +469,8 @@ class SpiController:
             if cs >= len(self._spi_ports):
                 if cs < 5:
                     # increase cs_count (up to 4) to reserve more /CS channels
-                    raise SpiIOError("/CS pin %d not reserved for SPI" % cs)
-                raise SpiIOError("No such SPI port: %d" % cs)
+                    raise SpiIOError('/CS pin {cs} not reserved for SPI')
+                raise SpiIOError(f'No such SPI port: {cs}')
             if not self._spi_ports[cs]:
                 freq = min(freq or self._frequency, self.frequency_max)
                 hold = freq and (1+int(1E6/freq))
@@ -673,8 +672,8 @@ class SpiController:
         """
         with self._lock:
             if (value & self._gpio_dir) != value:
-                raise SpiIOError('No such GPO pins: %04x/%04x' %
-                                 (self._gpio_dir, value))
+                raise SpiIOError(f'No such GPO pins: '
+                                 f'{self._gpio_dir:04x}/{value:04x}')
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)

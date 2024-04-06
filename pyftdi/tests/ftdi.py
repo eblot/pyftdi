@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2010-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+"""FTDI detection and connection unit tests."""
+
+# Copyright (c) 2010-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
+# pylint: disable=missing-docstring
 
 import logging
 from doctest import testmod
@@ -84,7 +88,7 @@ class ResetTestCase(TestCase):
             ftdi1.close()
             raise SkipTest('FTDI device is not a multi-port device')
         next_port = (int(url1[-1]) % count) + 1
-        url2 = 'ftdi:///%d' % next_port
+        url2 = f'ftdi:///{next_port}'
         ftdi2 = Ftdi()
         self.assertTrue(ftdi1.is_connected, 'Unable to connect to FTDI')
         ftdi2.open_from_url(url2)

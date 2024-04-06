@@ -10,7 +10,6 @@
 
 from enum import Enum
 from importlib import import_module
-from sys import version_info
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import EasyDict
 
@@ -101,7 +100,6 @@ class UsbConstants:
 
     def dec_desc_type(self, desctype: int) -> str:
         return self._desc_type[desctype & self._desc_type_mask]
-
 
 
 class FtdiConstants:

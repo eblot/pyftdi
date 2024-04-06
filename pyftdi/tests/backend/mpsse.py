@@ -8,8 +8,10 @@
 from collections import deque
 from logging import getLogger
 from struct import unpack as sunpack
-from typing import Union
+from typing import TYPE_CHECKING, Union
 from pyftdi.tracer import FtdiMpsseEngine, FtdiMpsseTracer
+if TYPE_CHECKING:
+    from .ftdivirt import VirtFtdiPort
 
 
 class VirtMpsseTracer(FtdiMpsseTracer):
@@ -26,8 +28,8 @@ class VirtMpsseTracer(FtdiMpsseTracer):
         try:
             self._engines[iface]
         except IndexError as exc:
-            raise ValueError('No MPSSE engine available on interface %d' %
-                             iface) from exc
+            raise ValueError(f'No MPSSE engine available on interface '
+                             f'{iface}') from exc
         if not self._engines[iface]:
             self._engines[iface] = VirtMpsseEngine(self, self._port)
         return self._engines[iface]

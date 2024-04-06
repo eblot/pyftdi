@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2011-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+"""JTAG unit test."""
+
+# Copyright (c) 2011-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -38,7 +40,7 @@ class JtagTestCase(TestCase):
         self.jtag.reset()
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print("IDCODE (reset): 0x%x" % int(idcode))
+        print(f'IDCODE (reset): 0x{int(idcode):x}')
 
     def test_idcode_sequence(self):
         """Read the IDCODE using the dedicated instruction"""
@@ -46,7 +48,7 @@ class JtagTestCase(TestCase):
         self.jtag.write_ir(instruction)
         idcode = self.jtag.read_dr(32)
         self.jtag.go_idle()
-        print("IDCODE (idcode): 0x%08x" % int(idcode))
+        print(f'IDCODE (idcode): 0x{int(idcode):08x}')
 
     def test_idcode_shift_register(self):
         """Read the IDCODE using the dedicated instruction with
@@ -54,26 +56,26 @@ class JtagTestCase(TestCase):
         instruction = JTAG_INSTR['IDCODE']
         self.jtag.change_state('shift_ir')
         retval = self.jtag.shift_and_update_register(instruction)
-        print("retval: 0x%x" % int(retval))
+        print(f'retval: 0x{int(retval):x}')
         self.jtag.go_idle()
         self.jtag.change_state('shift_dr')
         idcode = self.jtag.shift_and_update_register(BitSequence('0'*32))
         self.jtag.go_idle()
-        print("IDCODE (idcode): 0x%08x" % int(idcode))
+        print(f'IDCODE (idcode): 0x{int(idcode):08x}')
 
     def test_bypass_shift_register(self):
         """Test the BYPASS instruction using shift_and_update_register"""
         instruction = JTAG_INSTR['BYPASS']
         self.jtag.change_state('shift_ir')
         retval = self.jtag.shift_and_update_register(instruction)
-        print("retval: 0x%x" % int(retval))
+        print(f'retval: 0x{int(retval):x}')
         self.jtag.go_idle()
         self.jtag.change_state('shift_dr')
-        _in = BitSequence('011011110000'*2, length=24)
-        out = self.jtag.shift_and_update_register(_in)
+        in_ = BitSequence('011011110000'*2, length=24)
+        out = self.jtag.shift_and_update_register(in_)
         self.jtag.go_idle()
-        print("BYPASS sent: %s, received: %s  (should be left shifted by one)"
-              % (_in, out))
+        print(f'BYPASS sent: {in_}, received: {out} '
+              f' (should be left shifted by one)')
 
     def _test_detect_ir_length(self):
         """Detect the instruction register length"""

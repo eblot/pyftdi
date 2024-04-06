@@ -8,7 +8,6 @@
 # pylint: disable=missing-docstring
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
-# pylint: disable=no-self-use
 
 import os
 from array import array
@@ -17,13 +16,15 @@ from collections import deque
 from enum import IntEnum, unique
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from sys import version_info
 from threading import Event, Lock, Thread
 from time import sleep, time as now
-from typing import List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import (TYPE_CHECKING, List, Mapping, NamedTuple, Optional,
+                    Sequence, Tuple)
 from pyftdi.eeprom import FtdiEeprom   # only for consts, do not use code
 from .consts import FTDICONST, USBCONST
 from .mpsse import VirtMpsseEngine, VirtMpsseTracer
+if TYPE_CHECKING:
+    from .backend import VirtDeviceHandle
 
 
 class Pipe:
@@ -203,7 +204,6 @@ class VirtFtdiPort:
     class Fifos(NamedTuple):
         rx: Fifo  # Host-to-FTDI
         tx: Fifo  # FTDI-to-host
-
 
     @unique
     class BitMode(IntEnum):
@@ -898,10 +898,9 @@ class VirtFtdiPort:
                     else:
                         _wait_delay = self.SLEEP_DELAY
                     continue
-                else:
-                    self.log.error('Unimplemented support for command %d',
-                                   command)
-                    continue
+                self.log.error('Unimplemented support for command %d',
+                               command)
+                continue
             self.log.debug('End of worker %s', self._tx_thread.name)
         except Exception as exc:
             self.log.error('Dead of worker %s: %s', self._tx_thread.name, exc)

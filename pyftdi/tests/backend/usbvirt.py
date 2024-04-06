@@ -19,12 +19,13 @@ from functools import partial
 from importlib import import_module
 from logging import getLogger
 from struct import calcsize as scalc, pack as spack
-from sys import version_info
-from typing import List, Mapping, Optional, Tuple
+from typing import TYPE_CHECKING, List, Mapping, Optional, Tuple
 from usb.backend import IBackend
 from pyftdi.misc import EasyDict
 from .consts import USBCONST
 from .ftdivirt import VirtFtdi
+if TYPE_CHECKING:
+    from .loader import VirtLoader
 
 
 class VirtEndpoint:
@@ -82,7 +83,7 @@ class VirtInterface:
             bInterfaceSubClass=0xFF,
             bInterfaceProtocol=0xFF,
             iInterface=0,  # String desc index
-            extra_descriptors=extra or  b'')
+            extra_descriptors=extra or b'')
         desc.update(defs)
         self.alt = 0
         self.altsettings: List[Tuple[VirtInterface,
@@ -160,10 +161,10 @@ class VirtConfiguration:
             wTotalLength=0,
             bNumInterfaces=0,
             bConfigurationValue=0,
-            iConfiguration=0, # string index
+            iConfiguration=0,  # string index
             bmAttributes=0x80,  # bus-powered
             bMaxPower=150//2,  # 150 mA
-            extra_descriptors=extra or  b'')
+            extra_descriptors=extra or b'')
         self.desc.update(defs)
         self.interfaces: List[VirtInterface] = []
 
@@ -226,6 +227,7 @@ class VirtDevice:
             eeprom=None)
         self.desc.update(defs)
         self._props = set()
+        # pylint: disable=consider-using-dict-items
         for key in kwargs:
             # be sure not to allow descriptor override by arbitrary properties
             if key not in defs:
@@ -316,8 +318,8 @@ class VirtBackend(IBackend):
 
     def __init__(self):
         self.log = getLogger('pyftdi.virt.usb')
-        self._devices: List[VirtDevice] = list()
-        self._device_handles: Mapping[int, VirtDeviceHandle] = dict()
+        self._devices: List[VirtDevice] = []
+        self._device_handles: Mapping[int, VirtDeviceHandle] = {}
         self._device_handle_count: int = 0
 
     def add_device(self, device: VirtDevice):
@@ -329,7 +331,7 @@ class VirtBackend(IBackend):
         self._devices.clear()
 
     @classmethod
-    def create_loader(cls) -> 'VirtLooader':
+    def create_loader(cls) -> 'VirtLoader':
         """Provide the loader class to configure this virtual backend instance.
 
            Using this method to retrieve a loader ensure both the virtual
@@ -354,8 +356,7 @@ class VirtBackend(IBackend):
         raise ValueError('No FTDI @ {bus:address}')
 
     def enumerate_devices(self) -> VirtDevice:
-        for dev in self._devices:
-            yield dev
+        yield from self._devices
 
     def open_device(self, dev: VirtDevice) -> VirtDeviceHandle:
         self._device_handle_count += 1

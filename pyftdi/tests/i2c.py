@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2017-2023, Emmanuel Blot <emmanuel.blot@free.fr>
+"""I2C unit tests."""
+
+# Copyright (c) 2017-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -12,13 +14,13 @@ from binascii import hexlify
 from doctest import testmod
 from os import environ
 from sys import modules, stdout
+from time import time as now
 from pyftdi import FtdiLogger
 from pyftdi.i2c import I2cController, I2cIOError
 from pyftdi.misc import pretty_size
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=missing-docstring
-# pylint: disable=no-self-use
 
 
 class I2cTca9555TestCase(TestCase):
@@ -137,9 +139,6 @@ class I2cEepromTest(TestCase):
     def test_long(self):
         port = self._i2c.get_port(self.address)
         # select start address
-        #print('RC', self._i2c.ftdi.read_data_get_chunksize())
-        #print('WC', self._i2c.ftdi.write_data_get_chunksize())
-        from time import time as now
         size = 4096
         port.write(b'\x00\x00')
         start = now()
@@ -248,7 +247,7 @@ class I2cDualMaster(TestCase):
         url1 = environ.get('FTDI_DEVICE', 'ftdi:///1')
         i2c1 = I2cController()
         i2c1.configure(url1, frequency=100000)
-        url2 = '%s%d' % (url1[:-1], int(url1[-1])+1)
+        url2 = f'{url1[:-1]}{int(url1[-1])+1}'
         i2c2 = I2cController()
         i2c2.configure(url2, frequency=100000)
         port = i2c2.get_port(0x76)
@@ -270,11 +269,11 @@ class I2cIssue143(TestCase):
         gpio = i2c.get_gpio()
         gpio.set_direction(0x0010, 0x0010)
         gpio.write(0)
-        gpio.write(1<<4)
+        gpio.write(1 << 4)
         gpio.write(0)
         slave.write([0x12, 0x34])
         gpio.write(0)
-        gpio.write(1<<4)
+        gpio.write(1 << 4)
         gpio.write(0)
 
 
@@ -291,13 +290,13 @@ def suite():
        bridge -or any unsupported setup!! You've been warned.
     """
     ste = TestSuite()
-    #ste.addTest(I2cTca9555TestCase('test'))
-    #ste.addTest(I2cAccelTest('test'))
-    #ste.addTest(I2cReadTest('test'))
+    # ste.addTest(I2cTca9555TestCase('test'))
+    # ste.addTest(I2cAccelTest('test'))
+    # ste.addTest(I2cReadTest('test'))
     ste.addTest(makeSuite(I2cEepromTest, 'test'))
-    #ste.addTest(I2cReadGpioTest('test'))
+    # ste.addTest(I2cReadGpioTest('test'))
     ste.addTest(I2cClockStrechingGpioCheck('test'))
-    #ste.addTest(I2cDualMaster('test'))
+    # ste.addTest(I2cDualMaster('test'))
     ste.addTest(I2cIssue143('test'))
     return ste
 

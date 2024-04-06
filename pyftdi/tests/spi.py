@@ -8,7 +8,6 @@
 
 # pylint: disable=empty-docstring
 # pylint: disable=missing-docstring
-# pylint: disable=no-self-use
 
 import logging
 import unittest
@@ -297,7 +296,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
         for loop in range(7):
             data = self._port.exchange(buf, duplex=True, droptail=loop+1)
             self.assertEqual(len(data), 1)
-            exp = buf[0] & ~((1<<(loop+1))-1)
+            exp = buf[0] & ~((1 << (loop+1))-1)
             # print(f'{data[0]:08b} {exp:08b}')
             self.assertEqual(data[0], exp)
 
@@ -306,7 +305,7 @@ class SpiUnalignedTestCase(unittest.TestCase):
         for loop in range(7):
             data = self._port.exchange(buf, duplex=True, droptail=loop+1)
             self.assertEqual(len(data), 2)
-            exp = buf[-1] & ~((1<<(loop+1))-1)
+            exp = buf[-1] & ~((1 << (loop+1))-1)
             # print(f'{data[-1]:08b} {exp:08b}')
             self.assertEqual(data[0], 0xFF)
             self.assertEqual(data[-1], exp)

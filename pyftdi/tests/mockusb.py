@@ -5,12 +5,10 @@
 # All rights reserved.
 
 # pylint: disable=empty-docstring
-# pylint: disable=missing-docstring
-# pylint: disable=no-self-use
-# pylint: disable=invalid-name
 # pylint: disable=global-statement
+# pylint: disable=invalid-name
+# pylint: disable=missing-docstring
 # pylint: disable=too-many-locals
-
 
 import logging
 from collections import defaultdict
@@ -19,7 +17,7 @@ from doctest import testmod
 from io import StringIO
 from os import environ
 from string import ascii_letters
-from sys import modules, stdout, version_info
+from sys import modules, stdout
 from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from urllib.parse import urlsplit
 from pyftdi import FtdiLogger
@@ -156,7 +154,7 @@ class MockFtdiDiscoveryTestCase(FtdiTestCase):
         self.assertEqual(len(devs), 1)
         out = StringIO()
         Ftdi.show_devices('ftdi:///?', out)
-        lines = [l.strip() for l in out.getvalue().split('\n')]
+        lines = [ln.strip() for ln in out.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -190,7 +188,7 @@ class MockSimpleDeviceTestCase(FtdiTestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines = [ln.strip() for ln in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -216,7 +214,7 @@ class MockDualDeviceTestCase(FtdiTestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines = [ln.strip() for ln in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -243,7 +241,7 @@ class MockTwoPortDeviceTestCase(FtdiTestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines = [ln.strip() for ln in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -270,7 +268,7 @@ class MockFourPortDeviceTestCase(FtdiTestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines = [ln.strip() for ln in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -297,7 +295,7 @@ class MockManyDevicesTestCase(FtdiTestCase):
         temp_stdout = StringIO()
         with redirect_stdout(temp_stdout):
             self.assertRaises(SystemExit, ftdi.open_from_url, 'ftdi:///?')
-        lines = [l.strip() for l in temp_stdout.getvalue().split('\n')]
+        lines = [ln.strip() for ln in temp_stdout.getvalue().split('\n')]
         lines.pop(0)  # "Available interfaces"
         while lines and not lines[-1]:
             lines.pop()
@@ -411,10 +409,10 @@ class MockSimpleGpioTestCase(FtdiTestCase):
     def test_baudrate(self):
         """Check simple GPIO write and read sequence."""
         # load custom CBUS config, with:
-            # CBUS0: GPIO (gpio)
-            # CBUS1: GPIO (gpio)
-            # CBUS0: DRIVE1 (forced to high level)
-            # CBUS0: TXLED  (eq. to highz for tests)
+        # - CBUS0: GPIO (gpio)
+        # - CBUS1: GPIO (gpio)
+        # - CBUS0: DRIVE1 (forced to high level)
+        # - CBUS0: TXLED  (eq. to highz for tests)
         with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
             self.loader.load(yfp)
         gpio = GpioController()
@@ -486,7 +484,6 @@ class MockSimpleUartTestCase(FtdiTestCase):
                          460800, 490000, 921600, 1000000, 1200000, 1500000,
                          2000000, 3000000):
             port.baudrate = baudrate
-            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
             self.assertEqual(port.ftdi.baudrate, vport.baudrate)
         port.close()
 
@@ -504,7 +501,6 @@ class MockSimpleUartTestCase(FtdiTestCase):
                          460800, 490000, 921600, 1000000, 1200000, 1500000,
                          2000000, 3000000, 4000000, 6000000):
             port.baudrate = baudrate
-            #print(f'{baudrate} -> {port.ftdi.baudrate} -> {vport.baudrate}')
             self.assertEqual(port.ftdi.baudrate, vport.baudrate)
         port.close()
 
@@ -728,10 +724,10 @@ class MockCbusGpioTestCase(FtdiTestCase):
     def test_230x(self):
         """Check simple GPIO write and read sequence."""
         # load custom CBUS config, with:
-            # CBUS0: GPIO (gpio)
-            # CBUS1: GPIO (gpio)
-            # CBUS0: DRIVE1 (forced to high level)
-            # CBUS0: TXLED  (eq. to highz for tests)
+        # - CBUS0: GPIO (gpio)
+        # - CBUS1: GPIO (gpio)
+        # - CBUS0: DRIVE1 (forced to high level)
+        # - CBUS0: TXLED  (eq. to highz for tests)
         with open('pyftdi/tests/resources/ft230x_io.yaml', 'rb') as yfp:
             self.loader.load(yfp)
         ftdi = Ftdi()
@@ -774,13 +770,13 @@ class MockCbusGpioTestCase(FtdiTestCase):
 
     def test_lc231x(self):
         """Check simple GPIO write and read sequence."""
-         # load custom CBUS config, with:
-            # CBUS0: GPIO (gpio)
-            # CBUS1: TXLED
-            # CBUS2: DRIVE0 (to light up RX green led)
-            # CBUS3: GPIO (gpio)
-            # only CBUS0 and CBUS3 are available on LC231X
-            # CBUS1 is connected to TX led, CBUS2 to RX led
+        # load custom CBUS config, with:
+        # - CBUS0: GPIO (gpio)
+        # - CBUS1: TXLED
+        # - CBUS2: DRIVE0 (to light up RX green led)
+        # - CBUS3: GPIO (gpio)
+        #   only CBUS0 and CBUS3 are available on LC231X
+        # - CBUS1 is connected to TX led, CBUS2 to RX led
         with open('pyftdi/tests/resources/ft231x_cbus.yaml', 'rb') as yfp:
             self.loader.load(yfp)
         ftdi = Ftdi()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2019-2022, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -9,7 +9,7 @@
 
 from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, DEBUG, ERROR
-from sys import modules, stderr
+from sys import exit as sys_exit, modules, stderr
 from traceback import format_exc
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
@@ -62,12 +62,12 @@ def main():
         Ftdi.show_devices()
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
-        print('\nError: %s' % exc, file=stderr)
+        print(f'\nError: {exc}', file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
-        exit(1)
+        sys_exit(1)
     except KeyboardInterrupt:
-        exit(2)
+        sys_exit(2)
 
 
 if __name__ == '__main__':

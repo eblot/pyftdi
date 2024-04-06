@@ -1,4 +1,4 @@
-# Copyright (c) 2010-2016 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2015, Neotion
 # All rights reserved.
 #
@@ -13,7 +13,7 @@ except ImportError as exc:
     raise ImportError("Python serial module not installed") from exc
 try:
     from serial import VERSION, serial_for_url as serial4url
-    version = tuple([int(x) for x in VERSION.split('.')])
+    version = tuple(int(x) for x in VERSION.split('.'))
     if version < (3, 0):
         raise ValueError
 except (ValueError, IndexError, ImportError) as exc:

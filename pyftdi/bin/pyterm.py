@@ -18,7 +18,7 @@ from collections import deque
 from logging import Formatter, StreamHandler, DEBUG, ERROR
 from os import environ, linesep, stat
 from re import search
-from sys import exit as sysexit, modules, platform, stderr, stdout
+from sys import exit as sys_exit, modules, platform, stderr, stdout
 from time import sleep
 from threading import Event, Thread
 from traceback import format_exc
@@ -57,7 +57,7 @@ class MiniTerm:
         """Switch to a pure serial terminal application"""
 
         self._terminal.init(fullmode)
-        print('Entering minicom mode @ %d bps' % self._port.baudrate)
+        print(f'Entering minicom mode @ { self._port.baudrate} bps')
         stdout.flush()
         self._resume = True
         # start the reader (target to host direction) within a dedicated thread
@@ -109,6 +109,7 @@ class MiniTerm:
             self._resume = False
             print(str(ex), file=stderr)
             interrupt_main()
+            return bytearray()
         except Exception as ex:
             print(str(ex), file=stderr)
             return bytearray()
@@ -132,7 +133,7 @@ class MiniTerm:
         except KeyboardInterrupt:
             return
         except Exception as exc:
-            print("Exception: %s" % exc)
+            print(f'Exception: {exc}')
             if self._debug:
                 print(format_exc(chain=False), file=stderr)
             interrupt_main()
@@ -182,7 +183,7 @@ class MiniTerm:
     def _cleanup(self, *args):
         """Cleanup resource before exiting"""
         if args and args[0]:
-            print('%sAborting...' % linesep)
+            print(f'{linesep}Aborting...')
         try:
             self._resume = False
             if self._port:
@@ -222,7 +223,7 @@ class MiniTerm:
             if not vmo:
                 # unable to parse version
                 raise ValueError()
-            if tuple([int(x) for x in vmo.groups()]) < (3, 0):
+            if tuple(int(x) for x in vmo.groups()) < (3, 0):
                 # pysrial version is too old
                 raise ValueError()
         except (ValueError, IndexError, ImportError) as exc:
@@ -243,10 +244,10 @@ class MiniTerm:
             if not port.is_open:
                 port.open()
             if not port.is_open:
-                raise IOError('Cannot open port "%s"' % device)
+                raise IOError(f"Cannot open port '{device}'")
             if debug:
                 backend = port.BACKEND if hasattr(port, 'BACKEND') else '?'
-                print("Using serial backend '%s'" % backend)
+                print(f"Using serial backend '{backend}'")
             return port
         except SerialException as exc:
             raise IOError(str(exc)) from exc
@@ -272,7 +273,6 @@ def get_default_device() -> str:
     return device
 
 
-
 def main():
     """Main routine"""
     debug = False
@@ -280,16 +280,16 @@ def main():
         default_device = get_default_device()
         argparser = ArgumentParser(description=modules[__name__].__doc__)
         argparser.add_argument('-f', '--fullmode', dest='fullmode',
-                                   action='store_true',
-                                   help='use full terminal mode, exit with '
-                                        '[Ctrl]+B')
+                               action='store_true',
+                               help='use full terminal mode, exit with '
+                                    '[Ctrl]+B')
         argparser.add_argument('device', nargs='?', default=default_device,
-                               help='serial port device name (default: %s)' %
-                               default_device)
+                               help=f'serial port device name '
+                                    f'(default: {default_device}')
         argparser.add_argument('-b', '--baudrate',
-                               help='serial port baudrate (default: %d)' %
-                               MiniTerm.DEFAULT_BAUDRATE,
-                               default='%s' % MiniTerm.DEFAULT_BAUDRATE)
+                               efault=str(MiniTerm.DEFAULT_BAUDRATE),
+                               help=f'serial port baudrate '
+                                    f'(default: {MiniTerm.DEFAULT_BAUDRATE})')
         argparser.add_argument('-w', '--hwflow',
                                action='store_true',
                                help='hardware flow control')
@@ -355,12 +355,12 @@ def main():
                      args.crlf)
 
     except (IOError, ValueError) as exc:
-        print('\nError: %s' % exc, file=stderr)
+        print(f'\nError: {exc}', file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
-        sysexit(1)
+        sys_exit(1)
     except KeyboardInterrupt:
-        sysexit(2)
+        sys_exit(2)
 
 
 if __name__ == '__main__':

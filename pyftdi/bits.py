@@ -71,7 +71,7 @@ class BitSequence:
         elif value is None:
             pass
         else:
-            raise BitSequenceError("Cannot initialize from a %s" % type(value))
+            raise BitSequenceError(f"Cannot initialize from '{type(value)}'")
         self._update_length(length, msb)
 
     def sequence(self) -> bytearray:
@@ -272,7 +272,7 @@ class BitSequence:
             else:
                 j = None
             chunks.append(srepr[-i-8:j])
-        return '%d: %s' % (len(self), ' '.join(reversed(chunks)))
+        return f'{len(self)}: {" ".join(reversed(chunks))}'
 
     def __int__(self):
         value = 0
@@ -371,14 +371,15 @@ class BitZSequence(BitSequence):
         return self
 
     def tobyte(self, msb=False):
-        raise BitSequenceError("Type %s cannot be converted to byte" %
-                               type(self))
+        raise BitSequenceError(f'Type {type(self)} cannot be converted to '
+                               f'byte')
 
     def tobytes(self, msb=False, msby=False):
-        raise BitSequenceError("Type %s cannot be converted to bytes" %
-                               type(self))
+        raise BitSequenceError(f'Type {type(self)} cannot be converted to '
+                               f'bytes')
 
     def matches(self, other):
+        # pylint: disable=missing-function-docstring
         if not isinstance(self, BitSequence):
             raise BitSequenceError('Not a BitSequence instance')
         # the bit sequence should be of the same length
@@ -494,7 +495,7 @@ class BitField:
     def __getitem__(self, index):
         if isinstance(index, slice):
             if index.stop == index.start:
-                return
+                return None
             if index.stop < index.start:
                 offset = index.stop
                 count = index.start-index.stop+1

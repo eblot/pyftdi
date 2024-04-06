@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2023 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
@@ -131,6 +131,7 @@ class CheckStyle(Command):
         self.announce('checking coding style', level=2)
         filecount = 0
         topdir = dirname(__file__) or getcwd()
+        error_count = 0
         for dpath, dnames, fnames in walk(topdir):
             dnames[:] = [d for d in dnames
                          if not d.startswith('.') and d != 'doc']
@@ -140,11 +141,14 @@ class CheckStyle(Command):
                 with open(filename, 'rt', encoding='utf-8') as pfp:
                     for lpos, line in enumerate(pfp, start=1):
                         if len(line) > 80:
-                            print(f'\n  {lpos}: {line.rstrip()}')
                             toppath = relpath(filename, topdir)
-                            raise RuntimeError(f"Invalid line width in "
-                                               f"{toppath}:{lpos}")
+                            print(f'  invalid line width in {toppath}:{lpos}',
+                                  file=stderr)
+                            print(f'    {line.strip()}', file=stderr)
+                            error_count += 1
                 filecount += 1
+        if error_count:
+            raise RuntimeError(f'{error_count} errors')
         if not filecount:
             raise RuntimeError(f'No Python file found from "{topdir}"')
 

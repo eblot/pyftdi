@@ -1,6 +1,6 @@
 """Terminal management helpers"""
 
-# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2020, Michael Pratt <mpratt51@gmail.com>
 # All rights reserved.
 #
@@ -17,15 +17,20 @@ else:
     from termios import (ECHO, ICANON, TCSAFLUSH, TCSANOW, VINTR, VMIN, VSUSP,
                          VTIME, tcgetattr, tcsetattr)
 
+    # pylint workaround (disable=used-before-assignment)
+    def call():
+        # pylint: disable=missing-function-docstring
+        pass
+
 
 class Terminal:
     """Terminal management function
     """
 
     FNKEYS = {
-        #Ctrl + Alt + Backspace
+        # Ctrl + Alt + Backspace
         14:     b'\x1b^H',
-        #Ctrl + Alt + Enter
+        # Ctrl + Alt + Enter
         28:     b'\x1b\r',
         # Pause/Break
         29:     b'\x1c',
@@ -44,7 +49,7 @@ class Terminal:
         145:    b'\x1b[1;5B',
         116:    b'\x1b[1;5C',
         115:    b'\x1b[1;5D',
-        #Ctrl + Tab
+        # Ctrl + Tab
         148:    b'\x1b[2J',
         # Cursor (Home, Ins, Del...)
         71:     b'\x1b[1~',
@@ -65,7 +70,7 @@ class Terminal:
         146:    b'\x1b[2;5~',
         147:    b'\x1b[3;5~',
         117:    b'\x1b[1;5F',
-        134:    b'\x1b[5;5~',
+        114:    b'\x1b[5;5~',
         118:    b'\x1b[6;5~',
         # Function Keys (F1 - F12)
         59:     b'\x1b[11~',
@@ -141,7 +146,7 @@ class Terminal:
         if not self.IS_MSWIN:
             self._termstates = [(t.fileno(),
                                 tcgetattr(t.fileno()) if t.isatty() else None)
-                                    for t in (stdin, stdout, stderr)]
+                                for t in (stdin, stdout, stderr)]
             tfd, istty = self._termstates[0]
             if istty:
                 new = tcgetattr(tfd)

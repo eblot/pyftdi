@@ -12,7 +12,7 @@
 
 from argparse import ArgumentParser, FileType
 from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
-from sys import modules, stderr
+from sys import exit as sys_exit, modules, stderr
 from traceback import format_exc
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
@@ -75,12 +75,12 @@ class I2cBusScanner:
             i2c.terminate()
         columns = 16
         row = 0
-        print('   %s' % ''.join(' %01X ' % col for col in range(columns)))
+        print('  ', ''.join(f' {col:01X} ' for col in range(columns)))
         while True:
             chunk = slaves[row:row+columns]
             if not chunk:
                 break
-            print(' %1X:' % (row//columns), '  '.join(chunk))
+            print(f' {row//columns:01X}:', '  '.join(chunk))
             row += columns
 
 
@@ -140,16 +140,16 @@ def main():
         I2cBusScanner.scan(args.device, not args.no_smb, args.force)
 
     except (ImportError, IOError, NotImplementedError, ValueError) as exc:
-        print('\nError: %s' % exc, file=stderr)
+        print(f'\nError: {exc}', file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
-        exit(1)
+        sys_exit(1)
     except KeyboardInterrupt:
-        exit(2)
+        sys_exit(2)
 
 
 if __name__ == '__main__':
     try:
         main()
-    except Exception as exc:
-        print(str(exc), file=stderr)
+    except Exception as _exc:
+        print(str(_exc), file=stderr)

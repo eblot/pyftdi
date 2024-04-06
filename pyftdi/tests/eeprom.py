@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""EEPROM unit tests."""
+
 # Copyright (c) 2018, Stephen Goadhouse <sgoadhouse@virginia.edu>
 # Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
@@ -17,7 +19,6 @@ from pyftdi.ftdi import Ftdi
 from pyftdi.misc import hexdump, to_bool
 
 # pylint: disable=missing-docstring
-
 
 class EepromTestCase(unittest.TestCase):
     """FTDI EEPROM access method test case"""
@@ -42,7 +43,7 @@ class EepromTestCase(unittest.TestCase):
             ftdi.open_bitbang_from_url(self.url, direction=out_pins)
             self.ftdi = ftdi
         except IOError as exc:
-            raise IOError('Unable to open USB port: %s' % str(exc)) from exc
+            raise IOError(f'Unable to open USB port: {exc}') from exc
 
     def tearDown(self):
         """Close the FTDI connection"""
@@ -106,7 +107,7 @@ def main():
     try:
         loglevel = getattr(logging, level)
     except AttributeError as exc:
-        raise ValueError('Invalid log level: %s' % level) from exc
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.set_level(loglevel)
     testmod(modules[__name__])
     unittest.main(defaultTest='suite')

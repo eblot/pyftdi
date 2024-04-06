@@ -46,7 +46,7 @@ def hexdump(data: Union[bytes, bytearray, Iterable[int]],
         else:
             src = data
     except Exception as exc:
-        raise TypeError("Unsupported data type '%s'" % type(data)) from exc
+        raise TypeError(f"Unsupported data type '{type(data)}'") from exc
 
     length = 16
     result = []
@@ -61,16 +61,15 @@ def hexdump(data: Union[bytes, bytearray, Iterable[int]],
                     abv = True
                 continue
             abv = False
-        hexa = ' '.join(["%02x" % x for x in s])
+        hexa = ' '.join((f'{x:02x}' for x in s))
         printable = s.translate(ASCIIFILTER).decode('ascii')
         if full:
             hx1, hx2 = hexa[:3*8], hexa[3*8:]
             hl = length//2
-            result.append("%08x  %-*s %-*s |%s|\n" %
-                          (i, hl*3, hx1, hl*3, hx2, printable))
+            result.append(f'{i:08x}  {hx1:<{hl*3}} {hx2:<{hl*3}} '
+                          f'|{printable}|\n')
         else:
-            result.append("%06x   %-*s  %s\n" %
-                          (i, length*3, hexa, printable))
+            result.append(f'{i:06x}   {hexa:<{length*3}}  {printable}\n')
         last = s
     return ''.join(result)
 
@@ -95,11 +94,11 @@ def hexline(data: Union[bytes, bytearray, Iterable[int]],
         else:
             src = data
     except Exception as exc:
-        raise TypeError("Unsupported data type '%s'" % type(data)) from exc
+        raise TypeError(f"Unsupported data type '{type(data)}'") from exc
 
-    hexa = sep.join(["%02x" % x for x in src])
+    hexa = sep.join((f'{x:02x}' for x in src))
     printable = src.translate(ASCIIFILTER).decode('ascii')
-    return "(%d) %s : %s" % (len(data), hexa, printable)
+    return f'({len(data)}) {hexa} : {printable}'
 
 
 def to_int(value: Union[int, str]) -> int:
@@ -156,12 +155,12 @@ def to_bool(value: Union[int, bool, str], permissive: bool = True,
             return bool(value)
         if permissive:
             return False
-        raise ValueError("Invalid boolean value: '%d'" % value)
+        raise ValueError(f"Invalid boolean value: '{value}'")
     if value.lower() in TRUE_BOOLEANS:
         return True
     if permissive or (value.lower() in FALSE_BOOLEANS):
         return False
-    raise ValueError('"Invalid boolean value: "%s"' % value)
+    raise ValueError(f"Invalid boolean value: '{value}'")
 
 
 def to_bps(value: str) -> int:
@@ -197,7 +196,7 @@ def xor(_a_: bool, _b_: bool) -> bool:
        :return: xor-ed value
     """
     # pylint: disable=superfluous-parens
-    return bool((not(_a_) and _b_) or (_a_ and not(_b_)))
+    return bool((not (_a_) and _b_) or (_a_ and not (_b_)))
 
 
 def is_iterable(obj: Any) -> bool:
@@ -237,12 +236,12 @@ def pretty_size(size, sep: str = ' ',
     if size > lim_m:
         ssize = size >> 20
         if floor or (ssize << 20) == size:
-            return '%d%sMiB' % (ssize, sep)
+            return f'{ssize}{sep}MiB'
     if size > lim_k:
         ssize = size >> 10
         if floor or (ssize << 10) == size:
-            return '%d%sKiB' % (ssize, sep)
-    return '%d%sbyte%s' % (size, sep, (plural and 's' or ''))
+            return f'{ssize}{sep}KiB'
+    return f'{size}{sep}byte{plural and "s" or ""}'
 
 
 def add_custom_devices(ftdicls=None,
@@ -328,8 +327,8 @@ class EasyDict(dict):
         try:
             return self.__getitem__(name)
         except KeyError as exc:
-            raise AttributeError("'%s' object has no attribute '%s'" %
-                                 (self.__class__.__name__, name)) from exc
+            raise AttributeError(f"'{self.__class__.__name__}' object has no "
+                                 f"attribute '{name}'") from exc
 
     def __setattr__(self, name, value):
         self.__setitem__(name, value)

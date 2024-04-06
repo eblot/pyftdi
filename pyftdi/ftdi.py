@@ -182,18 +182,18 @@ class Ftdi:
     ENABLE_CLK_DIV5 = 0x8b
 
     # Modem status
-    MODEM_CTS = (1 << 4)    # Clear to send
-    MODEM_DSR = (1 << 5)    # Data set ready
-    MODEM_RI = (1 << 6)     # Ring indicator
-    MODEM_RLSD = (1 << 7)   # Carrier detect
-    MODEM_DR = (1 << 8)     # Data ready
-    MODEM_OE = (1 << 9)     # Overrun error
-    MODEM_PE = (1 << 10)    # Parity error
-    MODEM_FE = (1 << 11)    # Framing error
-    MODEM_BI = (1 << 12)    # Break interrupt
-    MODEM_THRE = (1 << 13)  # Transmitter holding register
-    MODEM_TEMT = (1 << 14)  # Transmitter empty
-    MODEM_RCVE = (1 << 15)  # Error in RCVR FIFO
+    MODEM_CTS = 1 << 4      # Clear to send
+    MODEM_DSR = 1 << 5      # Data set ready
+    MODEM_RI = 1 << 6       # Ring indicator
+    MODEM_RLSD = 1 << 7     # Carrier detect
+    MODEM_DR = 1 << 8       # Data ready
+    MODEM_OE = 1 << 9       # Overrun error
+    MODEM_PE = 1 << 10      # Parity error
+    MODEM_FE = 1 << 11      # Framing error
+    MODEM_BI = 1 << 12      # Break interrupt
+    MODEM_THRE = 1 << 13    # Transmitter holding register
+    MODEM_TEMT = 1 << 14    # Transmitter empty
+    MODEM_RCVE = 1 << 15    # Error in RCVR FIFO
 
     # FTDI MPSSE commands
     SET_BITS_LOW = 0x80     # Change LSB GPIO output
@@ -250,15 +250,15 @@ class Ftdi:
 
     # Flow control arguments
     SIO_DISABLE_FLOW_CTRL = 0x0
-    SIO_RTS_CTS_HS = (0x1 << 8)
-    SIO_DTR_DSR_HS = (0x2 << 8)
-    SIO_XON_XOFF_HS = (0x4 << 8)
+    SIO_RTS_CTS_HS = 0x1 << 8
+    SIO_DTR_DSR_HS = 0x2 << 8
+    SIO_XON_XOFF_HS = 0x4 << 8
     SIO_SET_DTR_MASK = 0x1
-    SIO_SET_DTR_HIGH = (SIO_SET_DTR_MASK | (SIO_SET_DTR_MASK << 8))
-    SIO_SET_DTR_LOW = (0x0 | (SIO_SET_DTR_MASK << 8))
+    SIO_SET_DTR_HIGH = SIO_SET_DTR_MASK | (SIO_SET_DTR_MASK << 8)
+    SIO_SET_DTR_LOW = 0x0 | (SIO_SET_DTR_MASK << 8)
     SIO_SET_RTS_MASK = 0x2
-    SIO_SET_RTS_HIGH = (SIO_SET_RTS_MASK | (SIO_SET_RTS_MASK << 8))
-    SIO_SET_RTS_LOW = (0x0 | (SIO_SET_RTS_MASK << 8))
+    SIO_SET_RTS_HIGH = SIO_SET_RTS_MASK | (SIO_SET_RTS_MASK << 8)
+    SIO_SET_RTS_LOW = 0x0 | (SIO_SET_RTS_MASK << 8)
 
     # Parity bits
     PARITY_NONE, PARITY_ODD, PARITY_EVEN, PARITY_MARK, PARITY_SPACE = range(5)
@@ -305,7 +305,7 @@ class Ftdi:
     LATENCY_EEPROM_FT232R = 77
 
     # EEPROM Properties
-    EXT_EEPROM_SIZES = (128, 256) # in bytes (93C66 seen as 93C56)
+    EXT_EEPROM_SIZES = (128, 256)  # in bytes (93C66 seen as 93C56)
 
     INT_EEPROMS = {
         0x0600: 0x80,  # FT232R: 128 bytes, 1024 bits
@@ -411,9 +411,9 @@ class Ftdi:
            :raise ValueError: if the vendor id is already referenced
         """
         if vid in cls.VENDOR_IDS.values():
-            raise ValueError('Vendor ID 0x%04x already registered' % vid)
+            raise ValueError(f'Vendor ID 0x{vid:04x} already registered')
         if not vidname:
-            vidname = '0x%04x' % vid
+            vidname = f'0x{vid:04x}'
         cls.VENDOR_IDS[vidname] = vid
 
     @classmethod
@@ -431,10 +431,10 @@ class Ftdi:
         if vid not in cls.PRODUCT_IDS:
             cls.PRODUCT_IDS[vid] = OrderedDict()
         elif pid in cls.PRODUCT_IDS[vid].values():
-            raise ValueError('Product ID 0x%04x:0x%04x already registered' %
-                             (vid, pid))
+            raise ValueError(f'Product ID 0x{vid:04x}:0x{pid:04x} already '
+                             f'registered')
         if not pidname:
-            pidname = '0x%04x' % pid
+            pidname = f'0x{pid:04x}'
         cls.PRODUCT_IDS[vid][pidname] = pid
 
     @classmethod
@@ -491,7 +491,7 @@ class Ftdi:
     def open(self, vendor: int, product: int, bus: Optional[int] = None,
              address: Optional[int] = None, index: int = 0,
              serial: Optional[str] = None,
-             interface: int = 1)  -> None:
+             interface: int = 1) -> None:
         """Open a new interface to the specified FTDI device.
 
            If several FTDI devices of the same kind (vid, pid) are connected
@@ -529,7 +529,7 @@ class Ftdi:
            :param interface: FTDI interface to use (integer starting from 1)
         """
         if not isinstance(device, UsbDevice):
-            raise FtdiError("Device '%s' is not a PyUSB device" % device)
+            raise FtdiError(f"Device '{device}' is not a PyUSB device")
         self._usb_dev = device
         try:
             self._usb_dev.set_configuration()
@@ -538,7 +538,7 @@ class Ftdi:
         # detect invalid interface as early as possible
         config = self._usb_dev.get_active_configuration()
         if interface > config.bNumInterfaces:
-            raise FtdiError('No such FTDI port: %d' % interface)
+            raise FtdiError(f'No such FTDI port: {interface}')
         self._set_interface(config, interface)
         self._max_packet_size = self._get_max_packet_size()
         # Invalidate data in the readbuffer
@@ -1004,7 +1004,6 @@ class Ftdi:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0700, 0x0800, 0x0900, 0x3600)
 
-
     @property
     def is_mpsse(self) -> bool:
         """Tell whether the device is configured in MPSSE mode
@@ -1082,8 +1081,8 @@ class Ftdi:
         try:
             return Ftdi.FIFO_SIZES[self.device_version]
         except KeyError as exc:
-            raise FtdiFeatureError('Unsupported device: 0x%04x' %
-                                   self.device_version) from exc
+            raise FtdiFeatureError(f'Unsupported device: '
+                                   f'0x{self.device_version:04x}') from exc
 
     @property
     def mpsse_bit_delay(self) -> float:
@@ -1219,8 +1218,7 @@ class Ftdi:
             chunksize = min(self.fifo_sizes[0], self.fifo_sizes[1],
                             self._max_packet_size)
         if platform == 'linux':
-            if chunksize > 16384:
-                chunksize = 16384
+            chunksize = min(chunksize, 16384)
         self._readbuffer_chunksize = chunksize
         self.log.debug('RX chunksize: %d', self._readbuffer_chunksize)
 
@@ -1262,9 +1260,9 @@ class Ftdi:
         """
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= mask <= 0x0F:
-            raise ValueError('Invalid CBUS gpio mask: 0x%02x' % mask)
+            raise ValueError(f'Invalid CBUS gpio mask: 0x{mask:02x}')
         if not 0 <= direction <= 0x0F:
-            raise ValueError('Invalid CBUS gpio direction: 0x%02x' % direction)
+            raise ValueError(f'Invalid CBUS gpio direction: 0x{direction:02x}')
         self._cbus_pins = (mask, direction)
 
     def get_cbus_gpio(self) -> int:
@@ -1295,7 +1293,7 @@ class Ftdi:
             raise FtdiError('CBUS gpio not available from current mode')
         # sanity check: there cannot be more than 4 CBUS pins in bitbang mode
         if not 0 <= pins <= 0x0F:
-            raise ValueError('Invalid CBUS gpio pins: 0x%02x' % pins)
+            raise ValueError(f'Invalid CBUS gpio pins: 0x{pins:02x}')
         if not self._cbus_pins[0] & self._cbus_pins[1]:
             raise FtdiError('No CBUS IO configured as output')
         pins &= self._cbus_pins[0] & self._cbus_pins[1]
@@ -1413,14 +1411,14 @@ class Ftdi:
         try:
             value = ctrl[flowctrl] | self._index
         except KeyError as exc:
-            raise ValueError('Unknown flow control: %s' % flowctrl) from exc
+            raise ValueError(f'Unknown flow control: {flowctrl}') from exc
         try:
             if self._usb_dev.ctrl_transfer(
                     Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_FLOW_CTRL, 0, value,
                     bytearray(), self._usb_write_timeout):
                 raise FtdiError('Unable to set flow control')
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % str(exc)) from exc
+            raise FtdiError(f'UsbError: {exc}') from exc
 
     def set_dtr(self, state: bool) -> None:
         """Set dtr line
@@ -1663,15 +1661,15 @@ class Ftdi:
                     Ftdi.REQ_IN, Ftdi.SIO_REQ_READ_EEPROM, 0,
                     word_addr, 2, self._usb_read_timeout)
                 if not buf:
-                    raise FtdiEepromError('EEPROM read error @ %d' %
-                                          (word_addr << 1))
+                    err_addr = word_addr << 1
+                    raise FtdiEepromError(f'EEPROM read error @ {err_addr}')
                 data.extend(buf)
                 word_count -= 1
                 word_addr += 1
             start = addr & 0x1
             return bytes(data[start:start+length])
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % exc) from exc
+            raise FtdiError(f'UsbError: {exc}') from exc
 
     def write_eeprom(self, addr: int, data: Union[bytes, bytearray],
                      eeprom_size: Optional[int] = None,
@@ -1726,8 +1724,7 @@ class Ftdi:
             size += 1
         if size & 0x1:
             size += 1
-        if size > eeprom_size-2:
-            size = eeprom_size-2
+        size = min(size, eeprom_size - 2)
         # finally, write new section of data and ...
         self._write_eeprom_raw(start, eeprom[start:start+size],
                                dry_run=dry_run)
@@ -1781,7 +1778,7 @@ class Ftdi:
                 offset += length
             return offset
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % str(exc)) from exc
+            raise FtdiError(f'UsbError: {exc}') from exc
 
     def read_data_bytes(self, size: int, attempt: int = 1,
                         request_gen: Optional[Callable[[int], bytes]] = None) \
@@ -1907,7 +1904,7 @@ class Ftdi:
                         self._readoffset += part_size
                         return data
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % str(exc)) from exc
+            raise FtdiError(f'UsbError: {exc}') from exc
         # never reached
         raise FtdiError("Internal error")
 
@@ -1988,7 +1985,7 @@ class Ftdi:
         else:
             for lat in (lmin, lmax):
                 if not self.LATENCY_MIN <= lat <= self.LATENCY_MAX:
-                    raise ValueError("Latency out of range: %d" % lat)
+                    raise ValueError(f'Latency out of range: {lat}')
             self._latency_min = lmin
             self._latency_max = lmax
             self._latency_threshold = threshold
@@ -2004,7 +2001,7 @@ class Ftdi:
         # only useful in MPSSE mode
         bytes_ = self.read_data(2)
         if (len(bytes_) >= 2) and (bytes_[0] == '\xfa'):
-            raise FtdiError("Invalid command @ %d" % bytes_[1])
+            raise FtdiError(f'Invalid command @ {bytes_[1]}')
 
     @classmethod
     def get_error_string(cls) -> str:
@@ -2061,8 +2058,8 @@ class Ftdi:
             return self._usb_dev.ctrl_transfer(
                 Ftdi.REQ_OUT, reqtype, value, self._index,
                 bytearray(data), self._usb_write_timeout)
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex)) from None
+        except USBError as exc:
+            raise FtdiError(f'UsbError: {exc}') from None
 
     def _ctrl_transfer_in(self, reqtype: int, length: int):
         """Request for a control message from the device"""
@@ -2070,8 +2067,8 @@ class Ftdi:
             return self._usb_dev.ctrl_transfer(
                 Ftdi.REQ_IN, reqtype, 0, self._index, length,
                 self._usb_read_timeout)
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex)) from None
+        except USBError as exc:
+            raise FtdiError(f'UsbError: {exc}') from None
 
     def _write(self, data: Union[bytes, bytearray]) -> int:
         if self._debug_log:
@@ -2084,15 +2081,15 @@ class Ftdi:
         try:
             return self._usb_dev.write(self._in_ep, data,
                                        self._usb_write_timeout)
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex)) from None
+        except USBError as exc:
+            raise FtdiError(f'UsbError: {exc}') from None
 
     def _read(self) -> bytes:
         try:
             data = self._usb_dev.read(self._out_ep, self._readbuffer_chunksize,
                                       self._usb_read_timeout)
-        except USBError as ex:
-            raise FtdiError('UsbError: %s' % str(ex)) from None
+        except USBError as exc:
+            raise FtdiError(f'UsbError: {exc}') from None
         if data:
             if self._debug_log:
                 self.log.debug('< %s', hexlify(data).decode())
@@ -2129,13 +2126,13 @@ class Ftdi:
         if self.device_version in self.INT_EEPROMS:
             if (eeprom_size and
                     eeprom_size != self.INT_EEPROMS[self.device_version]):
-                raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
+                raise ValueError(f'Invalid EEPROM size: {eeprom_size}')
             eeprom_size = self.INT_EEPROMS[self.device_version]
         else:
             if eeprom_size is None:
                 eeprom_size = self.max_eeprom_size
             if eeprom_size not in self.EXT_EEPROM_SIZES:
-                raise ValueError('Invalid EEPROM size: %d' % eeprom_size)
+                raise ValueError(f'Invalid EEPROM size: {eeprom_size}')
         return eeprom_size
 
     def _write_eeprom_raw(self, addr: int, data: Union[bytes, bytearray],
@@ -2162,13 +2159,13 @@ class Ftdi:
             length = len(data)
             if addr & 0x1 or length & 0x1:
                 raise ValueError('Address/length not even')
-            for word in sunpack('<%dH' % (length//2), data):
+            for word in sunpack(f'<{length//2}H', data):
                 if not dry_run:
                     out = self._usb_dev.ctrl_transfer(
                         Ftdi.REQ_OUT, Ftdi.SIO_REQ_WRITE_EEPROM,
                         word, addr >> 1, b'', self._usb_write_timeout)
                     if out:
-                        raise FtdiEepromError('EEPROM Write Error @ %d' % addr)
+                        raise FtdiEepromError(f'EEPROM Write Error @ {addr}')
                     self.log.debug('Write EEPROM [0x%02x]: 0x%04x', addr, word)
                 else:
                     self.log.info('Fake write EEPROM [0x%02x]: 0x%04x',
@@ -2261,9 +2258,8 @@ class Ftdi:
                        actual, delta, index, value)
         # return actual
         if constrain and delta > Ftdi.BAUDRATE_TOLERANCE:
-            raise ValueError('Baudrate tolerance exceeded: %.02f%% '
-                             '(wanted %d, achievable %d)' %
-                             (delta, baudrate, actual))
+            raise ValueError(f'Baudrate tolerance exceeded: {delta:.02f}% '
+                             f'(wanted {baudrate}, achievable {actual})')
         try:
             if self._usb_dev.ctrl_transfer(
                     Ftdi.REQ_OUT, Ftdi.SIO_REQ_SET_BAUDRATE, value, index,
@@ -2271,14 +2267,14 @@ class Ftdi:
                 raise FtdiError('Unable to set baudrate')
             return actual
         except USBError as exc:
-            raise FtdiError('UsbError: %s' % str(exc)) from exc
+            raise FtdiError('UsbError: {exc}') from exc
 
     def _set_frequency(self, frequency: float) -> float:
         """Convert a frequency value into a TCK divisor setting"""
         if not self.is_mpsse:
             raise FtdiFeatureError('Cannot change frequency w/ current mode')
         if frequency > self.frequency_max:
-            raise FtdiFeatureError('Unsupported frequency: %f' % frequency)
+            raise FtdiFeatureError(f'Unsupported frequency: {frequency:.0f}')
         # Calculate base speed clock divider
         divcode = Ftdi.ENABLE_CLK_DIV5
         divisor = int((Ftdi.BUS_CLOCK_BASE+frequency/2)/frequency)-1

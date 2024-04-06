@@ -1,4 +1,4 @@
-# Copyright (c) 2008-2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2008-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2008-2016, Neotion
 # All rights reserved.
 #
@@ -26,7 +26,7 @@ class FtdiSerial(SerialBase):
                        list(range(115200, 1000000, 115200)) +
                        list(range(1000000, 13000000, 100000)))
 
-    PYSERIAL_VERSION = tuple([int(x) for x in pyserialver.split('.')])
+    PYSERIAL_VERSION = tuple(int(x) for x in pyserialver.split('.'))
 
     def open(self):
         """Open the initialized serial port"""
@@ -34,9 +34,9 @@ class FtdiSerial(SerialBase):
             raise SerialException("Port must be configured before use.")
         try:
             device = Ftdi.create_from_url(self.port)
-        except (UsbToolsError, IOError) as ex:
-            raise SerialException('Unable to open USB port %s: %s' %
-                                  (self.portstr, str(ex))) from ex
+        except (UsbToolsError, IOError) as exc:
+            raise SerialException(f'Unable to open USB port {self.portstr}: '
+                                  f'{exc}') from exc
         self.udev = device
         self._set_open_state(True)
         self._reconfigure_port()
@@ -179,7 +179,7 @@ class FtdiSerial(SerialBase):
                 pass
         except IOError as exc:
             err = self.udev.get_error_string()
-            raise SerialException("%s (%s)" % (str(exc), err)) from exc
+            raise SerialException(f'{exc} ({err})') from exc
 
     def _set_open_state(self, open_):
         self.is_open = bool(open_)

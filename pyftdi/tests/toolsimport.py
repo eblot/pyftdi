@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2020, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 
 # pylint: disable=empty-docstring
-# pylint: disable=missing-docstring
-# pylint: disable=no-self-use
-# pylint: disable=invalid-name
 # pylint: disable=global-statement
+# pylint: disable=invalid-name
+# pylint: disable=missing-docstring
 
 from doctest import testmod
 from importlib import import_module

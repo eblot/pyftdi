@@ -55,6 +55,7 @@ UsbDeviceKey = Union[Tuple[int, int, int, int], Tuple[int, int]]
    it may be degraded to (vid, pid) 2-uple.
 """
 
+
 class UsbToolsError(Exception):
     """UsbTools error."""
 
@@ -85,15 +86,14 @@ class UsbTools:
                                 the host
            :return: a list of 2-tuple (UsbDeviceDescriptor, interface count)
         """
-        cls.Lock.acquire()
-        try:
+        with cls.Lock:
             devs = set()
             for vid, pid in vps:
                 # TODO optimize useless loops
                 devs.update(UsbTools._find_devices(vid, pid, nocache))
             devices = set()
             for dev in devs:
-                ifcount = max([cfg.bNumInterfaces for cfg in dev])
+                ifcount = max(cfg.bNumInterfaces for cfg in dev)
                 # TODO: handle / is serial number strings
                 sernum = UsbTools.get_string(dev, dev.iSerialNumber)
                 description = UsbTools.get_string(dev, dev.iProduct)
@@ -102,8 +102,6 @@ class UsbTools:
                                                  sernum, None, description)
                 devices.add((descriptor, ifcount))
             return list(devices)
-        finally:
-            cls.Lock.release()
 
     @classmethod
     def flush_cache(cls, ):
@@ -117,9 +115,8 @@ class UsbTools:
            Failing to clear out the cache may lead to USB Error 19:
            ``Device may have been disconnected``.
         """
-        cls.Lock.acquire()
-        cls.UsbDevices.clear()
-        cls.Lock.release()
+        with cls.Lock:
+            cls.UsbDevices.clear()
 
     @classmethod
     def get_device(cls, devdesc: UsbDeviceDescriptor) -> UsbDevice:
@@ -142,8 +139,7 @@ class UsbTools:
                            constraints.
            :return: PyUSB device instance
         """
-        cls.Lock.acquire()
-        try:
+        with cls.Lock:
             if devdesc.index or devdesc.sn or devdesc.description:
                 dev = None
                 if not devdesc.vid:
@@ -199,8 +195,6 @@ class UsbTools:
             else:
                 cls.Devices[devkey][1] += 1
             return cls.Devices[devkey][0]
-        finally:
-            cls.Lock.release()
 
     @classmethod
     def release_device(cls, usb_dev: UsbDevice):
@@ -209,10 +203,9 @@ class UsbTools:
            :param usb_dev: a previously instanciated USB device instance
         """
         # Lookup for ourselves in the class dictionary
-        cls.Lock.acquire()
-        try:
-            for devkey in cls.Devices:
-                dev, refcount = cls.Devices[devkey]
+        with cls.Lock:
+            # pylint: disable=unnecessary-dict-index-lookup
+            for devkey, (dev, refcount) in cls.Devices.items():
                 if dev == usb_dev:
                     # found
                     if refcount > 1:
@@ -223,8 +216,6 @@ class UsbTools:
                         dispose_resources(cls.Devices[devkey][0])
                         del cls.Devices[devkey]
                     break
-        finally:
-            cls.Lock.release()
 
     @classmethod
     def release_all_devices(cls, devclass: Optional[Type] = None) -> int:
@@ -233,9 +224,9 @@ class UsbTools:
            :param devclass: optional class to only release devices of one type
            :return: the count of device that have been released.
         """
-        cls.Lock.acquire()
-        try:
+        with cls.Lock:
             remove_devs = set()
+            # pylint: disable=consider-using-dict-items
             for devkey in cls.Devices:
                 if devclass:
                     dev = cls._get_backend_device(cls.Devices[devkey][0])
@@ -246,8 +237,6 @@ class UsbTools:
             for devkey in remove_devs:
                 del cls.Devices[devkey]
             return len(remove_devs)
-        finally:
-            cls.Lock.release()
 
     @classmethod
     def list_devices(cls, urlstr: str,
@@ -295,7 +284,7 @@ class UsbTools:
         """
         urlparts = urlsplit(urlstr)
         if scheme != urlparts.scheme:
-            raise UsbToolsError("Invalid URL: %s" % urlstr)
+            raise UsbToolsError(f'Invalid URL: {urlstr}')
         try:
             if not urlparts.path:
                 raise UsbToolsError('URL string is missing device port')
@@ -306,7 +295,7 @@ class UsbTools:
                 interface = to_int(path)
                 report_devices = False
         except (IndexError, ValueError) as exc:
-            raise UsbToolsError('Invalid device URL: %s' % urlstr) from exc
+            raise UsbToolsError(f'Invalid device URL: {urlstr}') from exc
         candidates, idx = cls.enumerate_candidates(urlparts, vdict, pdict,
                                                    default_vendor)
         if report_devices:
@@ -316,30 +305,30 @@ class UsbTools:
                              'No USB-Serial device has been detected')
         if idx is None:
             if len(candidates) > 1:
-                raise UsbToolsError("%d USB devices match URL '%s'" %
-                                    (len(candidates), urlstr))
+                raise UsbToolsError(f"{len(candidates)} USB devices match URL "
+                                    f"'{urlstr}'")
             idx = 0
         try:
             desc, _ = candidates[idx]
             vendor, product = desc[:2]
         except IndexError:
-            raise UsbToolsError('No USB device matches URL %s' %
-                                urlstr) from None
+            raise UsbToolsError(f'No USB device matches URL {urlstr}') \
+                from None
         if not vendor:
             cvendors = {candidate[0] for candidate in candidates}
             if len(cvendors) == 1:
                 vendor = cvendors.pop()
         if vendor not in pdict:
-            raise UsbToolsError('Vendor ID %s not supported' %
-                                (vendor and '0x%04x' % vendor))
+            vstr = '0x{vendor:04x}' if vendor is not None else '?'
+            raise UsbToolsError(f'Vendor ID {vstr} not supported')
         if not product:
             cproducts = {candidate[1] for candidate in candidates
                          if candidate[0] == vendor}
             if len(cproducts) == 1:
                 product = cproducts.pop()
         if product not in pdict[vendor].values():
-            raise UsbToolsError('Product ID %s not supported' %
-                                (product and '0x%04x' % product))
+            pstr = '0x{vendor:04x}' if product is not None else '?'
+            raise UsbToolsError(f'Product ID {pstr} not supported')
         devdesc = UsbDeviceDescriptor(vendor, product, desc.bus, desc.address,
                                       desc.sn, idx, desc.description)
         return devdesc, interface
@@ -375,13 +364,13 @@ class UsbTools:
                 try:
                     product = to_int(plcomps[1])
                 except ValueError as exc:
-                    raise UsbToolsError('Product %s is not referenced' %
-                                        plcomps[1]) from exc
+                    raise UsbToolsError(f'Product {plcomps[1]} is not '
+                                        f'referenced') from exc
             else:
                 product = None
         except (IndexError, ValueError) as exc:
-            raise UsbToolsError('Invalid device URL: %s' %
-                                urlunsplit(urlparts)) from exc
+            raise UsbToolsError(f'Invalid device URL: '
+                                f'{urlunsplit(urlparts)}') from exc
         sernum = None
         idx = None
         bus = None
@@ -392,8 +381,8 @@ class UsbTools:
                 bus = int(locators[0], 16)
                 address = int(locators[1], 16)
             except ValueError as exc:
-                raise UsbToolsError('Invalid bus/address: %s' %
-                                    ':'.join(locators)) from exc
+                raise UsbToolsError(f'Invalid bus/address: '
+                                    f'{":".join(locators)}') from exc
         else:
             if locators and locators[0]:
                 try:
@@ -415,7 +404,7 @@ class UsbTools:
         devices = cls.find_all(vps)
         if sernum:
             if sernum not in [dev.sn for dev, _ in devices]:
-                raise UsbToolsError("No USB device with S/N %s" % sernum)
+                raise UsbToolsError(f'No USB device with S/N {sernum}')
         for desc, ifcount in devices:
             if vendor and vendor != desc.vid:
                 continue
@@ -451,10 +440,10 @@ class UsbTools:
         if not out:
             out = sys.stdout
         devstrs = cls.build_dev_strings(scheme, vdict, pdict, devdescs)
-        max_url_len = max([len(url) for url, _ in devstrs])
-        print("Available interfaces:", file=out)
-        for desc in devstrs:
-            print(('  %%-%ds   %%s' % max_url_len) % desc, file=out)
+        max_url_len = max(len(url) for url, _ in devstrs)
+        print('Available interfaces:', file=out)
+        for url, desc in devstrs:
+            print(f'  {url:{max_url_len}s}  {desc}', file=out)
         print('', file=out)
 
     @classmethod
@@ -480,7 +469,7 @@ class UsbTools:
             # try to find a matching string for the current vendor
             vendors = []
             # fallback if no matching string for the current vendor is found
-            vendor = '%04x' % desc.vid
+            vendor = f'{desc.vid:04x}'
             for vidc in vdict:
                 if vdict[vidc] == desc.vid:
                     vendors.append(vidc)
@@ -489,7 +478,7 @@ class UsbTools:
                 vendor = vendors[0]
             # try to find a matching string for the current vendor
             # fallback if no matching string for the current product is found
-            product = '%04x' % desc.pid
+            product = f'{desc.pid:04x}'
             try:
                 products = []
                 productids = pdict[desc.vid]
@@ -507,14 +496,14 @@ class UsbTools:
                 if not sernum:
                     sernum = ''
                 if [c for c in sernum if c not in printablechars or c == '?']:
-                    serial = '%d' % indices[ikey]
+                    serial = f'{indices[ikey]}'
                 else:
                     serial = sernum
                 if serial:
                     parts.append(serial)
                 elif desc.bus is not None and desc.address is not None:
-                    parts.append('%x' % desc.bus)
-                    parts.append('%x' % desc.address)
+                    parts.append(f'{desc.bus:x}')
+                    parts.append(f'{desc.address:x}')
                 # the description may contain characters that cannot be
                 # emitted in the output stream encoding format
                 try:
@@ -524,7 +513,7 @@ class UsbTools:
                                  port)
                 try:
                     if desc.description:
-                        description = '(%s)' % desc.description
+                        description = f'({desc.description})'
                     else:
                         description = ''
                 except Exception:
@@ -565,11 +554,8 @@ class UsbTools:
 
            :return: PyUSB backend
         """
-        cls.Lock.acquire()
-        try:
+        with cls.Lock:
             return cls._load_backend()
-        finally:
-            cls.Lock.release()
 
     @classmethod
     def _find_devices(cls, vendor: int, product: int,
@@ -604,6 +590,7 @@ class UsbTools:
             vpdict.setdefault(vendor, [])
             vpdict[vendor].append(product)
             for dev in backend.enumerate_devices():
+                # pylint: disable=no-member
                 device = UsbDevice(dev, backend)
                 if device.idVendor in vpdict:
                     products = vpdict[device.idVendor]
@@ -617,17 +604,17 @@ class UsbTools:
                 # appears also as N device with as single interface.
                 # We only keep the "device" that declares the most
                 # interface count and discard the "virtual" ones.
-                filtered_devs = dict()
+                filtered_devs = {}
                 for dev in devs:
                     vid = dev.idVendor
                     pid = dev.idProduct
-                    ifc = max([cfg.bNumInterfaces for cfg in dev])
+                    ifc = max(cfg.bNumInterfaces for cfg in dev)
                     k = (vid, pid, dev.bus, dev.address)
                     if k not in filtered_devs:
                         filtered_devs[k] = dev
                     else:
                         fdev = filtered_devs[k]
-                        fifc = max([cfg.bNumInterfaces for cfg in fdev])
+                        fifc = max(cfg.bNumInterfaces for cfg in fdev)
                         if fifc < ifc:
                             filtered_devs[k] = dev
                 devs = set(filtered_devs.values())

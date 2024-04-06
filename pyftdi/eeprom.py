@@ -12,16 +12,12 @@ import sys
 from binascii import hexlify, unhexlify
 from collections import OrderedDict, namedtuple
 from configparser import ConfigParser
-from enum import IntEnum
-if sys.version_info[:2] > (3, 5):
-    from enum import IntFlag
+from enum import IntEnum, IntFlag
 from logging import getLogger
 from random import randint
 from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from typing import BinaryIO, List, Optional, Set, TextIO, Union, Tuple
-if sys.version_info[:2] == (3, 5):
-    from aenum import IntFlag
 from usb.core import Device as UsbDevice
 from .ftdi import Ftdi, FtdiError
 from .misc import classproperty, to_bool, to_int
@@ -68,7 +64,6 @@ class FtdiEeprom:
         0x3600: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232HA
     }
     """EEPROM properties."""
-
 
     CBUS = IntEnum('CBus',
                    'TXDEN PWREN TXLED RXLED TXRXLED SLEEP CLK48 CLK24 CLK12 '
@@ -125,6 +120,7 @@ class FtdiEeprom:
 
     @classproperty
     def eeprom_sizes(cls) -> List[int]:
+        # pylint: disable=no-self-argument
         """Return a list of supported EEPROM sizes.
 
            :return: the supported EEPROM sizes
@@ -248,8 +244,8 @@ class FtdiEeprom:
             eeprom_storage_size = self.size
             if self.is_mirroring_enabled:
                 eeprom_storage_size = self.mirror_sector
-        except FtdiError as fe:
-            raise fe
+        except FtdiError as exc:
+            raise exc
         return eeprom_storage_size
 
     @property
@@ -262,7 +258,7 @@ class FtdiEeprom:
         return bytes(self._eeprom)
 
     @property
-    def properties(self) ->  Set[str]:
+    def properties(self) -> Set[str]:
         """Returns the supported properties for the current device.
 
            :return: the supported properies.
@@ -342,7 +338,7 @@ class FtdiEeprom:
         """
         return self.has_mirroring and self._mirror
 
-    def enable_mirroring(self, enable : bool) -> None:
+    def enable_mirroring(self, enable: bool) -> None:
         """Enable EEPROM write mirroring. When enabled, this divides the EEPROM
            into 2 sectors and mirrors configuration data between them.
 
@@ -625,7 +621,7 @@ class FtdiEeprom:
             self._dirty.add(name)
             return
         if name.startswith('invert_'):
-            if not self.device_version in (0x600, 0x1000):
+            if self.device_version not in (0x600, 0x1000):
                 raise ValueError('UART control line inversion not available '
                                  'with this device')
             self._set_invert(name[len('invert_'):], value, out)
@@ -834,7 +830,7 @@ class FtdiEeprom:
             self.log.debug('No change detected for EEPROM content')
             return
         if not no_crc:
-            if any([x in self._dirty for x in self.VAR_STRINGS]):
+            if any(x in self._dirty for x in self.VAR_STRINGS):
                 self._generate_var_strings()
                 for varstr in self.VAR_STRINGS:
                     self._dirty.discard(varstr)
@@ -864,7 +860,7 @@ class FtdiEeprom:
         if check:
             self._valid = not bool(crc)
             if not self._valid:
-                self.log.debug(f'CRC is now 0x{crc:04x}')
+                self.log.debug('CRC is now 0x%04x', crc)
             else:
                 self.log.debug('CRC OK')
         return crc, crc_pos, crc_size
@@ -878,8 +874,8 @@ class FtdiEeprom:
             crc_s1_start = self.mirror_sector - crc_size
             self._eeprom[crc_s1_start:crc_s1_start+crc_size] = spack('<H', crc)
 
-    def _compute_size(self,
-            eeprom: Union[bytes, bytearray]) -> Tuple[int, bool]:
+    def _compute_size(self, eeprom: Union[bytes, bytearray]) \
+            -> Tuple[int, bool]:
         """
             :return: Tuple of:
                 - int of usable size of the eeprom
@@ -887,7 +883,7 @@ class FtdiEeprom:
         """
         if self._ftdi.is_eeprom_internal:
             return self._ftdi.max_eeprom_size, False
-        if all([x == 0xFF for x in eeprom]):
+        if all(x == 0xFF for x in eeprom):
             # erased EEPROM, size is unknown
             return self._ftdi.max_eeprom_size, False
         if eeprom[0:0x80] == eeprom[0x80:0x100]:
@@ -989,8 +985,8 @@ class FtdiEeprom:
         try:
             code = cbus[value.upper()].value
         except KeyError as exc:
-            raise ValueError(f"CBUS pin '{cpin}'' does not have function "
-                              f"{value}'") from exc
+            raise ValueError(f"CBUS pin '{cpin}' does not have function "
+                             f"{value}'") from exc
         if pin_filter and not pin_filter(cpin, value.upper()):
             raise ValueError(f"Unsupported CBUS function '{value}' for pin "
                              f"'{cpin}'")

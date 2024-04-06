@@ -1,19 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
-#
 # SPDX-License-Identifier: BSD-3-Clause
-#
-# mock eeprom tests that can be run in CI without a device connected
+
+"""Mock eeprom tests that can be run in CI without a device connected."""
+
 import logging
 from os import environ
 from sys import modules, stdout
-from unittest import TestCase, TestSuite, SkipTest, makeSuite, main as ut_main
+from unittest import TestCase, TestSuite, makeSuite, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.eeprom import FtdiEeprom
-from pyftdi.misc import to_bool, hexdump
+from pyftdi.misc import to_bool
 from pyftdi.ftdi import FtdiError
+
+# pylint: disable=invalid-name
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=no-member
 
 VirtLoader = None
 
@@ -61,7 +66,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         if cls.url == 'ftdi:///1':
             ftdi = Ftdi()
             ftdi.open_from_url(cls.url)
-            count = ftdi.device_port_count
+            _ = ftdi.device_port_count
             ftdi.close()
 
     def test_mirror_properties(self):
@@ -84,7 +89,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         self.assertTrue(mirrored_eeprom.has_mirroring)
         self.assertTrue(mirrored_eeprom.is_mirroring_enabled)
         self.assertEqual(mirrored_eeprom.size // 2,
-            mirrored_eeprom.mirror_sector)
+                         mirrored_eeprom.mirror_sector)
         mirrored_eeprom.close()
 
     def test_mirror_manufacturer(self):
@@ -161,6 +166,7 @@ class EepromMirrorTestCase(FtdiTestCase):
         """Verify the eeproms internal _compute_size method
             returns the correct bool value when it detects an eeprom mirror
         """
+        # pylint: disable=protected-access
         eeprom = FtdiEeprom()
         eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
@@ -185,10 +191,12 @@ class EepromMirrorTestCase(FtdiTestCase):
         """
         sector_size = eeprom.size // 2
         for ii in range(0, sector_size):
-            self.assertEqual(eeprom.data[ii],
+            self.assertEqual(
+                eeprom.data[ii],
                 eeprom.data[ii + eeprom.mirror_sector],
                 f'Mismatch mirror data @ 0x{ii:02x}: 0x{eeprom.data[ii]:02x} '
                 f'!= 0x{eeprom.data[ii + eeprom.mirror_sector]:02x}')
+
 
 class NonMirroredEepromTestCase(FtdiTestCase):
     """Test FTDI EEPROM mirror features do not break FTDI devices that do
@@ -208,7 +216,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         if cls.url == 'ftdi:///1':
             ftdi = Ftdi()
             ftdi.open_from_url(cls.url)
-            count = ftdi.device_port_count
+            _ = ftdi.device_port_count
             ftdi.close()
 
     def test_mirror_properties(self):
@@ -218,8 +226,8 @@ class NonMirroredEepromTestCase(FtdiTestCase):
            mirroring
         """
         if bool(getattr(self, 'DEVICE_CAN_MIRROR', None)):
-            self.skipTest("Mirror properties for devices capable of mirroring"
-                + " are tested in EepromMirrorTestCase")
+            self.skipTest('Mirror properties for devices capable of mirroring '
+                          'are tested in EepromMirrorTestCase')
         # properties should work regardless of if the mirror option is set
         # or not
         eeprom = FtdiEeprom()
@@ -228,7 +236,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         self.assertFalse(eeprom.has_mirroring)
         self.assertFalse(eeprom.is_mirroring_enabled)
         with self.assertRaises(FtdiError):
-            eeprom.mirror_sector
+            _ = eeprom.mirror_sector
         eeprom.close()
         # even if mirroring is enabled, should still stay false
         mirrored_eeprom = FtdiEeprom()
@@ -237,7 +245,7 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         self.assertFalse(mirrored_eeprom.has_mirroring)
         self.assertFalse(mirrored_eeprom.is_mirroring_enabled)
         with self.assertRaises(FtdiError):
-            mirrored_eeprom.mirror_sector
+            _ = mirrored_eeprom.mirror_sector
         mirrored_eeprom.close()
 
     def test_no_mirror_manufacturer(self):
@@ -311,9 +319,10 @@ class NonMirroredEepromTestCase(FtdiTestCase):
         """Verify the eeproms internal _compute_size method returns the correct
            bool value when it detects no mirroring.
         """
+        # pylint: disable=protected-access
         if self.DEVICE_CAN_MIRROR:
-            self.skipTest("Mirror properties for devices capable of mirroring"
-                + " are tested in EepromMirrorTestCase")
+            self.skipTest('Mirror properties for devices capable of mirroring '
+                          'are tested in EepromMirrorTestCase')
         eeprom = FtdiEeprom()
         eeprom.set_test_mode(True)
         eeprom.open(self.url, ignore=True)
@@ -394,6 +403,7 @@ def suite():
 def virtualize():
     if not to_bool(environ.get('FTDI_VIRTUAL', 'off')):
         return
+    # pylint: disable=import-outside-toplevel
     from pyftdi.usbtools import UsbTools
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('backend.usbvirt', )
@@ -401,15 +411,17 @@ def virtualize():
     backend = UsbTools.find_backend()
     try:
         # obtain the loader class associated with the virtual backend
+        # pylint: disable=global-statement
         global VirtLoader
         VirtLoader = backend.create_loader()
-    except AttributeError:
-        raise AssertionError('Cannot load virtual USB backend')
+    except AttributeError as exc:
+        raise AssertionError('Cannot load virtual USB backend') from exc
 
 
 def setup_module():
-    import doctest
-    doctest.testmod(modules[__name__])
+    # pylint: disable=import-outside-toplevel
+    from doctest import testmod
+    testmod(modules[__name__])
     debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
     if debug:
         formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
@@ -420,8 +432,8 @@ def setup_module():
     level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
     try:
         loglevel = getattr(logging, level)
-    except AttributeError:
-        raise ValueError(f'Invalid log level: {level}')
+    except AttributeError as exc:
+        raise ValueError(f'Invalid log level: {level}') from exc
     FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
     FtdiLogger.set_level(loglevel)
     FtdiLogger.set_formatter(formatter)

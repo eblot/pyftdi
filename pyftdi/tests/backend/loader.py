@@ -1,7 +1,7 @@
 """Virtual USB backend loader.
 """
 
-# Copyright (c) 2020-2021, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -11,11 +11,10 @@
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-statements
 # pylint: disable=too-many-nested-blocks
-# pylint: disable=no-self-use
+# pylint: disable=import-error
 
 from binascii import unhexlify
 from logging import getLogger
-from sys import version_info
 from typing import BinaryIO
 from ruamel.yaml import YAML
 from pyftdi.misc import to_bool
@@ -207,7 +206,7 @@ class VirtLoader:
             try:
                 dkey = kmap[ckey]
             except KeyError as exc:
-                raise ValueError(f'Unknown descriptor field {dkey}') from exc
+                raise ValueError(f'Unknown descriptor field {ckey}') from exc
             kwargs[dkey] = cval
         return kwargs
 
@@ -287,11 +286,11 @@ class VirtLoader:
             else:
                 raise ValueError(f'Invalid interface entry {ikey}')
         ifaces = []
-        while  repeat:
+        while repeat:
             repeat -= 1
             ifdesc, endpoints = self._build_alternative(altdef[0])
-            self._last_ep_idx = max([ep.bEndpointAddress & 0x7F
-                                     for ep in endpoints])
+            self._last_ep_idx = max(ep.bEndpointAddress & 0x7F
+                                    for ep in endpoints)
             iface = VirtInterface(ifdesc)
             for endpoint in endpoints:
                 iface.add_endpoint(endpoint)

@@ -427,8 +427,8 @@ class GpioMpsseController(GpioBaseController):
 
     MPSSE_PAYLOAD_MAX_LENGTH = 0xFF00  # 16 bits max (- spare for control)
 
-    def read(self, readlen: int = 1, peek: Optional[bool] = None) -> \
-             Union[int, bytes, Tuple[int]]:
+    def read(self, readlen: int = 1, peek: Optional[bool] = None) \
+            -> Union[int, bytes, Tuple[int]]:
         """Read the GPIO input pin electrical level.
 
            :param readlen: how many GPIO samples to retrieve. Each sample if
@@ -498,7 +498,7 @@ class GpioMpsseController(GpioBaseController):
     def _read_mpsse(self, count: int) -> Tuple[int]:
         if self._width > 8:
             cmd = bytearray([Ftdi.GET_BITS_LOW, Ftdi.GET_BITS_HIGH] * count)
-            fmt = '<%dH' % count
+            fmt = f'<{count}H'
         else:
             cmd = bytearray([Ftdi.GET_BITS_LOW] * count)
             fmt = None
@@ -509,8 +509,8 @@ class GpioMpsseController(GpioBaseController):
         size = scalc(fmt) if fmt else count
         data = self._ftdi.read_data_bytes(size, 4)
         if len(data) != size:
-            raise FtdiError('Cannot read GPIO, recv %d out of %d bytes' %
-                            (len(data), size))
+            raise FtdiError(f'Cannot read GPIO, recv {len(data)} '
+                            f'out of {size} bytes')
         if fmt:
             return sunpack(fmt, data)
         return data

@@ -213,10 +213,10 @@ class I2cPort:
         return self._address
 
     def _make_buffer(self, regaddr: int,
-                     out: Union[bytes, bytearray, Iterable[int], None] = None)\
-                     -> bytes:
+                     out: Union[bytes, bytearray, Iterable[int],
+                                None] = None) -> bytes:
         data = bytearray()
-        data.extend(spack('%s%s' % (self._endian, self._format), regaddr))
+        data.extend(spack(f'{self._endian}{self._format}', regaddr))
         if out:
             data.extend(out)
         return bytes(data)
@@ -592,7 +592,7 @@ class I2cController:
         if address is None:
             return
         if address > cls.HIGHEST_I2C_ADDRESS:
-            raise I2cIOError("No such I2c slave: 0x%02x" % address)
+            raise I2cIOError(f'No such I2c slave: 0x{address:02x}')
 
     @property
     def frequency_max(self) -> float:
@@ -900,8 +900,8 @@ class I2cController:
         """
         with self._lock:
             if (value & self._gpio_dir) != value:
-                raise I2cIOError('No such GPO pins: %04x/%04x' %
-                                 (self._gpio_dir, value))
+                raise I2cIOError(f'No such GPO pins: '
+                                 f'{self._gpio_dir:04x}/{value:04x}')
             # perform read-modify-write
             use_high = self._wide_port and (self.direction & 0xff00)
             data = self._read_raw(use_high)
@@ -1100,6 +1100,7 @@ class I2cController:
             cmd_chunk = bytearray()
             cmd_chunk.extend(read_not_last * chunk_size)
             cmd_chunk.extend(self._immediate)
+
             def write_command_gen(length: int):
                 if length <= 0:
                     # no more data
