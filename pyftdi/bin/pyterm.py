@@ -287,7 +287,7 @@ def main():
                                help=f'serial port device name '
                                     f'(default: {default_device}')
         argparser.add_argument('-b', '--baudrate',
-                               efault=str(MiniTerm.DEFAULT_BAUDRATE),
+                               default=str(MiniTerm.DEFAULT_BAUDRATE),
                                help=f'serial port baudrate '
                                     f'(default: {MiniTerm.DEFAULT_BAUDRATE})')
         argparser.add_argument('-w', '--hwflow',
