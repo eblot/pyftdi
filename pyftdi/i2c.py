@@ -382,6 +382,7 @@ class I2cController:
         self._nack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.HIGH)
         self._ack = (Ftdi.WRITE_BITS_NVE_MSB, 0, self.LOW)
         self._ck_delay = 1
+        self._rd_byte_delay = 1
         self._fake_tristate = False
         self._tx_size = 1
         self._rx_size = 1
@@ -469,6 +470,8 @@ class I2cController:
             ck_buf = self._compute_delay_cycles(timings.t_buf)
             self._ck_idle = max(ck_su_sta, ck_buf)
             self._ck_delay = ck_buf
+            # extra delay in between read bytes to ensure valid data
+            self._rd_byte_delay = self._ck_delay * 3
             if clkstrch:
                 self._i2c_mask = self.I2C_MASK_CS
             else:
@@ -1079,8 +1082,11 @@ class I2cController:
             read_last = (read_byte + self._nack +
                          self._clk_lo_data_hi * self._ck_delay)
         else:
-            read_not_last = (self._read_byte + self._ack +
-                             self._clk_lo_data_hi * self._ck_delay)
+            read_not_last = (
+                self._read_byte
+                + self._ack
+                + self._clk_lo_data_hi * self._ck_delay * self._rd_byte_delay
+            )
             read_last = (self._read_byte + self._nack +
                          self._clk_lo_data_hi * self._ck_delay)
         # maximum RX size to fit in FTDI FIFO, minus 2 status bytes
