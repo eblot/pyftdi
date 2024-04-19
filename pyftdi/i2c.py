@@ -757,8 +757,6 @@ class I2cController:
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if readlen < 1:
-            raise I2cIOError('Nothing to read')
         if readlen > (self.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
         if address is None:
