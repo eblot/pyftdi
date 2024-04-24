@@ -345,7 +345,9 @@ class Ftdi:
     def create_from_url(cls, url: str) -> 'Ftdi':
         """Create an Ftdi instance from an URL
 
-           URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface
+           URL scheme: ftdi://[vendor[:product[:index]]]/interface
+           URL scheme: ftdi://[vendor[:product[::serial]]]/interface
+           URL scheme: ftdi://[vendor[:product[:bus:address]]]/interface
 
            :param url: FTDI device selector
            :return: a fresh, open Ftdi instance
