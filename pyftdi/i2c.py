@@ -757,8 +757,6 @@ class I2cController:
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         self.validate_address(address)
-        if readlen < 1:
-            raise I2cIOError('Nothing to read')
         if readlen > (self.PAYLOAD_MAX_LENGTH/3-1):
             raise I2cIOError("Input payload is too large")
         if address is None:
@@ -767,13 +765,14 @@ class I2cController:
             i2caddress = (address << 1) & self.HIGH
         retries = self._retry_count
         do_epilog = True
+        data = bytearray()
         with self._lock:
             while True:
                 try:
                     self._do_prolog(i2caddress)
                     self._do_write(out)
-                    self._do_prolog(i2caddress | self.BIT0)
                     if readlen:
+                        self._do_prolog(i2caddress | self.BIT0)
                         data = self._do_read(readlen)
                     do_epilog = relax
                     return data
