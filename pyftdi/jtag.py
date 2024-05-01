@@ -11,9 +11,10 @@ from logging import getLogger
 from time import sleep
 from typing import Optional, Union
 
+from jtagtools.bits import BitSequence
+from jtagtools.jtag import JtagController
+
 from .ftdi import Ftdi
-from .tools.bits import BitSequence
-from .tools.jtag import JtagController
 
 
 class JtagError(Exception):

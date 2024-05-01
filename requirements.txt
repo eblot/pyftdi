@@ -1,2 +1,3 @@
 pyusb>=1.0, != 1.2.0
 pyserial >= 3.0
+pyjtagtools >= 0.10

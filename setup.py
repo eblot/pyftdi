@@ -46,6 +46,7 @@ CLASSIFIERS = [
 INSTALL_REQUIRES = [
     'pyusb >= 1.0.0, != 1.2.0',
     'pyserial >= 3.0',
+    'pyjtagtools >= 0.10'
 ]
 
 HERE = abspath(dirname(__file__))
