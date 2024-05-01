@@ -2302,10 +2302,6 @@ class Ftdi:
             cmd = bytearray()
         cmd.extend((Ftdi.SET_TCK_DIVISOR, divisor & 0xff,
                     (divisor >> 8) & 0xff))
-        self.write_data(cmd)
-        self.validate_mpsse()
-        # Drain input buffer
-        self.purge_rx_buffer()
         # Note that bus frequency may differ from clock frequency, when
         # 3-phase clock is enable, in which case bus frequency = 2/3 clock
         # frequency
@@ -2315,6 +2311,10 @@ class Ftdi:
         else:
             self.log.debug('Clock frequency: %.3f KHz (error: %+.1f %%)',
                            (actual_freq/1E3), error*100)
+        self.write_data(cmd)
+        self.validate_mpsse()
+        # Drain input buffer
+        self.purge_rx_buffer()
         return actual_freq
 
     def __get_timeouts(self) -> Tuple[int, int]:

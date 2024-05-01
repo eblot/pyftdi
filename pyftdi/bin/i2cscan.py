@@ -90,7 +90,7 @@ def main():
     try:
         argparser = ArgumentParser(description=modules[__name__].__doc__)
         argparser.add_argument('device', nargs='?', default='ftdi:///?',
-                               help='serial port device name')
+                               help='FTDI device URL')
         argparser.add_argument('-S', '--no-smb', action='store_true',
                                default=False,
                                help='use regular I2C mode vs. SMBbus scan')
@@ -107,9 +107,6 @@ def main():
                                help='force clock mode (for FT2232D)')
         args = argparser.parse_args()
         debug = args.debug
-
-        if not args.device:
-            argparser.error('Serial device not specified')
 
         loglevel = max(DEBUG, ERROR - (10 * args.verbose))
         loglevel = min(ERROR, loglevel)
