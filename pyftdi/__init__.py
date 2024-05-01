@@ -16,27 +16,3 @@ __author__ = 'Emmanuel Blot'
 __email__ = 'emmanuel.blot@free.fr'
 __license__ = 'Modified BSD'
 __copyright__ = 'Copyright (c) 2011-2024 Emmanuel Blot'
-
-
-from logging import WARNING, NullHandler, getLogger
-
-
-class FtdiLogger:
-
-    log = getLogger('pyftdi')
-    log.addHandler(NullHandler())
-    log.setLevel(level=WARNING)
-
-    @classmethod
-    def set_formatter(cls, formatter):
-        handlers = list(cls.log.handlers)
-        for handler in handlers:
-            handler.setFormatter(formatter)
-
-    @classmethod
-    def get_level(cls):
-        return cls.log.getEffectiveLevel()
-
-    @classmethod
-    def set_level(cls, level):
-        cls.log.setLevel(level=level)

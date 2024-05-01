@@ -13,6 +13,7 @@ from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from threading import Lock
 from typing import Any, Iterable, Mapping, Optional, Set, Union
 from usb.core import Device as UsbDevice
+
 from .ftdi import Ftdi, FtdiError
 
 

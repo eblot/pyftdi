@@ -13,6 +13,7 @@ from doctest import testmod
 from os import environ
 from sys import modules
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
+
 from pyftdi.ftdi import Ftdi, FtdiError
 from pyftdi.eeprom import FtdiEeprom
 

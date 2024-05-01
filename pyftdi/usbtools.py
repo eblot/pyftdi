@@ -16,6 +16,7 @@ from urllib.parse import SplitResult, urlsplit, urlunsplit
 from usb.backend import IBackend
 from usb.core import Device as UsbDevice, USBError
 from usb.util import dispose_resources, get_string as usb_get_string
+
 from .misc import to_int
 
 # pylint: disable=broad-except

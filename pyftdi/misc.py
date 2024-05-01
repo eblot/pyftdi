@@ -11,10 +11,8 @@
 
 from array import array
 from copy import deepcopy
-from logging import Formatter, Logger, StreamHandler, DEBUG, ERROR, getLogger
 from re import match
-from typing import Any, Iterable, List, Optional, Sequence, Tuple, Union
-import sys
+from typing import Any, Iterable, Optional, Sequence, Union
 
 
 # String values evaluated as true boolean values

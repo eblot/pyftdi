@@ -16,9 +16,9 @@ import sys
 
 from pyftdi.ftdi import Ftdi
 from pyftdi.jtag import JtagFtdiController
+from pyftdi.log import configure_loggers
 from pyftdi.tools.bits import BitSequence
 from pyftdi.tools.jtag import JtagEngine
-from pyftdi.log import configure_loggers
 from pyftdi.misc import add_custom_devices
 
 

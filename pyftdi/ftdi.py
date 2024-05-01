@@ -18,6 +18,7 @@ from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
 from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
                       CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
+
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 

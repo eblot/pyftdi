@@ -11,17 +11,17 @@
 # pylint: disable=invalid-name
 # pylint: disable=missing-docstring
 
-import logging
 from collections import deque
 from os import environ
-from sys import modules, stdout
+from sys import modules
 from time import sleep
 from unittest import TestCase, TestLoader, TestSuite, SkipTest, main as ut_main
-from pyftdi import FtdiLogger
+
 from pyftdi.ftdi import Ftdi
 from pyftdi.gpio import (GpioAsyncController,
                          GpioSyncController,
                          GpioMpsseController)
+from pyftdi.log import configure_test_loggers
 from pyftdi.misc import to_bool
 
 # When USB virtualization is enabled, this loader is instanciated
@@ -629,24 +629,10 @@ def virtualize():
 
 
 def setup_module():
+    configure_test_loggers()
     # pylint: disable=import-outside-toplevel
     from doctest import testmod
     testmod(modules[__name__])
-    debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
-    if debug:
-        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
-                                      ' %(name)-20s [%(lineno)4d] %(message)s',
-                                      '%H:%M:%S')
-    else:
-        formatter = logging.Formatter('%(message)s')
-    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    FtdiLogger.set_level(loglevel)
-    FtdiLogger.set_formatter(formatter)
     virtualize()
 
 

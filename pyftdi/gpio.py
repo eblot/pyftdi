@@ -9,6 +9,7 @@
 
 from struct import calcsize as scalc, unpack as sunpack
 from typing import Iterable, Optional, Tuple, Union
+
 from .ftdi import Ftdi, FtdiError
 from .misc import is_iterable
 

@@ -9,14 +9,14 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from doctest import testmod
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from os import environ
-from sys import modules, stdout
-from pyftdi import FtdiLogger
+from sys import modules
+
 from pyftdi.ftdi import Ftdi
-from pyftdi.misc import hexdump, to_bool
+from pyftdi.log import configure_test_loggers
+from pyftdi.misc import hexdump
 
 # pylint: disable=missing-docstring
 
@@ -102,14 +102,7 @@ def suite():
 
 
 def main():
-    if to_bool(environ.get('FTDI_DEBUG', 'off')):
-        FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.set_level(loglevel)
+    configure_test_loggers()
     testmod(modules[__name__])
     ut_main(defaultTest='suite')
 

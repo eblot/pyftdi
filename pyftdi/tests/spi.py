@@ -9,14 +9,14 @@
 # pylint: disable=empty-docstring
 # pylint: disable=missing-docstring
 
-import logging
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from binascii import hexlify
 from doctest import testmod
 from os import environ
-from sys import modules, stderr, stdout
+from sys import modules, stderr
 from time import sleep
-from pyftdi import FtdiLogger
+
+from pyftdi.log import configure_test_loggers
 from pyftdi.misc import to_bool
 from pyftdi.spi import SpiController, SpiIOError
 
@@ -374,14 +374,8 @@ def suite():
 
 
 def main():
+    configure_test_loggers()
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
 
 

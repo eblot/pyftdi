@@ -8,19 +8,18 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from doctest import testmod
 from os import environ
 from multiprocessing import Process, set_start_method
 from random import choice, seed
 from string import printable
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
-from sys import modules, platform, stdout
+from sys import modules, platform
 from time import sleep, time as now
 from threading import Thread
 from unittest import TestCase, TestLoader, TestSuite, skipIf, main as ut_main
-from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
+from pyftdi.log import configure_test_loggers
 from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 
@@ -348,14 +347,8 @@ def suite():
 
 
 def main():
+    configure_test_loggers()
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
 
 

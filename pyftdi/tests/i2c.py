@@ -8,14 +8,14 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import logging
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from binascii import hexlify
 from doctest import testmod
 from os import environ
-from sys import modules, stdout
+from sys import modules
 from time import time as now
-from pyftdi import FtdiLogger
+
+from pyftdi.log import configure_test_loggers
 from pyftdi.i2c import I2cController, I2cIOError
 from pyftdi.misc import pretty_size
 
@@ -303,14 +303,8 @@ def suite():
 
 
 def main():
+    configure_test_loggers()
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
 
 

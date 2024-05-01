@@ -10,13 +10,12 @@
 
 from argparse import ArgumentParser, FileType
 from io import StringIO
-from logging import Formatter, StreamHandler, DEBUG, ERROR
 from sys import exit as sys_exit, modules, stderr, stdout
 from textwrap import fill
 from traceback import format_exc
-from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi
+from pyftdi.log import configure_loggers
 from pyftdi.misc import add_custom_devices, hexdump
 
 # pylint: disable=too-many-locals
@@ -95,16 +94,7 @@ def main():
         if not args.device:
             argparser.error('Serial device not specified')
 
-        loglevel = max(DEBUG, ERROR - (10 * args.verbose))
-        loglevel = min(ERROR, loglevel)
-        if debug:
-            formatter = Formatter('%(asctime)s.%(msecs)03d %(name)-20s '
-                                  '%(message)s', '%H:%M:%S')
-        else:
-            formatter = Formatter('%(message)s')
-        FtdiLogger.set_formatter(formatter)
-        FtdiLogger.set_level(loglevel)
-        FtdiLogger.log.addHandler(StreamHandler(stderr))
+        configure_loggers(args.verbose, 'pyftdi')
 
         if args.virtual:
             # pylint: disable=import-outside-toplevel

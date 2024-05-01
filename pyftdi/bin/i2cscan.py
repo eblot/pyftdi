@@ -11,12 +11,12 @@
 # pylint: disable=broad-except
 
 from argparse import ArgumentParser, FileType
-from logging import Formatter, StreamHandler, getLogger, DEBUG, ERROR
+from logging import getLogger, ERROR
 from sys import exit as sys_exit, modules, stderr
 from traceback import format_exc
-from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.i2c import I2cController, I2cNackError
+from pyftdi.log import configure_loggers
 from pyftdi.misc import add_custom_devices
 
 
@@ -108,16 +108,7 @@ def main():
         args = argparser.parse_args()
         debug = args.debug
 
-        loglevel = max(DEBUG, ERROR - (10 * args.verbose))
-        loglevel = min(ERROR, loglevel)
-        if debug:
-            formatter = Formatter('%(asctime)s.%(msecs)03d %(name)-20s '
-                                  '%(message)s', '%H:%M:%S')
-        else:
-            formatter = Formatter('%(message)s')
-        FtdiLogger.log.addHandler(StreamHandler(stderr))
-        FtdiLogger.set_formatter(formatter)
-        FtdiLogger.set_level(loglevel)
+        configure_loggers(args.verbose, 'pyftdi.i2c', -1, 'pyftdi')
 
         if args.virtual:
             # pylint: disable=import-outside-toplevel

@@ -10,20 +10,20 @@
 # pylint: disable=missing-docstring
 # pylint: disable=too-many-locals
 
-import logging
 from collections import defaultdict
 from contextlib import redirect_stdout
 from doctest import testmod
 from io import StringIO
 from os import environ
 from string import ascii_letters
-from sys import modules, stdout
+from sys import modules
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from urllib.parse import urlsplit
-from pyftdi import FtdiLogger
+
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.log import configure_test_loggers
 from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
@@ -822,22 +822,8 @@ def suite():
 
 
 def setup_module():
+    configure_test_loggers()
     testmod(modules[__name__])
-    debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
-    if debug:
-        formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)-7s'
-                                      ' %(name)-18s [%(lineno)4d] %(message)s',
-                                      '%H:%M:%S')
-    else:
-        formatter = logging.Formatter('%(message)s')
-    level = environ.get('FTDI_LOGLEVEL', 'warning').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    FtdiLogger.set_level(loglevel)
-    FtdiLogger.set_formatter(formatter)
     # Force PyUSB to use PyFtdi test framework for USB backends
     UsbTools.BACKENDS = ('backend.usbvirt', )
     # Ensure the virtual backend can be found and is loaded

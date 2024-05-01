@@ -19,6 +19,7 @@ from re import match
 from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from typing import BinaryIO, List, Optional, Set, TextIO, Union, Tuple
 from usb.core import Device as UsbDevice
+
 from .ftdi import Ftdi, FtdiError
 from .misc import classproperty, to_bool, to_int
 

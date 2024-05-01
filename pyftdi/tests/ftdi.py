@@ -10,14 +10,15 @@
 
 # pylint: disable=missing-docstring
 
-import logging
 from doctest import testmod
+from logging import getLogger
 from os import environ
-from sys import modules, stdout
+from sys import modules
 from time import sleep, time as now
 from unittest import TestCase, TestLoader, TestSuite, SkipTest, main as ut_main
-from pyftdi import FtdiLogger
+
 from pyftdi.ftdi import Ftdi, FtdiError
+from pyftdi.log import configure_test_loggers
 from pyftdi.usbtools import UsbTools, UsbToolsError
 
 
@@ -118,7 +119,7 @@ class DisconnectTestCase(TestCase):
 
     def test_close_on_disconnect(self):
         """Validate close after disconnect."""
-        log = logging.getLogger('pyftdi.tests.ftdi')
+        log = getLogger('pyftdi.tests.ftdi')
         url = environ.get('FTDI_DEVICE', 'ftdi:///1')
         ftdi = Ftdi()
         ftdi.open_from_url(url)
@@ -163,12 +164,6 @@ def suite():
 
 
 if __name__ == '__main__':
+    configure_test_loggers()
     testmod(modules[__name__])
-    FtdiLogger.log.addHandler(logging.StreamHandler(stdout))
-    level = environ.get('FTDI_LOGLEVEL', 'info').upper()
-    try:
-        loglevel = getattr(logging, level)
-    except AttributeError as exc:
-        raise ValueError(f'Invalid log level: {level}') from exc
-    FtdiLogger.set_level(loglevel)
     ut_main(defaultTest='suite')
