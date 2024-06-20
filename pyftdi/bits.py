@@ -127,8 +127,10 @@ class BitSequence:
     def tobytes(self, msb: bool = False, msby: bool = False) -> bytearray:
         """Convert the sequence into a sequence of byte values"""
         blength = (len(self)+7) & (~0x7)
-        sequence = list(self._seq)
-        if not msb:
+        if msb:
+            sequence = list(bytes(blength - len(self)) + self._seq)
+        else:
+            sequence = list(self._seq + bytes(blength - len(self)))
             sequence.reverse()
         bytes_ = bytearray()
         for pos in range(0, blength, 8):
@@ -237,26 +239,21 @@ class BitSequence:
         return not self == other
 
     def __le__(self, other):
-        return not self._cmp(other) <= 0
+        return self._cmp(other) <= 0
 
     def __lt__(self, other):
-        return not self._cmp(other) < 0
+        return self._cmp(other) < 0
 
     def __ge__(self, other):
-        return not self._cmp(other) >= 0
+        return self._cmp(other) >= 0
 
     def __gt__(self, other):
-        return not self._cmp(other) > 0
+        return self._cmp(other) > 0
 
     def _cmp(self, other):
-        # the bit sequence should be of the same length
-        ld = len(self) - len(other)
-        if ld:
-            return ld
-        for n, (x, y) in enumerate(zip(self._seq, other.sequence()), start=1):
-            if xor(x, y):
-                return n
-        return 0
+        a = int(self)
+        b = int(other)
+        return (a > b) - (a < b)
 
     def __repr__(self):
         # cannot use bin() as it truncates the MSB zero bits
@@ -418,15 +415,27 @@ class BitZSequence(BitSequence):
                                    "an integral type")
         return BitSequence.__int__(self)
 
-    def __cmp__(self, other):
-        # the bit sequence should be of the same length
-        ld = len(self) - len(other)
-        if ld:
-            return ld
-        for n, (x, y) in enumerate(zip(self._seq, other.sequence()), start=1):
-            if x is not y:
-                return n
-        return 0
+    def _pseudo_int(self):
+        # returns int value of sequence by treating it as ternary sequence
+        value = 0
+        bit_value = {
+            0: 0,
+            BitZSequence.Z: 1,
+            1: 2,
+        }
+        for b in reversed(self._seq):
+            value *= 3
+            value += bit_value[b]
+        return value
+
+    def _cmp(self, other):
+        try:
+            a = self._pseudo_int()
+            b = other._pseudo_int()
+        except AttributeError: # if other is not BitZSequence, compare both as normal BitSequence
+            a = int(self)
+            b = int(other)
+        return (a > b) - (a < b)
 
     def __and__(self, other):
         if not isinstance(self, BitSequence):
