@@ -361,12 +361,57 @@ class SpiCsForceTestCase(TestCase):
             self._port.force_select()
 
 
+class SpiActiveHighTestCase(TestCase):
+    """Basic test for checking active high CS
+
+       It requires a scope or a digital analyzer to validate the signal
+       waveforms.
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.url = environ.get('FTDI_DEVICE', 'ftdi:///1')
+        cls.debug = to_bool(environ.get('FTDI_DEBUG', 'off'))
+
+    def setUp(self):
+        self._spi = SpiController(cs_count=2)
+        self._spi.configure(self.url, debug=self.debug, active_high_cs=[1])
+        self._port0 = self._spi.get_port(0, freq=1e6, mode=0)
+        self._port1 = self._spi.get_port(1, freq=1e6, mode=0)
+    
+    def tearDown(self):
+        self._spi.terminate()
+    
+    def testExchange(self):
+        for s in [self._port0, self._port1]:
+            s.exchange(bytes.fromhex('11223344'), 4)
+            s.exchange(bytes.fromhex('5566'), stop=False)
+            s.exchange(bytes.fromhex('7788'), start=False)
+    
+    def testRead(self):
+        for s in [self._port0, self._port1]:
+            s.read(readlen=5)
+            s.read(readlen=3, stop=False)
+            s.read(readlen=2, start=False)
+    
+    def testWrite(self):
+        for s in [self._port0, self._port1]:
+            s.write(b'dead')
+            s.write(b'be', stop=False)
+            s.write(b'ef', start=False)
+
+    def testMixed(self):
+        for s in [self._port0, self._port1]:
+            s.write(b'01', stop=False)
+            s.exchange(b'02', readlen=2, start=False, stop=False)
+            s.read(readlen=2, start=False)
+
+
 def suite():
     suite_ = TestSuite()
     loader = TestLoader()
     mod = modules[__name__]
     tests = (  # 'Spi',
-             'SpiGpio', 'SpiUnaligned', 'SpiCsForce')
+             'SpiGpio', 'SpiUnaligned', 'SpiCsForce', 'SpiActiveHigh')
     for testname in tests:
         testcase = getattr(mod, f'{testname}TestCase')
         suite_.addTest(loader.loadTestsFromTestCase(testcase))
