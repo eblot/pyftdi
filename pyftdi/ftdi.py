@@ -2267,7 +2267,7 @@ class Ftdi:
                 raise FtdiError('Unable to set baudrate')
             return actual
         except USBError as exc:
-            raise FtdiError('UsbError: {exc}') from exc
+            raise FtdiError(f'UsbError: {exc}') from exc
 
     def _set_frequency(self, frequency: float) -> float:
         """Convert a frequency value into a TCK divisor setting"""

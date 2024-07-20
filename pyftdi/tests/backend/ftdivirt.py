@@ -1107,7 +1107,7 @@ class VirtFtdi:
                 try:
                     size = cls.EXT_EEPROMS[model.lower()]
                 except KeyError as exc:
-                    raise ValueError('Unsupported EEPROM model: {model}') \
+                    raise ValueError(f'Unsupported EEPROM model: {model}') \
                             from exc
             data = eeprom.get('data', b'')
         if version in cls.INT_EEPROMS:

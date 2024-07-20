@@ -353,7 +353,7 @@ class VirtBackend(IBackend):
         for dev in self._devices:
             if dev.bus == bus and dev.address == address:
                 return dev.ftdi
-        raise ValueError('No FTDI @ {bus:address}')
+        raise ValueError(f'No FTDI @ {bus:address}')
 
     def enumerate_devices(self) -> VirtDevice:
         yield from self._devices
