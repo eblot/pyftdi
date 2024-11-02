@@ -942,7 +942,10 @@ class FtdiEeprom:
             return
         name = None
         try:
-            name = Ftdi.DEVICE_NAMES[cfg['type']].replace('-', '')
+            type_ = cfg['type']
+            if type_ == 0:
+                type_ = self.device_version
+            name = Ftdi.DEVICE_NAMES[type_].replace('-', '')
             if name.startswith('ft'):
                 name = name[2:]
             func = getattr(self, f'_decode_{name}')
