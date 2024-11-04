@@ -18,7 +18,7 @@ from struct import calcsize as scalc, pack as spack, unpack as sunpack
 from sys import modules, platform, stdout
 from time import sleep, time as now
 from threading import Thread
-from unittest import TestCase, TestSuite, skipIf, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, skipIf, main as ut_main
 from pyftdi import FtdiLogger
 from pyftdi.ftdi import Ftdi
 from pyftdi.misc import to_bool
@@ -343,8 +343,7 @@ class BaudrateTestCase(FtdiTestCase):
 
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(BaudrateTestCase, 'test'))
-    suite_.addTest(makeSuite(UartTestCase, 'test'))
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
     return suite_
 
 
