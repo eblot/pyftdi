@@ -13,7 +13,7 @@ from doctest import testmod
 from importlib import import_module
 from os.path import dirname, join as joinpath
 from sys import modules, path as syspath
-from unittest import TestCase, TestSuite, makeSuite, main as ut_main
+from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 
 
 class ToolsTestCase(TestCase):
@@ -57,7 +57,7 @@ class ToolsTestCase(TestCase):
 
 def suite():
     suite_ = TestSuite()
-    suite_.addTest(makeSuite(ToolsTestCase, 'test'))
+    suite_.addTest(TestLoader().loadTestsFromModule(modules[__name__]))
     return suite_
 
 
