@@ -291,6 +291,7 @@ class UsbTools:
             path = urlparts.path.strip('/')
             if path == '?' or (not path and urlstr.endswith('?')):
                 report_devices = True
+                interface = -1
             else:
                 interface = to_int(path)
                 report_devices = False
