@@ -1781,8 +1781,9 @@ class Ftdi:
             raise FtdiError(f'UsbError: {exc}') from exc
 
     def read_data_bytes(self, size: int, attempt: int = 1,
-                        request_gen: Optional[Callable[[int], bytes]] = None) \
-            -> bytes:
+            request_gen: Optional[Callable[[int],
+                                  Union[bytes, bytearray]]] = None) \
+        -> bytearray:
         """Read data from the FTDI interface
 
            In UART mode, data contains the serial stream read from the UART
