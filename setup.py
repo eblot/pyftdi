@@ -35,11 +35,11 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: System :: Hardware :: Hardware Drivers',
 ]
@@ -182,7 +182,7 @@ def main():
                       'pyftdi.serialext': ['*.rst', 'doc/api/uart.rst']},
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,
-        python_requires='>=3.8',
+        python_requires='>=3.9',
     )
 
 

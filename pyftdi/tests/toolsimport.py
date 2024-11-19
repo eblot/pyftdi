@@ -22,7 +22,7 @@ class ToolsTestCase(TestCase):
        This is especially useful to find Python syntax version mismatch
        and other not-yet-supported modules/features.
 
-       PyFtdi and tools should support Python 3.8 onwards.
+       PyFtdi and tools should support Python 3.9 onwards.
     """
 
     @classmethod
