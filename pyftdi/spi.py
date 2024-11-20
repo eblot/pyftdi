@@ -152,11 +152,8 @@ class SpiPort:
             self._cs_hold = cs_hold
         self._cpol = bool(mode & 0x2)
         self._cpha = bool(mode & 0x1)
-        cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
-                            SpiController.DO_BIT)
-        cs_select = 0xFF & ~((SpiController.CS_BIT << self._cs) |
-                             (int(not self._cpol) and SpiController.SCK_BIT) |
-                             SpiController.DO_BIT)
+        cs_clock = self._controller._cs_idle | (int(self._cpol) and SpiController.SCK_BIT)
+        cs_select = cs_clock ^ (SpiController.CS_BIT << self._cs)
         self._cs_prolog = bytes([cs_clock, cs_select])
         self._cs_epilog = bytes([cs_select] + [cs_clock] * int(cs_hold))
 
@@ -210,6 +207,14 @@ class SpiPort:
           :return: the /CS index (starting from 0)
         """
         return self._cs
+    
+    @property
+    def cs_active_high(self) -> bool:
+        """Is the CS active high?
+
+          :return: True if it's active high, False if active low
+        """
+        (self._controller._cs_idle & (SpiController.CS_BIT << self._cs)) == 0
 
     @property
     def mode(self) -> int:
@@ -352,6 +357,7 @@ class SpiController:
         self._spi_ports = []
         self._spi_dir = 0
         self._spi_mask = self.SPI_BITS
+        self._cs_idle = 0xff
 
     def configure(self, url: Union[str, UsbDevice],
                   **kwargs: Mapping[str, Any]) -> None:
@@ -378,6 +384,8 @@ class SpiController:
              frequency.
            * ``cs_count`` count of chip select signals dedicated to select
              SPI slave devices, starting from A*BUS3 pin
+           * ``active_high_cs`` iterable of CS slots that should be active high
+             instead of active low
            * ``turbo`` whether to enable or disable turbo mode
            * ``debug`` to increase log verbosity, using MPSSE tracer
         """
@@ -389,6 +397,13 @@ class SpiController:
             del kwargs['cs_count']
         if not 1 <= self._cs_count <= 5:
             raise ValueError(f'Unsupported CS line count: {self._cs_count}')
+        if 'active_high_cs' in kwargs:
+            active_high_cs = set([int(x) for x in kwargs['active_high_cs']])
+            del kwargs['active_high_cs']
+            if max(active_high_cs) >= self._cs_count or min(active_high_cs) < 0:
+                raise ValueError(f'Invalid active high CS slots {active_high_cs} for {self._cs_count} CS slots')
+        else:
+            active_high_cs = []
         if 'turbo' in kwargs:
             self._turbo = bool(kwargs['turbo'])
             del kwargs['turbo']
@@ -414,6 +429,7 @@ class SpiController:
                 raise SpiIOError('Already configured')
             self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
                              ~(SpiController.CS_BIT - 1))
+            self._cs_idle = self._cs_bits ^ sum([SpiController.CS_BIT << x for x in active_high_cs])
             self._spi_ports = [None] * self._cs_count
             self._spi_dir = (self._cs_bits |
                              SpiController.DO_BIT |
@@ -424,7 +440,7 @@ class SpiController:
             # delay any truncation till the device is actually open
             self._set_gpio_direction(16, (~self._spi_mask) & 0xFFFF, io_dir)
             kwargs['direction'] = self._spi_dir | self._gpio_dir
-            kwargs['initial'] = self._cs_bits | (io_out & self._gpio_mask)
+            kwargs['initial'] = self._cs_idle | (io_out & self._gpio_mask)
             if not isinstance(url, str):
                 self._frequency = self._ftdi.open_mpsse_from_device(
                     url, interface=interface, **kwargs)
@@ -469,7 +485,7 @@ class SpiController:
             if cs >= len(self._spi_ports):
                 if cs < 5:
                     # increase cs_count (up to 4) to reserve more /CS channels
-                    raise SpiIOError('/CS pin {cs} not reserved for SPI')
+                    raise SpiIOError(f'/CS pin {cs} not reserved for SPI')
                 raise SpiIOError(f'No such SPI port: {cs}')
             if not self._spi_ports[cs]:
                 freq = min(freq or self._frequency, self.frequency_max)
@@ -609,7 +625,7 @@ class SpiController:
            :param cs_epilog: the epilog MPSSE command sequence to execute
                              after the actual exchange.
            :param cpol: SPI clock polarity, derived from the SPI mode
-           :param cpol: SPI clock phase, derived from the SPI mode
+           :param cpha: SPI clock phase, derived from the SPI mode
            :param duplex: perform a full-duplex exchange (vs. half-duplex),
                           i.e. bits are clocked in and out at once or
                           in a write-then-read manner.
@@ -793,7 +809,7 @@ class SpiController:
                 ctrl |= self._gpio_low
                 epilog.extend((Ftdi.SET_BITS_LOW, ctrl, direction))
             # Restore idle state
-            cs_high = [Ftdi.SET_BITS_LOW, self._cs_bits | self._gpio_low,
+            cs_high = [Ftdi.SET_BITS_LOW, self._cs_idle | self._gpio_low,
                        direction]
             if not self._turbo:
                 cs_high.append(Ftdi.SEND_IMMEDIATE)

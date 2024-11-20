@@ -20,7 +20,7 @@ class VirtMpsseTracer(FtdiMpsseTracer):
 
     def __init__(self, port: 'VirtFtdiPort', version: int):
         super().__init__(version)
-        self.log = getLogger('pyftdi.virt.mpsse.{port.iface}')
+        self.log = getLogger(f'pyftdi.virt.mpsse.{port.iface}')
         self._port = port
 
     def _get_engine(self, iface: int):

@@ -320,7 +320,7 @@ class UsbTools:
             if len(cvendors) == 1:
                 vendor = cvendors.pop()
         if vendor not in pdict:
-            vstr = '0x{vendor:04x}' if vendor is not None else '?'
+            vstr = f'0x{vendor:04x}' if vendor is not None else '?'
             raise UsbToolsError(f'Vendor ID {vstr} not supported')
         if not product:
             cproducts = {candidate[1] for candidate in candidates
@@ -328,7 +328,7 @@ class UsbTools:
             if len(cproducts) == 1:
                 product = cproducts.pop()
         if product not in pdict[vendor].values():
-            pstr = '0x{vendor:04x}' if product is not None else '?'
+            pstr = f'0x{vendor:04x}' if product is not None else '?'
             raise UsbToolsError(f'Product ID {pstr} not supported')
         devdesc = UsbDeviceDescriptor(vendor, product, desc.bus, desc.address,
                                       desc.sn, idx, desc.description)
