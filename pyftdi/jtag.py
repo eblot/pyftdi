@@ -7,6 +7,7 @@
 """JTAG tools.
 """
 
+from binascii import hexlify
 from logging import getLogger
 from time import sleep
 from typing import Optional, Union
@@ -132,8 +133,7 @@ class JtagFtdiController(JtagController):
     def quit(self) -> None:
         self.close()
 
-    def write_tms(self, modesel: BitSequence, immediate: bool = True) \
-            -> BitSequence:
+    def write_tms(self, modesel: BitSequence) -> BitSequence:
         if not isinstance(modesel, BitSequence):
             raise ValueError('Not a BitSequence')
         length = len(modesel)
@@ -153,38 +153,32 @@ class JtagFtdiController(JtagController):
             fcmd = Ftdi.RW_BITS_TMS_PVE_NVE
         else:
             self._log.debug('WRITE TMS [%d] %s', length, modesel)
-            fcmd = Ftdi.WRITE_BITS_TMS_NVE
+            fcmd = Ftdi.RW_BITS_TMS_PVE_NVE
         self._log.debug('TMS %02x', byte)
         cmd = bytes((fcmd, length-1, byte))
-        self._ftdi.purge_rx_buffer()
+        # self._ftdi.purge_rx_buffer()
         self._push_bytes(cmd)
-        if immediate or lbit:
-            self._flush()
-        if lbit:
-            bs = self._read_bits(length)
-            return bs.pop_right()
-        return BitSequence()
+        self._flush()
+        bs = self._read_bits(length)
+        return bs
 
-    def write(self, out: BitSequence, immediate: bool = True) -> None:
+    def write(self, out: BitSequence) -> None:
         if not isinstance(out, BitSequence):
             raise ValueError('Not a BitSequence')
         self._last_tdi = out.pop_left_bit()
-        self._log.debug("WRITE TDI %s [+%u]", out, self._last_tdi)
         byte_count = len(out)//8
         pos = 8 * byte_count
         bit_count = len(out)-pos
-        self._log.debug('%dB, %db len %d', byte_count, bit_count, len(out))
+        self._log.debug('%d B, %d b len %d', byte_count, bit_count, len(out))
         if byte_count:
             self._prepare_write_bytes(byte_count)
-            self._write_bytes(out[:pos])
+            self._write_bytes(out[bit_count:])
         if bit_count:
             self._prepare_write_bits(bit_count)
-            self._write_bits(out[pos:])
-        if immediate:
-            self._flush()
+            self._write_bits(out[:bit_count])
+        self._flush()
 
-    def read(self, length: int, tdi: Optional[bool] = None) -> BitSequence:
-        # tdi argument is not used with PyFtdi for now
+    def read(self, length: int) -> BitSequence:
         self._log.debug("READ TDO %d", length)
         byte_count = length // 8
         bit_count = length - 8 * byte_count
@@ -197,24 +191,24 @@ class JtagFtdiController(JtagController):
         if byte_count:
             bs.push_right(self._read_bytes(byte_count))
         if bit_count:
-            bs.push_right(self._read_bits(bit_count))
+            bs.push_left(self._read_bits(bit_count))
         return bs
 
     def exchange(self, out: BitSequence) -> BitSequence:
         self._last_tdi = out.pop_left_bit()
         length = len(out)
-        self._log.debug("WRITE TDI %s [+%u] + READ TDO %u", out, self._last_tdi,
-                        length)
+        self._log.debug("WRITE TDI %s [+%u] + READ TDO %u",
+                        out, self._last_tdi, length)
         byte_count = length // 8
         bit_count = length - 8 * byte_count
         pos = 8 * byte_count
         bs = BitSequence()
         if byte_count:
             self._prepare_exchange_bytes(byte_count)
-            self._write_bytes(out[:pos])
+            self._write_bytes(out[-pos:])
         if bit_count:
             self._prepare_exchange_bits(bit_count)
-            self._write_bits(out[pos:])
+            self._write_bits(out[:-pos])
         self._flush()
         if byte_count:
             bs = self._read_bytes(byte_count)
@@ -234,6 +228,7 @@ class JtagFtdiController(JtagController):
 
     def _flush(self):
         self._log.debug('flushing %d bytes', len(self._write_buff))
+        self._log.debug(' [%s]', hexlify(self._write_buff).decode())
         if self._write_buff:
             self._ftdi.write_data(self._write_buff)
             self._write_buff = bytearray()
@@ -253,7 +248,7 @@ class JtagFtdiController(JtagController):
     def _write_bits(self, out: BitSequence) -> None:
         """Output bits on TDI"""
         byte = out.to_byte()
-        self._log.debug('WRITE BITS %s / 0x%02x', out, byte)
+        self._log.debug('%s (0x%02x)', out, byte)
         self._push_bytes(bytes((byte,)))
 
     def _prepare_exchange_bits(self, length: int) -> None:
@@ -299,11 +294,10 @@ class JtagFtdiController(JtagController):
         data = self._ftdi.read_data_bytes(length, 4)
         if len(data) != length:
             raise JtagError('Failed to read from FTDI')
-        bs = BitSequence.from_bytestream(data, lsbyte=True)
-        self._log.debug('READ BYTES %s', bs)
+        bs = BitSequence.from_bytestream(data, True)
         return bs
 
     def _write_bytes(self, out: BitSequence) -> None:
         """Output bytes on TDI"""
-        self._log.debug('WRITE BYTES %s', out)
-        self._push_bytes(out.to_bytestream())
+        self._log.debug('%s', out)
+        self._push_bytes(out.to_bytestream(True))
