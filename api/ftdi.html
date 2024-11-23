@@ -38,7 +38,7 @@
             PyFtdi
           </a>
               <div class="version">
-                0.55.3
+                0.56.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -1218,7 +1218,7 @@ requested amount.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – the number of bytes to received from the device</p></li>
 <li><p><strong>attempt</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – attempt cycle count</p></li>
-<li><p><strong>request_gen</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>]]</span>) – a callable that takes the number of bytes read
+<li><p><strong>request_gen</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code>]]]</span>) – a callable that takes the number of bytes read
 and expect a bytes byffer to send back to the
 remote device. This is only useful to perform
 optimized/continuous transfer from a slave
@@ -1226,7 +1226,7 @@ device.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>payload bytes, as bytes</p>
@@ -1818,7 +1818,7 @@ change the EEPROM content</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2020, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
