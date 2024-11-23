@@ -171,6 +171,7 @@ def main():
         maintainer_email=find_meta('email'),
         keywords=KEYWORDS,
         long_description=read_desc('pyftdi/doc/index.rst'),
+        long_description_content_type='text/x-rst',
         packages=PACKAGES,
         scripts=['pyftdi/bin/i2cscan.py',
                  'pyftdi/bin/ftdi_urls.py',

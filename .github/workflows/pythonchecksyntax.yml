@@ -16,26 +16,31 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r test-requirements.txt
+
     - name: Check style
       run: |
         python setup.py check_style
+
     - name: Linter
       run: |
         pylint --disable=fixme --disable=duplicate-code \
-          pyftdi pyftdi/bin pyftdi/serialext \
-          pyftdi/tests pyftdi/serialext/tests pyftdi/tests/backend
+          $(git ls-files '*.py')
+
     - name: Install package
       run: |
         python setup.py install
+
     - name: Run tests
       run: |
         python pyftdi/tests/toolsimport.py

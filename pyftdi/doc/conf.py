@@ -1,7 +1,9 @@
-# Copyright (c) 2010-2021 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
+
+# pylint: skip-file
 
 import os
 import re
