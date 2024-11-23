@@ -186,6 +186,8 @@ def main():
         sys_exit(1)
     except KeyboardInterrupt:
         sys_exit(2)
+    finally:
+        eeprom.close()
 
 
 if __name__ == '__main__':
