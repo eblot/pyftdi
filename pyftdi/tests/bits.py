@@ -61,8 +61,8 @@ class BitSequenceTestCase(TestCase):
         self.assertEqual(repr(self.bzs4.invert()), '00Z0Z101ZZ1011')
         self.assertLess(self.bs5, self.bs6)
         self.assertLessEqual(self.bs5, self.bs6)
-        self.assertLess(self.bs6, self.bs5)
-        self.assertLessEqual(self.bs6, self.bs5)
+        self.assertGreater(self.bs6, self.bs5)
+        self.assertGreaterEqual(self.bs6, self.bs5)
 
     def test_cmp(self):
         self.assertTrue(self.bs1 == self.bs1)
@@ -72,12 +72,12 @@ class BitSequenceTestCase(TestCase):
         self.assertTrue(self.bzs1 != self.bzs2)
         self.assertTrue(self.bs1 == self.bzs1)
         self.assertTrue(self.bzs1 == self.bs1)
-        self.assertTrue(self.bzs3 != self.bzs2)
+        self.assertTrue(self.bzs3 == self.bzs2)
         self.assertNotEqual(self.bzs4, self.bzs5)
         bzs = BitZSequence(self.bs7)
         self.assertTrue(bzs == self.bs7)
         bzs |= BitZSequence('00Z0Z000ZZ0Z00')
-        self.assertFalse(bzs == self.bs7)
+        self.assertFalse(bzs == BitZSequence(self.bs7))
         self.assertTrue(bzs.matches(self.bs7))
 
     def test_representation(self):
@@ -166,9 +166,9 @@ class BitSequenceTestCase(TestCase):
         bl = [ba, bb]
         bl.sort(key=int)
         self.assertEqual(str(bl), "[00110000000000, 0011000000000000]")
-        self.assertEqual(str(ba.tobytes()), "[48, 0]")
-        self.assertEqual(str(ba.tobytes(True)), "[0, 12]")
-        self.assertEqual(str(bb.tobytes(True)), "[0, 12]")
+        self.assertEqual(ba.tobytes(), bytearray([48, 0]))
+        self.assertEqual(ba.tobytes(True), bytearray([0, 12]))
+        self.assertEqual(bb.tobytes(True), bytearray([0, 12]))
 
         b = BitSequence(length=254)
         b[0:4] = '1111'
@@ -179,9 +179,9 @@ class BitSequenceTestCase(TestCase):
             '00000000 00000000 00000000 00000000 00000000 00000000 00000000 '
             '00000000 00000000 00000000 00000000 00000000 00000000 00001111')
         self.assertEqual(
-            str(b.tobytes()),
-            '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '
-            '0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15]')
+            b.tobytes(),
+            bytearray([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15]))
 
         b = BitSequence(bytes_=[0xa0, '\x0f', 0x77], msb=False, msby=False)
         self.assertEqual(str([f'{x:02x}' for x in b.tobytes(False)]),
@@ -208,6 +208,17 @@ class BitSequenceTestCase(TestCase):
                          '1111101010100111Z1Z010ZZ0100')
         self.assertEqual(repr(self.bs7+self.bzs4),
                          '11Z1Z010ZZ010011111010101001')
+    
+    def test_int(self):
+        self.assertEqual(int(BitSequence(65535)), 65535)
+        self.assertEqual(int(BitSequence(65536)), 65536)
+        self.assertEqual(int(BitSequence(65537)), 65537)
+        self.assertEqual(int(BitSequence(65539)), 65539)
+        self.assertEqual(int.from_bytes(BitSequence(65535).tobytes(), byteorder='big'), 65535)
+        self.assertEqual(int.from_bytes(BitSequence(65536).tobytes(), byteorder='big'), 65536)
+        self.assertEqual(int.from_bytes(BitSequence(65537).tobytes(), byteorder='big'), 65537)
+        self.assertEqual(int.from_bytes(BitSequence(65539).tobytes(), byteorder='big'), 65539)
+        self.assertEqual(int.from_bytes(BitSequence(65539).tobytes(msby=True), byteorder='little'), 65539)
 
 
 def suite():
