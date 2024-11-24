@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &mdash; PyFtdi  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Authors" href="authors.html" />
+    <link rel="prev" title="Testing" href="testing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PyFtdi
+          </a>
+              <div class="version">
+                0.56.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">API documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gpio.html">GPIOs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-a-bug">Reporting a bug</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#common-error-messages">Common error messages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#error-no-backend-available">“Error: No backend available”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-access-denied-insufficient-permissions">“Error: Access denied (insufficient permissions)”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#error-the-device-has-no-langid">“Error: The device has no langid”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bus-error-access-violation">“Bus error / Access violation”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#serial-serialutil-serialexception-unable-to-open-usb-port">“serial.serialutil.SerialException: Unable to open USB port”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#slow-initialisation-on-os-x-el-capitan">Slow initialisation on OS X El Capitan</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyFtdi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
+<section id="reporting-a-bug">
+<h2>Reporting a bug<a class="headerlink" href="#reporting-a-bug" title="Link to this heading"></a></h2>
+<p>Please do not contact the author by email. The preferered method to report bugs
+and/or enhancement requests is through
+<a class="reference external" href="https://github.com/eblot/pyftdi/issues">GitHub</a>.</p>
+<p>Please be sure to read the next sections before reporting a new issue.</p>
+</section>
+<section id="logging">
+<h2>Logging<a class="headerlink" href="#logging" title="Link to this heading"></a></h2>
+<p>FTDI uses the <cite>pyftdi</cite> logger.</p>
+<p>It emits log messages with raw payload bytes at DEBUG level, and data loss
+at ERROR level.</p>
+</section>
+<section id="common-error-messages">
+<h2>Common error messages<a class="headerlink" href="#common-error-messages" title="Link to this heading"></a></h2>
+<section id="error-no-backend-available">
+<h3>“Error: No backend available”<a class="headerlink" href="#error-no-backend-available" title="Link to this heading"></a></h3>
+<p>libusb native library cannot be loaded. Try helping the dynamic loader:</p>
+<ul>
+<li><p>On Linux: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">LD_LIBRARY_PATH=&lt;path&gt;</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal notranslate"><span class="pre">libusb-1.*.so</span></code>
+library file</p>
+</li>
+<li><p>On macOS: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">DYLD_LIBRARY_PATH=.../lib</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the <code class="docutils literal notranslate"><span class="pre">libusb-1.*.dylib</span></code>
+library file</p>
+</li>
+<li><p>On Windows:</p>
+<p>Try to copy the USB dll where the Python executable is installed, along
+with the other Python DLLs.</p>
+<p>If this happens while using an exe created by pyinstaller:
+<code class="docutils literal notranslate"><span class="pre">copy</span> <span class="pre">C:\Windows\System32\libusb0.dll</span> <span class="pre">&lt;path&gt;</span></code></p>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;path&gt;</span></code> is the directory containing the executable created
+by pyinstaller. This assumes you have installed libusb (using a tool
+like Zadig) as referenced in the installation guide for Windows.</p>
+</li>
+</ul>
+</section>
+<section id="error-access-denied-insufficient-permissions">
+<h3>“Error: Access denied (insufficient permissions)”<a class="headerlink" href="#error-access-denied-insufficient-permissions" title="Link to this heading"></a></h3>
+<p>The system may already be using the device.</p>
+<ul>
+<li><p>On macOS: starting with 10.9 “<em>Mavericks</em>”, macOS ships with a native FTDI
+kernel extension that preempts access to the FTDI device.</p>
+<p>Up to 10.13 “<em>High Sierra</em>”, this driver can be unloaded this way:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>kextunload<span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span>-bundle<span class="w"> </span>com.apple.driver.AppleUSBFTDI
+</pre></div>
+</div>
+<p>You may want to use an alias or a tiny script such as
+<code class="docutils literal notranslate"><span class="pre">pyftdi/bin/uphy.sh</span></code></p>
+<p>Please note that the system automatically reloads the driver, so it may be
+useful to move the kernel extension so that the system never loads it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>From macOS 10.14 “<em>Mojave</em>”, the Apple kernel extension peacefully
+co-exists with <a class="reference external" href="https://www.libusb.info/">libusb</a> and <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a>, so you no longer need - and <strong>should
+not attempt</strong> - to unload the kernel extension. If you still experience
+this error, please verify you have not installed another driver from FTDI,
+such as FTDI’s D2XX.</p>
+</div>
+</li>
+<li><p>On Linux: it may indicate a missing or invalid udev configuration. See
+the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p></li>
+<li><p>This error message may also be triggered whenever the communication port is
+already in use.</p></li>
+</ul>
+</section>
+<section id="error-the-device-has-no-langid">
+<h3>“Error: The device has no langid”<a class="headerlink" href="#error-the-device-has-no-langid" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>On Linux, it usually comes from the same installation issue as the
+<code class="docutils literal notranslate"><span class="pre">Access</span> <span class="pre">denied</span></code> error: the current user is not granted the permissions to
+access the FTDI device, therefore pyusb cannot read the FTDI registers. Check
+out the <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> section.</p></li>
+</ul>
+</section>
+<section id="bus-error-access-violation">
+<h3>“Bus error / Access violation”<a class="headerlink" href="#bus-error-access-violation" title="Link to this heading"></a></h3>
+<p>PyFtdi does not use any native library, but relies on <a class="reference external" href="https://pyusb.github.io/pyusb/">PyUSB</a> and <a class="reference external" href="https://www.libusb.info/">libusb</a>. The
+latter uses native code that may trigger OS error. Some early development
+versions of <a class="reference external" href="https://www.libusb.info/">libusb</a>, for example 1.0.22-b…, have been reported to trigger
+such issues. Please ensure you use a stable/final versions of <a class="reference external" href="https://www.libusb.info/">libusb</a> if you
+experience this kind of fatal error.</p>
+</section>
+<section id="serial-serialutil-serialexception-unable-to-open-usb-port">
+<h3>“serial.serialutil.SerialException: Unable to open USB port”<a class="headerlink" href="#serial-serialutil-serialexception-unable-to-open-usb-port" title="Link to this heading"></a></h3>
+<p>May be caused by a conflict with the FTDI virtual COM port (VCOM). Try
+uninstalling the driver. On macOS, refer to this <a class="reference external" href="https://www.ftdichip.com/Support/Documents/AppNotes/AN_134_FTDI_Drivers_Installation_Guide_for_MAC_OSX.pdf">FTDI macOS guide</a>.</p>
+</section>
+<section id="slow-initialisation-on-os-x-el-capitan">
+<h3>Slow initialisation on OS X El Capitan<a class="headerlink" href="#slow-initialisation-on-os-x-el-capitan" title="Link to this heading"></a></h3>
+<p>It may take several seconds to open or enumerate FTDI devices.</p>
+<p>If you run libusb &lt;= v1.0.20, be sure to read the <a class="reference external" href="https://github.com/libusb/libusb/commit/5e45e0741daee4fa295c6cc977edfb986c872152">Libusb issue on macOS</a>
+with OS X 10.11+.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="testing.html" class="btn btn-neutral float-left" title="Testing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="authors.html" class="btn btn-neutral float-right" title="Authors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>serialext - UART API &mdash; PyFtdi  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="usbtools - USB tools" href="usbtools.html" />
+    <link rel="prev" title="spi - SPI API" href="spi.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            PyFtdi
+          </a>
+              <div class="version">
+                0.56.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../requirements.html">Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../urlscheme.html">URL Scheme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tools.html">Tools</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#release"></a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ftdi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftdi</span></code> - FTDI low-level driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gpio.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gpio</span></code> - GPIO API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="i2c.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">i2c</span></code> - I<sup>2</sup>C API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="spi.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">spi</span></code> - SPI API</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gpio-access">GPIO access</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mini-serial-terminal">Mini serial terminal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="usbtools.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usbtools</span></code> - USB tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="misc.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">misc</span></code> - Miscellaneous helpers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="eeprom.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">eeprom</span></code> - EEPROM API</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pinout.html">FTDI device pinout</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gpio.html">GPIOs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../eeprom.html">EEPROM management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyFtdi</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">API documentation</a></li>
+      <li class="breadcrumb-item active"><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/uart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="serialext-uart-api">
+<h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">serialext</span></code> - UART API<a class="headerlink" href="#serialext-uart-api" title="Link to this heading"></a></h1>
+<p>There is no dedicated module for the UART API, as <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> acts as a backend of
+the well-known <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> module.</p>
+<p>The <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> backend module is implemented as the <cite>serialext.protocol_ftdi</cite>
+module. It is not documented here as no direct call to this module is required,
+as the UART client should use the regular <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> API.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>To enable <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> as a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> backend, use the following import:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+</pre></div>
+</div>
+<p>Then use</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to open a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> serial port instance.</p>
+</section>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable pyserial extensions</span>
+<span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+
+<span class="c1"># Open a serial port on the second FTDI device interface (IF/2) @ 3Mbaud</span>
+<span class="n">port</span> <span class="o">=</span> <span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/2&#39;</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="mi">3000000</span><span class="p">)</span>
+
+<span class="c1"># Send bytes</span>
+<span class="n">port</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;Hello World&#39;</span><span class="p">)</span>
+
+<span class="c1"># Receive bytes</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">port</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="gpio-access">
+<span id="uart-gpio"></span><h2>GPIO access<a class="headerlink" href="#gpio-access" title="Link to this heading"></a></h2>
+<p>UART mode, the primary function of FTDI *232* devices, is somewhat limited
+when it comes to GPIO management, as opposed to alternative mode such as I<sup>2</sup>C,
+SPI and JTAG. It is not possible to assign the unused pins of an UART mode to
+arbitrary GPIO functions.</p>
+<p>All the 8 lower pins of an UART port are dedicated to the UART function,
+although most of them are seldomely used, as dedicated to manage a modem or a
+legacy <a class="reference external" href="https://en.wikipedia.org/wiki/Data_circuit-terminating_equipment">DCE</a> device. Upper pins (b<sub>7</sub>..b<sub>15</sub>), on devices that
+have ones, cannot be driven while UART port is enabled.</p>
+<p>It is nevertheless possible to have limited access to the lower pins as GPIO,
+with many limitations:</p>
+<ul class="simple">
+<li><p>the GPIO direction of each pin is hardcoded and cannot be changed</p></li>
+<li><p>GPIO pins cannot be addressed atomically: it is possible to read the state
+of an input GPIO, or to change the state of an output GPIO, one after
+another. This means than obtaining the state of several input GPIOs or
+changing the state of several output GPIO at once is not possible.</p></li>
+<li><p>some pins cannot be used as GPIO is hardware flow control is enabled.
+Keep in mind However that HW flow control with FTDI is not reliable, see the
+<a class="reference internal" href="#hardware-flow-control"><span class="std std-ref">Hardware flow control</span></a> section.</p></li>
+</ul>
+<p>Accessing those GPIO pins is done through the UART extended pins, using their
+UART assigned name, as PySerial port attributes. See the table below:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Bit</p></th>
+<th class="head"><p>UART</p></th>
+<th class="head"><p>Direction</p></th>
+<th class="head"><p>API</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>b<sub>0</sub></p></td>
+<td><p>TX</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.write(buffer)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>1</sub></p></td>
+<td><p>RX</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">buffer</span> <span class="pre">=</span> <span class="pre">port.read(count)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>2</sub></p></td>
+<td><p>RTS</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.rts</span> <span class="pre">=</span> <span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>3</sub></p></td>
+<td><p>CTS</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.cts</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>4</sub></p></td>
+<td><p>DTR</p></td>
+<td><p>Out</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">port.dtr</span> <span class="pre">=</span> <span class="pre">state</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>5</sub></p></td>
+<td><p>DSR</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.dsr</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>b<sub>6</sub></p></td>
+<td><p>DCD</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.dcd</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>b<sub>7</sub></p></td>
+<td><p>RI</p></td>
+<td><p>In</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">=</span> <span class="pre">port.ri</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<section id="cbus-support">
+<h3>CBUS support<a class="headerlink" href="#cbus-support" title="Link to this heading"></a></h3>
+<p>Some FTDI devices (FT232R, FT232H, FT230X, FT231X) support additional CBUS
+pins, which can be used as regular GPIOs pins. See <a class="reference internal" href="../gpio.html#cbus-gpio"><span class="std std-ref">CBUS GPIO</span></a>
+for details.</p>
+</section>
+</section>
+<section id="mini-serial-terminal">
+<span id="pyterm"></span><h2>Mini serial terminal<a class="headerlink" href="#mini-serial-terminal" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is a simple serial terminal that can be used to test the serial
+port feature. See the <a class="reference internal" href="../tools.html#tools"><span class="std std-ref">Tools</span></a> chapter to locate this tool.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Usage</span><span class="p">:</span> <span class="n">pyterm</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">f</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">w</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">e</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">r</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">]</span>
+                 <span class="p">[</span><span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">v</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">d</span><span class="p">]</span>
+                 <span class="p">[</span><span class="n">device</span><span class="p">]</span>
+
+<span class="n">Simple</span> <span class="n">Python</span> <span class="n">serial</span> <span class="n">terminal</span>
+
+<span class="n">positional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="n">device</span>                <span class="n">serial</span> <span class="n">port</span> <span class="n">device</span> <span class="n">name</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">ftdi</span><span class="p">:</span><span class="o">///</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">optional</span> <span class="n">arguments</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+  <span class="o">-</span><span class="n">f</span><span class="p">,</span> <span class="o">--</span><span class="n">fullmode</span>        <span class="n">use</span> <span class="n">full</span> <span class="n">terminal</span> <span class="n">mode</span><span class="p">,</span> <span class="n">exit</span> <span class="k">with</span> <span class="p">[</span><span class="n">Ctrl</span><span class="p">]</span><span class="o">+</span><span class="n">B</span>
+  <span class="o">-</span><span class="n">b</span> <span class="n">BAUDRATE</span><span class="p">,</span> <span class="o">--</span><span class="n">baudrate</span> <span class="n">BAUDRATE</span>
+                        <span class="n">serial</span> <span class="n">port</span> <span class="n">baudrate</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">115200</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">w</span><span class="p">,</span> <span class="o">--</span><span class="n">hwflow</span>          <span class="n">hardware</span> <span class="n">flow</span> <span class="n">control</span>
+  <span class="o">-</span><span class="n">e</span><span class="p">,</span> <span class="o">--</span><span class="n">localecho</span>       <span class="n">local</span> <span class="n">echo</span> <span class="n">mode</span> <span class="p">(</span><span class="nb">print</span> <span class="nb">all</span> <span class="n">typed</span> <span class="n">chars</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">--</span><span class="n">crlf</span>            <span class="n">prefix</span> <span class="n">LF</span> <span class="k">with</span> <span class="n">CR</span> <span class="n">char</span><span class="p">,</span> <span class="n">use</span> <span class="n">twice</span> <span class="n">to</span> <span class="n">replace</span> <span class="nb">all</span> <span class="n">LF</span>
+                        <span class="k">with</span> <span class="n">CR</span> <span class="n">chars</span>
+  <span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="n">loopback</span>        <span class="n">loopback</span> <span class="n">mode</span> <span class="p">(</span><span class="n">send</span> <span class="n">back</span> <span class="nb">all</span> <span class="n">received</span> <span class="n">chars</span><span class="p">)</span>
+  <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="o">--</span><span class="n">silent</span>          <span class="n">silent</span> <span class="n">mode</span>
+  <span class="o">-</span><span class="n">P</span> <span class="n">VIDPID</span><span class="p">,</span> <span class="o">--</span><span class="n">vidpid</span> <span class="n">VIDPID</span>
+                        <span class="n">specify</span> <span class="n">a</span> <span class="n">custom</span> <span class="n">VID</span><span class="p">:</span><span class="n">PID</span> <span class="n">device</span> <span class="n">ID</span><span class="p">,</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span>
+  <span class="o">-</span><span class="n">V</span> <span class="n">VIRTUAL</span><span class="p">,</span> <span class="o">--</span><span class="n">virtual</span> <span class="n">VIRTUAL</span>
+                        <span class="n">use</span> <span class="n">a</span> <span class="n">virtual</span> <span class="n">device</span><span class="p">,</span> <span class="n">specified</span> <span class="k">as</span> <span class="n">YaML</span>
+  <span class="o">-</span><span class="n">v</span><span class="p">,</span> <span class="o">--</span><span class="n">verbose</span>         <span class="n">increase</span> <span class="n">verbosity</span>
+  <span class="o">-</span><span class="n">d</span><span class="p">,</span> <span class="o">--</span><span class="n">debug</span>           <span class="n">enable</span> <span class="n">debug</span> <span class="n">mode</span>
+</pre></div>
+</div>
+<p>If the PyFtdi module is not yet installed and <code class="docutils literal notranslate"><span class="pre">pyterm.py</span></code> is run from the
+archive directory, <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> should be defined to the current directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PYTHONPATH=$PWD pyftdi/bin/pyterm.py ftdi:///?
+</pre></div>
+</div>
+<p>The above command lists all the available FTDI device ports. To avoid conflicts
+with some shells such as <cite>zsh</cite>, escape the <cite>?</cite> char as <code class="docutils literal notranslate"><span class="pre">ftdi:///\?</span></code>.</p>
+<p>To start up a serial terminal session, specify the FTDI port to use, for
+example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># detect all FTDI connected devices</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span>.<span class="w"> </span>python3<span class="w"> </span>pyftdi/bin/ftdi_urls.py
+<span class="c1"># use the first interface of the first FT2232H as a serial port</span>
+<span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PWD</span><span class="w"> </span>pyftdi/bin/pyterm.py<span class="w"> </span>ftdi://ftdi:2232/1
+</pre></div>
+</div>
+</section>
+<section id="limitations">
+<span id="uart-limitations"></span><h2>Limitations<a class="headerlink" href="#limitations" title="Link to this heading"></a></h2>
+<p>Although the FTDI H series are in theory capable of 12 MBps baudrate, baudrates
+above 6 Mbps are barely usable.</p>
+<p>See the following table for details.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Requ. bps</p></th>
+<th class="head"><p>HW capability</p></th>
+<th class="head"><p>9-bit time</p></th>
+<th class="head"><p>Real bps</p></th>
+<th class="head"><p>Duty cycle</p></th>
+<th class="head"><p>Stable</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>115.2 Kbps</p></td>
+<td><p>115.2 Kbps</p></td>
+<td><p>78.08 µs</p></td>
+<td><p>115.26 Kbps</p></td>
+<td><p>49.9%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>460.8 Kbps</p></td>
+<td><p>461.54 Kbps</p></td>
+<td><p>19.49 µs</p></td>
+<td><p>461.77 Kbps</p></td>
+<td><p>49.9%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>1 Mbps</p></td>
+<td><p>1 Mbps</p></td>
+<td><p>8.98 µs</p></td>
+<td><p>1.002 Mbps</p></td>
+<td><p>49.5%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>4 Mbps</p></td>
+<td><p>4 Mbps</p></td>
+<td><p>2.24 µs</p></td>
+<td><p>4.018 Mbps</p></td>
+<td><p>48%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>5 Mbps</p></td>
+<td><p>5.052 Mbps</p></td>
+<td><p>1.78 µs</p></td>
+<td><p>5.056 Mbps</p></td>
+<td><p>50%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>6 Mbps</p></td>
+<td><p>6 Mbps</p></td>
+<td><p>1.49 µs</p></td>
+<td><p>6.040 Mbps</p></td>
+<td><p>48.5%</p></td>
+<td><p>Yes</p></td>
+</tr>
+<tr class="row-even"><td><p>7 Mbps</p></td>
+<td><p>6.857 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>8 Mbps</p></td>
+<td><p>8 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
+<td><p>44%-48%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>8.8 Mbps</p></td>
+<td><p>8.727 Mbps</p></td>
+<td><p>1.13 µs</p></td>
+<td><p>7.964 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>9.6 Mbps</p></td>
+<td><p>9.6 Mbps</p></td>
+<td><p>1.12 µs</p></td>
+<td><p>8.036 Mbps</p></td>
+<td><p>48%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>10.5 Mbps</p></td>
+<td><p>10.667 Mbps</p></td>
+<td><p>1.11 µs</p></td>
+<td><p>8.108 Mbps</p></td>
+<td><p>44%</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-odd"><td><p>12 Mbps</p></td>
+<td><p>12 Mbps</p></td>
+<td><p>0.75 µs</p></td>
+<td><p>12 Mbps</p></td>
+<td><p>43%</p></td>
+<td><p>Yes</p></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<div><ul class="simple">
+<li><p>9-bit time is the measured time &#64; FTDI output pins for a 8-bit character
+(start bit + 8 bit data)</p></li>
+<li><p>Duty cycle is the ratio between a low-bit duration and a high-bit duration,
+a good UART should exhibit the same duration for low bits and high bits,
+<em>i.e.</em> a duty cycle close to 50%.</p></li>
+<li><p>Stability reports whether subsequent runs, with the very same HW settings,
+produce the same timings.</p></li>
+</ul>
+</div></blockquote>
+<p>Achieving a reliable connection over 6 Mbps has proven difficult, if not
+impossible: Any baudrate greater than 6 Mbps (except the upper 12 Mbps limit)
+results into an actual baudrate of about 8 Mbps, and suffer from clock
+fluterring [7.95 .. 8.1Mbps].</p>
+<section id="hardware-flow-control">
+<span id="id1"></span><h3>Hardware flow control<a class="headerlink" href="#hardware-flow-control" title="Link to this heading"></a></h3>
+<p>Moreover, as the hardware flow control of the FTDI device is not a true HW
+flow control. Quoting FTDI application note:</p>
+<blockquote>
+<div><p><em>If CTS# is logic 1 it is indicating the external device cannot accept more
+data. the FTxxx will stop transmitting within 0~3 characters, depending on
+what is in the buffer.</em>
+<strong>This potential 3 character overrun does occasionally present problems.</strong>
+<em>Customers shoud be made aware the FTxxx is a USB device and not a “normal”
+RS232 device as seen on a PC. As such the device operates on a packet
+basis as opposed to a byte basis.</em></p>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="spi.html" class="btn btn-neutral float-left" title="spi - SPI API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="usbtools.html" class="btn btn-neutral float-right" title="usbtools - USB tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
