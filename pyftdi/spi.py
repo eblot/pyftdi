@@ -766,8 +766,6 @@ class SpiController:
             raise SpiIOError("FTDI controller not initialized")
         if len(out) > SpiController.PAYLOAD_MAX_LENGTH:
             raise SpiIOError("Output payload is too large")
-        if readlen > SpiController.PAYLOAD_MAX_LENGTH:
-            raise SpiIOError("Input payload is too large")
         if cpha:
             # to enable CPHA, we need to use a workaround with FTDI device,
             # that is enable 3-phase clocking (which is usually dedicated to
@@ -823,17 +821,31 @@ class SpiController:
                 cmd.extend(write_cmd)
         if readlen:
             if not droptail:
+                n = readlen // SpiController.PAYLOAD_MAX_LENGTH
+                r = readlen % SpiController.PAYLOAD_MAX_LENGTH
+
                 rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
                         Ftdi.READ_BYTES_PVE_MSB)
-                read_cmd = spack('<BH', rcmd, readlen-1)
-                cmd.extend(read_cmd)
+                for i in range(n):
+                    read_cmd = spack('<BH', rcmd, SpiController.PAYLOAD_MAX_LENGTH-1)
+                    cmd.extend(read_cmd)
+                if r:
+                    read_cmd = spack('<BH', rcmd, r-1)
+                    cmd.extend(read_cmd)
             else:
                 bytelen = readlen-1
                 if bytelen:
+                    n = bytelen // SpiController.PAYLOAD_MAX_LENGTH
+                    r = bytelen % SpiController.PAYLOAD_MAX_LENGTH
+
                     rcmd = (Ftdi.READ_BYTES_NVE_MSB if not cpol else
                             Ftdi.READ_BYTES_PVE_MSB)
-                    read_cmd = spack('<BH', rcmd, bytelen-1)
-                    cmd.extend(read_cmd)
+                    for i in range(n):
+                        read_cmd = spack('<BH', rcmd, SpiController.PAYLOAD_MAX_LENGTH-1)
+                        cmd.extend(read_cmd)
+                    if r:
+                        read_cmd = spack('<BH', rcmd, r-1)
+                        cmd.extend(read_cmd)
                 rcmd = (Ftdi.READ_BITS_NVE_MSB if not cpol else
                         Ftdi.READ_BITS_PVE_MSB)
                 read_cmd = spack('<BB', rcmd, 7-droptail)
