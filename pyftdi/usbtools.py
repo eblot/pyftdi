@@ -377,7 +377,7 @@ class UsbTools:
         bus = None
         address = None
         locators = specifiers[2:]
-        if len(locators) > 1:
+        if len(locators) > 1 and locators[0]:
             try:
                 bus = int(locators[0], 16)
                 address = int(locators[1], 16)
@@ -395,6 +395,8 @@ class UsbTools:
                         idx = devidx-1
                 except ValueError:
                     sernum = locators[0]
+            if locators and len(locators) > 1:
+                sernum = locators[1]
         candidates = []
         vendors = [vendor] if vendor else set(vdict.values())
         vps = set()
