@@ -134,17 +134,18 @@ def main():
 
         try:
             add_custom_devices(Ftdi, args.vidpid, force_hex=True)
-        except ValueError as exc:
-            argparser.error(str(exc))
+        except ValueError as add_device_exc:
+            argparser.error(str(add_device_exc))
 
         I2cBusScanner.scan(args.device, not args.no_smb, args.force)
 
-    except (ImportError, IOError, NotImplementedError, ValueError) as exc:
-        print(f'\nError: {exc}', file=stderr)
+    except (ImportError, IOError, NotImplementedError, ValueError) as specific_exc:
+        print(f'\nError: {specific_exc}', file=stderr)
         if debug:
             print(format_exc(chain=False), file=stderr)
         sys_exit(1)
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as kb_interrupt:
+        print("\nExecution interrupted by user.", file=stderr)
         sys_exit(2)
 
 
