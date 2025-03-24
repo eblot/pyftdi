@@ -58,9 +58,9 @@ Example: communication with a SPI device and an extra GPIO
     # Get a SPI port to a SPI slave w/ /CS on A*BUS3 and SPI mode 0 @ 12MHz
     slave = spi.get_port(cs=0, freq=12E6, mode=0)
 
-    # Get GPIO port to manage extra pins, use A*BUS4 as GPO, A*BUS4 as GPI
+    # Get GPIO port to manage extra pins, use A*BUS4 as GPO, A*BUS5 as GPI
     gpio = spi.get_gpio()
-    gpio.set_direction(0x30, 0x10)
+    gpio.set_direction(pins=0b0011_0000, direction=0b0001_0000)
 
     # Assert GPO pin
     gpio.write(0x10)
