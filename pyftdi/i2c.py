@@ -390,6 +390,7 @@ class I2cController:
         self._ck_idle = 0
         self._read_optim = True
         self._disable_3phase_clock = False
+        self._clkstrch = False
 
     def set_retry_count(self, count: int) -> None:
         """Change the default retry count when a communication error occurs,
@@ -438,10 +439,10 @@ class I2cController:
         else:
             timings = self.I2C_1M
         if 'clockstretching' in kwargs:
-            clkstrch = bool(kwargs['clockstretching'])
+            self._clkstrch = bool(kwargs['clockstretching'])
             del kwargs['clockstretching']
         else:
-            clkstrch = False
+            self._clkstrch = False
         if 'direction' in kwargs:
             io_dir = int(kwargs['direction'])
             del kwargs['direction']
@@ -469,7 +470,7 @@ class I2cController:
             ck_buf = self._compute_delay_cycles(timings.t_buf)
             self._ck_idle = max(ck_su_sta, ck_buf)
             self._ck_delay = ck_buf
-            if clkstrch:
+            if self._clkstrch:
                 self._i2c_mask = self.I2C_MASK_CS
             else:
                 self._i2c_mask = self.I2C_MASK
@@ -489,7 +490,6 @@ class I2cController:
                 frequency = self._ftdi.open_mpsse_from_url(url, **kwargs)
             self._frequency = (2.0*frequency)/3.0
             self._tx_size, self._rx_size = self._ftdi.fifo_sizes
-            self._ftdi.enable_adaptive_clock(clkstrch)
             if not self._disable_3phase_clock:
                 self._ftdi.enable_3phase_clock(True)
             try:
@@ -880,7 +880,7 @@ class I2cController:
         if not self.configured:
             raise I2cIOError("FTDI controller not initialized")
         with self._lock:
-            self._ftdi.write_data(self._immediate)
+            self._ftdi.write_data(bytearray(self._immediate))
             self._ftdi.purge_buffers()
 
     def read_gpio(self, with_output: bool = False) -> int:
@@ -1057,12 +1057,26 @@ class I2cController:
             # read SDA (ack from slave)
             cmd.extend(self._read_bit)
         cmd.extend(self._immediate)
-        self._ftdi.write_data(cmd)
-        ack = self._ftdi.read_data_bytes(1, 4)
+        self._i2c_write_data(cmd)
+        ack = self._i2c_read_data_bytes(1, 4)
         if not ack:
             raise I2cIOError('No answer from FTDI')
         if ack[0] & self.BIT0:
             raise I2cNackError('NACK from slave')
+
+    def _i2c_write_data(self, cmd: bytearray):
+        if self._clkstrch:
+            cmd.insert(0, self._ftdi.ENABLE_CLK_ADAPTIVE)
+            cmd.append(self._ftdi.DISABLE_CLK_ADAPTIVE)
+        self._ftdi.write_data(cmd)
+
+    def _i2c_read_data_bytes(self, readlen: int, attempt: int = 1, request_gen=None) -> bytearray:
+        data = self._ftdi.read_data_bytes(readlen, attempt, request_gen)
+        if not data and self._clkstrch:
+            self.log.warning('bus seems wedged')
+            self._ftdi.purge_rx_buffer()
+            self._ftdi.write_data(bytearray((self._ftdi.DISABLE_CLK_ADAPTIVE,)))
+        return data
 
     def _do_read(self, readlen: int) -> bytearray:
         self.log.debug('- read %d byte(s)', readlen)
@@ -1070,8 +1084,8 @@ class I2cController:
             # force a real read request on device, but discard any result
             cmd = bytearray()
             cmd.extend(self._immediate)
-            self._ftdi.write_data(cmd)
-            self._ftdi.read_data_bytes(0, 4)
+            self._i2c_write_data(cmd)
+            self._i2c_read_data_bytes(0, 4)
             return bytearray()
         if self._fake_tristate:
             read_byte = (self._clk_lo_data_input +
@@ -1117,7 +1131,7 @@ class I2cController:
                 return cmd_chunk
 
             while rem:
-                buf = self._ftdi.read_data_bytes(rem, 4, write_command_gen)
+                buf = self._i2c_read_data_bytes(rem, 4, write_command_gen)
                 self.log.debug('- read %d bytes, rem: %d', len(buf), rem)
                 chunks.append(buf)
                 rem -= len(buf)
@@ -1136,8 +1150,8 @@ class I2cController:
                     cmd.extend(read_not_last * (rem-1))
                     cmd.extend(read_last)
                     cmd.extend(self._immediate)
-                self._ftdi.write_data(cmd)
-                buf = self._ftdi.read_data_bytes(size, 4)
+                self._i2c_write_data(cmd)
+                buf = self._i2c_read_data_bytes(size, 4)
                 self.log.debug('- read %d byte(s): %s',
                                len(buf), hexlify(buf).decode())
                 chunks.append(buf)
