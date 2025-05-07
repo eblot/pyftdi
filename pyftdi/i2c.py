@@ -962,7 +962,7 @@ class I2cController:
     @property
     def _clk_input_data_input(self) -> Tuple[int]:
         return (Ftdi.SET_BITS_LOW,
-                self._gpio_low,
+                self.I2C_DIR | self._gpio_low,
                 (self._gpio_dir & 0xFF))
 
     @property
