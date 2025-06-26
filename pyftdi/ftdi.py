@@ -329,6 +329,7 @@ class Ftdi:
         self._in_ep = None
         self._out_ep = None
         self._bitmode = Ftdi.BitMode.RESET
+        self._orig_latency = self.LATENCY_MAX
         self._latency = 0
         self._latency_count = 0
         self._latency_min = self.LATENCY_MIN
@@ -552,6 +553,7 @@ class Ftdi:
         self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
         self._latency_threshold = None
+        self._orig_latency = self.get_latency_timer()
         self.set_latency_timer(self.LATENCY_MIN)
         self._debug_log = self.log.getEffectiveLevel() == DEBUG
 
@@ -574,7 +576,7 @@ class Ftdi:
                 try:
                     if not freeze:
                         self.set_bitmode(0, Ftdi.BitMode.RESET)
-                        self.set_latency_timer(self.LATENCY_MAX)
+                        self.set_latency_timer(self._orig_latency)
                     release_interface(dev, self._index - 1)
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)
