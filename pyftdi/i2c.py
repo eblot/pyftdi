@@ -1130,7 +1130,7 @@ class I2cController:
                         # repeated till the end of the transfer
                         cmd = bytearray()
                         cmd.extend(read_not_last * chunk_size)
-                        size = chunk_size
+                    size = chunk_size
                 else:
                     cmd = bytearray()
                     cmd.extend(read_not_last * (rem-1))
