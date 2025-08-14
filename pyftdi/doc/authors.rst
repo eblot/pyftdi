@@ -53,3 +53,4 @@ Contributors
  * Mark Mentovai
  * Alessandro Zini
  * Sjoerd Simons
+ * David Schneider
