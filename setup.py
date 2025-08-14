@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2025 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
@@ -32,7 +32,6 @@ CLASSIFIERS = [
     'Environment :: Other Environment',
     'Natural Language :: English',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
     'Programming Language :: Python :: 3.9',
