@@ -522,7 +522,8 @@ class Ftdi:
         self.open_from_device(device, interface)
 
     def open_from_device(self, device: UsbDevice,
-                         interface: int = 1) -> None:
+                         interface: int = 1,
+                         reset_bitmode: bool = True) -> None:
         """Open a new interface from an existing USB device.
 
            :param device: FTDI USB device (PyUSB instance)
@@ -551,7 +552,8 @@ class Ftdi:
         # Shallow reset
         self._reset_device()
         # Reset feature mode
-        self.set_bitmode(0, Ftdi.BitMode.RESET)
+        if reset_bitmode:
+            self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
         self._latency_threshold = None
         self.set_latency_timer(self.LATENCY_MIN)
@@ -841,7 +843,7 @@ class Ftdi:
            :param sync: whether to use synchronous or asynchronous bitbang
            :return: actual bitbang baudrate in bps
         """
-        self.open_from_device(device, interface)
+        self.open_from_device(device, interface, reset_bitmode=False)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
