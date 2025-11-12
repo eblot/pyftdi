@@ -579,7 +579,8 @@ class Ftdi:
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)
                 try:
-                    self._usb_dev.attach_kernel_driver(self._index - 1)
+                    if not freeze:
+                        self._usb_dev.attach_kernel_driver(self._index - 1)
                 except (NotImplementedError, USBError):
                     pass
             self._usb_dev = None
