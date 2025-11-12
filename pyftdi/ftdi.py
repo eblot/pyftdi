@@ -16,8 +16,8 @@ from sys import platform
 from typing import Callable, Optional, List, Sequence, TextIO, Tuple, Union
 from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
-from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
-                      CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
+from usb.util import (build_request_type, claim_interface, release_interface,
+                      CTRL_IN, CTRL_OUT, CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
@@ -546,6 +546,8 @@ class Ftdi:
         self._readbuffer = bytearray()
         # Drain input buffer
         self.purge_buffers()
+        # Claim the interface
+        claim_interface(device, self._index - 1)
         # Shallow reset
         self._reset_device()
         # Reset feature mode
