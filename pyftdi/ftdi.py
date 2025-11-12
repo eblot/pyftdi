@@ -532,12 +532,10 @@ class Ftdi:
         if not isinstance(device, UsbDevice):
             raise FtdiError(f"Device '{device}' is not a PyUSB device")
         self._usb_dev = device
-        try:
-            self._usb_dev.set_configuration()
-        except USBError:
-            pass
+        cfg0 = device[0].bConfigurationValue
         # detect invalid interface as early as possible
         config = self._usb_dev.get_active_configuration()
+        cfg = config.bConfigurationValue
         if interface > config.bNumInterfaces:
             raise FtdiError(f'No such FTDI port: {interface}')
         self._set_interface(config, interface)
@@ -548,6 +546,11 @@ class Ftdi:
         # Drain input buffer
         self.purge_buffers()
         # Claim the interface
+        if device.bNumConfigurations > 0 and cfg0 != cfg:
+            try:
+                device.set_configuration()
+            except USBError:
+                pass
         claim_interface(device, self._index - 1)
         # Shallow reset
         self._reset_device()
