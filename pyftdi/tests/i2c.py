@@ -3,7 +3,7 @@
 
 """I2C unit tests."""
 
-# Copyright (c) 2017-2024, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2017-2026, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -240,7 +240,7 @@ class I2cClockStrechingGpioTestCase(TestCase):
 
 class I2cDualMasterTestCase(TestCase):
     """Check the behaviour of 2 I2C masters. Requires a multi port FTDI device,
-       i.e. FT2232H, FT4232H or FT4232HA. See issue #159.
+       i.e. FT2232H, FT4232H, FT4232HA or FT4232HP. See issue #159.
     """
 
     def test(self):

@@ -158,7 +158,7 @@ Application Node 114:
 
 Support for mode 1 and mode 3 is implemented with some workarounds, but
 generated signals may not be reliable: YMMV. It is only available with -H
-series (232H, 2232H, 4232H, 4232HA).
+series (FT232H, FT2232H, FT4232H/HA/HP).
 
 The 3-clock phase mode which has initially be designed to cope with |I2C|
 signalling is used to delay the data lines from the clock signals. A direct

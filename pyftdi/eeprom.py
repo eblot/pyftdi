@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2019-2026, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -61,6 +61,7 @@ class FtdiEeprom:
         0x0800: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232H
         0x0900: _PROPS(256, 0x1A, 0xA0, 0x1e),   # FT232H
         0x1000: _PROPS(1024, 0x1A, 0xA0, None),  # FT230X/FT231X/FT234X
+        0x3100: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232HP
         0x3600: _PROPS(256, 0x1A, 0x9A, 0x18),   # FT4232HA
     }
     """EEPROM properties."""
@@ -73,7 +74,7 @@ class FtdiEeprom:
     CBUSH = IntEnum('CBusH',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
                     'GPIO TXDEN CLK30 CLK15 CLK7_5', start=0)
-    """Alternate features for FT232H/FT2232H/FT4232H devices."""
+    """Alternate features for FT232H, FT2232H, FT4232H/HA/HP devices."""
 
     CBUSX = IntEnum('CBusX',
                     'TRISTATE TXLED RXLED TXRXLED PWREN SLEEP DRIVE0 DRIVE1 '
@@ -1054,8 +1055,8 @@ class FtdiEeprom:
 
     def _set_group_x232h(self, group: int, control: str, value: str,
                          out: Optional[TextIO]) -> None:
-        # 2232H/4232H/4232HA
-        if self.device_version in (0x0700, 0x800, 0x3600):
+        # 2232H/4232H/4232HA/4232HP
+        if self.device_version in (0x0700, 0x800, 0x3100, 0x3600):
             offset = 0x0c + group//2
             nibble = group & 1
         else:  # 232H
@@ -1225,7 +1226,7 @@ class FtdiEeprom:
                 'RS485' if conf & (rs485 << chix) else 'UART')
 
     def _decode_x232h(self, cfg):
-        # common code for 2232h, 4232h, 4232ha
+        # common code for 2232H, 4232H, 4232HA, 4232HP
         cfg0, cfg1 = self._eeprom[0x00], self._eeprom[0x01]
         cfg['channel_a_driver'] = 'VCP' if (cfg0 & (1 << 3)) else 'D2XX'
         cfg['channel_b_driver'] = 'VCP' if (cfg1 & (1 << 3)) else 'D2XX'

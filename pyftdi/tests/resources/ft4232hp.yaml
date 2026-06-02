@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+devices:
+  - bus: 1
+    address: 1
+    descriptor:
+      vid: 0x403
+      pid: 0x6043
+      version: 0x3100
+      manufacturer: FTDI
+      product: FT4232HP
+      serialnumber: FT7E0S92
+    configurations:
+      - interfaces:
+        - repeat: 4
