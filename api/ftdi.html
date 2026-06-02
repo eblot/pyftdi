@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ftdi - FTDI low-level driver &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -110,29 +110,29 @@ through the dedicated <a class="reference internal" href="index.html"><span clas
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">Ftdi</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">Ftdi</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi" title="Link to this definition"></a></dt>
 <dd><p>FTDI device driver</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.BitMode">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BitMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names=&lt;not</span> <span class="pre">given&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.BitMode" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">BitMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.BitMode" title="Link to this definition"></a></dt>
 <dd><p>Function selection.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.DEFAULT_VENDOR">
-<span class="sig-name descname"><span class="pre">DEFAULT_VENDOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1027</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEFAULT_VENDOR" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">DEFAULT_VENDOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1027</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEFAULT_VENDOR" title="Link to this definition"></a></dt>
 <dd><p>Default vendor: FTDI.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.DEVICE_NAMES">
-<span class="sig-name descname"><span class="pre">DEVICE_NAMES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{512:</span> <span class="pre">'ft232am',</span> <span class="pre">1024:</span> <span class="pre">'ft232bm',</span> <span class="pre">1280:</span> <span class="pre">'ft2232c',</span> <span class="pre">1536:</span> <span class="pre">'ft232r',</span> <span class="pre">1792:</span> <span class="pre">'ft2232h',</span> <span class="pre">2048:</span> <span class="pre">'ft4232h',</span> <span class="pre">2304:</span> <span class="pre">'ft232h',</span> <span class="pre">4096:</span> <span class="pre">'ft-x',</span> <span class="pre">13824:</span> <span class="pre">'ft4232ha'}</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEVICE_NAMES" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">DEVICE_NAMES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{512:</span> <span class="pre">'ft232am',</span> <span class="pre">1024:</span> <span class="pre">'ft232bm',</span> <span class="pre">1280:</span> <span class="pre">'ft2232c',</span> <span class="pre">1536:</span> <span class="pre">'ft232r',</span> <span class="pre">1792:</span> <span class="pre">'ft2232h',</span> <span class="pre">2048:</span> <span class="pre">'ft4232h',</span> <span class="pre">2304:</span> <span class="pre">'ft232h',</span> <span class="pre">4096:</span> <span class="pre">'ft-x',</span> <span class="pre">12544:</span> <span class="pre">'ft4232hp',</span> <span class="pre">13824:</span> <span class="pre">'ft4232ha'}</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.DEVICE_NAMES" title="Link to this definition"></a></dt>
 <dd><p>Common names of FTDI supported devices.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.FIFO_SIZES">
-<span class="sig-name descname"><span class="pre">FIFO_SIZES</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{512:</span> <span class="pre">(128,</span> <span class="pre">128),</span> <span class="pre">1024:</span> <span class="pre">(128,</span> <span class="pre">384),</span> <span class="pre">1280:</span> <span class="pre">(128,</span> <span class="pre">384),</span> <span class="pre">1536:</span> <span class="pre">(256,</span> <span class="pre">128),</span> <span class="pre">1792:</span> <span class="pre">(4096,</span> <span class="pre">4096),</span> <span class="pre">2048:</span> <span class="pre">(2048,</span> <span class="pre">2048),</span> <span class="pre">2304:</span> <span class="pre">(1024,</span> <span class="pre">1024),</span> <span class="pre">4096:</span> <span class="pre">(512,</span> <span class="pre">512),</span> <span class="pre">13824:</span> <span class="pre">(2048,</span> <span class="pre">2048)}</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FIFO_SIZES" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">FIFO_SIZES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{512:</span> <span class="pre">(128,</span> <span class="pre">128),</span> <span class="pre">1024:</span> <span class="pre">(128,</span> <span class="pre">384),</span> <span class="pre">1280:</span> <span class="pre">(128,</span> <span class="pre">384),</span> <span class="pre">1536:</span> <span class="pre">(256,</span> <span class="pre">128),</span> <span class="pre">1792:</span> <span class="pre">(4096,</span> <span class="pre">4096),</span> <span class="pre">2048:</span> <span class="pre">(2048,</span> <span class="pre">2048),</span> <span class="pre">2304:</span> <span class="pre">(1024,</span> <span class="pre">1024),</span> <span class="pre">4096:</span> <span class="pre">(512,</span> <span class="pre">512),</span> <span class="pre">12544:</span> <span class="pre">(2048,</span> <span class="pre">2048),</span> <span class="pre">13824:</span> <span class="pre">(2048,</span> <span class="pre">2048)}</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FIFO_SIZES" title="Link to this definition"></a></dt>
 <dd><p>FTDI chip internal FIFO sizes</p>
 <p>Note that ‘TX’ and ‘RX’ are inverted with the datasheet terminology:
 Values here are seen from the host perspective, whereas datasheet
@@ -141,13 +141,13 @@ values are defined from the device perspective</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.FTDI_VENDOR">
-<span class="sig-name descname"><span class="pre">FTDI_VENDOR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1027</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FTDI_VENDOR" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">FTDI_VENDOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1027</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.FTDI_VENDOR" title="Link to this definition"></a></dt>
 <dd><p>USB VID for FTDI chips.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.PRODUCT_IDS">
-<span class="sig-name descname"><span class="pre">PRODUCT_IDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{1027:</span> <span class="pre">{'2232':</span> <span class="pre">24592,</span> <span class="pre">'2232c':</span> <span class="pre">24592,</span> <span class="pre">'2232d':</span> <span class="pre">24592,</span> <span class="pre">'2232h':</span> <span class="pre">24592,</span> <span class="pre">'230x':</span> <span class="pre">24597,</span> <span class="pre">'231x':</span> <span class="pre">24597,</span> <span class="pre">'232':</span> <span class="pre">24577,</span> <span class="pre">'232h':</span> <span class="pre">24596,</span> <span class="pre">'232r':</span> <span class="pre">24577,</span> <span class="pre">'234x':</span> <span class="pre">24597,</span> <span class="pre">'4232':</span> <span class="pre">24593,</span> <span class="pre">'4232h':</span> <span class="pre">24593,</span> <span class="pre">'4232ha':</span> <span class="pre">24648,</span> <span class="pre">'ft-x':</span> <span class="pre">24597,</span> <span class="pre">'ft2232':</span> <span class="pre">24592,</span> <span class="pre">'ft2232c':</span> <span class="pre">24592,</span> <span class="pre">'ft2232d':</span> <span class="pre">24592,</span> <span class="pre">'ft2232h':</span> <span class="pre">24592,</span> <span class="pre">'ft230x':</span> <span class="pre">24597,</span> <span class="pre">'ft231x':</span> <span class="pre">24597,</span> <span class="pre">'ft232':</span> <span class="pre">24577,</span> <span class="pre">'ft232h':</span> <span class="pre">24596,</span> <span class="pre">'ft232r':</span> <span class="pre">24577,</span> <span class="pre">'ft234x':</span> <span class="pre">24597,</span> <span class="pre">'ft4232':</span> <span class="pre">24593,</span> <span class="pre">'ft4232h':</span> <span class="pre">24593,</span> <span class="pre">'ft4232ha':</span> <span class="pre">24648}}</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.PRODUCT_IDS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">PRODUCT_IDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{1027:</span> <span class="pre">{'2232':</span> <span class="pre">24592,</span> <span class="pre">'2232c':</span> <span class="pre">24592,</span> <span class="pre">'2232d':</span> <span class="pre">24592,</span> <span class="pre">'2232h':</span> <span class="pre">24592,</span> <span class="pre">'230x':</span> <span class="pre">24597,</span> <span class="pre">'231x':</span> <span class="pre">24597,</span> <span class="pre">'232':</span> <span class="pre">24577,</span> <span class="pre">'232h':</span> <span class="pre">24596,</span> <span class="pre">'232r':</span> <span class="pre">24577,</span> <span class="pre">'234x':</span> <span class="pre">24597,</span> <span class="pre">'4232':</span> <span class="pre">24593,</span> <span class="pre">'4232h':</span> <span class="pre">24593,</span> <span class="pre">'4232ha':</span> <span class="pre">24648,</span> <span class="pre">'4232hp':</span> <span class="pre">24643,</span> <span class="pre">'ft-x':</span> <span class="pre">24597,</span> <span class="pre">'ft2232':</span> <span class="pre">24592,</span> <span class="pre">'ft2232c':</span> <span class="pre">24592,</span> <span class="pre">'ft2232d':</span> <span class="pre">24592,</span> <span class="pre">'ft2232h':</span> <span class="pre">24592,</span> <span class="pre">'ft230x':</span> <span class="pre">24597,</span> <span class="pre">'ft231x':</span> <span class="pre">24597,</span> <span class="pre">'ft232':</span> <span class="pre">24577,</span> <span class="pre">'ft232h':</span> <span class="pre">24596,</span> <span class="pre">'ft232r':</span> <span class="pre">24577,</span> <span class="pre">'ft234x':</span> <span class="pre">24597,</span> <span class="pre">'ft4232':</span> <span class="pre">24593,</span> <span class="pre">'ft4232h':</span> <span class="pre">24593,</span> <span class="pre">'ft4232ha':</span> <span class="pre">24648,</span> <span class="pre">'ft4232hp':</span> <span class="pre">24643}}</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.PRODUCT_IDS" title="Link to this definition"></a></dt>
 <dd><p>Supported products, only FTDI officials ones.
 To add third parties and customized products, see
 <a class="reference internal" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="pyftdi.ftdi.Ftdi.add_custom_product"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_custom_product()</span></code></a>.</p>
@@ -155,20 +155,20 @@ To add third parties and customized products, see
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.SCHEME">
-<span class="sig-name descname"><span class="pre">SCHEME</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ftdi'</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.SCHEME" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SCHEME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ftdi'</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.SCHEME" title="Link to this definition"></a></dt>
 <dd><p>URL scheme for <code class="xref py py-class docutils literal notranslate"><span class="pre">UsbTools</span></code>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.VENDOR_IDS">
-<span class="sig-name descname"><span class="pre">VENDOR_IDS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ftdi':</span> <span class="pre">1027}</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.VENDOR_IDS" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">VENDOR_IDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ftdi':</span> <span class="pre">1027}</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.VENDOR_IDS" title="Link to this definition"></a></dt>
 <dd><p>Supported vendors, only FTDI.
 To add third parties vendors see <a class="reference internal" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="pyftdi.ftdi.Ftdi.add_custom_vendor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_custom_vendor()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.add_custom_product">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_custom_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pidname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">add_custom_product</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pidname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_product" title="Link to this definition"></a></dt>
 <dd><p>Add a custom USB product identifier.</p>
 <p>It is required for opening FTDI device with non-standard VID/PID
 USB identifiers.</p>
@@ -191,7 +191,7 @@ USB identifiers.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.add_custom_vendor">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add_custom_vendor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vidname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">add_custom_vendor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vidname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.add_custom_vendor" title="Link to this definition"></a></dt>
 <dd><p>Add a custom USB vendor identifier.</p>
 <p>It can be useful to use a pretty URL for opening FTDI device</p>
 <dl class="field-list simple">
@@ -212,13 +212,13 @@ USB identifiers.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.baudrate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">baudrate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.baudrate" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">baudrate</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.baudrate" title="Link to this definition"></a></dt>
 <dd><p>Return current baudrate.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.bitbang_enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bitbang_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.bitbang_enabled" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">bitbang_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.bitbang_enabled" title="Link to this definition"></a></dt>
 <dd><p>Tell whether some bitbang mode is activated</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -266,7 +266,7 @@ specific needs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.create_from_url">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.create_from_url" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">create_from_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.create_from_url" title="Link to this definition"></a></dt>
 <dd><p>Create an Ftdi instance from an URL</p>
 <p>URL scheme: ftdi://[vendor[:product[:index|:serial]]]/interface</p>
 <dl class="field-list simple">
@@ -284,7 +284,7 @@ specific needs.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.decode_modem_status">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">decode_modem_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.decode_modem_status" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">decode_modem_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.decode_modem_status" title="Link to this definition"></a></dt>
 <dd><p>Decode the FTDI modem status bitfield into short strings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -304,7 +304,7 @@ specific needs.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.device_port_count">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device_port_count</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.device_port_count" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">device_port_count</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.device_port_count" title="Link to this definition"></a></dt>
 <dd><p>Report the count of port/interface of the Ftdi device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -315,7 +315,7 @@ specific needs.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.device_version">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.device_version" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">device_version</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.device_version" title="Link to this definition"></a></dt>
 <dd><p>Report the device version, i.e. the kind of device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">See<span class="colon">:</span></dt>
@@ -403,7 +403,7 @@ purposes only. It does not support UART (TX to RX) mode.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.fifo_sizes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fifo_sizes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.fifo_sizes" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fifo_sizes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.fifo_sizes" title="Link to this definition"></a></dt>
 <dd><p>Return the (TX, RX) tupple of hardware FIFO sizes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -414,14 +414,14 @@ purposes only. It does not support UART (TX to RX) mode.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.find_all">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.find_all" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">find_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.find_all" title="Link to this definition"></a></dt>
 <dd><p>Find all devices that match the vendor/product pairs of the vps
 list.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vps</strong> (<em>tuple</em><em>(</em><em>int</em><em>, </em><em>int</em><em>)</em>) – a sequence of 2-tuple (vid, pid) pairs</p></li>
-<li><p><strong>nocache</strong> (<em>bool</em>) – bypass cache to re-enumerate USB devices on
+<li><p><strong>vps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – a sequence of 2-tuple (vid, pid) pairs</p></li>
+<li><p><strong>nocache</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – bypass cache to re-enumerate USB devices on
 the host</p></li>
 </ul>
 </dd>
@@ -430,14 +430,14 @@ the host</p></li>
 device descriptors</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list(tuple(int,int,str,int,str))</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">UsbDeviceDescriptor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.frequency_max">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency_max</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.frequency_max" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">frequency_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.frequency_max" title="Link to this definition"></a></dt>
 <dd><p>Tells the maximum frequency for MPSSE clock.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -490,7 +490,7 @@ device descriptors</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.get_device">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_device" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_device" title="Link to this definition"></a></dt>
 <dd><p>Get a USB device from its URL, without opening an instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -521,7 +521,7 @@ device descriptors</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.get_error_string">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_error_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_error_string" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_error_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_error_string" title="Link to this definition"></a></dt>
 <dd><p>Wrapper for legacy compatibility.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -535,7 +535,7 @@ device descriptors</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.get_identifiers">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_identifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_identifiers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.get_identifiers" title="Link to this definition"></a></dt>
 <dd><p>Extract the identifiers of an FTDI device from URL, if any</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -577,7 +577,7 @@ device descriptors</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.has_cbus">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_cbus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_cbus" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_cbus</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_cbus" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device supports CBUS bitbang.</p>
 <p>CBUS bitbanging feature requires a special configuration in EEPROM.
 This function only reports if the current device supports this mode,
@@ -596,7 +596,7 @@ been configured for GPIO/bitbang mode.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.has_drivezero">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_drivezero</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_drivezero" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_drivezero</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_drivezero" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device supports drive-zero mode, i.e. if the
 device supports the open-collector drive mode, useful for I2C
 communication for example.</p>
@@ -612,7 +612,7 @@ communication for example.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.has_mpsse">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_mpsse</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_mpsse" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_mpsse</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_mpsse" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device supports MPSSE (I2C, SPI, JTAG, …)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -626,7 +626,7 @@ communication for example.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.has_wide_port">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_wide_port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_wide_port" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">has_wide_port</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.has_wide_port" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device supports 16-bit GPIO ports (vs. 8 bits)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -640,7 +640,7 @@ communication for example.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.ic_name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ic_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.ic_name" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ic_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.ic_name" title="Link to this definition"></a></dt>
 <dd><p>Return the current type of the FTDI device as a string</p>
 <p>see also <a class="reference external" href="http://www.ftdichip.com/Support/">http://www.ftdichip.com/Support/</a>
 Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
@@ -653,7 +653,7 @@ Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_H_series">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_H_series</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_H_series" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_H_series</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_H_series" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device is a high-end FTDI</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -667,7 +667,7 @@ Documents/TechnicalNotes/TN_100_USB_VID-PID_Guidelines.pdf</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_bitbang_enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_bitbang_enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_bitbang_enabled" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_bitbang_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_bitbang_enabled" title="Link to this definition"></a></dt>
 <dd><p>Tell whether some bitbang mode is activated</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -679,7 +679,7 @@ bitbanging</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_connected">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_connected</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_connected" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_connected</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_connected" title="Link to this definition"></a></dt>
 <dd><p>Tells whether this instance is connected to an actual USB slave.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -690,7 +690,7 @@ bitbanging</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_eeprom_internal">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_eeprom_internal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_eeprom_internal" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_eeprom_internal</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_eeprom_internal" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device has an internal EEPROM.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -701,7 +701,7 @@ bitbanging</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_legacy">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_legacy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_legacy" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_legacy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_legacy" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device is a low-end FTDI</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -716,7 +716,7 @@ bridge</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.is_mpsse">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_mpsse</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_mpsse" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_mpsse</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.is_mpsse" title="Link to this definition"></a></dt>
 <dd><p>Tell whether the device is configured in MPSSE mode</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -744,7 +744,7 @@ bridge</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.list_devices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.list_devices" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">list_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.list_devices" title="Link to this definition"></a></dt>
 <dd><p>List of URLs of connected FTDI devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -761,7 +761,7 @@ bridge</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.max_eeprom_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_eeprom_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.max_eeprom_size" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">max_eeprom_size</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.max_eeprom_size" title="Link to this definition"></a></dt>
 <dd><p>Report the maximum size of the EEPROM.
 The actual size may be lower, of even 0 if no EEPROM is connected
 or supported.</p>
@@ -788,7 +788,7 @@ or supported.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.mpsse_bit_delay">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mpsse_bit_delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.mpsse_bit_delay" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mpsse_bit_delay</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.mpsse_bit_delay" title="Link to this definition"></a></dt>
 <dd><p>Delay between execution of two MPSSE SET_BITS commands.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -807,21 +807,21 @@ discriminate the FTDI device.</p>
 <p>index argument is not a reliable solution as the host may enumerate
 the USB device in random order. serial argument is more reliable
 selector and should always be prefered.</p>
-<p>Some FTDI devices support several interfaces/ports (such as FT2232H,
-FT4232H and FT4232HA). The interface argument selects the FTDI port
+<p>Some FTDI devices support several interfaces/ports (such as
+FT4232H/HA/HP). The interface argument selects the FTDI port
 to use, starting from 1 (not 0).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>vendor</strong> (<em>int</em>) – USB vendor id</p></li>
-<li><p><strong>product</strong> (<em>int</em>) – USB product id</p></li>
-<li><p><strong>bus</strong> (<em>int</em>) – optional selector,  USB bus</p></li>
-<li><p><strong>address</strong> (<em>int</em>) – optional selector, USB address on bus</p></li>
-<li><p><strong>index</strong> (<em>int</em>) – optional selector, specified the n-th matching
+<li><p><strong>vendor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – USB vendor id</p></li>
+<li><p><strong>product</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – USB product id</p></li>
+<li><p><strong>bus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – optional selector,  USB bus</p></li>
+<li><p><strong>address</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – optional selector, USB address on bus</p></li>
+<li><p><strong>index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – optional selector, specified the n-th matching
 FTDI enumerated USB device on the host</p></li>
-<li><p><strong>serial</strong> (<em>str</em>) – optional selector, specified the FTDI device
+<li><p><strong>serial</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – optional selector, specified the FTDI device
 by its serial number</p></li>
-<li><p><strong>interface</strong> (<em>str</em>) – FTDI interface/port</p></li>
+<li><p><strong>interface</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – FTDI interface/port</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -941,7 +941,7 @@ delay. The shorter the delay, the higher the host CPU load.</p></li>
 <dd><p>Open a new interface to the specified FTDI device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p>
+<dd class="field-odd"><p><strong>url</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – a FTDI URL selector</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -961,8 +961,8 @@ discriminate the FTDI device.</p>
 <p>index argument is not a reliable solution as the host may enumerate
 the USB device in random order. serial argument is more reliable
 selector and should always be prefered.</p>
-<p>Some FTDI devices support several interfaces/ports (such as FT2232H,
-FT4232H and FT4232HA). The interface argument selects the FTDI port
+<p>Some FTDI devices support several interfaces/ports (such as
+FT4232H/HA/HP). The interface argument selects the FTDI port
 to use, starting from 1 (not 0). Note that not all FTDI ports are
 MPSSE capable.</p>
 <dl class="field-list simple">
@@ -985,7 +985,7 @@ input</p></li>
 <li><p><strong>latency</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
-<li><p><strong>debug</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
+<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – use a tracer to decode MPSSE protocol</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1009,8 +1009,8 @@ discriminate the FTDI device.</p>
 <p>index argument is not a reliable solution as the host may enumerate
 the USB device in random order. serial argument is more reliable
 selector and should always be prefered.</p>
-<p>Some FTDI devices support several interfaces/ports (such as FT2232H,
-FT4232H and FT4232HA). The interface argument selects the FTDI port
+<p>Some FTDI devices support several interfaces/ports (such as
+FT4232H/HA/HP). The interface argument selects the FTDI port
 to use, starting from 1 (not 0). Note that not all FTDI ports are
 MPSSE capable.</p>
 <dl class="field-list simple">
@@ -1026,8 +1026,8 @@ input</p></li>
 <li><p><strong>latency</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
-<li><p><strong>tracer</strong> (<em>bool</em>) – use a tracer to decode MPSSE protocol</p></li>
-<li><p><strong>debug</strong> (<em>bool</em>) – add more debug traces</p></li>
+<li><p><strong>tracer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – use a tracer to decode MPSSE protocol</p></li>
+<li><p><strong>debug</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – add more debug traces</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -1053,7 +1053,7 @@ modes (vs. UART mode).</p>
 where high level defines an output, and low level defines an
 input</p></li>
 <li><p><strong>initial</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – a bitfield specifying the initial output value</p></li>
-<li><p><strong>frequency</strong> (<em>float</em>) – serial interface clock in Hz</p></li>
+<li><p><strong>frequency</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – serial interface clock in Hz</p></li>
 <li><p><strong>latency</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – low-level latency in milliseconds. The shorter
 the delay, the higher the host CPU load. Do not use shorter
 values than the default, as it triggers data loss in FTDI.</p></li>
@@ -1114,7 +1114,7 @@ control endpoint.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.port_index">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">port_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.port_index" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">port_index</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.port_index" title="Link to this definition"></a></dt>
 <dd><p>Report the port/interface index, starting from 1</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1125,7 +1125,7 @@ control endpoint.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.port_width">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">port_width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.port_width" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">port_width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.port_width" title="Link to this definition"></a></dt>
 <dd><p>Report the width of a single port / interface</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1504,7 +1504,7 @@ been received from the FTDI device.</p>
 software or no flow control.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>flowctrl</strong> (<em>str</em>) – either ‘hw’ for HW flow control or ‘’ (empty
+<dd class="field-odd"><p><strong>flowctrl</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – either ‘hw’ for HW flow control or ‘’ (empty
 string) for no flow control.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
@@ -1647,7 +1647,7 @@ definitions.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.show_devices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">show_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.show_devices" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">show_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.show_devices" title="Link to this definition"></a></dt>
 <dd><p>Print the URLs and descriptors of connected FTDI devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1664,13 +1664,13 @@ definitions.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.usb_dev">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">usb_dev</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Device</span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_dev" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">usb_dev</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Device</span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_dev" title="Link to this definition"></a></dt>
 <dd><p>Return the underlying USB Device.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.ftdi.Ftdi.usb_path">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">usb_path</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_path" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">usb_path</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#pyftdi.ftdi.Ftdi.usb_path" title="Link to this definition"></a></dt>
 <dd><p>Provide the physical location on the USB topology.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -1783,19 +1783,19 @@ change the EEPROM content</p></li>
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.ftdi.FtdiError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiError" title="Link to this definition"></a></dt>
 <dd><p>Base class error for all FTDI device</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.ftdi.FtdiMpsseError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiMpsseError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiMpsseError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiMpsseError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiMpsseError" title="Link to this definition"></a></dt>
 <dd><p>MPSSE mode not supported on FTDI device</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.ftdi.FtdiFeatureError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiFeatureError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiFeatureError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.ftdi.</span></span><span class="sig-name descname"><span class="pre">FtdiFeatureError</span></span><a class="headerlink" href="#pyftdi.ftdi.FtdiFeatureError" title="Link to this definition"></a></dt>
 <dd><p>Requested feature is not available on FTDI device</p>
 </dd></dl>
 
@@ -1813,7 +1813,7 @@ change the EEPROM content</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Installation &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="_static/doctools.js?v=9bcbadda"></script>
-      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -136,6 +136,8 @@ configure <cite>udev</cite>, here is a typical setup:</p>
 <span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6015&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0664&quot;</span>
 <span class="c1"># FT4232HA</span>
 <span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6048&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0664&quot;</span>
+<span class="c1"># FT4232HP</span>
+<span class="n">SUBSYSTEM</span><span class="o">==</span><span class="s2">&quot;usb&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idVendor</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;0403&quot;</span><span class="p">,</span> <span class="n">ATTR</span><span class="p">{</span><span class="n">idProduct</span><span class="p">}</span><span class="o">==</span><span class="s2">&quot;6043&quot;</span><span class="p">,</span> <span class="n">GROUP</span><span class="o">=</span><span class="s2">&quot;plugdev&quot;</span><span class="p">,</span> <span class="n">MODE</span><span class="o">=</span><span class="s2">&quot;0664&quot;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -185,7 +187,7 @@ stored in the FTDI EEPROM.</p></li>
 <blockquote>
 <div><ul class="simple">
 <li><p>With FTDI devices with multiple channels, such as FT2232 (2 channels) and
-FT4232 (4 channels), you <strong>must</strong> install the driver for the composite
+FT4232H/HA/HP (4 channels), you <strong>must</strong> install the driver for the composite
 parent, <strong>not</strong> for the individual interfaces. If you install the driver
 for each interface, each interface will be presented as a unique FTDI
 device and you may have difficulties to select a specific FTDI device port
@@ -295,7 +297,7 @@ PyFtdi to support those custom USB identifiers.</p>
 <h3>Custom PID<a class="headerlink" href="#custom-pid" title="Link to this heading"></a></h3>
 <p>To support a custom product ID (16-bit integer) with the official FTDI ID, add
 the following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyftdi.ftdi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">Ftdi</span><span class="o">.</span><span class="n">DEFAULT_VENDOR</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
 </pre></div>
@@ -305,7 +307,7 @@ the following code <strong>before</strong> any call to an FTDI <code class="docu
 <h3>Custom VID<a class="headerlink" href="#custom-vid" title="Link to this heading"></a></h3>
 <p>To support a custom vendor ID and product ID (16-bit integers), add the
 following code <strong>before</strong> any call to an FTDI <code class="docutils literal notranslate"><span class="pre">open()</span></code> method.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyftdi.ftdi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">)</span>
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="n">vendor_id</span><span class="p">,</span> <span class="n">product_id</span><span class="p">)</span>
@@ -313,7 +315,7 @@ following code <strong>before</strong> any call to an FTDI <code class="docutils
 </div>
 <p>You may also specify an arbitrary string to each method if you want to specify
 a URL by custom vendor and product names instead of their numerical values:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyftdi.ftdi</span> <span class="kn">import</span> <span class="n">Ftdi</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pyftdi.ftdi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ftdi</span>
 
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_vendor</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="s1">&#39;myvendor&#39;</span><span class="p">)</span>
 <span class="n">Ftdi</span><span class="o">.</span><span class="n">add_custom_product</span><span class="p">(</span><span class="mh">0x1234</span><span class="p">,</span> <span class="mh">0x5678</span><span class="p">,</span> <span class="s1">&#39;myproduct&#39;</span><span class="p">)</span>
@@ -343,7 +345,7 @@ file, see <a class="reference internal" href="#install-linux"><span class="std s
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

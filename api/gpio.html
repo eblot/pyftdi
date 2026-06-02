@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>gpio - GPIO API &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -127,13 +127,13 @@ FT230X and FT231X devices. See <a class="reference internal" href="../gpio.html#
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.gpio.GpioPort">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioPort</span></span><a class="headerlink" href="#pyftdi.gpio.GpioPort" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioPort</span></span><a class="headerlink" href="#pyftdi.gpio.GpioPort" title="Link to this definition"></a></dt>
 <dd><p>Duck-type GPIO port for GPIO all controllers.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.gpio.GpioAsyncController">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioAsyncController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioAsyncController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioAsyncController" title="Link to this definition"></a></dt>
 <dd><p>GPIO controller for an FTDI port, in bit-bang asynchronous mode.</p>
 <p>GPIO accessible pins are limited to the 8 lower pins of each GPIO port.</p>
 <p>Asynchronous bitbang output are updated on write request using the
@@ -155,8 +155,8 @@ check if it matches the board requirements.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>url</strong> (<em>str</em>) – a FTDI URL selector</p></li>
-<li><p><strong>direction</strong> (<em>int</em>) – a bitfield specifying the FTDI GPIO direction,
+<li><p><strong>url</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – a FTDI URL selector</p></li>
+<li><p><strong>direction</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – a bitfield specifying the FTDI GPIO direction,
 where high level defines an output, and low level defines an
 input</p></li>
 <li><p><strong>initial</strong> – optional initial GPIO output value</p></li>
@@ -300,7 +300,7 @@ bytes &#64; constant frequency to GPIO output pins.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.gpio.GpioSyncController">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioSyncController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioSyncController" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioSyncController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioSyncController" title="Link to this definition"></a></dt>
 <dd><p>GPIO controller for an FTDI port, in bit-bang synchronous mode.</p>
 <p>GPIO accessible pins are limited to the 8 lower pins of each GPIO port.</p>
 <p>Synchronous bitbang input and output are synchronized. Eveery time GPIO
@@ -350,7 +350,7 @@ and written.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.gpio.GpioMpsseController">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioMpsseController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioMpsseController</span></span><a class="headerlink" href="#pyftdi.gpio.GpioMpsseController" title="Link to this definition"></a></dt>
 <dd><p>GPIO controller for an FTDI port, in MPSSE mode.</p>
 <p>All GPIO pins are reachable, but MPSSE mode is slower than other modes.</p>
 <p>Beware that LSBs (b0..b7) and MSBs (b8..b15) are accessed with two
@@ -421,7 +421,7 @@ bytes &#64; constant frequency to GPIO output pins.</p>
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.gpio.GpioException">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioException</span></span><a class="headerlink" href="#pyftdi.gpio.GpioException" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.gpio.</span></span><span class="sig-name descname"><span class="pre">GpioException</span></span><a class="headerlink" href="#pyftdi.gpio.GpioException" title="Link to this definition"></a></dt>
 <dd><p>Base class for GPIO errors.</p>
 </dd></dl>
 
@@ -443,7 +443,7 @@ bytes &#64; constant frequency to GPIO output pins.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

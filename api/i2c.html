@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>i2c - I2C API &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -131,7 +131,7 @@
 </pre></div>
 </div>
 <p>Example: mastering the I<sup>2</sup>C bus with a complex transaction</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">sleep</span>
 
 <span class="n">port</span> <span class="o">=</span> <span class="n">I2cController</span><span class="p">()</span><span class="o">.</span><span class="n">get_port</span><span class="p">(</span><span class="mh">0x56</span><span class="p">)</span>
 
@@ -156,7 +156,7 @@ examples on how to use the I<sup>2</sup>C API.</p>
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cPort">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cPort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cPort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cPort" title="Link to this definition"></a></dt>
 <dd><p>I2C port.</p>
 <p>An I2C port is never instanciated directly:
 use <a class="reference internal" href="#pyftdi.i2c.I2cController.get_port" title="pyftdi.i2c.I2cController.get_port"><code class="xref py py-meth docutils literal notranslate"><span class="pre">I2cController.get_port()</span></code></a> method to obtain an I2C port.</p>
@@ -176,7 +176,7 @@ released and the <code class="docutils literal notranslate"><span class="pre">re
 </div>
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cPort.address">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cPort.address" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">address</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cPort.address" title="Link to this definition"></a></dt>
 <dd><p>Return the slave address.</p>
 </dd></dl>
 
@@ -234,7 +234,7 @@ may be zero to only write to the slave</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cPort.frequency">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pyftdi.i2c.I2cPort.frequency" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">frequency</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#pyftdi.i2c.I2cPort.frequency" title="Link to this definition"></a></dt>
 <dd><p>Provide the current I2c bus frequency.</p>
 </dd></dl>
 
@@ -395,7 +395,7 @@ are invalid</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cGpioPort">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cGpioPort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cGpioPort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">controller</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort" title="Link to this definition"></a></dt>
 <dd><p>GPIO port</p>
 <p>A I2cGpioPort instance enables to drive GPIOs wich are not reserved for
 I2c feature as regular GPIOs.</p>
@@ -417,7 +417,7 @@ ports, while 232H and 2232H series use wide 16-bit ports.</p>
 <a class="reference internal" href="#pyftdi.i2c.I2cController.get_gpio" title="pyftdi.i2c.I2cController.get_gpio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">I2cController.get_gpio()</span></code></a> method to obtain the GPIO port.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cGpioPort.all_pins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">all_pins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.all_pins" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">all_pins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.all_pins" title="Link to this definition"></a></dt>
 <dd><p>Report the addressable GPIOs as a bitfield.</p>
 <p>A true bit represents a pin which may be used as a GPIO, a false bit
 a reserved pin (for I2C support)</p>
@@ -430,7 +430,7 @@ a reserved pin (for I2C support)</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cGpioPort.direction">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.direction" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">direction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.direction" title="Link to this definition"></a></dt>
 <dd><p>Provide the FTDI GPIO direction.self</p>
 <p>A true bit represents an output GPIO, a false bit an input GPIO.</p>
 <dl class="field-list simple">
@@ -442,7 +442,7 @@ a reserved pin (for I2C support)</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cGpioPort.pins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.pins" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">pins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.pins" title="Link to this definition"></a></dt>
 <dd><p>Report the configured GPIOs as a bitfield.</p>
 <p>A true bit represents a GPIO, a false bit a reserved or not
 configured pin.</p>
@@ -489,7 +489,7 @@ configured pin.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cGpioPort.width">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.width" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cGpioPort.width" title="Link to this definition"></a></dt>
 <dd><p>Report the FTDI count of addressable pins.</p>
 <p>Note that all pins, including reserved I2C ones, are reported.</p>
 <dl class="field-list simple">
@@ -517,7 +517,7 @@ configured pin.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cController</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cController</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController" title="Link to this definition"></a></dt>
 <dd><p>I2c master.</p>
 <p>An I2c master should be instanciated only once for each FTDI port that
 supports MPSSE (one or two ports, depending on the FTDI device).</p>
@@ -583,7 +583,7 @@ xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.configured">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">configured</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.configured" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">configured</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.configured" title="Link to this definition"></a></dt>
 <dd><p>Test whether the device has been properly configured.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -594,7 +594,7 @@ xD7 (GPIO7) pin should be connected back to xD0 (SCK)</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.direction">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.direction" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">direction</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.direction" title="Link to this definition"></a></dt>
 <dd><p>Provide the FTDI pin direction</p>
 <p>A true bit represents an output pin, a false bit an input pin.</p>
 <dl class="field-list simple">
@@ -668,7 +668,7 @@ specifications and may not work with most I2C slaves.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.frequency">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">frequency</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency" title="Link to this definition"></a></dt>
 <dd><p>Provides the current I2C clock frequency in Hz.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -679,7 +679,7 @@ specifications and may not work with most I2C slaves.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.frequency_max">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">frequency_max</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency_max" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">frequency_max</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.frequency_max" title="Link to this definition"></a></dt>
 <dd><p>Provides the maximum I2C clock frequency in Hz.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -690,7 +690,7 @@ specifications and may not work with most I2C slaves.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.ftdi">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ftdi</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ftdi.html#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><span class="pre">Ftdi</span></a></em><a class="headerlink" href="#pyftdi.i2c.I2cController.ftdi" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ftdi</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ftdi.html#pyftdi.ftdi.Ftdi" title="pyftdi.ftdi.Ftdi"><span class="pre">Ftdi</span></a></span><a class="headerlink" href="#pyftdi.i2c.I2cController.ftdi" title="Link to this definition"></a></dt>
 <dd><p>Return the Ftdi instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -732,7 +732,7 @@ specifications and may not work with most I2C slaves.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.gpio_all_pins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gpio_all_pins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_all_pins" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gpio_all_pins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_all_pins" title="Link to this definition"></a></dt>
 <dd><p>Report the addressable GPIOs as a bitfield.</p>
 <p>A true bit represents a pin which may be used as a GPIO, a false bit
 a reserved pin (for I2C support)</p>
@@ -745,7 +745,7 @@ a reserved pin (for I2C support)</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.gpio_pins">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gpio_pins</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_pins" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">gpio_pins</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.gpio_pins" title="Link to this definition"></a></dt>
 <dd><p>Report the configured GPIOs as a bitfield.</p>
 <p>A true bit represents a GPIO, a false bit a reserved or not
 configured pin.</p>
@@ -898,7 +898,7 @@ before bailing out.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.validate_address">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">validate_address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.validate_address" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">validate_address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.i2c.I2cController.validate_address" title="Link to this definition"></a></dt>
 <dd><p>Assert an I2C slave address is in the supported range.
 None is a special bypass address.</p>
 <dl class="field-list simple">
@@ -916,7 +916,7 @@ None is a special bypass address.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cController.width">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">width</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#pyftdi.i2c.I2cController.width" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#pyftdi.i2c.I2cController.width" title="Link to this definition"></a></dt>
 <dd><p>Report the FTDI count of addressable pins.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -971,19 +971,19 @@ be added as the first (byte)s of the output buffer.</p>
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cIOError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cIOError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cIOError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cIOError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cIOError" title="Link to this definition"></a></dt>
 <dd><p>I2c I/O error</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cNackError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cNackError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cNackError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cNackError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cNackError" title="Link to this definition"></a></dt>
 <dd><p>I2c NACK receive from slave</p>
 </dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.i2c.I2cTimeoutError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cTimeoutError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cTimeoutError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.i2c.</span></span><span class="sig-name descname"><span class="pre">I2cTimeoutError</span></span><a class="headerlink" href="#pyftdi.i2c.I2cTimeoutError" title="Link to this definition"></a></dt>
 <dd><p>I2c timeout on polling</p>
 </dd></dl>
 
@@ -1033,17 +1033,17 @@ limit further down the sourced current.</p>
 <p>Fortunately, FT232H device is fitted with real open collector outputs, and
 PyFtdi always enable this mode on SCL and SDA lines when a FT232H device is
 used.</p>
-<p>Other FTDI devices such as FT2232H, FT4232H and FT4232HA do not support open
-collector mode, and source current to SCL and SDA lines.</p>
+<p>Other FTDI devices such as FT2232H and FT4232H/HA/HP do not
+support open collector mode, and source current to SCL and SDA lines.</p>
 </section>
 <section id="clock-streching">
 <h3>Clock streching<a class="headerlink" href="#clock-streching" title="Link to this heading"></a></h3>
 <p>Clock stretching is supported through a hack that re-uses the JTAG adaptative
 clock mode designed for ARM devices. FTDI HW drives SCL on <code class="docutils literal notranslate"><span class="pre">AD0</span></code> (<cite>BD0</cite>), and
 samples the SCL line on : the 8<sup>th</sup> pin of a port <code class="docutils literal notranslate"><span class="pre">AD7</span></code> (<code class="docutils literal notranslate"><span class="pre">BD7</span></code>).</p>
-<p>When a FTDI device without an open collector capability is used
-(FT2232H, FT4232H, FT4232HA) the current sourced from AD0 may prevent proper
-sampling ofthe SCL line when the slave attempts to strech the clock. It is
+<p>When a FTDI device without an open collector capability is used (FT2232H,
+FT4232H/HA/HP) the current sourced from AD0 may prevent proper sampling of
+the SCL line when the slave attempts to strech the clock. It is
 therefore recommended to add a low forward voltage drop diode to <cite>AD0</cite> to
 prevent AD0 to source current to the SCL bus. See the wiring section.</p>
 </section>
@@ -1068,7 +1068,7 @@ a different communication protocol.</p>
 <section id="wiring">
 <span id="i2c-wiring"></span><h2>Wiring<a class="headerlink" href="#wiring" title="Link to this heading"></a></h2>
 <figure class="align-right" id="id1">
-<a class="reference internal image-reference" href="../_images/i2c_wiring.png"><img alt="I2C wiring" src="../_images/i2c_wiring.png" style="width: 354.0px; height: 270.0px;" />
+<a class="reference internal image-reference" href="../_images/i2c_wiring.png"><img alt="I2C wiring" height="270" src="../_images/i2c_wiring.png" width="354" />
 </a>
 <figcaption>
 <p><span class="caption-text">Fig.1: FT2232H with clock stretching</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
@@ -1083,7 +1083,8 @@ a different communication protocol.</p>
 <p><em>Fig.1</em>:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">D1</span></code> is only required when clock streching is used along with
-FT2232H, FT4232H or FT4232HA devices. It should not be fit with an FT232H.</p></li>
+FT2232H or FT4232H/HA/HP devices. It should not be fit with
+an FT232H.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">AD7</span></code> may be used as a regular GPIO with clock stretching is not required.</p></li>
 </ul>
 </section>
@@ -1100,7 +1101,7 @@ FT2232H, FT4232H or FT4232HA devices. It should not be fit with an FT232H.</p></
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

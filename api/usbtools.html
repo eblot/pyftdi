@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>usbtools - USB tools &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -107,11 +107,11 @@
 <h2>Classes<a class="headerlink" href="#classes" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.usbtools.</span></span><span class="sig-name descname"><span class="pre">UsbTools</span></span><a class="headerlink" href="#pyftdi.usbtools.UsbTools" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.usbtools.</span></span><span class="sig-name descname"><span class="pre">UsbTools</span></span><a class="headerlink" href="#pyftdi.usbtools.UsbTools" title="Link to this definition"></a></dt>
 <dd><p>Helpers to obtain information about connected USB devices.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.build_dev_strings">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build_dev_strings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">devdescs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.build_dev_strings" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">build_dev_strings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">devdescs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.build_dev_strings" title="Link to this definition"></a></dt>
 <dd><p>Build URL and device descriptors from UsbDeviceDescriptors.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -133,7 +133,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.enumerate_candidates">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enumerate_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlparts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.enumerate_candidates" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">enumerate_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlparts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.enumerate_candidates" title="Link to this definition"></a></dt>
 <dd><p>Enumerate USB device URLs that match partial URL and VID/PID
 criteria.</p>
 <dl class="field-list simple">
@@ -156,13 +156,13 @@ criteria.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.find_all">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">find_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nocache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_all" title="Link to this definition"></a></dt>
 <dd><p>Find all devices that match the specified vendor/product pairs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>vps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – a sequence of 2-tuple (vid, pid) pairs</p></li>
-<li><p><strong>nocache</strong> (<em>bool</em>) – bypass cache to re-enumerate USB devices on
+<li><p><strong>nocache</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – bypass cache to re-enumerate USB devices on
 the host</p></li>
 </ul>
 </dd>
@@ -177,7 +177,7 @@ the host</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.find_backend">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">find_backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_backend" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">find_backend</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.find_backend" title="Link to this definition"></a></dt>
 <dd><p>Try to find and load an PyUSB backend.</p>
 <p>..note:: There is no need to call this method for regular usage.</p>
 <dl class="field-list simple">
@@ -192,7 +192,7 @@ the host</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.flush_cache">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flush_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.flush_cache" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">flush_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.flush_cache" title="Link to this definition"></a></dt>
 <dd><p>Flush the FTDI device cache.</p>
 <p>It is highly recommanded to call this method a FTDI device is
 unplugged/plugged back since the last enumeration, as the device
@@ -204,7 +204,7 @@ in.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.get_device">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devdesc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_device" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devdesc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_device" title="Link to this definition"></a></dt>
 <dd><p>Find a previously open device with the same vendor/product
 or initialize a new one, and return it.</p>
 <p>If several FTDI devices of the same kind (vid, pid) are connected
@@ -213,8 +213,8 @@ discriminate the FTDI device.</p>
 <p>index argument is not a reliable solution as the host may enumerate
 the USB device in random order. serial argument is more reliable
 selector and should always be prefered.</p>
-<p>Some FTDI devices support several interfaces/ports (such as FT2232H,
-FT4232H and FT4232HA). The interface argument selects the FTDI port
+<p>Some FTDI devices support several interfaces/ports (such as FT2232H
+and FT4232H/HA/HP). The interface argument selects the FTDI port
 to use, starting from 1 (not 0).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -232,7 +232,7 @@ constraints.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.get_string">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stridx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stridx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.get_string" title="Link to this definition"></a></dt>
 <dd><p>Retrieve a string from the USB device, dealing with PyUSB API breaks</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -252,7 +252,7 @@ constraints.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.list_devices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlstr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.list_devices" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">list_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlstr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.list_devices" title="Link to this definition"></a></dt>
 <dd><p>List candidates that match the device URL pattern.</p>
 <dl class="field-list simple">
 <dt class="field-odd">See<span class="colon">:</span></dt>
@@ -278,7 +278,7 @@ candidates list</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.parse_url">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlstr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">parse_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">urlstr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_vendor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.parse_url" title="Link to this definition"></a></dt>
 <dd><p>Parse a device specifier URL.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -308,7 +308,7 @@ candidates list</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.release_all_devices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">release_all_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_all_devices" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">release_all_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_all_devices" title="Link to this definition"></a></dt>
 <dd><p>Release all open devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -325,7 +325,7 @@ candidates list</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.release_device">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">release_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">usb_dev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_device" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">release_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">usb_dev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.release_device" title="Link to this definition"></a></dt>
 <dd><p>Release a previously open device, if it not used anymore.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -336,7 +336,7 @@ candidates list</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbTools.show_devices">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">show_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">devdescs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">show_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheme</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pdict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">devdescs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyftdi.usbtools.UsbTools.show_devices" title="Link to this definition"></a></dt>
 <dd><p>Show supported devices. When the joker url <code class="docutils literal notranslate"><span class="pre">scheme://*/?</span></code> is
 specified as an URL, it generates a list of connected USB devices
 that match the supported USB devices. It can be used to provide the
@@ -361,7 +361,7 @@ end-user with a list of valid URL schemes.</p>
 <h2>Exceptions<a class="headerlink" href="#exceptions" title="Link to this heading"></a></h2>
 <dl class="py exception">
 <dt class="sig sig-object py" id="pyftdi.usbtools.UsbToolsError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyftdi.usbtools.</span></span><span class="sig-name descname"><span class="pre">UsbToolsError</span></span><a class="headerlink" href="#pyftdi.usbtools.UsbToolsError" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyftdi.usbtools.</span></span><span class="sig-name descname"><span class="pre">UsbToolsError</span></span><a class="headerlink" href="#pyftdi.usbtools.UsbToolsError" title="Link to this definition"></a></dt>
 <dd><p>UsbTools error.</p>
 </dd></dl>
 
@@ -379,7 +379,7 @@ end-user with a list of valid URL schemes.</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -7,16 +7,16 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>serialext - UART API &mdash; PyFtdi  documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway" />
 
   
       <script src="../_static/jquery.js?v=5d32c60e"></script>
       <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
       <script src="../_static/documentation_options.js?v=5929fcd5"></script>
-      <script src="../_static/doctools.js?v=9bcbadda"></script>
-      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -114,7 +114,7 @@ as the UART client should use the regular <a class="reference external" href="ht
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
 <p>To enable <a class="reference external" href="https://www.github.com/eblot/pyftdi">PyFtdi</a> as a <a class="reference external" href="https://pythonhosted.org/pyserial/">pyserial</a> backend, use the following import:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pyftdi.serialext</span>
 </pre></div>
 </div>
 <p>Then use</p>
@@ -126,7 +126,7 @@ as the UART client should use the regular <a class="reference external" href="ht
 <section id="quickstart">
 <h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable pyserial extensions</span>
-<span class="kn">import</span> <span class="nn">pyftdi.serialext</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyftdi.serialext</span>
 
 <span class="c1"># Open a serial port on the second FTDI device interface (IF/2) @ 3Mbaud</span>
 <span class="n">port</span> <span class="o">=</span> <span class="n">pyftdi</span><span class="o">.</span><span class="n">serialext</span><span class="o">.</span><span class="n">serial_for_url</span><span class="p">(</span><span class="s1">&#39;ftdi://ftdi:2232h/2&#39;</span><span class="p">,</span> <span class="n">baudrate</span><span class="o">=</span><span class="mi">3000000</span><span class="p">)</span>
@@ -414,7 +414,7 @@ basis as opposed to a byte basis.</em></p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2010-2024, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
+    <p>&#169; Copyright 2010-2025, Emmanuel Blot &lt;emmanuel.blot@free.fr&gt;.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

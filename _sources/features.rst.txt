@@ -61,7 +61,7 @@ Note: FTDI*232* devices cannot be used as an SPI slave.
 |I2C| master
 ````````````
 
-Supported devices: FT232H_, FT2232H_, FT4232H_, FT4232HA_
+Supported devices: FT232H_, FT2232H_, FT4232H_, FT4232HA_, FT4232HP_
 
 For now, only 7-bit addresses are supported.
 
