@@ -943,7 +943,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900, 0x3600, 0x3100)
+        return self.device_version in (0x0500, 0x0700, 0x0800, 0x0900, 0x3100, 0x3600)
 
     @property
     def has_wide_port(self) -> bool:
@@ -1006,7 +1006,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        return self.device_version in (0x0700, 0x0800, 0x0900, 0x3600)
+        return self.device_version in (0x0700, 0x0800, 0x0900, 0x3100, 0x3600)
 
     @property
     def is_mpsse(self) -> bool:
