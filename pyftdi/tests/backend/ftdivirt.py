@@ -1,6 +1,6 @@
 """PyUSB virtual FTDI device."""
 
-# Copyright (c) 2020-2024, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2020-2026, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -231,6 +231,7 @@ class VirtFtdiPort:
         0x0800: (2048, 2048),  # FT4232H:   TX: 2KiB, RX: 2KiB
         0x0900: (1024, 1024),  # FT232H:    TX: 1KiB, RX: 1KiB
         0x1000: (512, 512),    # FT-X:      TX: 512, RX: 512
+        0x3100: (2048, 2048),  # FT4232HA:  TX: 2KiB, RX: 2KiB
         0x3600: (2048, 2048),  # FT4232HA:  TX: 2KiB, RX: 2KiB
     }
     """FTDI chip internal FIFO sizes.
@@ -247,6 +248,7 @@ class VirtFtdiPort:
         0x0800: 8,
         0x0900: 16,
         0x1000: 8,
+        0x3100: 8,
         0x3600: 8}
     """Interterface pin count."""
 
@@ -966,6 +968,7 @@ class VirtFtdi:
         0x0800: Properties(4, 8, 0),   # FT4232H
         0x0900: Properties(1, 8, 10),  # FT232H
         0x1000: Properties(1, 8, 4),   # FT231X
+        0x3100: Properties(4, 8, 0),   # FT4232HP
         0x3600: Properties(4, 8, 0),   # FT4232HA
     }
     """Width of port/bus (regular, cbus)."""

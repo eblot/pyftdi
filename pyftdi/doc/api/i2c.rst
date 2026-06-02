@@ -132,8 +132,8 @@ Fortunately, FT232H device is fitted with real open collector outputs, and
 PyFtdi always enable this mode on SCL and SDA lines when a FT232H device is
 used.
 
-Other FTDI devices such as FT2232H, FT4232H and FT4232HA do not support open
-collector mode, and source current to SCL and SDA lines.
+Other FTDI devices such as FT2232H and FT4232H/HA/HP do not
+support open collector mode, and source current to SCL and SDA lines.
 
 Clock streching
 ```````````````
@@ -142,9 +142,9 @@ Clock stretching is supported through a hack that re-uses the JTAG adaptative
 clock mode designed for ARM devices. FTDI HW drives SCL on ``AD0`` (`BD0`), and
 samples the SCL line on : the 8\ :sup:`th` pin of a port ``AD7`` (``BD7``).
 
-When a FTDI device without an open collector capability is used
-(FT2232H, FT4232H, FT4232HA) the current sourced from AD0 may prevent proper
-sampling ofthe SCL line when the slave attempts to strech the clock. It is
+When a FTDI device without an open collector capability is used (FT2232H,
+FT4232H/HA/HP) the current sourced from AD0 may prevent proper sampling of
+the SCL line when the slave attempts to strech the clock. It is
 therefore recommended to add a low forward voltage drop diode to `AD0` to
 prevent AD0 to source current to the SCL bus. See the wiring section.
 
@@ -187,5 +187,6 @@ Wiring
 *Fig.1*:
 
 * ``D1`` is only required when clock streching is used along with
-  FT2232H, FT4232H or FT4232HA devices. It should not be fit with an FT232H.
+  FT2232H or FT4232H/HA/HP devices. It should not be fit with
+  an FT232H.
 * ``AD7`` may be used as a regular GPIO with clock stretching is not required.

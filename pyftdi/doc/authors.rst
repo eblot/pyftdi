@@ -54,3 +54,4 @@ Contributors
  * Alessandro Zini
  * Sjoerd Simons
  * David Schneider
+ * Christophe Leblanc
