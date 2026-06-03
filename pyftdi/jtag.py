@@ -315,7 +315,7 @@ class JtagController:
             blen = byte_count-1
             # print("RW OUT %s" % out[:pos])
             cmd = bytearray((Ftdi.RW_BYTES_PVE_NVE_LSB,
-                             blen, (blen >> 8) & 0xff))
+                             blen & 0xff, (blen >> 8) & 0xff))
             cmd.extend(out[:pos].tobytes(msby=True))
             self._stack_cmd(cmd)
             # print("push %d bytes" % byte_count)
