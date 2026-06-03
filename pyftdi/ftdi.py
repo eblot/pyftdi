@@ -16,8 +16,8 @@ from sys import platform
 from typing import Callable, Optional, List, Sequence, TextIO, Tuple, Union
 from usb.core import (Configuration as UsbConfiguration, Device as UsbDevice,
                       USBError)
-from usb.util import (build_request_type, release_interface, CTRL_IN, CTRL_OUT,
-                      CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
+from usb.util import (build_request_type, claim_interface, release_interface,
+                      CTRL_IN, CTRL_OUT, CTRL_TYPE_VENDOR, CTRL_RECIPIENT_DEVICE)
 from .misc import to_bool
 from .usbtools import UsbDeviceDescriptor, UsbTools
 
@@ -526,7 +526,8 @@ class Ftdi:
         self.open_from_device(device, interface)
 
     def open_from_device(self, device: UsbDevice,
-                         interface: int = 1) -> None:
+                         interface: int = 1,
+                         reset_bitmode: bool = True) -> None:
         """Open a new interface from an existing USB device.
 
            :param device: FTDI USB device (PyUSB instance)
@@ -535,12 +536,10 @@ class Ftdi:
         if not isinstance(device, UsbDevice):
             raise FtdiError(f"Device '{device}' is not a PyUSB device")
         self._usb_dev = device
-        try:
-            self._usb_dev.set_configuration()
-        except USBError:
-            pass
+        cfg0 = device[0].bConfigurationValue
         # detect invalid interface as early as possible
         config = self._usb_dev.get_active_configuration()
+        cfg = config.bConfigurationValue
         if interface > config.bNumInterfaces:
             raise FtdiError(f'No such FTDI port: {interface}')
         self._set_interface(config, interface)
@@ -550,10 +549,18 @@ class Ftdi:
         self._readbuffer = bytearray()
         # Drain input buffer
         self.purge_buffers()
+        # Claim the interface
+        if device.bNumConfigurations > 0 and cfg0 != cfg:
+            try:
+                device.set_configuration()
+            except USBError:
+                pass
+        claim_interface(device, self._index - 1)
         # Shallow reset
         self._reset_device()
         # Reset feature mode
-        self.set_bitmode(0, Ftdi.BitMode.RESET)
+        if reset_bitmode:
+            self.set_bitmode(0, Ftdi.BitMode.RESET)
         # Init latency
         self._latency_threshold = None
         self.set_latency_timer(self.LATENCY_MIN)
@@ -583,7 +590,8 @@ class Ftdi:
                 except FtdiError as exc:
                     self.log.warning('FTDI device may be gone: %s', exc)
                 try:
-                    self._usb_dev.attach_kernel_driver(self._index - 1)
+                    if not freeze:
+                        self._usb_dev.attach_kernel_driver(self._index - 1)
                 except (NotImplementedError, USBError):
                     pass
             self._usb_dev = None
@@ -842,7 +850,7 @@ class Ftdi:
            :param sync: whether to use synchronous or asynchronous bitbang
            :return: actual bitbang baudrate in bps
         """
-        self.open_from_device(device, interface)
+        self.open_from_device(device, interface, reset_bitmode=False)
         # Set latency timer
         self.set_latency_timer(latency)
         # Set chunk size
