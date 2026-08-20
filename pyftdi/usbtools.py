@@ -543,6 +543,10 @@ class UsbTools:
             if cls.UsbApi == 2:
                 return usb_get_string(device, stridx)
             return usb_get_string(device, 64, stridx)
+        except ValueError:
+            # issue #437
+            # do not abort if user does not have enough permissions for one device
+            return ''
         except UnicodeDecodeError:
             # do not abort if EEPROM data is somewhat incoherent
             return ''
