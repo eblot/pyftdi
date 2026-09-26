@@ -439,6 +439,22 @@ class MockSimpleUartTestCase(FtdiTestCase):
     def tearDown(self):
         self.loader.unload()
 
+    def test_uart_close_unopened(self):
+        """Closing an unopened port is safe and does not prevent opening it."""
+        port = serial_for_url('ftdi:///1', do_not_open=True)
+        port.close()
+        self.assertFalse(port.is_open)
+        port.close()
+        with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
+            self.loader.load(yfp)
+        port.open()
+        device = port.ftdi
+        self.assertTrue(port.is_open)
+        port.close()
+        self.assertFalse(port.is_open)
+        self.assertFalse(device.is_connected)
+        port.close()
+
     def test_uart(self):
         """Check simple TX/RX sequence."""
         with open('pyftdi/tests/resources/ft232h.yaml', 'rb') as yfp:
