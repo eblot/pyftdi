@@ -41,7 +41,8 @@ class SpiPort:
        >>> out.extend(spi.exchange([], 2, False, True))
     """
 
-    def __init__(self, controller: 'SpiController', cs: int, cs_hold: int = 3,
+    def __init__(self, controller: 'SpiController', cs: Optional[int],
+                 cs_hold: int = 3,
                  spi_mode: int = 0):
         self.log = getLogger('pyftdi.spi.port')
         self._controller = controller
@@ -154,7 +155,8 @@ class SpiPort:
         self._cpha = bool(mode & 0x1)
         cs_clock = 0xFF & ~((int(not self._cpol) and SpiController.SCK_BIT) |
                             SpiController.DO_BIT)
-        cs_select = 0xFF & ~((SpiController.CS_BIT << self._cs) |
+        cs_bits = 0 if self._cs is None else (SpiController.CS_BIT << self._cs)
+        cs_select = 0xFF & ~(cs_bits |
                              (int(not self._cpol) and SpiController.SCK_BIT) |
                              SpiController.DO_BIT)
         self._cs_prolog = bytes([cs_clock, cs_select])
@@ -204,10 +206,11 @@ class SpiPort:
         return self._frequency
 
     @property
-    def cs(self) -> int:
+    def cs(self) -> Optional[int]:
         """Return the /CS index.
 
-          :return: the /CS index (starting from 0)
+          :return: the /CS index (starting from 0), or ``None`` when this port
+                   does not drive a hardware chip select
         """
         return self._cs
 
@@ -350,6 +353,7 @@ class SpiController:
         self._clock_phase = False
         self._cs_bits = 0
         self._spi_ports = []
+        self._spi_port_nocs: Optional[SpiPort] = None
         self._spi_dir = 0
         self._spi_mask = self.SPI_BITS
 
@@ -415,6 +419,7 @@ class SpiController:
             self._cs_bits = (((SpiController.CS_BIT << self._cs_count) - 1) &
                              ~(SpiController.CS_BIT - 1))
             self._spi_ports = [None] * self._cs_count
+            self._spi_port_nocs = None
             self._spi_dir = (self._cs_bits |
                              SpiController.DO_BIT |
                              SpiController.SCK_BIT)
@@ -453,19 +458,29 @@ class SpiController:
         """
         self.close()
 
-    def get_port(self, cs: int, freq: Optional[float] = None,
+    def get_port(self, cs: Optional[int], freq: Optional[float] = None,
                  mode: int = 0) -> SpiPort:
         """Obtain a SPI port to drive a SPI device selected by Chip Select.
 
            :note: SPI mode 1 and 3 are not officially supported.
 
-           :param cs: chip select slot, starting from 0
+           :param cs: chip select slot, starting from 0, or ``None`` to not
+             use a chip select.
            :param freq: SPI bus frequency for this slave in Hz
            :param mode: SPI mode [0, 1, 2, 3]
         """
         with self._lock:
             if not self._ftdi.is_connected:
                 raise SpiIOError("FTDI controller not initialized")
+            if cs is None:
+                if not self._spi_port_nocs:
+                    freq = min(freq or self._frequency, self.frequency_max)
+                    hold = freq and (1+int(1E6/freq))
+                    self._spi_port_nocs = SpiPort(self, None, cs_hold=hold,
+                                                  spi_mode=mode)
+                    self._spi_port_nocs.set_frequency(freq)
+                    self._flush()
+                return self._spi_port_nocs
             if cs >= len(self._spi_ports):
                 if cs < 5:
                     # increase cs_count (up to 4) to reserve more /CS channels
