@@ -71,6 +71,7 @@ class Ftdi:
             ('230x', 0x6015),
             ('231x', 0x6015),
             ('234x', 0x6015),
+            ('4233hpq', 0x6041),
             ('4232hp', 0x6043),
             ('4232ha', 0x6048),
             ('ft232', 0x6001),
@@ -85,6 +86,7 @@ class Ftdi:
             ('ft230x', 0x6015),
             ('ft231x', 0x6015),
             ('ft234x', 0x6015),
+            ('ft4233hpq', 0x6041),
             ('ft4232hp', 0x6043),
             ('ft4232ha', 0x6048)))
         }
@@ -105,6 +107,7 @@ class Ftdi:
         0x0800: 'ft4232h',
         0x0900: 'ft232h',
         0x1000: 'ft-x',
+        0x2900: 'ft4233hpq',
         0x3100: 'ft4232hp',
         0x3600: 'ft4232ha'}
     """Common names of FTDI supported devices."""
@@ -120,6 +123,7 @@ class Ftdi:
         0x0800: (2048, 2048),  # FT4232H:   TX: 2KiB, RX: 2KiB
         0x0900: (1024, 1024),  # FT232H:    TX: 1KiB, RX: 1KiB
         0x1000: (512, 512),    # FT-X:      TX: 512, RX: 512
+        0x2900: (2048, 2048),  # FT4233HPQ: TX: 2KiB, RX: 2KiB
         0x3100: (2048, 2048),  # FT4232HP:  TX: 2KiB, RX: 2KiB
         0x3600: (2048, 2048),  # FT4232HA:  TX: 2KiB, RX: 2KiB
     }
@@ -507,7 +511,7 @@ class Ftdi:
            selector and should always be prefered.
 
            Some FTDI devices support several interfaces/ports (such as
-           FT4232H/HA/HP). The interface argument selects the FTDI port
+           FT4232H/HA/HP, FT4233HPQ). The interface argument selects the FTDI port
            to use, starting from 1 (not 0).
 
            :param int vendor: USB vendor id
@@ -653,7 +657,7 @@ class Ftdi:
            selector and should always be prefered.
 
            Some FTDI devices support several interfaces/ports (such as
-           FT4232H/HA/HP). The interface argument selects the FTDI port
+           FT4232H/HA/HP, FT4233HPQ). The interface argument selects the FTDI port
            to use, starting from 1 (not 0). Note that not all FTDI ports are
            MPSSE capable.
 
@@ -706,7 +710,7 @@ class Ftdi:
            selector and should always be prefered.
 
            Some FTDI devices support several interfaces/ports (such as
-           FT4232H/HA/HP). The interface argument selects the FTDI port
+           FT4232H/HA/HP, FT4233HPQ). The interface argument selects the FTDI port
            to use, starting from 1 (not 0). Note that not all FTDI ports are
            MPSSE capable.
 
@@ -944,7 +948,8 @@ class Ftdi:
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
         return self.device_version in (0x0500, 0x0700, 0x0800,
-                                       0x0900, 0x3100, 0x3600)
+                                       0x0900, 0x2900, 0x3100,
+                                       0x3600)
 
     @property
     def has_wide_port(self) -> bool:
@@ -1007,7 +1012,7 @@ class Ftdi:
         """
         if not self.is_connected:
             raise FtdiError('Device characteristics not yet known')
-        return self.device_version in (0x0700, 0x0800, 0x0900, 0x3100, 0x3600)
+        return self.device_version in (0x0700, 0x0800, 0x0900, 0x2900, 0x3100, 0x3600)
 
     @property
     def is_mpsse(self) -> bool:
@@ -1028,6 +1033,8 @@ class Ftdi:
         if self.device_version == 0x0800 and interface > 2:
             return False
         if self.device_version == 0x3600 and interface > 2:
+            return False
+        if self.device_version == 0x2900 and interface > 2:
             return False
         if self.device_version == 0x3100 and interface > 2:
             return False
