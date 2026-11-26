@@ -745,7 +745,7 @@ class FtdiEeprom:
                 pos &= ~0x1
                 raise FtdiEepromError(f'Write to EEPROM failed @ 0x{pos:02x}')
             self._modified = False
-        return dry_run
+        return not dry_run
 
     def reset_device(self):
         """Execute a USB device reset."""
