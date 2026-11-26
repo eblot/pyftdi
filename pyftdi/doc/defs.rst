@@ -7,9 +7,11 @@
 .. _FT2232H: https://www.ftdichip.com/Products/ICs/FT2232H.html
 .. _FT4232H: https://www.ftdichip.com/Products/ICs/FT4232H.htm
 .. _FT4232HA: http://ftdichip.com/products/ft4232haq/
+.. _FT4232HP: https://www.ftdichip.com/Support/Documents/DataSheets/ICs/DS_FT4233HP.pdf
 .. _FTDI_Recovery: https://www.ftdichip.com/Support/Documents/AppNotes/AN_136%20Hi%20Speed%20Mini%20Module%20EEPROM%20Disaster%20Recovery.pdf
 .. _PyFtdi: https://www.github.com/eblot/pyftdi
 .. _PyFtdiTools: https://github.com/eblot/pyftdi/tree/master/pyftdi/bin
+.. _PyJtagTools: https://www.github.com/eblot/pyjtagtools
 .. _FTDI: https://www.ftdichip.com/
 .. _PyUSB: https://pyusb.github.io/pyusb/
 .. _Python: https://www.python.org/
@@ -29,7 +31,7 @@
 .. _PEP_498: https://www.python.org/dev/peps/pep-0498
 .. _PEP_526: https://www.python.org/dev/peps/pep-0526
 .. _ruamel.yaml: https://pypi.org/project/ruamel.yaml
-
+.. _PyFtdiWin: https://github.com/mariusgreuel/pyftdiwin
 
 .. Restructured Text levels
 

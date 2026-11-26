@@ -61,7 +61,7 @@ Note: FTDI*232* devices cannot be used as an SPI slave.
 |I2C| master
 ````````````
 
-Supported devices: FT232H_, FT2232H_, FT4232H_, FT4232HA_
+Supported devices: FT232H_, FT2232H_, FT4232H_, FT4232HA_, FT4232HP_
 
 For now, only 7-bit addresses are supported.
 
@@ -83,6 +83,9 @@ JTAG
 JTAG API is limited to low-level access. It is not intented to be used for
 any flashing or debugging purpose, but may be used as a base to perform SoC
 tests and boundary scans.
+
+It requires the PyJtagTools_ Python module which integrates a JTAG engine, while
+PyFtdi_ implements the FTDI JTAG backend.
 
 EEPROM
 ``````

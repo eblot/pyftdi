@@ -71,7 +71,14 @@ devices:
     configurations:
       - interfaces:
         - repeat: 4
-
-
-
-
+  - bus: 3
+    address: 6
+    descriptor:
+      vid: 0x403
+      pid: 0x6043
+      version: 0x3100
+      manufacturer: FTDI
+      product: FT4232HP
+    configurations:
+      - interfaces:
+        - repeat: 4

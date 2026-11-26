@@ -40,6 +40,8 @@ configure `udev`, here is a typical setup:
     SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6015", GROUP="plugdev", MODE="0664"
     # FT4232HA
     SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6048", GROUP="plugdev", MODE="0664"
+    # FT4232HP
+    SUBSYSTEM=="usb", ATTR{idVendor}=="0403", ATTR{idProduct}=="6043", GROUP="plugdev", MODE="0664"
 
 .. note:: **Accessing FTDI devices with custom VID/PID**
 
@@ -101,7 +103,7 @@ The probably easiest way to deal with libusb on Windows is to use Zadig_
    stored in the FTDI EEPROM.
 
   * With FTDI devices with multiple channels, such as FT2232 (2 channels) and
-    FT4232 (4 channels), you **must** install the driver for the composite
+    FT4232H/HA/HP (4 channels), you **must** install the driver for the composite
     parent, **not** for the individual interfaces. If you install the driver
     for each interface, each interface will be presented as a unique FTDI
     device and you may have difficulties to select a specific FTDI device port

@@ -38,6 +38,9 @@ jobs:
       run: |
         python pyftdi/tests/mockusb.py
 
+    - name: Run JTAG command tests
+      run: python pyftdi/tests/jtag_mock.py
+
     - name: Run GPIO tests
       env:
         FTDI_LOGLEVEL: WARNING

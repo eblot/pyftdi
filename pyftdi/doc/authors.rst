@@ -52,3 +52,6 @@ Contributors
  * Roman Dobrodii
  * Mark Mentovai
  * Alessandro Zini
+ * Sjoerd Simons
+ * David Schneider
+ * Christophe Leblanc

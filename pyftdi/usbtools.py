@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2024, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2026, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -131,8 +131,8 @@ class UsbTools:
            the USB device in random order. serial argument is more reliable
            selector and should always be prefered.
 
-           Some FTDI devices support several interfaces/ports (such as FT2232H,
-           FT4232H and FT4232HA). The interface argument selects the FTDI port
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H/HA/HP). The interface argument selects the FTDI port
            to use, starting from 1 (not 0).
 
            :param devdesc: Device descriptor that identifies the device by
