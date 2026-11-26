@@ -488,6 +488,9 @@ class JtagEngine:
         path = self._sm.find_path(statename)
         # convert the path into an event sequence
         events = self._sm.get_events(path)
+        # Staying in the current state requires no TMS clocks.
+        if not events:
+            return
         # update the remote device tap controller
         self._ctrl.write_tms(events)
         # update the current state machine's state
