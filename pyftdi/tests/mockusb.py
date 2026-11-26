@@ -24,6 +24,7 @@ from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
 from pyftdi.gpio import GpioController
+from pyftdi.jtag import JtagEngine
 from pyftdi.misc import to_bool
 from pyftdi.serialext import serial_for_url
 from pyftdi.usbtools import UsbTools
@@ -384,6 +385,24 @@ class MockSimpleMpsseTestCase(FtdiTestCase):
         ftdi = Ftdi()
         ftdi.open_mpsse_from_url('ftdi:///1')
         ftdi.close()
+
+
+    def test_go_idle_twice(self):
+        engine = JtagEngine()
+        engine.configure('ftdi:///1')
+        try:
+            engine.reset()
+            engine.go_idle()
+            engine.go_idle()
+            self.assertEqual(str(engine.state_machine.state()),
+                             'run_test_idle')
+            engine.change_state('shift_dr')
+            self.assertEqual(str(engine.state_machine.state()), 'shift_dr')
+            engine.go_idle()
+            self.assertEqual(str(engine.state_machine.state()),
+                             'run_test_idle')
+        finally:
+            engine.close()
 
 
 class MockSimpleGpioTestCase(FtdiTestCase):
