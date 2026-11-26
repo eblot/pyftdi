@@ -304,13 +304,13 @@ class JtagController:
            Returns the number of bits written."""
         if not isinstance(out, BitSequence):
             return JtagError('Expect a BitSequence')
+        if len(out) == 0:
+            raise JtagError("Nothing to shift")
         if use_last:
             (out, self._last) = (out[:-1], int(out[-1]))
         byte_count = len(out)//8
         pos = 8*byte_count
         bit_count = len(out)-pos
-        if not byte_count and not bit_count:
-            raise JtagError("Nothing to shift")
         if byte_count:
             blen = byte_count-1
             # print("RW OUT %s" % out[:pos])
