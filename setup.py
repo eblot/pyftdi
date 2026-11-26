@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010-2024 Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2010-2025 Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2010-2016 Neotion
 # All rights reserved.
 #
@@ -32,7 +32,6 @@ CLASSIFIERS = [
     'Environment :: Other Environment',
     'Natural Language :: English',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: BSD License',
     'Operating System :: MacOS :: MacOS X',
     'Operating System :: POSIX',
     'Programming Language :: Python :: 3.9',
@@ -171,6 +170,7 @@ def main():
         maintainer_email=find_meta('email'),
         keywords=KEYWORDS,
         long_description=read_desc('pyftdi/doc/index.rst'),
+        long_description_content_type='text/x-rst',
         packages=PACKAGES,
         scripts=['pyftdi/bin/i2cscan.py',
                  'pyftdi/bin/ftdi_urls.py',

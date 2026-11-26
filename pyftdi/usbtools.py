@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2024, Emmanuel Blot <emmanuel.blot@free.fr>
+# Copyright (c) 2014-2026, Emmanuel Blot <emmanuel.blot@free.fr>
 # Copyright (c) 2016, Emmanuel Bouaziz <ebouaziz@free.fr>
 # All rights reserved.
 #
@@ -131,8 +131,8 @@ class UsbTools:
            the USB device in random order. serial argument is more reliable
            selector and should always be prefered.
 
-           Some FTDI devices support several interfaces/ports (such as FT2232H,
-           FT4232H and FT4232HA). The interface argument selects the FTDI port
+           Some FTDI devices support several interfaces/ports (such as FT2232H
+           and FT4232H/HA/HP). The interface argument selects the FTDI port
            to use, starting from 1 (not 0).
 
            :param devdesc: Device descriptor that identifies the device by
@@ -219,24 +219,32 @@ class UsbTools:
 
     @classmethod
     def release_all_devices(cls, devclass: Optional[Type] = None) -> int:
-        """Release all open devices.
+        """Release all devices, including handles opened during enumeration.
 
            :param devclass: optional class to only release devices of one type
            :return: the count of device that have been released.
         """
         with cls.Lock:
-            remove_devs = set()
-            # pylint: disable=consider-using-dict-items
-            for devkey in cls.Devices:
+            devices = {dev for dev, _ in cls.Devices.values()}
+            for cached in cls.UsbDevices.values():
+                devices.update(cached)
+            released = set()
+            for device in devices:
                 if devclass:
-                    dev = cls._get_backend_device(cls.Devices[devkey][0])
-                    if dev is None or not isinstance(dev, devclass):
+                    backend_dev = cls._get_backend_device(device)
+                    if (backend_dev is None or
+                            not isinstance(backend_dev, devclass)):
                         continue
-                dispose_resources(cls.Devices[devkey][0])
-                remove_devs.add(devkey)
-            for devkey in remove_devs:
-                del cls.Devices[devkey]
-            return len(remove_devs)
+                dispose_resources(device)
+                released.add(device)
+            for devkey, (device, _) in list(cls.Devices.items()):
+                if device in released:
+                    del cls.Devices[devkey]
+            for devkey, cached in list(cls.UsbDevices.items()):
+                cached.difference_update(released)
+                if not cached:
+                    del cls.UsbDevices[devkey]
+            return len(released)
 
     @classmethod
     def list_devices(cls, urlstr: str,
