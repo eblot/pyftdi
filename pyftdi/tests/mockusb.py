@@ -530,6 +530,46 @@ class MockRawExtEepromTestCase(FtdiTestCase):
             data = bytearray(data) + bytes(size-len(data))
         vftdi.eeprom = bytes(data)
 
+    def test_commit_result(self):
+        """A verified EEPROM write reports that changes were committed."""
+        self._check_commit_result(False)
+
+    def test_dry_run_commit_result(self):
+        """A dry run reports no committed change and preserves the device."""
+        self._check_commit_result(True)
+
+    def _check_commit_result(self, dry_run):
+        ftdi = Ftdi()
+        ftdi.open_from_url('ftdi:///1')
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        original = vftdi.eeprom
+        eeprom = FtdiEeprom()
+        try:
+            eeprom.connect(ftdi, ignore=True)
+            eeprom.erase()
+            eeprom.initialize()
+            vftdi.eeprom = eeprom.data
+            initial = vftdi.eeprom
+            eeprom.close()
+
+            eeprom = FtdiEeprom()
+            eeprom.open('ftdi:///1')
+            self.assertFalse(eeprom.commit(dry_run=False))
+            eeprom.set_property('power_max', 100)
+            expected = eeprom.data
+            self.assertNotEqual(expected, initial)
+            result = eeprom.commit(dry_run=dry_run)
+            self.assertEqual(vftdi.eeprom, initial if dry_run else expected)
+            self.assertEqual(result, not dry_run)
+            if dry_run:
+                self.assertTrue(eeprom.commit(dry_run=False))
+                self.assertEqual(vftdi.eeprom, expected)
+            self.assertFalse(eeprom.commit(dry_run=False))
+        finally:
+            eeprom.close()
+            vftdi.eeprom = original
+
     def test_dump(self):
         """Check EEPROM full content."""
         ftdi = Ftdi()
