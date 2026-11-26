@@ -385,6 +385,53 @@ class MockSimpleMpsseTestCase(FtdiTestCase):
         ftdi.open_mpsse_from_url('ftdi:///1')
         ftdi.close()
 
+    def test_mpsse_trace_options(self):
+        """All MPSSE opening APIs accept tracer and the legacy debug alias."""
+        for api in ('url', 'identifiers', 'device'):
+            for option in ('tracer', 'debug'):
+                with self.subTest(api=api, option=option):
+                    ftdi = Ftdi()
+                    try:
+                        with self.assertLogs('pyftdi.mpsse.tracer',
+                                             level='DEBUG') as traces:
+                            kwargs = {option: True}
+                            if api == 'url':
+                                ftdi.open_mpsse_from_url('ftdi:///1', **kwargs)
+                            elif api == 'identifiers':
+                                ftdi.open_mpsse(0x403, 0x6014, **kwargs)
+                            else:
+                                desc, iface = Ftdi.get_identifiers('ftdi:///1')
+                                device = UsbTools.get_device(desc)
+                                ftdi.open_mpsse_from_device(device, iface,
+                                                           **kwargs)
+                            ftdi.write_data(bytes((Ftdi.SET_BITS_LOW, 0, 0)))
+                        self.assertTrue(any('SET_BITS_LOW' in line
+                                            for line in traces.output))
+                    finally:
+                        ftdi.close()
+
+    def test_spi_trace_options(self):
+        """SPI configuration forwards trace options and defaults to silent."""
+        # pylint: disable=import-outside-toplevel
+        from pyftdi.spi import SpiController
+        for option in ({}, {'tracer': False}, {'tracer': True},
+                       {'debug': True}):
+            with self.subTest(option=option):
+                spi = SpiController()
+                try:
+                    if any(option.values()):
+                        with self.assertLogs('pyftdi.mpsse.tracer',
+                                             level='DEBUG') as traces:
+                            spi.configure('ftdi:///1', **option)
+                        self.assertTrue(any('SET_BITS_LOW' in line
+                                            for line in traces.output))
+                    else:
+                        with self.assertNoLogs('pyftdi.mpsse.tracer',
+                                               level='DEBUG'):
+                            spi.configure('ftdi:///1', **option)
+                finally:
+                    spi.terminate()
+
 
 class MockSimpleGpioTestCase(FtdiTestCase):
     """Test FTDI GPIO APIs
