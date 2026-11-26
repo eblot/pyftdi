@@ -79,6 +79,30 @@ class MockUsbToolsTestCase(FtdiTestCase):
         self.assertIsNotNone(dev)
         UsbTools.release_device(dev)
 
+    def test_release_enumerated_devices(self):
+        """Release handles opened during enumeration, not just selection."""
+        # PyUSB exposes no public query for whether its handle is still open.
+        # pylint: disable=protected-access
+        UsbTools.release_all_devices()
+        UsbTools.flush_cache()
+        descriptors = UsbTools.find_all([(0x403, 0x6014)])
+        self.assertEqual(len(descriptors), 2)
+        devices = set(UsbTools.UsbDevices[(0x403, 0x6014)])
+        selected = UsbTools.get_device(descriptors[0][0])
+        self.assertIn(selected, devices)
+        # Reading strings during enumeration opens both PyUSB handles.
+        self.assertTrue(all(dev._ctx.handle is not None for dev in devices))
+        self.assertEqual(UsbTools.release_all_devices(str), 0)
+        self.assertTrue(all(dev._ctx.handle is not None for dev in devices))
+        released = UsbTools.release_all_devices()
+        self.assertTrue(all(dev._ctx.handle is None for dev in devices))
+        self.assertEqual(released, 2)
+        self.assertEqual(UsbTools.release_all_devices(), 0)
+        # Reopening after cleanup must enumerate a usable device again.
+        reopened = UsbTools.get_device(descriptors[0][0])
+        self.assertIsNotNone(reopened._ctx.handle)
+        UsbTools.release_all_devices()
+
     def test_string(self):
         """Retrieve a string from its identifier."""
         ftdis = [(0x403, 0x6010)]
