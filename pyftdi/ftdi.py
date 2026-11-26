@@ -606,7 +606,8 @@ class Ftdi:
 
     def open_mpsse_from_url(self, url: str, direction: int = 0x0,
                             initial: int = 0x0, frequency: float = 6.0E6,
-                            latency: int = 16, debug: bool = False) -> float:
+                            latency: int = 16, debug: bool = False,
+                            tracer: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -621,7 +622,8 @@ class Ftdi:
            :param latency: low-level latency in milliseconds. The shorter
                 the delay, the higher the host CPU load. Do not use shorter
                 values than the default, as it triggers data loss in FTDI.
-           :param debug: use a tracer to decode MPSSE protocol
+           :param debug: legacy alias for tracer
+           :param tracer: use a tracer to decode MPSSE protocol
            :return: actual bus frequency in Hz
         """
         devdesc, interface = self.get_identifiers(url)
@@ -631,14 +633,14 @@ class Ftdi:
                                            initial=initial,
                                            frequency=frequency,
                                            latency=latency,
-                                           debug=debug)
+                                           debug=debug, tracer=tracer)
 
     def open_mpsse(self, vendor: int, product: int, bus: Optional[int] = None,
                    address: Optional[int] = None, index: int = 0,
                    serial: Optional[str] = None, interface: int = 1,
                    direction: int = 0x0, initial: int = 0x0,
                    frequency: float = 6.0E6, latency: int = 16,
-                   debug: bool = False) -> float:
+                   debug: bool = False, tracer: bool = False) -> float:
         """Open a new interface to the specified FTDI device in MPSSE mode.
 
            MPSSE enables I2C, SPI, JTAG or other synchronous serial interface
@@ -674,7 +676,8 @@ class Ftdi:
            :param latency: low-level latency in milliseconds. The shorter
                 the delay, the higher the host CPU load. Do not use shorter
                 values than the default, as it triggers data loss in FTDI.
-           :param bool debug: use a tracer to decode MPSSE protocol
+           :param bool debug: legacy alias for tracer
+           :param bool tracer: use a tracer to decode MPSSE protocol
            :return: actual bus frequency in Hz
         """
         devdesc = UsbDeviceDescriptor(vendor, product, bus, address, serial,
@@ -685,7 +688,7 @@ class Ftdi:
                                            initial=initial,
                                            frequency=frequency,
                                            latency=latency,
-                                           debug=debug)
+                                           debug=debug, tracer=tracer)
 
     def open_mpsse_from_device(self, device: UsbDevice,
                                interface: int = 1, direction: int = 0x0,
@@ -721,15 +724,14 @@ class Ftdi:
                 the delay, the higher the host CPU load. Do not use shorter
                 values than the default, as it triggers data loss in FTDI.
            :param bool tracer: use a tracer to decode MPSSE protocol
-           :param bool debug: add more debug traces
+           :param bool debug: legacy alias for tracer
            :return: actual bus frequency in Hz
         """
-        # pylint: disable=unused-argument
         self.open_from_device(device, interface)
         if not self.is_mpsse_interface(interface):
             self.close()
             raise FtdiMpsseError('This interface does not support MPSSE')
-        if to_bool(tracer):  # accept strings as boolean
+        if to_bool(tracer) or to_bool(debug):  # accept strings as boolean
             # pylint: disable=import-outside-toplevel
             from .tracer import FtdiMpsseTracer
             self._tracer = FtdiMpsseTracer(self.device_version)
