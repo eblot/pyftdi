@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: BSD-3-Clause
+
+devices:
+  - bus: 1
+    address: 1
+    eeprom:
+      model: 93c56
+    descriptor:
+      vid: 0x403
+      pid: 0x6011
+      version: 0x800
+      manufacturer: FTDI
+      product: FT4232H
+      serialnumber: FT3GHI
+    configurations:
+      - interfaces:
+        - repeat: 4
+
