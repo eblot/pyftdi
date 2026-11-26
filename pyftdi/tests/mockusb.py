@@ -20,6 +20,7 @@ from string import ascii_letters
 from sys import modules, stdout
 from unittest import TestCase, TestLoader, TestSuite, main as ut_main
 from urllib.parse import urlsplit
+from serial import SerialException
 from pyftdi import FtdiLogger
 from pyftdi.eeprom import FtdiEeprom
 from pyftdi.ftdi import Ftdi, FtdiMpsseError
@@ -435,6 +436,22 @@ class MockSimpleGpioTestCase(FtdiTestCase):
 class MockSimpleUartTestCase(FtdiTestCase):
     """Test FTDI UART APIs
     """
+
+    def test_close_unopened_uart(self):
+        """Closing a deferred-open port is safe and idempotent."""
+        port = serial_for_url('ftdi:///1', do_not_open=True)
+        port.close()
+        port.close()
+        self.assertFalse(port.is_open)
+
+    def test_close_uart_after_failed_open(self):
+        """An unsuccessful open must still leave a safely closable port."""
+        port = serial_for_url('ftdi:///1', do_not_open=True)
+        port.port = None
+        with self.assertRaises(SerialException):
+            port.open()
+        port.close()
+        self.assertFalse(port.is_open)
 
     def tearDown(self):
         self.loader.unload()

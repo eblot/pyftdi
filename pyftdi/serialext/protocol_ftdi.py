@@ -44,7 +44,7 @@ class FtdiSerial(SerialBase):
     def close(self):
         """Close the open port"""
         self._set_open_state(False)
-        if self.udev:
+        if getattr(self, 'udev', None):
             self.udev.close()
             self.udev = None
 
