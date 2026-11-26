@@ -897,9 +897,8 @@ class FtdiEeprom:
         buf = self._ftdi.read_eeprom(0, eeprom_size=self.size)
         eeprom = bytearray(buf)
         size, mirror_detected = self._compute_size(eeprom)
-        if size < len(eeprom):
-            eeprom = eeprom[:size]
-        crc = self._compute_crc(eeprom, True)[0]
+        # Validate one sector, but retain both copies for mirrored writes.
+        crc = self._compute_crc(eeprom[:size], True)[0]
         if crc:
             if self.is_empty:
                 self.log.info('No EEPROM or EEPROM erased')

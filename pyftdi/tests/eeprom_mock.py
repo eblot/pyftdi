@@ -359,6 +359,53 @@ class EepromMirrorFt4232hTestCase(EepromMirrorTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h.yaml'
 
 
+class EepromReadMirrorTestCase(EepromMirrorFt4232hTestCase):
+    TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft4232h_eeprom.yaml'
+
+    def test_reopen_mirrored_eeprom(self):
+        """Retain both sectors when reading and editing an existing mirror."""
+        # pylint: disable=protected-access
+        if not self.loader:
+            self.skipTest('Requires a virtual EEPROM')
+        ftdi = Ftdi()
+        ftdi.open_from_url(self.url)
+        bus, address, _ = ftdi.usb_path
+        vftdi = self.loader.get_virtual_ftdi(bus, address)
+        original = vftdi.eeprom
+        ftdi.close()
+        eeprom = FtdiEeprom()
+        try:
+            eeprom.enable_mirroring(True)
+            eeprom.open(self.url, ignore=True)
+            eeprom.erase()
+            eeprom.set_property('type', eeprom.device_version)
+            eeprom.set_manufacturer_name(self.TEST_MANU_NAME)
+            eeprom.set_product_name(self.TEST_PROD_NAME)
+            eeprom.set_serial_number(self.TEST_SN)
+            vftdi.eeprom = eeprom.data
+            eeprom.close()
+
+            eeprom = FtdiEeprom()
+            eeprom.open(self.url)
+            self.assertTrue(eeprom.is_mirroring_enabled)
+            eeprom.set_property('power_max', 100)
+            eeprom.set_serial_number('REOPENED')
+            self.assertEqual(len(eeprom.data), eeprom.size)
+            self._check_for_mirrored_eeprom_contents(eeprom)
+            self.assertEqual(eeprom._ftdi.calc_eeprom_checksum(
+                eeprom.data[:eeprom.mirror_sector]), 0)
+            vftdi.eeprom = eeprom.data
+            eeprom.close()
+
+            eeprom = FtdiEeprom()
+            eeprom.open(self.url)
+            self.assertEqual(eeprom.power_max, 100)
+            self.assertEqual(eeprom.serial, 'REOPENED')
+        finally:
+            eeprom.close()
+            vftdi.eeprom = original
+
+
 class EepromMirrorFt232rTestCase(NonMirroredEepromTestCase, TestCase):
     TEST_CONFIG_FILENAME = 'pyftdi/tests/resources/ft232r.yaml'
     DEVICE_CAN_MIRROR = False
@@ -390,7 +437,8 @@ def suite():
     mod = modules[__name__]
     tests = []
     # Test devices that support the mirroring capability
-    tests.extend(('EepromMirrorFt232h',
+    tests.extend(('EepromReadMirror',
+                  'EepromMirrorFt232h',
                   'EepromMirrorFt2232h',
                   'EepromMirrorFt4232h'))
     # Test devices that do not support the mirror capability
